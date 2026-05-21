@@ -1,4 +1,0 @@
-[custom.all.dom-mvc]
-type = "local"
-path = "../idris2-dom-mvc"
-ipkg = "dom-mvc.ipkg"
