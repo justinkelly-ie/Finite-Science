@@ -1,0 +1,2015 @@
+Box Arithmetic: Polynomials without Variables and the
+Fundamental Identity of Arithmetic
+N J Wildberger
+School of Mathematics and Statistics
+UNSW, Sydney, Australia
+
+Abstract
+Box Arithmetic is a finite combinatorial framework built from boxes, or finite multisets. Starting
+from a single object, the empty box, natural numbers, polynumbers, and multinumbers arise by
+successive levels of nesting, together with a corresponding hierarchy of arithmetic operations, and
+with no need for variables. After addition and multiplication, the third operation in this hierarchy,
+the caret, gives a new algebraic structure on polynumbers. Its main number-theoretic consequence
+is the Fundamental Identity of Arithmetic: for each natural number n, a finite caret product of
+truncated prime-power boxes equals exactly the box b1; 2;
+; nc : This finite identity subsumes
+the usual Fundamental Theorem of Arithmetic and provides a combinatorial model for truncated
+Dirichlet algebra. In particular, familiar relations involving Euler products, Möbius inversion,
+divisor-count and divisor-sum functions arise here as exact finite identities, requiring neither infinite
+series nor analytic convergence.
+
+1
+
+Introduction
+
+Four millennia ago, the Babylonians already knew how to work with what we would now call polynomial equations, solving quadratics by a kind of geometric completion. Since then, mathematicians
+have steadily built an enormous edi…ce on top of this ancient foundation — and in doing so have quietly accumulated a great deal of logical debt. Even something as elementary as a polynomial in one
+variable, in the modern ZFC framework, requires an infinite set of ordered pairs of natural numbers,
+where each ordered pair [a; b] is itself de…ned as the set ffag ; fa; bgg : But a polynomial like 3 +x+ 2x3
+is a finite expression. Its de…nition should not require in…nity.
+
+We would like to propose a leaner foundation for pure mathematics, called Box Arithmetic, in which
+every object is genuinely finite, directly constructible, and completely encodable on a computer. The
+primary data structure is not a set but rather a multiset — which we call a box — where repetition is
+allowed and order is unimportant. Starting from a single object, the empty box (which we call zero),
+every mathematical object in our framework is built by finite nesting of boxes inside boxes. Natural
+numbers emerge at the …rst level after zero, polynomials in one variable at the next, polynomials in
+arbitrarily many variables at the level after that. At each stage a new arithmetic operation appears,
+and it is the third of these — which we call the caret operation — that leads somewhere surprising.
+Here is our destination. To a modern audience comfortable with infinite objects and infinite
+operations, we may write informally:
+1
+
+1; 2; 22 ;
+
+^ 1; 3; 32 ;
+
+^ 1; 5; 52 ;
+
+^ 1; 7; 72 ;
+
+^
+
+= b1; 2; 3; 4; 5; 6; 7;
+
+c:
+
+(FIA)
+
+On the left, we see one box of prime powers for each prime, all connected by the caret operation.
+On the right, we see the box of all strictly positive natural numbers. The equality of these two boxes,
+which are ultimately combinatorial objects, is the Fundamental Identity of Arithmetic, and the usual
+Fundamental Theorem of Arithmetic is an immediate consequence. With just a little more work, so
+is Euler’s product formula for the zeta function, and in fact innumerable further identities involving
+the Möbius function, divisor counts, divisor sums, the Liouville function, and many more.
+Now, the identity as written above is of course informal: both sides contain infinitely many elements, and the caret product on the left runs over infinitely many primes. This sits in apparent
+tension with our claim that everything in box arithmetic is finite. The resolution is that (FIA) is best
+understood not as a single identity between infinite objects, but as a *uniform family* of exact finite
+identities, one for each natural number n : for any n; the caret product of finitely many finite boxes of
+prime powers — one box per prime up to n; containing only those powers not exceeding n — equals
+exactly the finite box b1; 2;
+
+; nc :
+
+The infinite version is a suggestive shorthand for this family, in the same way that a power series
+
+is shorthand for its sequence of partial sums. Every individual identity in the family involves only
+finite boxes and finitely many operations, and is directly checkable by computation. We will make
+this precise in Section 7 via a truncation operator.
+The algebra of Dirichlet series from analytic number theory can then be developed in a purely
+algebraic and combinatorial fashion, with no complex numbers and no convergent series required. And
+P
+1
+even questions that classically demand real analysis — such as the limiting behavior of 0<n N (n)
+3
+
+as N grows — can be answered perfectly well by rational approximation intervals, improvable on
+demand by purely finite computation. This is, after all, what applied mathematics and modern
+computation actually deliver; and since real analysis ultimately grounds itself in equivalence classes
+of Cauchy sequences of rationals, an infinite construction built on an infinite construction, one may
+reasonably ask why we should not simply work with the finite rational approximations directly, and
+be honest about what we are computing.
+In Box Arithmetic, the primary data structure, the box, is simply a finite multiset. This is a
+
+more natural starting point than a set: multisets can always be added, by combining their elements,
+independent of the nature of those elements. This operation — combining boxes — underlies almost
+all linear structure in mathematics. It is built into the foundation, not added later as an afterthought.
+We develop the basic arithmetic of boxes in Section 2, establish natural numbers and polynumbers
+(our name for polynomials without variables) in Sections 3 and 4, extend to multinumbers (polynomials
+in arbitrarily many variables) in Section 5, and introduce the caret operation in Section 6. Section
+7 sets up the summation operator needed for the number-theoretic applications, and Section 8 states
+and applies the Fundamental Identity of Arithmetic, culminating in a rigorous rational interval for a
+classical Dirichlet sum computed entirely by finite box arithmetic.
+
+2
+
+2
+
+Boxes and their addition and multiplication
+
+The empty box is an expression of the form b
+
+c consisting of a left lower square bracket, followed
+
+by a space, followed by a right lower square bracket. We call this empty box zero, and denote it with
+
+the number 0. Thus 0
+
+b
+
+c. We declare that the empty box 0 is a box.
+
+General boxes are de…ned recursively by starting with the empty box and then nesting boxes inside
+boxes, always with only a finite number of boxes involved. Crucially repetitions are allowed, so this is
+going beyond set theory.
+The o¢ cial de…nition is that if A; B;
+expression M = bA; B;
+
+; K are boxes, not necessarily distinct, then so is the
+
+; Kc ; with the order of the boxes unimportant. The boxes A; B;
+
+; K are
+
+called the elements of the box M: If the box X is an element of the box Y; then we write X 2 Y:
+Boxes are equal if they contain exactly the same elements, possibly rearranged.
+
+Example 1 Since 0 is a box, we have that b0c is a box: we call this one, and denote it by the number
+1: The box two is 2
+
+b0; 0c and the box three is 3
+
+b0; 0; 0c : Here is a more complicated box, showing
+
+that our naming of basic boxes allows di¤ erent representations of the same box.
+p
+
+b0; bb0c ; b0cc ; b0; 0; 0c ; b0; 0; 0cc = b0; b1; 1c ; b0; 0; 0c ; b0; 0; 0cc = b0; [1; 1] ; 3; 3c :
+
+The fundamental operation on boxes is addition. If A; B;
+B+
+
+; K are boxes, then the sum A +
+
++ K is the box consisting of all the elements of the boxes A; B;
+
+; K: So for example if
+
+M = ba; a; Kc and N = ba; Nc and P = bK; c are boxes, with a; K; N and
+
+previously de…ned boxes,
+
+then M + N + P = ba; a; K; a; N; K; c = ba; a; a; K; K; N; c : Addition of boxes is the mathematical
+
+equivalent of dumping all the contents of several physical boxes into a single new physical box. The
+simplest example is just that 0 + 0 = 0: the sum of two empty boxes is an empty box.
+Note that addition is not intrinsically a binary operation, for example
+b0; 0c + bb0; 0c ; 0c + bb0; 0; 0c ; b0cc = b0; 0; b0; 0c ; 0; b0; 0; 0c ; b0cc = b0; 0; 0; 1; 2; 3c :
+Addition of boxes is commutative, meaning that A + B = B + A for any boxes A and B: It
+is associative, meaning that (A + B) + C = A + (B + C) for any boxes A; B and C: It supports
+cancellation, meaning that if A; B and C are boxes, and A + B = A + C; then B = C: The empty
+box 0 is the additive identity, so that 0 + A = A + 0 = A for any box A.
+We also note a more subtle zero sum property: for boxes A; B;
+then we must have A = B =
+
+; K; if A + B +
+
+= K = 0: Multiplication is the natural successor to the addition
+
+operation, and holds for all boxes. If A; B;
+
+; K are boxes, then the product A
+
+the box consisting of all possible sums of the elements of the boxes A; B;
+A
+
+B
+
+In case one or more of A; B;
+
++ K = 0;
+
+K
+
+ba + b +
+
++ k : a 2 A; b 2 B;
+
+B
+
+K is
+
+; K; that is
+
+; k 2 Kc :
+
+; K equals 0; the product has no elements in it, so is 0:
+
+The meaning of this notation is the same as in usual set theory, where the colon ":" is to be read as
+"such that" and what precedes the colon is an object which is going to be an element of the box, and
+
+3
+
+what follows it is a condition or conditions on that object. However here multiplicities are maintained,
+so that we must include all possibilities, without removing duplicates.
+So for example if a; K; N and
+
+are boxes, and M = ba; a; Kc and N = ba; Nc and P = bK; c,
+
+then
+M N P =
+
+$
+
+a + a + K; a + a + ; a + N + K; a + N + ; a + a + K; a + a + ; a + N + K; a + N + ;
+K + a + K; K + a + ; K + N + K; K + N +
+
+It follows that multiplication is not intrinsically a binary operation. Multiplication of boxes is however
+commutative, so that A B = B A for any boxes A and B: It is also associative, so that (A
+A
+
+(B
+
+B) C =
+
+C) for any boxes A; B and C: Multiplication distributes over addition, meaning that for
+
+any boxes A; B and C we have A
+
+(B + C) = (A
+
+B) + (A
+
+C) = A
+
+B+A
+
+C; where we adopt
+
+the usual convention that multiplication takes precedence over addition in the absence of brackets.
+The box 1
+
+b0c = b0c is the multiplicative identity, so that 1
+
+A=A
+
+1 = A for any box A.
+
+Multiplication supports non-zero cancellation, meaning that if A; B and C are boxes, with
+A 6= 0; and A
+boxes A; B;
+
+B=A
+
+C; then B = C: There is also an important zero product property: for
+
+; K; if A
+
+B
+
+K = 0; then we must have at least one of A; B;
+
+; K equal to 0:
+
+There is a natural hierarchy of operations on boxes, starting with addition, which we may write as
++
+
+(0) ; and then multiplication
+
+(n) is the operation
+
+A
+
+(n+1)
+
+B
+
+(1) ; and where at each stage the successor of the operation
+
+(n+1) de…ned by
+(n+1)
+
+(n+1)
+
+K
+
+j
+
+a
+
+(n)
+
+This is the box formed by all possible products a
+from the boxes A; B;
+it by ^
+
+(n)
+
+b
+
+(n) b
+
+(n)
+
+(n)
+
+k : a 2 A; b 2 B;
+(n) k where a; b;
+
+k
+;k 2 K :
+; k are respectively
+
+; K: We call the successor of multiplication the caret operation, and denote
+
+(2) : We will see that it plays a crucial role in understanding number theory from a
+
+foundational point of view. Higher operations are not so easy to appreciate quickly, and they lead to
+a largely unfamiliar world of arithmetic.
+For us a type T is a well-de…ned condition on a previously de…ned mathematical object that can
+be implemented in a computationally explicit way. We will adopt the convention that "a mathematical
+object O is of type T" will be expressed as O / T: We will not regard a type as a mathematical object;
+it is rather a property of a mathematical object, or a condition satis…ed by one.
+
+3
+
+Natural number arithmetic
+
+Now we establish the starting point of arithmetic, after having introduced our fundamental notion of
+an empty box, or zero. A natural number is a box of zeros. The type of a natural number will be
+denoted by Nat: Thus 0 = b
+write 0 / Nat: So is 1
+
+c is a natural number (it is the empty box of zeros), and so we may
+
+b0c and 2
+
+b0; 0c and 3
+
+b0; 0; 0c and so on, using the usual Hindu Arabic
+
+notations, so that for example 14 = b0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0c. The natural numbers are then
+linearly ordered, so up to a natural number n we have
+0<1<2<
+4
+
+< n:
+
+%
+
+:
+
+This ordering allows us naturally to de…ne the minimum min (m; n) of natural numbers m and
+n; along with the maximum max (m; n) : So min (7; 3) = 3 while max (7; 3) = 7:
+The addition of natural numbers then becomes the usual familiar operation, for example 3 + 4 =
+b0; 0; 0c + b0; 0; 0; 0c = b0; 0; 0; 0; 0; 0; 0c = 7: The linear ordering of natural numbers up to a natural
+number n can be described as repeated addition of 1; starting with 0 until n is reached.
+
+When we restrict to boxes of zeros, we recover the usual multiplication of natural numbers. So
+to multiply 3 and 4; we form the box of all possible sums between elements of the boxes: 3
+b0; 0; 0c
+
+4=
+
+b0; 0; 0; 0c = b0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0c = 12:
+
+Here is an example of taking the product of several natural numbers, by taking all possible sums
+
+containing one element from each number:
+2
+
+2
+
+1 = b0; 0c
+
+b0; 0c
+
+b0c = b0 + 0 + 0; 0 + 0 + 0; 0 + 0 + 0; 0 + 0 + 0c = b0; 0; 0; 0c = 4:
+
+The arithmetic that we obtain of natural numbers, involving addition and multiplication, is just
+like the usual one in terms of computations, except that the foundation is very di¤erent. Addition and
+multiplication are de…ned for all boxes, so natural numbers allow us to introduce multiples: for a box
+A; we de…ne 2A
+
+A+A = 2 A and 3A
+
+A+A+A = 3 A; and in general kA = A+A+
+
+with k terms. For consistency we de…ne 0A
+
+0
+
++A = k A
+
+A = 0 for any box A: We then have the general
+
+multiple laws that for any natural numbers m and n and any box A
+mA + nA = (m + n) A
+
+and
+
+n (mA) = (m
+
+Similarly we introduce powers: for a box A; we de…ne A2
+general Ak = A
+
+A
+
+A with k terms.
+
+A
+
+n) A:
+
+A and A3
+
+A
+
+A
+
+A; and in
+
+For consistency we de…ne A0 = 1 for any box A: This
+
+means in particular that we also agree that 00 = 1: We then have the general power laws that for
+any natural numbers k and m and any box A
+Ak
+
+Am = Ak+m
+
+and
+
+Ak
+
+m
+
+= Ak m :
+
+Furthermore if A and B are boxes, and n is a natural number, then (A
+generalizes in the obvious way to more boxes, so that if A; B;
+(A
+
+B
+
+K)n = An
+
+Bn
+
+B)n = An
+
+B n ; and this
+
+; K are boxes, then
+K n:
+
+If A and B are boxes, then the multiplicity mB (A) of B in A is the number of times B occurs
+as an element of A:
+Example 2 If A
+
+b7; 7; b3; 5c ; bb4c ; 2cc and B
+
+7 then mB (A) = 2: Similarly if C
+
+mC (A) = 1: While if D = b8c then mD (A) = 0:
+
+b3; 5c then
+
+By recording multiplicities we may express a box more simply; we do that with a left subscript denoting the multiplicity. We can rewrite the box A in the example above as A = b2 7;1 b3; 5c ;1 bb4c ; 2cc ;
+
+or simply A = b2 7; b3; 5c ; bb4c ; 2cc : The statement that 7 has multiplicity 2 in A can be rephrased
+as: the box 7 occurs two times in the box A:
+
+5
+
+If a box C has each of its elements occurring with multiplicity less than or equal to the multiplicity
+of that element in a box D; then we write C
+
+D and say that C is a subbox of D: The empty box
+
+0 is a subbox of any box C; and also C itself is a subbox of itself.
+Example 3 The box b0; 5; 5; 17c = b0;2 5; 17c is a subbox of b0; 0; 3; 5; 5; 17c = b2 0; 3;2 5; 17c ; so that
+b0; 5; 5; 17c
+
+b0; 0; 3; 5; 5; 17c :
+
+If a box C occurs as an element of A n times, and occurs as an element of B m times, then it
+will occur in A + B a total of m + n times. So we can then perform addition of general boxes in
+terms of addition of (natural number) multiplicities. So for example if X
+Y
+
+b3 0;7 1;5 2;1 bbb4ccc ;9 b8cc then X + Y = b11 0;7 1;8 2;3 bbb4ccc ;9 b8cc :
+
+b8 0;3 2;2 bbb4cccc and
+
+We may also multiply boxes by working with multiplicities, such as
+bn A;m Bc
+
+bp C;q Dc = bn p (A + C) ;n q (A + D) ;m p (B + C) ;m q (B + D)c :
+
+Here both addition and multiplication of natural numbers are generally required.
+Once we have natural numbers, we may de…ne the size s (M ) of a box M to be the number
+of elements in M: Another way of saying this is that s (M ) is the box obtained by replacing each
+element of M with 0: Then clearly s (A + B) = s (A) + s (B) and s (A
+s A
+
+4
+
+(n) B
+
+= s (A)
+
+s (B) for any operation
+
+B) = s (A)
+
+s (B) and indeed
+
+(n) in the hierarchy of arithmetical operations.
+
+Polynumber algebra
+
+We now introduce polynomial arithmetic, but our terminology is slightly di¤erent from usual, and the
+fundamental "variable"
+
+has a very speci…c meaning.
+
+A polynumber is a box of natural numbers. The type of a polynumber will be denoted by Poly:
+The degree deg (p) of a polynumber p is the largest natural number that appears as an element of
+it. So p
+
+b0; 2c ; q
+
+and deg (r) = 6:
+
+b3; 5; 3c and r
+
+b0; 0; 6; 0; 1; 3; 3c are polynumbers,with deg (p) = 2; deg(q) = 5
+
+Addition of polynumbers is just addition of boxes, so that for example with p and q as above,
+p + q = b0; 2; 3; 3; 5c. Multiplication of polynumbers is just multiplication of boxes, so that for
+example p
+
+q = b0; 2c
+
+b3; 5; 3c = b0 + 3; 0 + 5; 0 + 3; 2 + 3; 2 + 5; 2 + 3c = b3; 5; 3; 5; 7; 5c :
+
+We introduce the simplest polynumber which is not actually a natural number, called alpha:
+b1c : Then
+
+2
+
+= b2c ;
+
+3 = b3c and in general
+
+n = bnc ; and this allows any polynumber to
+
+be written in polynomial form as a sum of multiples of powers of ; so that for example p = b0; 2c =
+b0; 2c = 1 +
+
+3+
+
+2 and r = b3; 3; 5c = 2 3 +
+
++2 2+
+
+6:
+
+5 and s = b0; 0; 0; 1; 3; 3; 6c = b0; 0; 0c + b1c + b3; 3c + b6c =
+
+Then the addition and multiplication of polynumbers agrees with the usual operations on polynomials, so that p + q = 1 +
+b3; 3; 5; 5; 5; 7c = 2
+
+2
+
+3+3 5+
+
++ 2 3+
+
+5
+
+= 1+
+
+2 +2 3 +
+
+5 and p
+
+q = 1+
+
+2
+
+2 3+
+
+5
+
+=
+
+7:
+
+There is another convenient way to represent a polynumber p = m0 + m1 +
+
+6
+
++ mn n , by
+
+introducing the (linear) multiplicity array
+p = [m0 ; m1 ;
+
+; mn ]
+
+using square brackets, that records the multiplicities of the natural numbers 0; 1; 2;
+in p; in that order, up to a number n
+
+deg (p). By allowing also additional zeroes in this way, this
+
+multiplicity array is not unique, so for example we could write p = b0; 2c = 1 +
+[1; 0; 2; 0] and r = b3; 3; 5c = 2
+
+3 +
+
+; n appearing
+2
+
+= [1; 0; 2] =
+
+5 = [0; 0; 0; 2; 0; 1] and s = b0; 0; 0; 1; 3; 3; 6c = 3 +
+
++2 2+
+
+6 = [3; 1; 0; 2; 0; 0; 1] = [3; 1; 0; 2; 0; 0; 1; 0; 0] : Then addition of polynumbers corresponds to pointwise
+
+addition of multiplicity arrays, so that p + r = [1; 0; 2] + [0; 0; 0; 2; 0; 1] = [1; 0; 2; 2; 0; 1] :
+Multiplication of polynumbers then corresponds to the convolution, or Cauchy product of
+multiplicity arrays. If p = [p0 ; p1 ;
+
+; pn ] and q = [q0 ; q1 ;
+
+; qn ] are polynumbers with possibly
+
+additional zeroes added, so that both arrays go up to a natural number n; then
+p
+
+q = [p0 q0 ; p0 q1 + p1 q0 ; p0 q2 + p1 q1 + p2 q0 ;
+
+ending in the 2n-th position, where the k-th entry for 0
+
+k
+
+; pn qn ]
+
+2n is
+
+p0 qk + p1 qk 1 + : : : + pk q0 :
+Thus p
+
+r = [1; 0; 2]
+
+[0; 0; 0; 2; 0; 1] = [0; 0; 0; 2; 0; 3; 0; 1] : There is a convenient device to make
+
+the multiplication in this form easier, involving taking two strips of paper, with the multiplicity array
+of say p on one, and the reversed multiplicity array of q on the other, and then sliding one past the
+other sequentially, taking the sum of all products formed by adjacent entries.
+Linear combinations of polynumbers are polynumbers. Power linear combinations of polynumbers
+are also polynumbers. With these conventions the algebra of polynumbers becomes the same as the
+familiar algebra of polynomials. But the di¤erence now is that
+
+is not an abstract variable, but just
+
+a particularly simple polynumber.
+The evaluation of the polynumber p = p0 + p1 + p2 2 + : : : + pn n on the box A is the box
+p (A)
+
+p 0 + p 1 A + p 2 A2 + : : : + p n An :
+
+For polynumbers p and q, a natural number
+and ( p) (A) = p (A) and (p
+
+q) (A) = p (A)
+
+and a box A; we have (p + q) (A) = p (A) + q (A)
+q (A) : In particular if we evaluate a polynumber p
+
+on a natural number n; then the result p (n) is also a natural number. There is another important
+special case. If p = p0 0 + p1 1 + p2 2 + : : : + pn n is a polynumber and q is another polynumber,
+then the composition is the polynumber
+p q
+
+p (q) = p0 + p1 q + p2 q 2 + : : : + pn q n :
+
+Note that because we do not have integers at this point, a factor theorem for polynumbers is not
+available, although we could still discuss divisibility and factors. However the Binomial theorem is
+directly accessible in terms of writing expansions for (1 + )n for a natural number n:
+
+7
+
+4.1
+
+Truncations of polynumbers
+
+If k is a natural number and p is a polynumber, then de…ne the degree k truncation of p to be the
+polynumber Tk (p) obtained from p by removing all elements which are strictly greater than k: Thus
+if p = b0; 0; 2; 2; 2; 5; 6; 6c = 2 + 3 2 +
+
+5 + 2 6 then T (p) = b0; 0; 2; 2; 2c = 2 + 3 2 :
+3
+
+Then for polynumbers p and q we have Tk (p + q) = Tk (p) + Tk (q) and also
+Tk (p
+
+q) = Tk (Tk (p)
+
+Tk (q)) :
+
+This last identity is particularly important and re‡ects the property that the product of two polynumbers up to degree k depends only on the truncations of those polynumbers to degree k : higher degree
+coe¢ cients have no e¤ect.
+Example 4 Thus if p is as above and q = b0; 3; 3; 4c = 1 + 2 3 +
+p
+
+q = 2+3 2+
+
+so that T3 (p
+
+5
+
++2 6
+
+1+2 3+
+
+4
+
+q) = 2 + 3 2 + 4 3 while T3 (p)
+
+and indeed T3 (T3 (p)
+
+4 then
+
+= 2 + 3 2 + 4 3 + 2 4 + 7 5 + 5 6 + 2 8 + 5 9 + 2 10
+T3 (q) = 2 + 3 2
+
+1 + 2 3 = 2+3 2+4 3+6 5
+
+T3 (q)) = 2 + 3 2 + 4 3 also.
+
+In fact this holds also for higher products: for any natural numbers n and k and polynumbers p
+and q one can show that
+Tk p
+
+(n)
+
+q = Tk Tk (p)
+
+(n)
+
+Tk (q) :
+
+For polynumbers p and q; and a natural number k; we introduce the notion of degree k equality
+by declaring that
+p =k q
+precisely when Tk (p) = Tk (q) :
+
+5
+
+Multinumbers
+
+Now we go down one more level. A multinumber is a box of polynumbers. The type of a multinumber
+will be denoted by Multi:
+Since natural numbers are polynumbers, any polynumber is also a multinumber. The multinumber
+A = b0; 4; 4; b3; 5c ; b0; 7; 7; 6cc has the 5 elements 0; 4; 4; b3; 5c and b0; 7; 7; 6c ; each of which is a
+polynumber, speci…cally b3; 5c =
+A = 0; 4; 4;
+
+3+
+
+5; 1 +
+
+6+2 7
+
+3 +
+
+:
+
+5 and b0; 7; 7; 6c = 1 +
+
+6 + 2 7 : Thus we could rewrite
+
+Multinumbers are closed under addition. They are also closed under multiplication, because
+polynumbers are closed under addition. So for example if B = [2; 1 + ] and C = 5;
+then B + C = 2; 1 + ; 5;
+
+2; 1 +
+
+while B
+
+C = 7; 3 +
+
+2; 3 +
+
+;6 + ;1 +
+
++
+
+2; 1 +
+
+2; 2 + 2
+
+:
+
+The simplest new multinumbers are the base multinumbers de…ned for a natural number n
+by
+n
+
+bbncc = b n c :
+
+8
+
+1
+
+For consistency we may rewrite
+
+as
+
+= bb0cc = b1c : Then multinumbers give us polynomial
+
+0
+
+algebra based on addition and multiplication of the base multinumbers
+
+0;
+
+1;
+
+2;
+
+n for any natural
+
+bb7cc
+
+bb7cc
+
+bb6cc
+
+3 5
+
+while the
+
+number n: Let us see why.
+Example 5 The multinumber A from a previous example may be written as
+A = b0; 4; 4; b3; 5c ; b0; 7; 7; 6cc = b0c + b4c + b4c + bb3cc
+=1+2
+
+4
+0+
+
+3 5+
+
+bb5cc + bb0cc
+
+2
+0 6 7:
+
+3 +
+
+We see that the polynumber b3; 5c =
+
+corresponds to the monomial term
+
+6 + 2 7 corresponds to the monomial term
+
+polynumber b0; 7; 7; 6c = 1 +
+For the polynumber p
+
+5
+
+2
+0 6 7:
+
+k m for natural numbers k and m; the corresponding multinumber is
+
+bpc = bbmc + bmc +
+
++ bmcc = bbmcc
+
+bbmcc
+
+k
+m
+
+bbmcc =
+
+with k copies in both the sum and the product. It follows that if q is the polynumber q
+q2
+
++qn n for some natural number n and natural numbers q0 ; q1 ;
+
+2+
+
+q0 + q1 +
+
+; qn ; then the multinumber
+
+Q = bqc can be written as
++ qn n = bq0 c
+
+Q = q0 + q1 + q2 2 +
+=
+
+q0
+0
+
+q1
+1
+
+q0
+0
+
+qn
+n =
+
+We say that the degree of Q is q0 + q1 +
+
+q1
+1
+
+qn
+n :
+
+bq1 c
+
+bqn n c
+
++ qn ; and if qn 6= 0 then the extent of Q is n:
+
+A general multinumber M will be a sum of such terms, one for each of the polynumber elements
+of M: We may call this the multinomial form of M: The operations of addition and multiplication of multinumbers then correspond to the familiar operations on multinomials in the variables
+0;
+
+1;
+
+2;
+
+;
+
+n for some natural number n:
+
+Example 6 If B = b0; b3c ; b2; 4cc = 1 +
+
+3+
+
+2 4 and C = bb1; 1c ; b2; 4cc =
+
+2+
+1
+
+B + C = b0; b3c ; b2; 4cc + bb1; 1c ; b2; 4cc = b0; b3c ; b1; 1c ; b2; 4c ; b2; 4cc = 1 +
+which agrees with (1 +
+B
+
+3+
+
+2 4) +
+
+C = b0; b3c ; b2; 4cc
+
+2+
+1
+
+2+
+1
+
+=1+
+
+2 4
+
+2 4 then
+
+2
+1+
+
+3+2 2 4
+
+3 + 2 2 4 : Similarly
+
+bb1; 1c ; b2; 4cc
+
+= b0 + b1; 1c ; 0 + b2; 4c ; b3c + b1; 1c ; b3c + b2; 4c ; b2; 4c + b1; 1c ; b2; 4c + b2; 4cc
+= bb1; 1c ; b2; 4c ; b3; 1; 1c ; b3; 2; 4c ; b2; 4; 1; 1c ; b2; 4; 2; 4cc
+=
+
+2
+1+
+
+which agrees with (1 +
+
+2 4+
+3+
+
+2
+1 3+
+
+2 4)
+
+2 3 4+
+2+
+1
+
+2 4
+
+2
+1 2 4+
+2+
+1
+
+=
+
+2 2
+2 4
+
+2 2+
+2 4
+
+2 4+
+
+2
+1 3+
+
+2
+1 2 4+
+
+2 3 4:
+
+In general the degree of the multinumber M will be the maximum degree of its terms, and the
+extent of M will be the maximum extent of its terms.
+9
+
+Example 7 For the multinumber A = b0;2 4; b3; 5c ; b0; 7; 7; 6cc = 1 + 2 40 +
+of A is the degree of the term
+
+3 5+
+
+2
+0 6 7 ; the degree
+
+2
+0 6 7 ; which is 4; while the extent of A is the extent of that same
+
+term, which is 7:
+
+6
+
+The caret operation
+
+The successor operation to multiplication
+by ^ =
+
+(2) ; for boxes A; B;
+
+A^B^
+
+^K
+
+A
+
+=
+
+(1) is what we call the caret operation, and denote
+
+; K we de…ne
+(2)
+
+B
+
+(2)
+
+(2)
+
+K
+
+ba
+
+b
+
+k : a 2 A; b 2 B;
+
+; k 2 Kc
+
+the box of all possible products between elements of A and elements of B: This has some similarities
+with the usual exponentiation, but it is definitely di¤erent. In particular it is commutative and
+associative, and also distributes over addition for the same reason that multiplication does so that for
+example for any boxes A; B and C we have A ^ (B + C) = (A ^ B) + (A ^ C) = A ^ B + A ^ C:
+
+We can check that when we restrict to natural numbers, the caret operation reduces to just
+
+multiplication, so that for natural numbers m and n we have m ^ n = m
+boxes A and B we have s (A ^ B) = s (A)
+
+s (B) = s (A) ^ s (B) :
+
+If we consider the caret of monomials, we have bmc ^ bnc = bm
+
+m^
+
+n =
+
+n: It follows that for any
+
+nc which we can restate as
+
+m n so this operation is distinct from multiplication on polynumbers.
+
+Example 8 Here is a caret of more general polynumbers:
+b1; 3; 2c ^ b2; 4c = b1
+which in polynomial form is
+
++
+
+2; 1
+2+
+
+3
+
+4; 3
+
+2; 3
+
+^
+
+2+
+
+4
+
+4; 2
+
+2; 2
+
+4c = b2; 4; 6; 12; 4; 8c
+
+=
+
+2+2 4+
+
+6+
+
+8+
+
+12
+
+:
+
+While the caret of polynumbers is seemingly curious, we shall see shortly that it plays a key role
+in fundamental number theory.
+When we consider the caret operation acting on multinumbers, we discover something again a bit
+surprising: for natural numbers m and n we have
+m^
+
+n = bbmcc ^ bbncc = bbmc
+
+bncc = bbm + ncc =
+
+m+n :
+
+Thus this arithmetical operation actually operates on the indices. This is reminiscent of the Umbral
+Calculus of G. C. Rota. Note that
+
+0 =
+
+becomes the caret identity, in the sense that for any box A
+
+we have
+^ A = b1c ^ A = A:
+Example 9 Here is a caret of more general multinumbers involving B = b0; b3c ; b2; 4cc = 1 +
+
+10
+
+3+
+
+2+
+1
+
+2 4 and C = bb1; 1c ; b2; 4cc =
+
+2 4:
+
+B ^ C = b0; b3c ; b2; 4cc ^ bb1; 1c ; b2; 4cc
+= b0
+
+b1; 1c ; 0
+
+b2; 4c ; b3c
+
+b1; 1c ; b3c
+
+b2; 4c ; b2; 4c
+
+b1; 1c ; b2; 4c
+
+b2; 4cc
+
+= b0; 0; b4; 4c ; b5; 7c ; b3; 3; 5; 5c ; b4; 6; 6; 8cc
+=2+
+
+6.1
+
+2
+4+
+
+2 2
+3 5+
+
+5 7+
+
+2
+4 6 8:
+
+Sums of boxes and the caret product identity
+
+There is another natural operator on boxes, which is the summation operator
+if M = bA; B;
+
+; Kc is a box, then the summation of M; denoted
+(M )
+
+Clearly if m is a natural number, then
+;pk kc then
+
+bp0 0;p1 1;
+
+(M ) is
+
++ K:
+
+(m) = 0: If p is a polynumber, say p = p0 + p1 +
+
++ pk
+
+k =
+
+(p) is a natural number given by
+(p) = p0
+
+where D (p)
+
+A+B+
+
+; de…ned as follows:
+
+p1 +2p2 +
+
+0 + p1
+
+1 + p2
+
+2+
+
++ pk
+
+k = D (p) (1)
+
+k 1 is the derivative of p: One can check that then for polynumbers
+
++kpk
+
+p and q; we have
+(p
+
+q) = s (q)
+
+(p) + s (p)
+
+Example 10 If p = b3; 3; 4c and q = b1; 2c we have p
+b4; 5; 4; 5; 5; 6c so that
+
+(p
+
+q) = 29 while s (q)
+
+(q) :
+
+q = b3 + 1; 3 + 2; 3 + 1; 3 + 2; 4 + 1; 4 + 2c =
+
+(p) + s (p)
+
+(q) = 2
+
+10 + 3
+
+3 = 29:
+
+The situation is somewhat cleaner for multinumbers and the caret operation. If r is a multinumber,
+say r = br0 ; r1 ;
+
+; rl c for polynumbers r0 ; r1 ;
+
+; rl then
+
+(r) = r0 + r1 +
+
++ rl is a polynumber.
+
+One can check that for multinumbers r and s we have
+(r ^ s) =
+and more generally for multinumbers r; s;
+(r ^ s ^
+
+(r)
+
+(s)
+
+; w we have the Caret product identity:
+
+^ w) =
+
+(r)
+
+(s)
+
+(w) :
+
+Example 11 Here is a caret of more general multinumbers:
+b1; 3; 2c ^ b2; 4c = b1
+which in polynomial form is
+
++
+
+2; 1
+2+
+
+1+3+2=6
+while
+36:
+
+(b2; 4c) = 2+4 = 6: Now
+
+4; 3
+
+3 ^
+
+2+
+
+2; 3
+4
+
+4; 2
+=
+
+(b1; 3; 2c ^ b2; 4c) =
+
+11
+
+2; 2
+
+4c = b2; 4; 6; 12; 4; 8c
+
+2+2 4+
+
+6+
+
+8+
+
+12
+
+: Then
+
+(b1; 3; 2c) =
+
+(b2; 4; 6; 12; 4; 8c) = 2+4+6+12+4+8 =
+
+Example 12 This will play an important role in reformulating certain classical analytic number theory
+identities into statements in (finite) box arithmetic.
+For some of the further story, we will anticipate the extension of our basic number system from
+natural numbers to include also integers. An integer may be introduced as a formal di¤erence m
+of natural numbers m and n, with the equivalence m
+
+n
+
+m0
+
+n
+
+n0 precisely when m + n0 = m0 + n.
+
+Addition and multiplication of integers follow from those of natural numbers in the usual way, and every
+natural number k embeds as the integer k 0. With this extension, polynumbers may now carry integer
+coe¢ cients, and the caret product of two polynumbers with integer coe¢ cients is again a polynumber
+with integer coe¢ cients. When we get to applications we will also use rational numbers, obtained in a
+similar formal fashion from integers by the usual formal quotients subject to an equivalence relation.
+
+7
+
+Caret forms of Dirichlet series from number theory
+
+Let us give an application of how the box arithmetic developed so far allows us to revaluate some
+fundamentals of number theory, especially leaning on the caret operation to formulate a Fundamental
+Identity of Arithmetic involving prime factorizations and a corresponding algebra of Dirichlet series,
+now removed from the analytic context and requiring only finite computable arithmetic.
+To set up Dirichlet algebra in box arithmetic, we …rst de…ne the subtype of Poly which we call
+*-Poly: a polynumber p is a *-polynumber (read "star polynumber") precisely when it has no 0
+elements. Then *-polynumbers form an associative commutative algebra under the operations of
+addition + and caret ^; with identity b1c : The *-polynumbers up to degree n for a natural number n
+form a linear space *-Polyn with a basis the set fb1c ; b2c ;
+
+introduced the notation
+
+=
+
+1;
+
+2;
+
+;
+
+; bncg : In the polynumber context, we
+
+n for these basis elements.
+
+This terminology is well suited
+
+for the usual algebra structure on polynumbers, but not for the caret algebra *-Poly on *-polynumbers.
+Instead we introduce the Dirichlet form for these boxes:
+1s
+
+b1c ; 2s
+
+b2c ;
+
+; ns
+
+bnc
+
+where now s is just part of the expression and does not signify (at this stage!) an exponentiation.
+Classically the reciprocal 1=ns is used to ensure convergence of the series, but in our finite algebraic
+setting no such requirement exists, so ns is the natural form. Then the rule for the caret product
+bmc ^ bnc = bm
+
+nc becomes
+ms ^ ns = (m
+
+n)s :
+
+Happily this accords with our usual conventions for exponents, and so is easy to remember. In the
+usual formulation the reciprocal is used instead, so n1s instead of ns ; in order to facilitate convergence
+of certain infinite sums that appear, but we have no need of this requirement.
+So to summarize: for polynumbers the basis element bnc is given the form
+
+n for an arbitrary
+
+choice of the (Greek) letter ; while for *-polynumbers the same basis element bnc is given the form
+ns for an arbitrary choice of the letter s: The consequence is that in both cases the resulting algebra
+
+multiplication which is
+algebra.
+
+for polynumbers and ^ for *-polynumbers aligns smoothly with our familiar
+
+12
+
+We are now in a position to introduce many of the fundamental sequences in number theory,
+all expressed in the language of *-polynumbers and with multiplication the Dirichlet product which
+turns out to be exactly the caret operation. We introduce them with their usual names but with our
+somewhat novel notation.
+The simplest case is the delta
+
+1s = b1c : This is the multiplicative identity
+
+polynumber is
+
+in the caret algebra *-Poly. Many other examples come in series indexed by a natural number n
+
+1;
+
+and are derived from multiplicative functions from natural numbers to natural numbers. Arguably
+the most important is the zeta
+
+polynumber
+X
+
+n
+
+k s = 1s + 2s +
+
++ ns = b1; 2;
+
+; nc :
+
+ks = 1
+
+2s + 3
+
+3s +
+
++n
+
+ns :
+
+5s + 2
+
+6s + 6
+
+7s +
+
+1 k n
+
+The identity series is
+X
+
+Nn
+
+k
+
+1s + 2
+
+1 k n
+
+The Euler totient series is
+X
+
+'n
+
+' (k)
+
+k s = 1s + 2s + 2
+
+3s + 2
+
+4s + 4
+
++ ' (n) ns
+
+1 k n
+
+where ' (k) is the number of natural numbers less than k relatively prime to it. The divisor count
+series is
+dn
+
+X
+
+d (k)
+
+k s = 1s + 2
+
+2s + 2
+
+3s + 3
+
+4s + 2
+
+5s + 4
+
+6s + 2
+
+7s +
+
++ d (n) ns
+
+6s + 8
+
+7s +
+
++ (n) ns
+
+1 k n
+
+where d (k) is the number of divisors of k. The divisor sum series is
+n
+
+X
+
+(k)
+
+k s = 1s + 3
+
+2s + 4
+
+3s + 7
+
+4s + 6
+
+5s + 12
+
+1 k n
+
+where
+
+(k) is the sum of the divisors of k. The square zeta series is
+Sn
+
+X
+
+S (k)
+
+k s = 1s + 4s + 9s +
+
+n2
+
+s
+
+1 k n
+
+where S (k) is 1 when k is a square and is 0 otherwise. And of course there are many others, for multiplicative functions can be multiplied and raised to powers to generally also create more multiplicative
+functions. In particular, once we have augmented our number system to also include integers, then
+there are additional interesting series. The Mobius
+n
+
+X
+
+(k)
+
+k s = 1s
+
+2s
+
+3s
+
+1 k n
+
+13
+
+polynumber is
+5s + 6s
+
+7s
+
++ (n) ns
+
+(n) = ( 1)k if n has k distinct prime factors, and 0 otherwise. The Liouville series is
+
+where
+
+X
+
+n
+
+(k)
+
+k s = 1s
+
+2s
+
+3s + 4 s
+
+5s + 6s
+
+7s
+
+(n) ns
+
+1 k n
+
+(n) = ( 1) (n) where
+
+where
+
+(n) is the number of prime factors of n including multiplicity.
+
+Now there are many often remarkable algebraic relations between these various series, which are
+e¢ ciently written using the caret operation, suitably truncated. Here are some: for any natural
+number n;
+n^
+
+n =n dn
+
+n ^ Nn =n
+
+n
+
+'n ^
+
+n =n Nn
+
+n^
+
+n =n
+
+n^
+
+n = Sn :
+
+The …rst says that (informally) the Dirichlet square of the zeta series is the divisor count series; the
+second is that the zeta series convolved with the identity series gives the divisor sum series, and so
+on. We illustrate each of these with n = 6; the …rst three are over the natural numbers and we
+express them using box form, while the remaining two require extension to integers and are expressed
+in Dirichlet form:
+6^
+
+= b1; 2; 3; 4; 5; 6c ^ b1; 2; 3; 4; 5; 6c =6 b1;2 2;2 3;3 4;2 5;4 6c =6 d6
+
+6
+
+6 ^ N6
+
+= b1; 2; 3; 4; 5; 6c ^6 b1;2 2;3 3;4 4;5 5;6 6c =6 b1;3 2;4 3;7 4;6 5;12 6c =6
+
+'6 ^
+
+6
+
+= b1; 2;2 3;2 4;4 5;2 6c ^ b1; 2; 3; 4; 5; 6c =6 b1;2 2;3 3;4 4;5 5;6 6c =6 N6
+
+6^
+
+6
+
+= (1s
+
+2s
+
+3s
+
+6^
+
+6
+
+= (1s
+
+2s
+
+3s + 4s
+
+6
+
+5s + 6s ) ^ (1s + 2s + 3s + 4s + 5s + 6s ) =6 1s =
+
+5s + 6s ) ^ (1s + 2s + 3s + 4s + 5s + 6s ) =6 1s + 4s + 5s = S6 :
+
+So now in fact we can given meaning to all these assertions with seemingly unbounded series,
+which are now to be interpreted as consistent families of finite *-polynumbers indexed by a natural
+number n: If the understanding is clear, we could introduce the notation f ^ g = h to mean that
+
+for any natural number n; we have fn ^ gn = hn : for this no analysis or notion of convergence is
+
+necessary. Indeed the ideal limiting object is just a short form for a measured family of completely
+explicit objects, indexed by a natural number n:
+
+8
+
+The Fundamental Identity of Arithmetic
+
+For any prime number p and any natural number 1
+that pm
+
+n let m (p; n) be the largest natural number such
+
+n: Then for a prime p and a natural number n; de…ne the prime power *-polynumber
+(p)n
+
+X
+
+0 k m(p;n)
+
+Then the degree of
+
+pk
+
+s
+
+j
+= 1; p; p2 ;
+
+k
+s
+; pm(p;n) = 1s + (p)s + p2 +
+
++ pm(p;n)
+
+(p)n is less than or equal to n:
+
+Example 13 If p = 5 and n = 130 then p (5)130 = b1; 5; 25; 125c = 1s + 5s + 25s + 125s :
+Here then is a precise version of the informal identity from the Introduction.
+14
+
+s
+
+:
+
+Theorem 14 (Fundamental Identity of Arithmetic (FIA)) Suppose that n is a natural number
+and that we have, in order, all of the prime numbers 2; 3; 5;
+(2)n ^ (3)n ^
+
+; p less than or equal to n: Then
+
+^ (p)n =n
+
+n:
+
+Explicitly this is the identity
+j
+1; 2; 22 ;
+
+k j
+; 2m(2;n) ^ 1; 3; 32 ;
+
+k
+; 3m(3;n) ^
+
+j
+^ 1; p; p2 ;
+
+a caret product over all the prime power *-polynumbers
+
+k
+; pm(p;n) =n b1; 2; 3;
+
+; nc
+
+(q)n where q runs from 2 to p:
+
+This is really just a combinatorial restatement of the usual Fundamental Theorem of Arithmetic
+that every natural number from 1 to n is uniquely the product of powers of the primes 2; 3;
+
+; p; but
+
+now it is in the form of an equality of boxes.
+Example 15 If n = 12 then the primes less than or equal to 12 are 2; 3; 5; 7; 11; and the identity is
+b1; 2; 4; 8c ^ b1; 3; 9c ^ b1; 5c ^ b1; 7c ^ b1; 11c =12 b1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12c :
+Note that the Fundamental Identity is maintained if we uniformly apply a multiplicative function
+to natural numbers.
+Example 16 By applying the squaring operator for example, we may now deduce the identity b1; 4; 16; 64c^
+b1; 9; 81c ^ b1; 25c ^ b1; 49c ^ b1; 121c =144 b1; 4; 9; 16; 25; 36; 49; 64; 81; 100; 121; 144c where the trunca-
+
+tion level has also been squared.
+
+Or we could apply a number theoretic function, such as the number of divisors d (n) or the sum
+of divisors
+
+(n) or even some power of these. If we work over the rational numbers, and apply the
+
+multiplicative function which takes a natural number n and raises it to some negative power, for
+example to get n13 ; then there is the possibility that we could apply the caret product identity to make
+some statement about limiting values of summations as our truncations get larger and larger.
+
+8.1
+
+Calculating a limiting summation interval
+
+To illustrate this just with an example, suppose we are interested in an approximate value for the sum
+S (N ) =
+
+X
+
+0<n N
+
+1
+(n)3
+
+for a large natural number N: Our aim is to use the Box Arithmetic framework to allow us to subtly shift from answering such questions with classical analysis involving real numbers and infinite
+operations, to purely finite algebraic computations, generally depending on some parameters.
+So to make this question more precise, we could ask instead for a rational number interval [t; u]
+such that for all su¢ ciently large natural numbers N; we have t
+
+S (N )
+
+u; and such could be called
+
+an eventual bounding interval for the sums S (N ) : Note that a priori such an eventual bounding
+interval need not exist, although of course a lower bound t is readily found since the terms are all
+
+15
+
+positive: just take t = S (M ) for any natural number M; or even t = 0: To make things speci…c, lets
+try to …nd t and u such that u
+
+t
+
+1=10:
+
+We shall restrict the FIA just to the primes 2; 3; 5 and 7; and only take powers up to 2: Then the
+1; 2; 22 ^ 1; 3; 32 ^ 1; 5; 52 ^ 1; 7; 72 is a box of 81 distinct natural numbers
+
+caret product M
+
+(just those which are either 1 or have prime factorizations involving only the primes 2; 3; 5 and 7 with
+exponents only up to 2): In fact this box is
+7
+6
+6 1; 2; 3; 4; 5; 6; 7; 9; 10; 12; 14; 15; 18; 20; 21; 25; 28; 30; 35; 36; 42; 45; 49; 50; 60; 63; 70; 75; 84; 7
+7
+6
+7
+6
+6 90; 98; 100; 105; 126; 140; 147; 150; 175; 180; 196; 210; 225; 245; 252; 294; 300; 315; 350; 420; 7
+7:
+6
+M =6
+7
+4 441; 450; 490; 525; 588; 630; 700; 735; 882; 900; 980; 1050; 1225; 1260; 1470; 1575; 1764; 2100; 5
+2205; 2450; 2940; 3150; 3675; 4410; 4900; 6300; 7350; 8820; 11025; 14700; 22050; 44100:
+For a prime p; if we apply the transformation
+k
+j
+1
+1
+;
+with sum f (p)
+box R (p) = 1; (p)
+3
+(p2 )3
+multiplicative nature of the transformation
+t
+
+f (2)
+
+f (3)
+
+f (5)
+
+f (7) =
+
+1
+to the box 1; p; p2 we get the
+(n)3
+1
+1
+(R (p)) = 1 + (1+p)
+: Then because of the
+3 +
+(1+p+p2 )3
+
+that sends n to
+
+; the Caret product identity applies and gives
+
+X
+281 703 168 422 010 537 266 399
+=
+264 837 830 174 132 729 020 416
+
+m2M
+
+1
+(m)3
+
+and this rational number t is just approximately 1: 06368: So t is clearly a lower bound for S (N )
+provided that N
+
+44100:
+
+An elementary upper bound for S (N ) may be obtained by observing that for any natural number
+P
+P
+1
+1
+1
+1
+n we have (n) 1+n so that (n)
+and so S (N ) = 1+ 2 n N (n)
+1+ 2 n N (n+1)
+3
+3
+3:
+(n+1)3
+R
+k+1
+1
+1
+Now since 1=x3 is decreasing, for any natural number k we have (k+1)
+dx and so
+3
+k
+x3
+S (N )
+
+X
+
+1
+1+
+(n + 1)3
+2 n N
+
+1+
+
+Z 1
+2
+
+9
+1
+dx =
+3
+x
+8
+
+where this last integral can be de…ned and computed purely within the rational number framework as
+it has a rational value. We conclude that for N
+S (N ) 2
+
+44100 we have
+
+281 703 168 422 010 537 266 399 9
+;
+' 1:0637
+264 837 830 174 132 729 020 416 8
+
+1:125
+
+of width approximately 0:061 which is indeed less than our desired goal of 1=10: If we use a computer
+to evaluate the sum for larger N; we get something close to S (N ) ' 1:0656; re‡ecting the fact that the
+
+81-element partial Euler product captures most of the sum. The upper bound 9=8 is elementary and
+explicit. A sharper upper bound can be obtained by computing finitely many additional
+
+values, but
+
+our point here is methodological: rigorous rational intervals replace real-number limits, with precision
+improvable on demand by purely finite computation.
+
+16
+
+

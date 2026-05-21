@@ -1,0 +1,6 @@
+━━━ Math.DiscreteCalculus ━━━
+  ✓ McBride Derivative handles boundaries passed 100 tests.
+  ✓ Wildberger Derivative calculates delta passed 100 tests.
+  ✓ Leibniz Lag sums integers correctly passed 100 tests.
+  ✓ 3 succeeded.
+SUCCESS

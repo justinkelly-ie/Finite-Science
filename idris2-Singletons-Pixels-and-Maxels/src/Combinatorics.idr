@@ -1,0 +1,64 @@
+module Combinatorics
+
+import Data.List
+import MSet1
+import Base
+
+public export
+transposePix : Pix -> Pix
+transposePix (MkPix a b) = MkPix b a
+
+public export
+transposeMaxel : Maxel -> Maxel
+transposeMaxel (MkMaxel pxs) = MkMaxel (map transposePix pxs)
+
+-- The support J is the set of all unique underlying boxes in the maxel
+public export
+support : Maxel -> List MSet1
+support (MkMaxel pxs) = nub (concatMap (\(MkPix a b) => [a, b]) pxs)
+
+-- Property S: is a Set (multiplicities are exactly 1)
+public export
+isSet : Maxel -> Bool
+isSet (MkMaxel pxs) = length (nub pxs) == length pxs
+
+-- Property Y: is Symmetric (M == M^T)
+public export
+isSymmetric : Maxel -> Bool
+isSymmetric m = m == transposeMaxel m
+
+-- Property N: is Anti-Symmetric (a->b and b->a implies a=b)
+public export
+isAntiSymmetric : Maxel -> Bool
+isAntiSymmetric (MkMaxel pxs) =
+  all (\(MkPix a b) => a == b || not (elem (MkPix b a) pxs)) pxs
+
+-- Helper for Transitive: checks if the support of A is completely within B
+isSupportedOn : Maxel -> Maxel -> Bool
+isSupportedOn (MkMaxel xs) (MkMaxel ys) = all (\p => elem p ys) xs
+
+-- Property T: is Transitive (M * M is supported on M)
+public export
+isTransitive : Maxel -> Bool
+isTransitive m = isSupportedOn (mulMaxel m m) m
+
+-- Property R: is Reflexive (a->a exists for all a in J)
+public export
+isReflexive : Maxel -> Bool
+isReflexive m@(MkMaxel pxs) =
+  let j = support m
+  in all (\a => elem (MkPix a a) pxs) j
+
+-- Irreflexive: no a->a exists for all a in J
+public export
+isIrreflexive : Maxel -> Bool
+isIrreflexive m@(MkMaxel pxs) =
+  let j = support m
+  in all (\a => not (elem (MkPix a a) pxs)) j
+
+-- Property O: is Total (for all a,b in J, either a->b or b->a exists)
+public export
+isTotal : Maxel -> Bool
+isTotal m@(MkMaxel pxs) =
+  let j = support m
+  in all (\a => all (\b => a == b || elem (MkPix a b) pxs || elem (MkPix b a) pxs) j) j

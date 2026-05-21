@@ -1,0 +1,4 @@
+package polynumber-properties-test
+depends = base, idris2-polynumber, hedgehog
+executable = test
+main = Main

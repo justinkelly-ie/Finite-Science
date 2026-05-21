@@ -1,0 +1,9 @@
+package idris2-Maxel
+version = 0.1.0
+authors = "Justin"
+
+depends = base, contrib, idris2-Multiset-Advanced
+
+sourcedir = "src"
+
+modules = Math.Maxel, Math.MaxelNL

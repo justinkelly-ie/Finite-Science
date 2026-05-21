@@ -1,0 +1,5 @@
+package dirichlet-totient
+
+depends = hedgehog, idris2-Multiset-Advanced
+main = Main
+executable = dirichlet-totient

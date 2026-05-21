@@ -1,0 +1,4 @@
+package idris2-polynumber-tests
+depends = base, idris2-polynumber, golden-runner-helper, hedgehog
+executable = runtests
+main = Tests

@@ -1,0 +1,15 @@
+[custom.all.idris2-Multiset-Advanced]
+type = "local"
+path = "."
+ipkg = "idris2-Multiset-Advanced.ipkg"
+test = "idris2-Multiset-Advanced-tests/idris2-Multiset-Advanced-test.ipkg"
+
+[custom.all.idris2-ref1]
+type = "local"
+path = "../Library/Src/idris2-ref1"
+ipkg = "ref1.ipkg"
+
+[custom.all.idris2-QuickCheck]
+type = "local"
+path = "../idris2-QuickCheck"
+ipkg = "idris2-QuickCheck.ipkg"

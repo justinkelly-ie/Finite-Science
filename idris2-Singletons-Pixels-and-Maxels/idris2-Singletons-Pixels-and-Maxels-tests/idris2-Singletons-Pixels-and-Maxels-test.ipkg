@@ -1,0 +1,6 @@
+package idris2-Singletons-Pixels-and-Maxels-tests
+
+depends = golden-runner-helper, idris2-Singletons-Pixels-and-Maxels
+
+main = Tests
+executable = runtests

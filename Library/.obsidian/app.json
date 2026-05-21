@@ -1,0 +1,11 @@
+{
+  "spellcheck": true,
+  "useMarkdownLinks": true,
+  "attachmentFolderPath": "Attachments",
+  "newFileLocation": "folder",
+  "newFileFolderPath": "Wiki",
+  "livePreview": true,
+  "showLineNumber": true,
+  "readableLineLength": false,
+  "pluginRestrictedMode": false
+}

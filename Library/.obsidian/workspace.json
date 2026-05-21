@@ -1,0 +1,226 @@
+{
+  "main": {
+    "id": "7db553a694e28957",
+    "type": "split",
+    "children": [
+      {
+        "id": "220f78e1352e84ac",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "830eb15816e25d68",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Knowledge_Base/DarkPlusMatter_Architecture.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "DarkPlusMatter_Architecture"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "49f797a7cc872f9b",
+    "type": "split",
+    "children": [
+      {
+        "id": "2bd93d9c0cbd0274",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bc806c4b4688f6ff",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "c414da986eb78afa",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "ea6c9acc7ca459d3",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200,
+    "collapsed": true
+  },
+  "right": {
+    "id": "6e4829f960ea7e02",
+    "type": "split",
+    "children": [
+      {
+        "id": "317e864fec33cdb6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d46a9f21c53746f1",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Raw/Physics/Berandes/Research_Summary.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Research_Summary"
+            }
+          },
+          {
+            "id": "a721692d336481d9",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Raw/Physics/Berandes/Research_Summary.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Research_Summary"
+            }
+          },
+          {
+            "id": "611f8820632d327e",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "54250cc9ba813090",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "f32b4403c08ac2fc",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Raw/Physics/Berandes/Research_Summary.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Research_Summary"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "830eb15816e25d68",
+  "lastOpenFiles": [
+    "Knowledge_Base/Index.md",
+    "Knowledge_Base/New_Model/Cosmic_Energy_Budget.md",
+    "Knowledge_Base/New_Model/PrimeGate_AdaptiveCycle_Correspondence.md",
+    "Knowledge_Base/New_Model/DenseAMSet_Lazy_Evaluation.md",
+    "Knowledge_Base/Weak_Force_As_Metrical_Settlement.md",
+    "Knowledge_Base/DarkPlusMatter_Architecture.md",
+    "Knowledge_Base/Physics_Driven_Synthesis_Plan.md",
+    "Knowledge_Base/Projects_Wiki_Source/Theory_and_Architecture.md",
+    "Knowledge_Base/Projects_Wiki_Source/concat.py",
+    "Knowledge_Base/Projects_Wiki_Source/sedJ2UlgU",
+    "Knowledge_Base/New_Model/Baryogenesis_and_AMSet.md",
+    "Knowledge_Base/Maxel_Algebra.md",
+    "Knowledge_Base/The_137_Grid.md",
+    "Knowledge_Base/Rational_Chromogeometry.md",
+    "Knowledge_Base/New_Model/Model_implementaiton_Notes.md",
+    "Knowledge_Base/New_Model/LUniverse_Epochs_Fractal_Scaling.md",
+    "Knowledge_Base/New_Model/Quarks.md",
+    "Knowledge_Base/New_Model/Molecular_Bonding.md",
+    "Knowledge_Base/New_Model/Weak_Force_and_Particle_Decay.md",
+    "Knowledge_Base/New_Model/Particles_exist_when_N_is_natural.md",
+    "Knowledge_Base/New_Model/prime_Gate_13.md",
+    "Knowledge_Base/New_Model/128_invisible_antimatter_states_27_visible_matter.md",
+    "Knowledge_Base/New_Model/computational_model.md",
+    "Knowledge_Base/New_Model/implications_for_quantum_physicsimplications_for_quantum_physics.md",
+    "Knowledge_Base/New_Model/index.md",
+    "Wiki/Terminology_Mapping.md",
+    "Wiki/Maths/Herner/ProPer.md",
+    "Raw/Maths/Herner/ProPer.pdf",
+    "Wiki/Projects/Idris2_Book/Protocol_Source_Code.md",
+    "Raw/Maths/Herner/BAUA.pdf",
+    "Src/idris2-dot-parse/test_output.txt",
+    "Src/idris2-dot-parse/build/exec/_tmpchez_app/libidris2_support.so",
+    "Src/idris2-dot-parse/build/ttc/2025081600/TestExamples.ttm",
+    "Src/idris2-dot-parse/build/ttc/2025081600/TestExamples.ttc",
+    "Src/idris2-dot-parse/build/exec/_tmpchez",
+    "Src/idris2-dot-parse/build/exec/_tmpchez_app/_tmpchez.ss"
+  ]
+}

@@ -1,0 +1,4 @@
+package test
+depends = idris2-Multiset-Advanced, hedgehog
+main = Main
+executable = test

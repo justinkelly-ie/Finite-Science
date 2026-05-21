@@ -1,0 +1,11 @@
+package idris2-Multiset-Basic-tests
+
+authors = "Justin"
+version = 0.1.0
+
+builddir = ".build"
+
+main = Tests
+executable = runtests
+
+depends = golden-runner-helper, idris2-Multiset-Basic

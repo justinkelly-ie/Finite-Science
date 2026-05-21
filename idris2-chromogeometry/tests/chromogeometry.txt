@@ -1,0 +1,1106 @@
+arXiv:0806.3617v1 [math.MG] 23 Jun 2008
+
+Chromogeometry
+N J Wildberger
+School of Mathematics and Statistics
+UNSW Sydney 2052 Australia
+May 31, 2018
+Abstract
+Chromogeometry brings together Euclidean geometry (called blue) and
+two relativistic geometries (called red and green), in a surprising three-fold
+symmetry. We show how the red and green ‘Euler lines’ and ‘nine-point
+circles’ of a triangle interact with the usual blue ones, and how the three
+orthocenters form an associated triangle with interesting collinearities.
+This is developed in the framework of rational trigonometry using quadrance and spread instead of distance and angle. The former are more
+suitable for relativistic geometries.
+
+Introduction
+Three-fold symmetry is at the heart of a lot of interesting mathematics and
+physics. This paper shows that it also plays an unexpected role in planar geometry, in that the familiar Euclidean geometry is only one of a trio of interlocking
+metrical geometries. We refer to Euclidean geometry here as blue geometry; the
+other two geometries, called red and green, are relativistic in nature and are
+associated with the names of Lorentz, Einstein and Minkowski.
+The three geometries support each other and interact in a rich way. This
+transcends Klein’s Erlangen program, since there are now three groups acting
+on a space. Remarkable algebraic identities lie at the heart of the explanations.
+The results described here are just the tip of an iceberg, leading to many
+rich generalizations of results of Euclidean geometry, with much waiting to be
+discovered and explored, see for example [4] for applications to conics and [3]
+for connections with one dimensional metrical geometry.
+The basic structure of all three geometries are the same—they are ruled by
+the laws of rational trigonometry as developed recently in [1], which hold over
+a general field not of characteristic two. Although over the rational numbers
+(or the ‘real numbers’) there are significant differences between the Euclidean
+(blue) version and the other two (red and green), it is the interaction of all three
+which yields the biggest surprises.
+To start the ball rolling, this paper first introduces the phenomenon in the
+context of the classical Euler line and nine-point circle of a triangle. Then we
+1
+
+recall the main laws of rational trigonometry, introduce the basic facts about the
+three geometries and state some explicit formulas, and then show how chromogeometry allows us to enlarge our understanding of the geometry of a triangle.
+In particular we associate to each triangle A1 A2 A3 in the Cartesian plane a
+second interesting triangle which we call the Ω-triangle of A1 A2 A3 .
+The results are verified by routine but sometimes lengthy computation, and
+they inevitably reduce to algebraic identities, some of which are quite lovely.
+The development takes place in the framework of universal geometry, so that
+we are interested primarily in what happens over arbitrary fields. The paper
+([2]) shows that universal geometry also extends to arbitrary quadratic forms,
+and embraces both spherical and hyperbolic geometries in a projective version.
+
+Euler lines and nine-point circles in relativistic
+settings
+Recall that for a triangle A1 A2 A3 the intersection of the medians is the centroid
+G, the intersection of the altitudes is the orthocenter O and the intersection
+of the perpendicular bisectors of the sides is the circumcenter C, which is the
+center of the circumcircle of the triangle. Remarkably, it was left to Euler to
+discover that these three points are collinear, and that G divides OC in the
+(affine) proportion 2 : 1. Furthermore the center N of the circumcircle of the
+triangle M1 M2 M3 of midpoints of the sides of A1 A2 A3 (called the nine-point
+circle of A1 A2 A3 ) also lies on the Euler line, and is the midpoint of OC.
+4.5
+
+4
+
+Ob
+3.5
+
+A3
+
+3
+
+2.5
+
+Nb
+
+2
+
+M2
+
+1.5
+
+M1
+
+G
+
+1
+
+A2
+
+M3
+0.5
+
+Cb
+
+A1
+
+1
+
+2
+
+3
+
+4
+
+-0.5
+
+-1
+
+eb
+-1.5
+
+-2
+
+-2.5
+
+-3
+
+2
+
+5
+
+6
+
+This is above shown for the triangle A1 A2 A3 with points
+A1 ≡ [0, 0]
+
+A2 ≡ [6, 1]
+
+A3 ≡ [2, 3] .
+
+The triangle A1 A2 A3 is in black, while the circumcircle and nine-point circle
+are in blue (the latter more boldly), as are the Euler line and the points O, C
+and N, which are given the subscript b for blue, and henceforth referred to as
+the blue Euler line, the blue orthocenter etc.
+Planar Euclidean geometry rests on the blue quadratic form x2 + y 2 (or
+if you prefer the corresponding symmetric bilinear form, or dot product). It
+is also interesting to consider the red quadratic form x2 − y 2 which figures
+prominently in two dimensional special relativity. In this case, two lines are red
+perpendicular precisely when one can be obtained from the other by ordinary
+Euclidean reflection in a red null line, which is red perpendicular to itself, and
+has usual slope ±1.
+It turns out that for any triangle A1 A2 A3 the three red altitudes also intersect, now in a point called the red orthocenter and denoted Or , and the three
+perpendicular bisectors also intersect in a point called the red circumcenter
+and denoted Cr . This latter point is the center of the unique red circle through
+the three points of the triangle, where a red circle is given by an equation of
+the form
+2
+2
+(x − x0 ) − (y − y0 ) = K.
+This is what we would usually call a rectangular hyperbola, with axes in the
+red null directions.
+4.5
+
+4
+
+3.5
+
+Cr
+
+A3
+
+3
+
+2.5
+
+2
+
+M1
+M2
+
+1.5
+
+G
+
+1
+
+Nr
+
+0.5
+
+A1
+
+1
+
+2
+
+A2
+
+M3
+3
+
+4
+
+er
+
+-0.5
+
+-1
+
+-1.5
+
+-2
+
+Or
+-2.5
+
+-3
+
+3
+
+5
+
+6
+
+This diagram shows the same triangle A1 A2 A3 , as well as the red circumcircle,
+the red nine-point circle and the red orthocenter, circumcenter, nine-point center
+and centroid G, the latter being independent of colour.
+Note that these points all lie on a line—the red Euler line, and the affine
+relationships between these points is exactly the same as for the blue Euler line,
+so that for example Nr is the midpoint of Or Cr .
+In the classical framework, there are some difficulties in setting up this relativistic geometry, as ‘distance’ and ‘angle’ are problematic. In universal geometry one regards the quadratic form as primary, not its square root, and
+by expressing everything in terms of the algebraic concepts of quadrance and
+spread, Euclidean geometry can be built up so as to allow generalization to
+the relativistic framework, and indeed to geometries built from other quadratic
+forms.
+This approach was introduced recently in [1], see also [5], and works over a
+general field with characteristic two excluded for technical reasons, as shown in
+[2]. The possibility of relativistic geometries over other fields seems particularly
+attractive.
+There is a third geometry, that associated to the green quadratic form
+2xy. Two lines are green perpendicular when one is the ordinary Euclidean
+reflection of the other in a line parallel to the axes, the latter being a green
+null line.
+Since x2 − y 2 and 2xy are conjugate by a simple change of variable, it should
+be no surprise that the corresponding relations between the green orthocenter
+Og , green circumcenter Cg , green nine-point center Ng and the centroid G hold
+as well. Here is the relevant diagram for our triangle A1 A2 A3 .
+4.5
+
+4
+
+3.5
+
+eg
+
+A3
+
+3
+
+Og
+2.5
+
+2
+
+Ng
+1.5
+
+M1
+
+G
+
+M2
+1
+
+Cg
+
+A1
+
+1
+
+A2
+
+M3
+
+0.5
+
+2
+
+4
+
+3
+
+-0.5
+
+-1
+
+-1.5
+
+-2
+
+-2.5
+
+-3
+
+4
+
+5
+
+6
+
+I conjecture that most theorems of planar Euclidean geometry, when formulated algebraically in the context of universal geometry, extend to the red and
+green situations. However there are exceptions. For example, over the ‘real
+numbers’ there are no equilateral triangles in the red or green geometries, so
+Napoleon’s theorem and Morley’s theorem will not have direct analogs.
+Much could be said further to support this conjecture, but this is not what
+I wish to pursue here. Instead, let’s consider a completely new phenomenon.
+Observe what happens when the three diagrams are put together!
+4.5
+
+4
+
+Ob
+3.5
+
+eg
+
+Cr
+
+A3
+
+3
+
+Og
+2.5
+
+Nb
+
+2
+
+M2
+
+1.5
+
+M1
+Ng
+
+G
+
+1
+
+Cg
+
+Nr
+
+0.5
+
+A2
+
+M3
+Cb
+
+A1
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+er
+
+-0.5
+
+-1
+
+eb
+-1.5
+
+-2
+
+Or
+-2.5
+
+-3
+
+We get remarkable collinearities, for example between Ob , Cr and Og , and
+between Cb , Nr and Cg , with furthermore Cr the midpoint of Ob Og , and Nr
+the midpoint of Cb Cg . Also we observe that, for example, Or and Og lie on the
+blue circumcircle of A1 A2 A3 , while Cr and Cg lie on the blue nine-point circle
+of A1 A2 A3 . The three colours generally interact symmetrically, so the same
+relations hold if we permute colours.
+However there are some aspects of chromogeometry in which this symmetry
+is broken. The blue geometry as we shall see behaves somewhat differently from
+the red and the green in certain contexts, and when we come to explicit formulas
+we will see that the green geometry is often simpler. The red geometry seems
+less inclined to distinguish itself.
+
+5
+
+Rational trigonometry
+Let’s now proceed more formally, beginning with the main definitions and laws
+of rational trigonometry. We work over a fixed field, not of characteristic two,
+whose elements will be called numbers. The plane will consist of the standard
+vector space of dimension two over this field. A point, or vector, is an ordered
+pair A ≡ [x, y] of numbers. The origin is denoted O ≡ [0, 0].
+A line is a proportion l ≡ ha : b : ci where a and b are not both zero. The
+point A ≡ [x, y] lies on the line l ≡ ha : b : ci, or equivalently the line l passes
+through the point A, precisely when
+ax + by + c = 0.
+This is not the only possible convention, and the reader should be aware
+that it is prejudiced towards the usual Euclidean (blue) geometry. For any two
+points A1 ≡ [x1 , y1 ] and A2 ≡ [x2 , y2 ] there is a unique line l ≡ A1 A2 which
+passes through them both. Specifically we have
+A1 A2 = hy1 − y2 : x2 − x1 : x1 y2 − x2 y1 i .
+Three points [x1 , y1 ], [x2 , y2 ] and [x3 , y3 ] are collinear precisely when they lie
+on the same line, which amounts to the condition
+x1 y2 − x1 y3 + x2 y3 − x3 y2 + x3 y1 − x2 y1 = 0.
+
+(1)
+
+Three lines ha1 : b1 : c1 i, ha2 : b2 : c2 i and ha3 : b3 : c3 i are concurrent precisely
+when they pass through the same point, which amounts to the condition
+a1 b2 c3 − a1 b3 c2 + a2 b3 c1 − a3 b2 c1 + a3 b1 c2 − a2 b1 c3 = 0.
+Fix a symmetric bilinear form, denoted by the dot product A1 · A2 . In
+practise we will take this bilinear form to be non-degenerate. The line A1 A2 is
+perpendicular to the line B1 B2 precisely when
+(A2 − A1 ) · (B2 − B1 ) = 0.
+A point A is a null point or null vector precisely when A · A = 0. The origin
+O is always a null point, but there may be others. A line A1 A2 is a null line
+precisely when the vector A2 − A1 is a null vector.
+A set {A1 , A2 , A3 } of three distinct non-collinear points is a triangle and
+is denoted A1 A2 A3 . The lines of the triangle are l3 ≡ A1 A2 , l2 ≡ A1 A3 and
+l1 ≡ A2 A3 . A triangle is non-null precisely when each of its lines is non-null.
+A side of the triangle is a subset of {A1 , A2 , A3 } with two elements, and is
+denoted A1 A2 etc. A vertex of the triangle is a subset of {l1 , l2 , l3 } with two
+elements, and is denoted l1 l2 etc.
+The quadrance between the points A1 and A2 is the number
+Q (A1 , A2 ) ≡ (A2 − A1 ) · (A2 − A1 ) .
+6
+
+The line A1 A2 is a null line precisely when Q (A1 , A2 ) = 0.
+The spread between the non-null lines A1 A2 and B1 B2 is the number
+s (A1 A2 , B1 B2 ) ≡ 1 −
+
+((A2 − A1 ) · (B2 − B1 ))2
+.
+Q (A1 , A2 ) Q (B1 , B2 )
+
+This is independent of the choice of points lying on the two lines. Two non-null
+lines are perpendicular precisely when the spread between them is 1.
+Here are the five main laws of planar rational trigonometry in this general
+setting, replacing the usual Sine law, Cosine law etc. Proofs can be found in
+[2]. Aside from giving new directions to geometry, these laws have the potential
+to change the teaching of high school mathematics, because they are simpler,
+and allow faster and more accurate calculations in practical problems. But
+the advantage for us here is that they hold for general quadratic forms, and in
+particular for each of the blue, red and green geometries.
+Theorem 1 (Triple quad formula) The points A1 , A2 and A3 are collinear
+precisely when the quadrances Q1 ≡ Q (A2 , A3 ), Q2 ≡ Q (A1 , A3 ) and Q3 ≡
+Q (A1 , A2 ) satisfy
+
+2
+(Q1 + Q2 + Q3 ) = 2 Q21 + Q22 + Q23 .
+
+Theorem 2 (Pythagoras’ theorem) For A1 , A2 and A3 three distinct points,
+A1 A3 is perpendicular to A2 A3 precisely when the quadrances Q1 ≡ Q (A2 , A3 ),
+Q2 ≡ Q (A1 , A3 ) and Q3 ≡ Q (A1 , A2 ) satisfy
+Q1 + Q2 = Q3 .
+Theorem 3 (Spread law) Suppose the non-null triangle A1 A2 A3 has quadrances Q1 ≡ Q (A2 , A3 ), Q2 ≡ Q (A1 , A3 ) and Q3 ≡ Q (A1 , A2 ), and spreads
+s1 ≡ s (A1 A2 , A1 A3 ), s2 ≡ s (A2 A1 , A2 A3 ) and s3 ≡ s (A3 A1 , A3 A2 ). Then
+s1
+s2
+s3
+=
+=
+.
+Q1
+Q2
+Q3
+Theorem 4 (Cross law) Suppose the non-null triangle A1 A2 A3 has quadrances Q1 ≡ Q (A2 , A3 ), Q2 ≡ Q (A1 , A3 ) and Q3 ≡ Q (A1 , A2 ), and spreads
+s1 ≡ s (A1 A2 , A1 A3 ), s2 ≡ s (A2 A1 , A2 A3 ) and s3 ≡ s (A3 A1 , A3 A2 ). Then
+2
+
+(Q1 + Q2 − Q3 ) = 4Q1 Q2 (1 − s3 ) .
+Note that the Cross law includes as special cases both the Triple quad formula and Pythagoras’ theorem. The next result is the algebraic analog to the
+sum of the angles in a triangle formula.
+Theorem 5 (Triple spread formula) Suppose the non-null triangle A1 A2 A3
+has spreads s1 ≡ s (A1 A2 , A1 A3 ), s2 ≡ s (A2 A1 , A2 A3 ) and s3 ≡ s (A3 A1 , A3 A2 ).
+Then
+
+2
+(s1 + s2 + s3 ) = 2 s21 + s22 + s23 + 4s1 s2 s3 .
+A useful observation is that the Triple spread formula shows that s3 = 1
+implies that
+s1 + s2 = 1.
+7
+
+Three fold symmetry
+The vectors A1 ≡ [x1 , y1 ] and A2 ≡ [x2 , y2 ] are parallel precisely when
+x1 y2 − x2 y1 = 0.
+We will be interested in three main examples of symmetric bilinear forms. Define
+the blue dot product
+[x1 , y1 ] ·b [x2 , y2 ] ≡ x1 x2 + y1 y2 ,
+the red dot product
+[x1 , y1 ] ·r [x2 , y2 ] ≡ x1 x2 − y1 y2
+and the green dot product
+[x1 , y1 ] ·g [x2 , y2 ] = x1 y2 + x2 y1 .
+Note that between them these four expressions give all possible bilinear
+expressions in the two vectors that involve only coefficients ±1, up to sign. Two
+lines l1 and l2 are blue, red and green perpendicular respectively precisely
+when they are perpendicular with respect to the blue, red and green forms. For
+lines l1 ≡ ha1 : b1 : c1 i and l2 ≡ ha2 : b2 : c2 i these conditions amount to the
+respective conditions
+a1 a2 + b1 b2 = 0 [blue]
+a1 a2 − b1 b2 = 0 [red]
+and
+a1 b2 + b1 a2 = 0 [green].
+In terms of coordinates, the formulas for the blue, red and green quadrances between points A1 ≡ [x1 , y1 ] and A2 ≡ [x2 , y2 ] are
+2
+
+2
+
+Qb (A1 , A2 ) = (x2 − x1 ) + (y2 − y1 )
+
+Qr (A1 , A2 ) = (x2 − x1 )2 − (y2 − y1 )2
+Qg (A1 , A2 ) = 2 (x2 − x1 ) (y2 − y1 ) .
+Theorem 6 (Coloured quadrances) For any points A1 and A2 let Qb , Qr
+and Qg be the blue, red and green quadrances between A1 and A2 respectively.
+Then
+Q2b = Q2r + Q2g .
+Proof. This is a consequence of the identity
+2
+2
+2
+r2 + s2 = r2 − s2 + (2rs) .
+8
+
+The formulas for the blue, red and green spreads between lines l1 ≡
+ha1 : b1 : c1 i and l2 ≡ ha2 : b2 : c2 i are
+2
+
+2
+
+sb (l1 , l2 ) = 1 −
+
+(a1 a2 + b1 b2 )
+(a1 b2 − a2 b1 )
+= 2
+(a21 + b21 ) (a22 + b22 )
+(a2 + b22 ) (a21 + b21 )
+
+sr (l1 , l2 ) = 1 −
+
+(a1 b2 − a2 b1 )
+(b1 b2 − a1 a2 )
+=− 2
+2
+2
+2
+2
+(b1 − a1 ) (b2 − a2 )
+(a2 − b22 ) (a21 − b21 )
+
+sg (l1 , l2 ) = 1 −
+
+(−a1 b2 − a2 b1 )2
+(a1 b2 − a2 b1 )2
+=−
+.
+4a1 a2 b1 b2
+4a1 a2 b1 b2
+
+2
+
+2
+
+Note carefully the minus signs that precede the final expressions in the red and
+green cases.
+Theorem 7 (Coloured spreads) For any lines l1 and l2 let sb , sr and sg be
+the blue, red and green spreads between l1 and l2 respectively. Then
+1
+1
+1
++
++
+= 2.
+sb
+sr
+sg
+Proof. This is a consequence of the identity
+
+
+
+
+2
+a21 + b21 a22 + b22 − a21 − b21 a22 − b22 − 4a1 a2 b1 b2 = 2 (a1 b2 − a2 b1 ) .
+
+Quadrances
+The most important single quantity associated to a triangle A1 A2 A3 with quadrances Q1 , Q2 and Q3 is the quadrea A defined by
+
+2
+A ≡ (Q1 + Q2 + Q3 ) − 2 Q21 + Q22 + Q23 .
+By the Triple quad formula this is a measure of the non-collinearity of the
+points A1 , A2 and A3 . We denote by Ab , Ar and Ag the respective blue, red
+and green quadreas of a triangle A1 A2 A3 .
+Theorem 8 (Quadrea ) For three points A1 ≡ [x1 , y1 ], A2 ≡ [x2 , y2 ] and
+A3 ≡ [x3 , y3 ], the three quadreas Ab , Ar and Ag satisfy
+Ab = −Ar = −Ag = 4 (x1 y2 − x1 y3 + x2 y3 − x3 y2 + x3 y1 − x2 y1 )2 .
+Proof. A calculation.
+So each quadrea of a triangle is ±16 times the square of its signed area, the
+latter being defined purely in an affine setting, without any need for metrical
+choices.
+We now adopt the convention that if no proof is given, ‘a calculation’ is to
+be assumed.
+
+9
+
+Altitudes
+Theorem 9 (Altitudes to a line) For any point A and any line l, there exist
+unique lines nb , nr and ng through A which are respectively blue, red and green
+perpendicular to l. If A ≡ [x0 , y0 ] and l ≡ ha : b : ci then
+nb = hb : −a : −bx0 + ay0 i
+nr = hb : a : −bx0 − ay0 i
+ng = ha : −b : −ax0 + by0 i .
+The lines nb , nr , ng are respectively the blue, red and green altitudes
+from A to l, and they intersect l at the feet, provided that l is non-null.
+Theorem 10 (Perpendicularity of altitudes) For any point A and any line
+l, let nb , nr , ng be the blue, red and green altitudes from A to l respectively. Then
+nb and nr are green perpendicular, nr and ng are blue perpendicular, and ng
+and nb are red perpendicular.
+l
+
+18
+
+16
+
+Fg
+
+14
+
+12
+
+10
+
+Fb
+
+8
+
+A
+
+6
+
+4
+
+2
+
+-5
+
+Fr
+5
+
+10
+
+15
+
+20
+
+25
+
+-2
+
+-4
+
+The figure shows an example of the three colour altitudes from a point A to
+a line l, and their feet Fb , Fr and Fg .
+Theorem 11 (Pythagorean means) Let l ≡ ha : b : ci be a line which is nonnull in each of the three geometries. If A is a point and Fb , Fr and Fg are the
+respective feet of the altitudes nb , nr and ng from A to l, then we have the affine
+relation
+2
+a2 − b 2
+4b2 a2
+Fb =
+F
++
+r
+2
+2 Fg .
+(a2 + b2 )
+(a2 + b2 )
+Proof. Suppose that A ≡ [x0 , y0 ] and l ≡ ha : b : ci. Elimination yields
+ 2
+
+b x0 − aby0 − ac −abx0 + a2 y0 − bc
+Fb =
+,
+a2 + b 2
+a2 + b 2
+ 2
+
+−b x0 − aby0 − ca abx0 + a2 y0 + bc
+,
+Fr =
+a2 − b 2
+a2 − b 2
+
+
+ax0 − by0 − c −ax0 + by0 − c
+,
+Fg =
+2a
+2b
+from which we deduce the result.
+Note again the connection with Pythagorean triples.
+10
+
+Anti-symmetric polynomials
+We use notation for anti-symmetric polynomials introduced in [1, page 28]. If m
+is a monomial in the variables x1 , x2 , x3 , y1 , y2 , y3 , z1 , z2 , z3 , · · · with all indices
+−
+in the range 1, 2 and 3, then we define [m] to be the anti-symmetric polynomial consisting of the sum of all monomials obtained from m by performing all
+six permutations of the indices and multiplying each term by the sign of the
+corresponding permutation.
+We often write such polynomials in the order described by the successive
+transpositions
+(23) , (12) , (23) , (12) , (23) .
+For example
+[x1 y2 ] ≡ x1 y2 − x1 y3 + x2 y3 − x3 y2 + x3 y1 − x2 y1
+−
+ 2
+x1 x2 y2 ≡ x21 x2 y2 − x21 x3 y3 + x22 x3 y3 − x23 x2 y2 + x23 x1 y1 − x22 x1 y1
+ 3 −
+x1 y1 ≡ x31 y1 − x31 y1 + x32 y2 − x33 y3 + x33 y3 − x32 y2 = 0.
+−
+
+The polynomial [x1 y2 ]− is of particular importance, since it occurs in (1), is
+twice the signed area of the triangle A1 A2 A3 , appears in the Quadrea theorem,
+and is often a denominator in formulas in the subject.
+
+Orthocenters
+Given a triangle A1 A2 A3 , for each point Am , m = 1, 2 and 3 we may construct
+the blue, red and green altitudes abm , arm and agm respectively to the opposite
+side.
+Theorem 12 (Orthocenter formulas) The three blue altitudes ab1 , ab2 and ab3
+meet in a point Ob called the blue orthocenter. The three red altitudes ar1 , ar2
+and ar3 meet in a point Or called the red orthocenter. The three green altitudes
+ag1 , ag2 and ag3 meet in a point Og called the green orthocenter. For A1 ≡
+[x1 , y1 ], A2 ≡ [x2 , y2 ] and A3 ≡ [x3 , y3 ] these points are given by
+"
+−
+
+
+− #
+−
+−
+[x1 x2 y2 ] + y1 y22
+[x1 y1 y2 ] + x21 x2
+Ob =
+,
+−
+−
+[x1 y2 ]
+[x1 y2 ]
+"
+− #
+
+−
+
+−
+−
+[x1 y1 y2 ] − x21 x2
+[x1 x2 y2 ] − y1 y22
+,
+Or =
+−
+−
+[x1 y2 ]
+[x1 y2 ]
+"
+#
+−
+−
+−
+− 
+x21 y2 + [x1 x2 y1 ]
+x1 y22 − [x1 y1 y2 ]
+Og =
+.
+,
+−
+−
+[x1 y2 ]
+[x1 y2 ]
+
+11
+
+Circumcenters
+When A1 and A2 are distinct points with l = A1 A2 , and A is the midpoint of
+A1 and A2 , then the blue, red and green altitudes from A to l are respectively
+called the blue, red and green perpendicular bisectors of the side A1 A2 .
+Theorem 13 (Perpendicular bisectors) If A1 ≡ [x1 , y1 ] and A2 ≡ [x2 , y2 ]
+are distinct points then the blue, red and green perpendicular bisectors of A1 A2
+have respective equations
+x21 − x22 + y12 − y22
+2
+x21 − x22 − y12 + y22
+(x1 − x2 ) x − (y1 − y2 ) y =
+2
+(y2 − y1 ) x + (x2 − x1 ) y = y2 x2 − x1 y1 .
+
+(x1 − x2 ) x + (y1 − y2 ) y =
+
+Given a triangle A1 A2 A3 we may construct the blue, red and green perpendicular bisectors of the three sides, denoted by bbm , brm and bgm respectively for
+m = 1, 2 and 3, where bb1 for example is the blue perpendicular bisector of the
+side A2 A3 and so on.
+Theorem 14 (Circumcenter formulas) The three blue perpendicular bisectors bb1 , bb2 and bb3 meet in a point Cb called the blue circumcenter. The three
+red perpendicular bisectors br1 , br2 and br3 meet in a point Cr called the red circumcenter. The three green perpendicular bisectors bg1 , bg2 and bg3 meet in a
+point Cg called the green circumcenter. For A1 ≡ [x1 , y1 ], A2 ≡ [x2 , y2 ] and
+A3 ≡ [x3 , y3 ], these points are given by
+"
+− #
+− 
+− 
+− 
+x1 y22 + x1 x22
+x21 y2 + y12 y2
+Cb =
+,
+−
+−
+2 [x1 y2 ]
+2 [x1 y2 ]
+"
+− #
+− 
+− 
+− 
+x21 y2 − y12 y2
+x1 y22 − x1 x22
+Cr =
+,
+−
+−
+2 [x1 y2 ]
+2 [x1 y2 ]
+#
+"
+−
+−
+[x1 x2 y2 ] [x1 y1 y2 ]
+.
+Cg =
+− ,
+−
+[x1 y2 ]
+[x1 y2 ]
+Theorem 15 (Circumcenters as midpoints) For any triangle a coloured circumcenter is the midpoint of the two orthocenters of the other two colours.
+Proof. This follows from the Orthocenter formulas and Circumcenter formulas.
+
+Nine-point centres
+Suppose that the respective midpoints of a triangle A1 A2 A3 are Mm for m = 1, 2
+and 3, where M1 is the midpoint of the side A2 A3 and so on. We let Nb , Nr
+12
+
+and Ng be the blue, red and green circumcenters respectively of the triangle
+M1 M2 M3 , and call these the blue, red and green nine-point centers of the
+original triangle A1 A2 A3 .
+Theorem 16 (Nine-point center formulas) For A1 ≡ [x1 , y1 ], A2 ≡ [x2 , y2 ]
+and A3 ≡ [x3 , y3 ], the blue, red and green nine-point centers of A1 A2 A3 are
+"
+#
+− 
+− 
+−
+−
+− 
+−
+x21 y2 − y12 y2 + 2 [x1 x2 y2 ]
+x1 y22 − x1 x22 + 2 [x1 y1 y2 ]
+Nb =
+,
+−
+−
+4 [x1 y2 ]
+4 [x1 y2 ]
+#
+"
+−
+− 
+−
+− 
+−
+− 
+x1 y22 + x1 x22 + 2 [x1 y1 y2 ]
+x21 y2 + y12 y2 + 2 [x1 x2 y2 ]
+,
+Nr =
+−
+−
+4 [x1 y2 ]
+4 [x1 y2 ]
+"
+#
+−
+− 
+x21 y2
+x1 y22
+Ng =
+,
+−
+− .
+2 [x1 y2 ] 2 [x1 y2 ]
+Theorem 17 (Nine-point centers as midpoints) In any triangle a coloured
+nine-point center is the midpoint of the two circumcenters of the other two
+colours.
+Proof. This follows from the Circumcenter formulas and Nine-point center
+formulas.
+
+The Ω-triangle and the Euler lines
+
+The Ω-triangle of a triangle A1 A2 A3 is the triangle Ω ≡ Ω A1 A2 A3 ≡
+Ob Or Og of orthocenters of A1 A2 A3 . From the theorems of the last two sections, the corresponding midpoints of the sides of Ω are Cb , Cr and Cg , with Cb
+the midpoint of Or and Og etc., and the midpoints of the triangle Cb Cr Cg are
+Nb , Nr and Ng , with Nb the midpoint of Cr and Cg etc. We also know that the
+centroid of Ω is the same as the centroid G of the original triangle A1 A2 A3 .
+Theorem 18 (Blue Euler line) The points Ob , Nb , G and Cb lie on a line
+called the blue Euler line. Furthermore Nb is the midpoint of Ob and Cb , and
+we have the affine relations
+G=
+
+2
+1
+2
+1
+Ob + Cb = Cb + Nb .
+3
+3
+3
+3
+
+Proof. This follows from the Orthocenter, Circumcenter and Nine-point center
+formulas.
+Theorem 19 (Red Euler line) The points Or , Nr , G and Cr lie on a line
+called the red Euler line. Furthermore Nr is the midpoint of Or and Cr , and
+G=
+
+1
+2
+1
+2
+Or + Cr = Cr + Nr .
+3
+3
+3
+3
+13
+
+Proof. Likewise.
+Theorem 20 (Green Euler line) The points Og , Ng , G and Cg lie on a line
+called the green Euler line. Furthermore Ng is the midpoint of Og and Cg ,
+and
+1
+2
+1
+2
+G = Og + Cg = Cg + Ng .
+3
+3
+3
+3
+Proof. Likewise.
+The geometry of the Ω-triangle clarifies the various ratios occurring along
+points on the Euler lines, since these are just the medians of Ω. The lines joining
+the circumcenters are the lines of the medial triangle of Ω, and so are parallel
+to the lines of Ω.
+
+Circles
+A blue, red or green circle is an equation c in x and y of the form
+2
+
+2
+
+2
+
+2
+
+(x − x0 ) + (y − y0 ) = K
+(x − x0 ) − (y − y0 ) = K
+2 (x − x0 ) (y − y0 ) = K
+respectively, where the point [x0 , y0 ] is then unique and called the centre of c,
+and K is the quadrance of c. A blue circle is an ordinary Euclidean circle. Red
+and green circles are more usually described as rectangular hyperbolas. A red
+circle has asymptotes parallel to the lines with equations y = ±x, and a green
+circle has asymptotes parallel to the coordinate axes.
+Theorem 21 (Circumcircles) If A1 , A2 and A3 are three distinct non-collinear
+points, then there are unique blue, red and green circles passing through A1 , A2
+and A3 .
+The circles above will be called respectively the blue, red and green circumcircles of the triangle A1 A2 A3 , while the circumcircles of the triangle of
+midpoints M1 , M2 , M3 of the triangle A1 A2 A3 will be called respectively the
+blue, red and green nine-point circles of the triangle A1 A2 A3 .
+Theorem 22 (Orthocenters on circumcircles) Any coloured orthocenter of
+a triangle A1 A2 A3 lies on the circumcircles of the other two colours.
+Theorem 23 (Nine-point circles) Any coloured nine-point circle of a triangle A1 A2 A3 passes through the feet of the altitudes of that colour, as well as
+the midpoints of the segments from the same coloured orthocenter to the points
+A1 , A2 and A3 . In addition it passes through the circumcenters of A1 A2 A3 of
+the other two colours.
+The following figure shows some of the other points on the nine-point circles
+of different colours. Others are off the page.
+14
+
+26
+
+24
+
+22
+
+Ob
+
+A3
+
+20
+
+Cr
+
+18
+
+eg
+
+Og
+
+M1
+
+Nb
+
+16
+
+Ng
+14
+
+G
+
+M2
+12
+
+Cg
+
+Nr
+
+10
+
+A2
+M3
+Cb
+
+8
+
+A1
+
+er
+
+6
+
+eb
+
+4
+
+2
+
+Or
+5
+
+10
+
+15
+
+20
+
+25
+
+30
+
+35
+
+Hopefully this taste of chromogeometry will encourage others to explore this
+rich new realm. See [3] and [4] for more in this direction.
+
+References
+[1] N. J. Wildberger, Divine Proportions: Rational Trigonometry to Universal
+Geometry, Wild Egg Books (http://wildegg.com), Sydney, 2005.
+[2] N. J. Wildberger,
+arXiv:math/0612499
+
+‘Affine
+
+and
+
+Projective
+
+Universal
+
+Geometry’,
+
+[3] N. J. Wildberger, One dimensional metrical geometry, Geometriae Dedicata,
+128, no.1, 145-166, 2007.
+[4] N. J. Wildberger, ‘Chromogeometry and relativistic conics’ arXiv:0806.2789
+[5] N. J. Wildberger, ‘A Rational Approach to Trigonometry’, Math Horizons,
+Nov. 2007, 16-20, 2007.
+
+15
+
+

@@ -1,0 +1,6 @@
+━━━ Physics.Particles.Interactions ━━━
+  ✓ Photon absorption yields pure spatial impulse passed 100 tests.
+  ✓ Weak Boson naturally decays upon boundary interaction passed 1 test.
+  ✓ Baryons stably confine quarks via structural lock passed 1 test.
+  ✓ 3 succeeded.
+SUCCESS

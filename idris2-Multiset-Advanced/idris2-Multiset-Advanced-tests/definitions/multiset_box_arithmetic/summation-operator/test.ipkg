@@ -1,0 +1,5 @@
+package summation-operator
+
+depends = hedgehog, idris2-Multiset-Advanced
+main = Main
+executable = summation-operator

@@ -1,0 +1,5 @@
+package dirichlet-divisor-count
+
+depends = hedgehog, idris2-Multiset-Advanced
+main = Main
+executable = dirichlet-divisor-count

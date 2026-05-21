@@ -1,0 +1,5 @@
+package amset-properties
+
+depends = base, hedgehog, idris2-Multiset-Basic
+executable = test
+main = Main

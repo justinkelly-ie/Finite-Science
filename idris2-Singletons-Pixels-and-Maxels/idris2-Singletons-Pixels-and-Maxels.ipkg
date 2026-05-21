@@ -1,0 +1,8 @@
+package idris2-Singletons-Pixels-and-Maxels
+
+depends = idris2-Multiset-Basic
+
+sourcedir = "src"
+
+modules = Base, Combinatorics
+

@@ -1,0 +1,6 @@
+package idris2-Maxel-tests
+
+depends = base, idris2-Maxel, idris2-Multiset-Advanced
+
+executable = runtests
+main = Main

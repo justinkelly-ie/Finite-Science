@@ -1,0 +1,9 @@
+━━━ Physics.Particles.Comparisons ━━━
+  ✓ Neutrino matches n=1 Absolute Vacuum Lock passed 1 test.
+  ✓ Photon propagates at c=1 with Red Null-Quadrance passed 1 test.
+  ✓ Electron is stable non-fractional knot on n=3 passed 1 test.
+  ✓ Quark possesses fractional charge on n=5 passed 1 test.
+  ✓ Bond acts as composite structural glue at n=4 passed 1 test.
+  ✓ Weak Boson naturally overflows and decays at n=11 passed 1 test.
+  ✓ 6 succeeded.
+SUCCESS
