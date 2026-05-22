@@ -10,7 +10,7 @@
 ## Significance
 Modern physics is plagued by infinities. Continuous wave equations, singularities, arbitrary constants, and abstract parameters like "gluons" or "virtual particles" dominate the Standard Model. 
 
-**Linear Physics** dispenses with that. Here we construct a Linear Universe **LUniverse** (Linear Universe) that attempts to provide a geometric foundation for the standard model of physics.
+**Linear Physics** dispenses with that. Here we construct the **Linear Universe**, which attempts to provide a rational, geometric foundation for the standard model of physics.
 
 Built on [Norman Wildberger's](https://njwildberger.com/) Finitist Mathematics and Rational Chromogeometry, this project models the universe as a discrete, combinatorial engine. In LUniverse, continuous fields are illusions; particles are simply algebraic constraints (Spread Polynomials) acting upon a discrete integer pixel grid (an indivisible, linear computational substrate).
 
@@ -29,8 +29,8 @@ Whether it is a subatomic quantum scattering event or the cellular division of a
 ## Core Architecture
 
 ### 1. The Grid and Chromogeometry
-Space is modeled as 3 discrete multisets. 
-The universe's coordinate space is structurally bounded by the 210 states of the 4th Primorial manifold ($2 \times 3 \times 5 \times 7 = 210$). Crucially, these values are **not hardcoded constants**. They emerge natively and dynamically from the combinatorial mathematics of the engine, partitioning the 210 computational "maxels" into:
+Space is modeled as 3 discrete Multisets. 
+The universe's coordinate space is structurally bounded by the 210 states of the 4th Primorial manifold ($2 \times 3 \times 5 \times 7 = 210$). Crucially, these values are **not hardcoded constants**. They emerge natively and dynamically from the combinatorial mathematics of the engine, partitioning the 210 computational Maxels into:
 * **27 Maxels (Visible Matter):** Resolvable $3^3$ integer states that successfully collapse into stable geometric projections.
 * **128 Maxels (Dark Energy):** Unresolvable $2^7$ fractional states that remain spread across the grid, exerting expansional topological pressure.
 * **55 Maxels (Dark Matter):** The mathematically emergent residue ($210 - (128 + 27) = 55$) that acts as a latent gravitational halo.
