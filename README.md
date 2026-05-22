@@ -12,7 +12,7 @@ Modern physics is plagued by infinities. Continuous wave equations, singularitie
 
 **LUniverse** (Linear Universe) dispenses with that. 
 
-Built on Norman Wildberger's Finitist Mathematics and Rational Chromogeometry, this project models the universe as a discrete, combinatorial engine. In LUniverse, continuous fields are illusions; particles are simply algebraic constraints (Spread Polynomials) acting upon a discrete integer pixel grid (the Maxel substrate).
+Built on [Norman Wildberger's](https://njwildberger.com/) Finitist Mathematics and Rational Chromogeometry, this project models the universe as a discrete, combinatorial engine. In LUniverse, continuous fields are illusions; particles are simply algebraic constraints (Spread Polynomials) acting upon a discrete integer pixel grid (the Maxel substrate).
 
 ### Why "Linear"?
 This project is written in **Idris 2** to leverage its **Quantitative Type Theory (QTT)** and **Linear Types**. In QTT, a linear resource must be consumed *exactly once*. We use this compiler-level constraint to natively enforce absolute physical laws:
