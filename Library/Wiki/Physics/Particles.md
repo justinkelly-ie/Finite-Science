@@ -1,12 +1,12 @@
-# Primorial Particle Mapping Findings
+# LUniverse Particle Mapping Findings
 
-This document records the exact geometric and algebraic mappings of standard model particles to the Primorial Architecture and Chromogeometry (as modeled in the `idris2-LUniverse` repository).
+This document records the exact geometric and algebraic mappings of standard model particles to the LUniverse Architecture and Chromogeometry (as modeled in the `idris2-LUniverse` repository).
 
 Unlike standard quantum mechanics which relies on continuous wave functions, fields, and phenomenological parameters (mass, charge), particles in this framework are defined strictly as topological and algebraic constraints upon the 137-Grid.
 
 ## The Particle Zoo
 
-| Particle | Standard Physics Description | Primorial Architecture / Algebraic Mapping |
+| Particle | Standard Physics Description | LUniverse Architecture / Algebraic Mapping |
 | :--- | :--- | :--- |
 | **Neutrino** | Elusive, nearly massless particle that rarely interacts. | **$n=1$ Absolute Vacuum Lock**. Mirrors the fractional input spread without fractional change. It acts as an invisible vacuum configuration passing smoothly through the dark substrate. |
 | **Photon** | Light quanta; travels at $c$, zero rest mass, mediates EM force. | **Red Metric Null-Quadrance Operator**. A 2D path where $x^2 - y^2 = 0$. Purely spatial energy ($Q_b > 0$) with zero projective time passage ($Q_r = 0$). |
@@ -23,9 +23,9 @@ Unlike standard quantum mechanics which relies on continuous wave functions, fie
 2. **Physics is Compiler-Enforced**: We have successfully tested this mapping using dependent types (Quantitative Type Theory). The behavior of these particles—such as Baryon confinement, Photon absorption resulting in purely spatial impulses, and Weak Boson decomposition—is enforced mathematically by the Idris 2 type-checker and rigorously verified by Hedgehog property testing.
 3. **Continuous Properties are Illusions**: Interactions are simply matrix transformations (e.g., the Cross-Ratio matrix transforming null-quadrance photons into pure integer impulses upon absorption). No infinite waves, no $c$ constants—just integer mathematics.
 
-## Standard Physics vs. Primorial Architecture
+## Standard Physics vs. LUniverse Architecture
 
-It is crucial to understand which aspects of this model are universally accepted orthodox physics, and which parts represent the novel theoretical interpretations of the Primorial Architecture (RCIT).
+It is crucial to understand which aspects of this model are universally accepted orthodox physics, and which parts represent the novel theoretical interpretations of the LUniverse Architecture (RCIT).
 
 ### What is Orthodox Standard Physics (QCD)
 The physical behaviors modeled here map directly to verified observations in Quantum Chromodynamics:
@@ -34,7 +34,7 @@ The physical behaviors modeled here map directly to verified observations in Qua
 *   **Baryon Stability:** To exist stably in the universe, quarks must group together into "Colorless" triads (Baryons, like Protons and Neutrons) where their fractional charges sum to a clean integer.
 *   **Asymptotic Freedom:** If you try to separate quarks, the energy required scales up exponentially until it snaps and converts into mass, creating new quark pairs rather than letting one escape.
 
-### The RCIT / Primorial Shift
+### The RCIT / LUniverse Shift
 Standard physics explains the above phenomena using continuous wave equations, virtual particles, and "gluon flux tubes" mapped over SU(3) gauge symmetry fields. 
 
 Our model explicitly discards continuous fields and forces, replacing them with **finitist arithmetic and geometric constraints**.
