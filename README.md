@@ -63,8 +63,8 @@ If you are unfamiliar with Idris2 but wish to explore the project, download Goog
 ## Theoretical Foundation & Wiki
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
-*   📖 **[Theory and Architecture Wiki](../Library/Wiki/Physics/Index.md)**
-*   ⚛️ **[Standard Model vs. Primorial Mapping](../Library/Wiki/Physics/Particles.md)**
+*   📖 **[Theory and Architecture Wiki](Library/Wiki/Physics/Index.md)**
+*   ⚛️ **[Standard Model vs. Primorial Mapping](Library/Wiki/Physics/Particles.md)**
 
 ---
 
