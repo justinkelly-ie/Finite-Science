@@ -1,9 +1,0 @@
-package idris2-Multiset-Basic
-
-authors = "Justin"
-version = 0.1.0
-
-builddir = ".build"
-sourcedir = "src"
-
-modules = MSet1, AMSet1

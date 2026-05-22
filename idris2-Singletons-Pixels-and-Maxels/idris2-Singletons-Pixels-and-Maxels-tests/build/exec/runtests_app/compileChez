@@ -1,1 +1,0 @@
-(parameterize ([optimize-level 3] [compile-file-message #f]) (compile-program "/var/home/justin/Projects/idris2-Singletons-Pixels-and-Maxels/idris2-Singletons-Pixels-and-Maxels-tests/build/exec/runtests_app/runtests.ss"))

@@ -1,5 +1,0 @@
-[custom.all.idris2-Multiset-Basic]
-type = "local"
-path = "."
-ipkg = "idris2-Multiset-Basic.ipkg"
-test = "idris2-Multiset-Basic-tests/idris2-Multiset-Basic-test.ipkg"

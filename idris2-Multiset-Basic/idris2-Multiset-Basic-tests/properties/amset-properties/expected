@@ -1,8 +1,0 @@
-━━━ AMSet1 Properties ━━━
-  ✓ prop_add_comm passed 100 tests.
-  ✓ prop_add_assoc passed 100 tests.
-  ✓ prop_add_zero passed 100 tests.
-  ✓ prop_mul_comm passed 100 tests.
-  ✓ prop_annihilation passed 100 tests.
-  ✓ 5 succeeded.
-SUCCESS

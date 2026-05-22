@@ -1,5 +1,0 @@
-package instantiation
-
-depends = idris2-Singletons-Pixels-and-Maxels, idris2-Multiset-Basic
-main = Main
-executable = instantiation

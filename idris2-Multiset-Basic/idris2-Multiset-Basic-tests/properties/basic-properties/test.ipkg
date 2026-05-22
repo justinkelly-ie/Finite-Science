@@ -1,5 +1,0 @@
-package basic-properties
-
-depends = hedgehog, idris2-Multiset-Basic
-main = Main
-executable = basic-properties

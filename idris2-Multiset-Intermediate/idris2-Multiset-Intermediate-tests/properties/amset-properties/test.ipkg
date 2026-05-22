@@ -1,5 +1,0 @@
-package amset-properties
-
-depends = base, idris2-QuickCheck, idris2-Multiset-Intermediate
-executable = test
-main = Main
