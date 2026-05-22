@@ -8,7 +8,7 @@ Unlike standard quantum mechanics which relies on continuous wave functions, fie
 
 | Particle | Standard Physics Description | Primorial Architecture / Algebraic Mapping |
 | :--- | :--- | :--- |
-| **Neutrino** | Elusive, nearly massless particle that rarely interacts. | **$n=1$ Absolute Vacuum Lock**. Mirrors the fractional input spread without fractional change. It acts as an invisible vacuum configuration passing smoothly through the dark substrate. |
+| **Neutrino** | Elusive, nearly massless particle that rarely interacts. | **$n=1$ Absolute Vacuum Lock**. Mirrohttps://github.com/justinkelly-ie/Linear-Physicsrs the fractional input spread without fractional change. It acts as an invisible vacuum configuration passing smoothly through the dark substrate. |
 | **Photon** | Light quanta; travels at $c$, zero rest mass, mediates EM force. | **Red Metric Null-Quadrance Operator**. A 2D path where $x^2 - y^2 = 0$. Purely spatial energy ($Q_b > 0$) with zero projective time passage ($Q_r = 0$). |
 | **Electron / Lepton** | Stable fundamental point particle with distinct mass. | **$n=3$ Matter Gate Topological Knot**. A strictly non-fractional knot anchored in the visible blue geometric space. It needs no color confinement because it fundamentally satisfies grid stability on its own. |
 | **Molecular Bond** | Glue binding chemical/molecular structures (e.g. electron sharing). | **$n=4$ Composite Gate**. A "double-squeezed" gate ($2^2$) allowing multiple matter states to share the identical natural-number coordinate simultaneously, perfectly skirting Pauli Exclusion via arithmetic overlap. |

@@ -1,6 +1,6 @@
 # Physics Index
 
-This section documents the physical research and formalizations arising from Rational Chromogeometric Information Theory (RCIT).
+This section documents the physical research and formalizations arising from Linear Physics.
 
 ## Research Areas
 

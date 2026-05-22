@@ -1,0 +1,6 @@
+package natural_folding
+
+depends = base, hedgehog, idris2-LUniverse, idris2-chromogeometry, idris2-Maxel, idris2-Multiset-Advanced, idris2-polynumber
+
+main = Main
+executable = natural-folding

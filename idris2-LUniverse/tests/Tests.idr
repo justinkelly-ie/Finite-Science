@@ -8,4 +8,5 @@ main = goldenRunner
   [ "LUniverse Definitions" `atDir` "definitions"
   , "LUniverse Properties"  `atDir` "properties"
   , "LUniverse Particles"   `atDir` "particles"
+  , "LUniverse Evolution"   `atDir` "evolution"
   ]
