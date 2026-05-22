@@ -67,3 +67,9 @@ The physics mapping and derivation in this project are massive. If you are a phy
 ---
 
 *LUniverse shifts physics from phenomenological observation to mathematical verification.*
+
+---
+
+&copy; Justin Kelly. All rights reserved.
+
+[^1]: Formalised and architected in collaboration with Antigravity, an advanced AI coding assistant by Google DeepMind.
