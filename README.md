@@ -28,8 +28,16 @@ Whether it is a subatomic quantum scattering event or the cellular division of a
 
 ## Core Architecture
 
-### 1. The 137-Grid and Chromogeometry
-Space is not a vacuum; it is a discrete anti-multiset grid. The geometry is governed by three interlocked metrics:
+### 1. The Grid and Chromogeometry
+Space is modeled as 3 discrete multisets. 
+
+Within the `DarkPlusMatter` architecture, the universe's coordinate space is structurally bounded by the 210 states of the 4th Primorial manifold ($2 \times 3 \times 5 \times 7 = 210$). Crucially, these values are **not hardcoded constants**. They emerge natively and dynamically from the combinatorial mathematics of the engine, partitioning the 210 computational "maxels" into:
+* **27 Maxels (Visible Matter):** Resolvable $3^3$ integer states that successfully collapse into stable geometric projections.
+* **128 Maxels (Dark Energy):** Unresolvable $2^7$ fractional states that remain spread across the grid, exerting expansional topological pressure.
+* **55 Maxels (Dark Matter):** The mathematically emergent residue ($210 - (128 + 27) = 55$) that acts as a latent gravitational halo.
+
+
+The geometry is governed by three interlocked metrics:
 *   **Blue Metric (Matter):** The standard Euclidean $x^2 + y^2$ geometry where stable particles materialize.
 *   **Red Metric (Dark Energy/Radiation):** The relativistic $x^2 - y^2$ geometry where photons propagate along null-quadrance bounds.
 *   **Green Metric (Background/Tension):** The $2xy$ geometry that traps unresolvable fractional states, generating topological tension (e.g., Color Confinement).
