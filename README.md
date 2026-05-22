@@ -10,9 +10,9 @@
 ## Significance
 Modern physics is plagued by infinities. Continuous wave equations, singularities, arbitrary constants, and abstract parameters like "gluons" or "virtual particles" dominate the Standard Model. 
 
-**Linear Physics** dispenses with that. Here we construct the **Linear Universe**, which attempts to provide a rational, geometric foundation for the standard model of physics.
+**Linear Physics** dispenses with that. Here we construct the **Linear Universe**, which attempts to provide a rational, algebraic and geometric explanation for the observed evidence.
 
-Built on [Norman Wildberger's](https://njwildberger.com/) Finitist Mathematics including Box Aritmetic (Multisets), Chromogeometry and Spread Polynomials, this project models the universe as a discrete, combinatorial engine. In LUniverse, continuous fields are unnecessary,particles are simply algebraic constraints acting upon a discrete integer pixel grid.
+Built on [Norman Wildberger's](https://njwildberger.com/) Finitist Mathematics including Box Aritmetic (Multisets), Chromogeometry and Spread Polynomials, this project models the universe as a discrete, combinatorial engine. In the Linear Universe, continuous fields are unnecessary, particles are simply geometric and algebraic constraints, acting on a discrete integer pixel grid.
 
 ### Why "Linear"?
 This project is written in **[Idris 2](https://github.com/idris-lang/Idris2)** to leverage its **Quantitative Type Theory (QTT)** and **Linear Types**. In QTT, a linear resource must be consumed *exactly once*. We use this compiler-level constraint to natively enforce absolute physical laws:
@@ -20,7 +20,7 @@ This project is written in **[Idris 2](https://github.com/idris-lang/Idris2)** t
 *   **Baryogenesis:** Matter naturally emerges from the geometry without requiring arbitrary parameters.
 *   **Color Confinement:** Quarks are trapped mathematically because their algebraic topology fails to evaluate to integer coordinates on the grid. It isn't a "force"—it's a computational limit.
 *   **Biological Uniqueness:** The specific natural foldings of life (e.g., the DNA double-helix or the Alpha Helix) are not evolutionary accidents. QTT natively enforces the No-Cloning theorem; thus, these structures emerge as the strictly unique, linear mathematical solutions capable of geometrically neutralizing topological debt without causing a Grid Fracture.
-*   **Autopoiesis & Evolution:** Life is formalized as a linear wrapper. Cellular replication (Mitosis/Meiosis) cannot "copy" state in violation of quantum mechanics. Instead, organisms linearly consume unallocated environmental space (discrete physical resources that strictly enforce linearity and prevent cloning) to instantiate fresh parallel identities, preserving absolute geometric lineage right down to the fundamental discrete grid.
+*   **Autopoiesis & Evolution:** Life is modeled as a linear wrapper. Cellular replication (Mitosis/Meiosis) cannot "copy" state in violation of quantum mechanics. Instead, organisms linearly consume unallocated environmental space (discrete physical resources that strictly enforce linearity and prevent cloning) to instantiate fresh parallel identities, preserving absolute geometric lineage right down to the fundamental discrete grid.
 
 Whether it is a subatomic quantum scattering event or the cellular division of a biological organism, if an interaction violates these fundamental topological laws, **the code simply will not compile.**
 
@@ -59,8 +59,6 @@ After n=13, the spread polynomial primorial structure will either compose or col
 ### 3. The Biological Fold
 Life is formalized as a linear wrapper that preserves geometric integrity. Biological folding is not a continuous thermodynamic accident; it is the geometric execution of a Spread Polynomial attempting to neutralize topological tension over a finite integer grid.
 
-*   **Autopoiesis:** Life is defined as a self-enforcing geometric structure that strictly preserves mathematical lineage. This is the physical manifestation of the No-Cloning Theorem—cells replicate not by copying, but by the linear consumption of unallocated environmental space, ensuring absolute fidelity across generations.
-*   **Evolution:** Biological variation is modeled as geometric drift. Natural selection acts as a compiler-level constraint, pruning arithmetic topologies that cause "Grid Fractures" (unphysical states) and preserving only those that maintain computational coherence.
 *   **The Helix Barrier:** The stability of the Alpha Helix and DNA Double Helix structures are enforced by specific geometric "locks". Driven by polynomials (such as $S_{10}$), these structures emerged only once in history because they are the strictly unique, linear mathematical solutions capable of folding and consuming the substrate without violating linearity or causing localized decoherence.
 *   **Neurological Folding:** The extreme folding of the cerebral cortex (Cortical Gyri) is modeled at the macro scale by massive polynomials (e.g., $S_{137}$). A dense neuronal substrate naturally generates high-frequency structural locks to neutralize topological tension, maximizing computational capacity.
 
