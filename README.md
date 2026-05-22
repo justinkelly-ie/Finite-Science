@@ -67,7 +67,7 @@ Life is formalized as a linear wrapper that preserves geometric integrity. Biolo
 ## Getting Started
 
 ### Prerequisites
-LUniverse requires [Idris 2](https://github.com/idris-lang/Idris2) and the **[pack](https://github.com/stefan-hoeck/idris2-pack)** package manager to be installed on your system.
+LUniverse requires [Idris 2](https://github.com/idris-lang/Idris2). Use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to install Idris2 and as an Idris2 package manager.
 
 ```bash
 # 1. Build the project using the Idris 2 Pack manager
