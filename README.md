@@ -8,7 +8,7 @@
 ---
 
 ## Significance
-Modern physics is plagued by infinities. Continuous wave equations, singularities, arbitrary constants, and abstract parameters like "gluons" or "virtual particles" dominate the Standard Model. 
+Modern physics is plagued by infinities. Continuous wave equations, singularities, arbitrary constants, and ad-hoc parameters like "gluons" or "virtual particles" dominate the Standard Model. 
 
 **Linear Physics** dispenses with that. Here we construct the **Linear Universe**, which attempts to provide a rational, algebraic and geometric explanation for the observed evidence.
 
