@@ -1,1 +1,0 @@
-(parameterize ([optimize-level 3] [compile-file-message #f]) (compile-program "/var/home/justin/Projects/Linear-Physics/build/exec/luniverse_app/luniverse.ss"))

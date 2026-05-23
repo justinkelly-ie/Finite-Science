@@ -1,0 +1,14 @@
+# Idris 2 Build Artifacts
+build/
+**/.build/
+*.ttc
+*.ttm
+
+# Compiled Binaries & Libraries
+*.so
+*.ss
+*.exe
+build/exec/
+
+# Package Lock Files
+.pack_lock
