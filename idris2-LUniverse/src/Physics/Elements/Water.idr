@@ -1,6 +1,6 @@
 module Physics.Elements.Water
 
-import Physics.Core
+import Math.Core
 import Physics.Elements.Hydrogen
 import Physics.Elements.Oxygen
 import Physics.Particles.Electron
@@ -9,7 +9,7 @@ import Physics.Findings.PeriodicTable
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Chromogeometry
 
 %default total
@@ -91,7 +91,7 @@ oPosition = MkPixelNL 0 0
 ||| Both O-H bonds have identical quadrance (symmetric molecule).
 public export
 bondQuadrance : Integer
-bondQuadrance = quadranceNL Blue h1Position
+bondQuadrance = quadranceNL Blue oPosition h1Position
 
 ||| The bond spread at O (the "bond angle"):
 ||| spread = (4·4 - 3·3)² / (25 · 25) = 49/625 = 7²/5⁴
@@ -100,14 +100,13 @@ bondQuadrance = quadranceNL Blue h1Position
 ||| Denominator = ChargeGate⁴
 public export
 bondSpread : (Integer, Integer)
-bondSpread = spreadNL Blue h1Position h2Position
+bondSpread = spreadNL Blue oPosition h1Position h2Position
 
 ||| The inter-hydrogen quadrance: Q(H₁H₂) = (4-3)² + (3-4)² = 2
 ||| This is exactly the BackgroundGate degree.
 public export
 interHydrogenQuadrance : Integer
-interHydrogenQuadrance = quadranceNL Blue (MkPixelNL (h2Position.x - h1Position.x)
-                                                      (h2Position.y - h1Position.y))
+interHydrogenQuadrance = quadranceNL Blue h1Position h2Position
 
 ||| The O-H bonds are perpendicular in the Red metric.
 ||| Red perpendicularity: a1·a2 - b1·b2 = 4·3 - 3·4 = 0
@@ -143,20 +142,20 @@ bondingElectrons = (bondElectron h1Position, bondElectron h2Position)
 ||| The Green quadrance IS Oxygen's Z (8) times the MatterGate degree (3).
 public export
 electronRedQuadrance : Integer
-electronRedQuadrance = quadranceNL Red h1Position
+electronRedQuadrance = quadranceNL Red oPosition h1Position
 
 ||| The Green quadrance of the electron in the bond.
 ||| Q_Green = 2·4·3 = 24 = 8 × 3 = Oxygen(Z) × MatterGate(n)
 public export
 electronGreenQuadrance : Integer
-electronGreenQuadrance = quadranceNL Green h1Position
+electronGreenQuadrance = quadranceNL Green oPosition h1Position
 
 ||| The electron-to-electron spread between the two bonding electrons.
 ||| This measures the angular separation of the two electrons as seen
 ||| from the Oxygen nucleus.
 public export
 electronElectronSpread : (Integer, Integer)
-electronElectronSpread = spreadNL Blue h1Position h2Position
+electronElectronSpread = spreadNL Blue oPosition h1Position h2Position
 
 -----------------------------------------------------------------------
 -- MOLECULE CONSTRUCTION

@@ -25,7 +25,7 @@ interface ConservesEnergy a b where
 public export
 implementation ConservesEnergy (PixelNL Integer) (PixelNL Integer) where
   isEnergyConserved (MkPixelNL x1 y1) (MkPixelNL x2 y2) = 
-    let res = quadranceNL Blue (MkPixelNL x1 y1) == quadranceNL Blue (MkPixelNL x2 y2)
+    let res = quadranceNL Blue (MkPixelNL 0 0) (MkPixelNL x1 y1) == quadranceNL Blue (MkPixelNL 0 0) (MkPixelNL x2 y2)
     in Builtin.(#) res (Builtin.(#) (MkPixelNL x1 y1) (MkPixelNL x2 y2))
 
 ||| For the Unified Multiset (PixelNL Integer, IntPolynumber) model, Energy is mathematically conserved if the total 

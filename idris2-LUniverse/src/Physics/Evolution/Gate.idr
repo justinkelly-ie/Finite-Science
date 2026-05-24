@@ -2,7 +2,7 @@ module Physics.Evolution.Gate
 
 import Physics.Evolution.State
 
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Polynumber
 import Math.IntPolynumber
 

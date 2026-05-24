@@ -1,13 +1,13 @@
 module Main
 
-import Physics.Core
+import Math.Core
 import Physics.Evolution.Gate
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Scales.ScaleTrajectory
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Chromogeometry
 import Data.List
 

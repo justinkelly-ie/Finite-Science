@@ -10,9 +10,7 @@ The base data structure. QTT linearity (`1`) ensures every element is consumed e
 
 ```idris
 -- The linear multiset: every atom must be accounted for
-data UnaryMultiset : Type -> Type where
-  Zero : UnaryMultiset a
-  Add  : (1 _ : a) -> (1 _ : UnaryMultiset a) -> UnaryMultiset a
+0 UnaryMultiset : Type -> Type
 ```
 
 This is the **No-Cloning Theorem** as a type. You cannot duplicate an `Add` node — the compiler forbids it.
@@ -21,11 +19,7 @@ This is the **No-Cloning Theorem** as a type. You cannot duplicate an `Add` node
 
 Matter/Antimatter annihilation as a data structure:
 
-```idris
-record SignedUnaryMultiset a where
-  constructor MkSignedUnaryMultiset
-  1 pos : UnaryMultiset a     -- Matter
-  1 neg : UnaryMultiset a     -- Antimatter
+0 SignedUnaryMultiset : Type -> Type
 
 annihilate : Eq a => SignedUnaryMultiset a -> SignedUnaryMultiset a
 ```
@@ -37,14 +31,10 @@ annihilate : Eq a => SignedUnaryMultiset a -> SignedUnaryMultiset a
 High-performance representation for large-scale computation. Each element carries an Integer multiplicity (positive = matter, negative = antimatter):
 
 ```idris
-data Multiset : Type -> Type where
-  ZeroM : Multiset a
-  AddM  : a -> Integer -> Multiset a -> Multiset a
+0 Multiset : Type -> Type
 
 -- Non-empty variant (prevents division-by-zero in spreads)
-data Multiset1 : Type -> Type where
-  BaseM : a -> Integer -> Multiset1 a
-  AddM1 : a -> Integer -> Multiset1 a -> Multiset1 a
+0 Multiset1 : Type -> Type
 ```
 
 **This is the engine.** Every physical type alias in the system resolves to `Multiset something`.
@@ -61,10 +51,7 @@ data Multiset1 : Type -> Type where
 Pixel a = LPair a a
 
 -- Non-linear version (for computation)
-record PixelNL (a : Type) where
-  constructor MkPixelNL
-  x : a
-  y : a
+0 PixelNL : Type -> Type
 ```
 
 ### Maxel — A Multiset of Pixels (discrete curve or region)
@@ -77,14 +64,9 @@ Maxel a = UnaryMultiset (Pixel a)
 ### Geometry — The Metrical Structure
 
 ```idris
-data Flexibility : Type where
-  Rigid    : Flexibility
-  Foldable : (degreesOfFreedom : Nat) -> Flexibility
+0 Flexibility : Type
 
-record Geometry where
-  constructor MkGeometry
-  dimensions  : Nat
-  flexibility : Flexibility
+0 Geometry : Type
 ```
 
 ---
@@ -120,33 +102,29 @@ spreadPoly : Nat -> IntPolynumber
 
 ---
 
-## Layer 5: Rational Trigonometry (`Math.Fraction`)
+## Layer 5: Rational Trigonometry & Chromogeometry (`Math.Chromogeometry`)
+
+We have stripped away legacy linear types (`Fraction`, `Spread`, `Quadrance` records) in favor of pure integer coordinate math. This completely immunises the engine from floating-point drift and structural decay.
 
 ```idris
-record Fraction where
-  constructor MkFraction
-  numerator   : Nat
-  denominator : Nat
-
-record Spread where               -- sin²(θ) — no trig functions
-  constructor MkSpread
-  value : Fraction
-
-record Quadrance where             -- distance² — no square roots
-  constructor MkQuadrance
-  value : Fraction
+-- Exact rational integer math. No division truncation!
+quadranceNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
+spreadNL    : Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> (Integer, Integer)
+archimedesNL: Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> Integer
 ```
+
+The Three-Fold Spread Theorem is mathematically guaranteed via exact cross-multiplication over triad geometry.
 
 ---
 
-## Layer 6: Physics Type Aliases (`Physics.Core`)
+## Layer 6: Physics Type Aliases (`Math.Core`)
 
 Every physical concept is a **type alias** over the Multiset engine. No wrappers.
 
 ```idris
 -- A coordinate on the integer pixel grid
 0 Geometry  : Type
-Geometry = PixelNL Integer
+Geometry = VoxelNL
 
 -- A polynomial amplitude at a coordinate
 0 Amplitude : Type
@@ -159,26 +137,70 @@ Substrate = Multiset (Geometry, Geometry)  -- = Multiset (PixelNL Integer, Pixel
 -- The quantum state vector (coordinates mapped to amplitudes)
 0 PixelIntPoly : Type
 PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (PixelNL Integer, Multiset (Nat, Nat))
+
+-- The complete universe state
+0 UniverseState : Type
 ```
 
 ### The Architecture Diagram
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    Multiset a                                │
-│         ZeroM | AddM element multiplicity rest               │
-├──────────┬─────────────────────┬─────────────────────────────┤
-│ a = (Nat, Nat)                │ a = (Geometry, Amplitude)    │
-│ IntPolynumber                 │ PixelIntPoly                 │
-│ "polynomial coefficients"     │ "quantum state vector"       │
-├───────────────────────────────┼──────────────────────────────┤
-│ a = (Geometry, Geometry)      │ a = (PixelNL Integer,        │
-│ Substrate                     │      IntPolynumber)          │
-│ "causal graph"                │ "state space"                │
-└───────────────────────────────┴──────────────────────────────┘
+```mermaid
+graph TD
+    A[Multiset a] --> B["IntPolynumber<br/>a = (Nat, Nat)"]
+    A --> C["Substrate<br/>a = (Geometry, Geometry)"]
+    A --> D["PixelIntPoly<br/>a = (Geometry, Amplitude)"]
+    
+    B --> D
+    C --> E[UniverseState]
+    D --> E
+    
+    F[Geometry / VoxelNL] --> C
+    F --> D
 ```
 
 All four physical types are the **same data structure** parameterised differently. An optimisation to `Multiset.idr` automatically improves the causal graph, the state vector, the polynomials, and the spread computations simultaneously.
+
+---
+
+## Layer 7: Twist and Localized Evolution (`Math.Twist` & `Physics.SpreadPolynumber`)
+
+### Twist (Gauge Field Holonomy)
+
+Computes rational gauge field interference directly via metric combination:
+```idris
+computeTwist : Metric -> Metric -> Metric -> IntPolynumber
+```
+
+### Spread Propagators
+
+Bridge functions that map spatial chromogeometric curvature directly into an active time-evolution Polynumber operator.
+
+```idris
+generateLocalSpreadPoly : Metric -> Substrate -> VoxelNL -> IntPolynumber
+
+stepUniverseLocalized : Integer -> Metric -> Substrate -> PixelIntPoly -> (Substrate, PixelIntPoly)
+```
+
+---
+
+## Layer 8: Cosmological Evolution (`Physics.Evolution`)
+
+The temporal engine orchestrates the phase transitions across scales.
+
+### `Physics.Evolution.State`
+```idris
+0 Flavor : Type
+
+0 DarkPlusMatter : Type
+```
+
+### `Physics.Evolution.Transform` & `Gate`
+Coordinate partition and resonance logic applied globally across the state vector during a clock tick.
+
+```idris
+partitionLogic : Integer -> VoxelNL -> IntPolynumber -> (IntPolynumber, IntPolynumber)
+evaluateResonance : Integer -> Integer -> VoxelNL -> IntPolynumber -> IntPolynumber
+```
 
 ---
 

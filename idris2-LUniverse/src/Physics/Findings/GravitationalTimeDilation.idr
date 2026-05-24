@@ -1,9 +1,9 @@
 module Physics.Findings.GravitationalTimeDilation
 
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.IntPolynumber
 import Math.Multiset
-import Physics.Core
+import Math.Core
 import Physics.Findings.CosmicEnergyBudget
 
 import Physics.Findings.CosmicPartition

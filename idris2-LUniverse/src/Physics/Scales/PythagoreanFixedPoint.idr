@@ -1,6 +1,6 @@
 module Physics.Scales.PythagoreanFixedPoint
 
-import Physics.Core
+import Math.Core
 import Physics.Evolution.Gate
 import Physics.Evolution.Identity
 import Physics.Elements.Water
@@ -9,7 +9,7 @@ import Physics.Findings.PeriodicTable
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Chromogeometry
 
 %default total
@@ -98,7 +98,7 @@ record PythagoreanFixedPoint where
 ||| Computes the full chromogeometric fingerprint of a grid coordinate.
 public export
 fingerprint : PixelNL Integer -> PythagoreanFixedPoint
-fingerprint p = MkFixedPoint p (quadranceNL Blue p) (quadranceNL Red p) (quadranceNL Green p)
+fingerprint p = MkFixedPoint p (quadranceNL Blue (MkPixelNL 0 0) p) (quadranceNL Red (MkPixelNL 0 0) p) (quadranceNL Green (MkPixelNL 0 0) p)
 
 ||| The Water fixed point: (4, 3)
 public export
@@ -213,4 +213,4 @@ waterIdentityCoord = h1Position
 ||| because the fixed point is metric-invariant.
 public export
 waterIdentityQuadrance : Integer
-waterIdentityQuadrance = quadranceNL Blue waterIdentityCoord
+waterIdentityQuadrance = quadranceNL Blue (MkPixelNL 0 0) waterIdentityCoord

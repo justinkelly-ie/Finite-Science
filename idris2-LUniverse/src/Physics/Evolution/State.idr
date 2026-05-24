@@ -5,7 +5,7 @@ import public Math.Polynumber
 import public Math.Multiset
 import public Math.IntPolynumber
 import public Math.MaxelNL
-import public Math.SpreadPolynomial
+import public Math.SpreadPolynumber
 import public Math.Chromogeometry
 
 %default total

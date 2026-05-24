@@ -1,13 +1,13 @@
 module Physics.Elements.Oxygen
 
-import Physics.Core
+import Math.Core
 import Physics.Particles.Electron
 import Physics.Evolution.Gate
 import Physics.Findings.PeriodicTable
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 
 %default total
 

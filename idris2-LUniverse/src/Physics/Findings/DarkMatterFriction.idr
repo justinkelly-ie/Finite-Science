@@ -1,6 +1,6 @@
 module Physics.Findings.DarkMatterFriction
 
-import Physics.Core
+import Math.Core
 import Math.Chromogeometry
 import Physics.Findings.CosmicEnergyBudget
 

@@ -2,8 +2,8 @@ module Physics.Findings.StrongNuclearForce
 
 import Math.IntPolynumber
 import Math.Multiset
-import Physics.Core
-import Math.SpreadPolynomial
+import Math.Core
+import Math.SpreadPolynumber
 
 %default total
 

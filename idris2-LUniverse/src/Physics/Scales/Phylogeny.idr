@@ -1,6 +1,6 @@
 module Physics.Scales.Phylogeny
 
-import Physics.Core
+import Math.Core
 import Physics.Evolution.Identity
 
 %default total

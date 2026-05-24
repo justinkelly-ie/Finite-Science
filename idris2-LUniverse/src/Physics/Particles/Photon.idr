@@ -4,7 +4,7 @@ import Physics.Evolution.State
 
 import Math.Polynumber
 import Math.Chromogeometry
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Fraction
 
 %default total
@@ -13,7 +13,7 @@ import Math.Fraction
 ||| but as an algebraic Null-Quadrance Operator on the Red (Relativistic) Metric.
 public export
 isPhotonPixel : PixelNL Integer -> Bool
-isPhotonPixel p = quadranceNL Red p == 0
+isPhotonPixel p = quadranceNL Red (MkPixelNL 0 0) p == 0
 
 ||| Represents a validated Photon.
 ||| It explicitly encapsulates a particle state that satisfies the Red Null-Quadrance property,
@@ -36,7 +36,7 @@ createPhoton p =
 ||| This Blue Quadrance corresponds directly to its spatial energy / momentum.
 public export
 blueEnergy : Photon -> Integer
-blueEnergy (MkPhoton p) = quadranceNL Blue p
+blueEnergy (MkPhoton p) = quadranceNL Blue (MkPixelNL 0 0) p
 
 ||| The Cross-Ratio Transformation Matrix (M_x) collapses a 2D null photon
 ||| into a pure 1D spatial impulse on the Blue grid. This models the

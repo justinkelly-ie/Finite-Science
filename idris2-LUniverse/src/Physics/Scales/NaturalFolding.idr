@@ -1,6 +1,6 @@
 module Physics.Scales.NaturalFolding
 
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 
 %default total
 

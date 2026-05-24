@@ -2,8 +2,8 @@ module Physics.Findings.CosmologicalConstant
 
 import Math.IntPolynumber
 import Math.Multiset
-import Physics.Core
-import Math.SpreadPolynomial
+import Math.Core
+import Math.SpreadPolynumber
 import Physics.Findings.CosmicEnergyBudget
 import Math.Fraction
 

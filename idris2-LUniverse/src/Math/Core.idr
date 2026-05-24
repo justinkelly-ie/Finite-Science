@@ -1,4 +1,4 @@
-module Physics.Core
+module Math.Core
 
 import public Math.Multiset
 import public Math.MaxelNL

@@ -2,7 +2,7 @@ module Physics.Findings.Baryogenesis
 
 import Physics.Evolution.State
 
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Physics.Evolution.Cycle
 import Physics.Findings.CosmicPartition
 

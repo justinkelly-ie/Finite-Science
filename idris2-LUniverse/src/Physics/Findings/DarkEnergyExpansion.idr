@@ -2,7 +2,7 @@ module Physics.Findings.DarkEnergyExpansion
 
 import Math.Chromogeometry
 import Math.Multiset
-import Physics.Core
+import Math.Core
 import Physics.Findings.CosmicEnergyBudget
 
 import Physics.Findings.CosmicPartition

@@ -1,12 +1,12 @@
 module Physics.Elements.Hydrogen
 
-import Physics.Core
+import Math.Core
 import Physics.Particles.Electron
 import Physics.Findings.PeriodicTable
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 
 %default total
 

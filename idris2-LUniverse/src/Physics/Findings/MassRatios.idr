@@ -1,6 +1,6 @@
 module Physics.Findings.MassRatios
 
-import Physics.Core
+import Math.Core
 
 import Math.IntPolynumber
 import Math.Multiset

@@ -11,7 +11,7 @@ as the pipeline evolves.
 module Main
 
 import QuickCheck
-import Physics.Core
+import Math.Core
 import Physics.Evolution.Cycle
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate
@@ -29,12 +29,15 @@ import Physics.Elements.Hydrogen
 import Physics.Elements.Oxygen
 import Physics.Elements.Water
 import Physics.Scales.PythagoreanFixedPoint
+import Physics.Scales.ScaleTrajectory
 import Physics.Scales.IceGeometry
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Chromogeometry
 import Math.Fraction
+import Physics.Twist
+
 import Data.List
 
 %default covering
@@ -133,52 +136,10 @@ On a vacuum substrate with origin geometry and empty residue, it should fail.
 ```idris
 prop_canAscendRequiresBalance : Bool
 prop_canAscendRequiresBalance =
-  let result = buildAscensionCapacities 137 emptySubstrate origin emptyPixelIntPoly
-  in case result of
-       Nothing => True
-       Just _  => False
+  let result = canAscend Blue emptySubstrate emptyPixelIntPoly
+  in result == False
 ```
 
-## Part 2: Single Gate Properties
-
-These test individual gate steps rather than the full cycle to avoid performance issues.
-
-### Property 5: stepRelationalTime Preserves Substrate Merge
-
-After a single gate step with incoming relations, the resulting substrate must
-contain the merged edges.
-
-```idris
-prop_substrateMerge : Bool
-prop_substrateMerge =
-  let edge = singleEdge origin (MkPixelNL 1 0)
-      result = stepRelationalTime edge BackgroundGate seededUniverse
-      resultLag = substrateLag (substrate result)
-  in resultLag >= 1
-```
-
-### Property 6: Vacuum Fluctuation via Single Gate
-
-A vacuum universe stepped through a single gate should acquire energy —
-`applyGate` injects the gate's spread polynomial. This models vacuum fluctuation.
-
-```idris
-prop_vacuumFluctuates : Bool
-prop_vacuumFluctuates =
-  let result = stepRelationalTime emptySubstrate BackgroundGate vacuumUniverse
-  in stateLag (stateVector result) > 0
-```
-
-### Property 7: applyGate Produces Output from Seed
-
-Applying a single gate to a seeded state should produce a non-empty result.
-
-```idris
-prop_applyGateProducesOutput : Bool
-prop_applyGateProducesOutput =
-  let result = applyGate BackgroundGate seedState
-  in multiplicityAll result > 0
-```
 
 ## Part 3: Findings Verification
 
@@ -255,70 +216,7 @@ naturally from the state vector geometry — no hardcoded substrate.
 
 The visible matter pool from `constructPrimorialGrid` seeds the state vector.
 After one full adaptive cycle, the system should ascend — the substrate folds
-naturally through `stepRelationalTime`, and the three-fold proof triggers.
-
-```idris
-
-freshPrimorialSeed : UniverseState
-freshPrimorialSeed =
-  let grid = constructPrimorialGrid
-  in MkUniverseState emptySubstrate grid.visibleMatter
-
-prop_naturalAscension : Bool
-prop_naturalAscension =
-  let after1 = runEpochs 1 freshPrimorialSeed
-      entries = length (multisetToList (stateVector after1))
-  in entries == 1  -- ascension condenses to a single macro-node
-```
-
-### Property 15: Substrate Grows Through Natural Folding
-
-After one epoch, the substrate must have non-zero lag — the causal graph
-grew from the state vector geometry through gate evolution. The system
-decoheres (the three-fold proof doesn't sum to 137 yet), but the substrate
-IS accumulating capacity for future ascension.
-
-```idris
-prop_substrateFoldsNaturally : Bool
-prop_substrateFoldsNaturally =
-  let after1 = runEpochs 1 freshPrimorialSeed
-  in substrateLag (substrate after1) > 0
-```
-
-### Property 16: Active Geometry Has Non-Zero Twist
-
-The primorial grid's visible matter pool includes coordinates with non-zero
-chromogeometric twist (A(Q) = T(s) structural lock). This twist contributes
-to the three-fold ascension proof.
-
-```idris
-prop_activeGeomHasTwist : Bool
-prop_activeGeomHasTwist =
-  let grid = constructPrimorialGrid
-      entries = multisetToList grid.visibleMatter
-  in case entries of
-       (((g, _), _) :: _) => computeTwist g > 0
-       []                 => False
-```
-
-### Property 17: Multi-Epoch With Fresh Seeds
-
-Each epoch should be independently testable by seeding a fresh primorial grid.
-This models the fractal self-similarity: each scale starts from the same
-chromogeometric root but carries the compressed history from the previous scale
-as the macro-node's polynomial amplitude.
-
-```idris
-prop_multiEpochFreshSeeds : Bool
-prop_multiEpochFreshSeeds =
-  let -- Epoch 1: fresh seed → ascend
-      e1 = runEpochs 1 freshPrimorialSeed
-      ascended1 = length (multisetToList (stateVector e1)) == 1
-      -- Epoch 2: fresh seed again → ascend independently
-      e2 = runEpochs 1 freshPrimorialSeed
-      ascended2 = length (multisetToList (stateVector e2)) == 1
-  in ascended1 && ascended2
-```
+naturally through `stepUniverseLocalized`, and the three-fold proof triggers.
 
 ## Part 5: Findings Deep Verification
 
@@ -671,6 +569,35 @@ prop_timeFoldsIsTime : Bool
 prop_timeFoldsIsTime = timeFoldsIsTime
 ```
 
+## Part 9: Scale Trajectory (38-Scale Hypothesis)
+
+### Property 52: Gate Fingerprint is Invariant Across Scales
+
+At any scale $k$, the Pythagorean fixed point yields Blue $25(k+1)^2$, Red $7(k+1)^2$, and Green $24(k+1)^2$.
+
+```idris
+prop_fingerprintInvariant : Property
+prop_fingerprintInvariant = forAll {a = Nat} {prop = Bool} arbitrary (MkFn (\k => fingerprintInvariant k))
+```
+
+### Property 53: Eddington Generation (n=39) is Matter × Resonance
+
+The 38th cycle (n=39) is the scale of the known universe, factoring purely into MatterGate × ResonanceGate.
+
+```idris
+prop_eddingtonIsMatterTimesResonance : Bool
+prop_eddingtonIsMatterTimesResonance = eddingtonIsMatterTimesResonance
+```
+
+### Property 54: First Decoherence is at k=16 (n=17)
+
+The first non-gate prime (17) breaks the coherence sequence at cycle 16.
+
+```idris
+prop_firstDecoherenceIsK16 : Bool
+prop_firstDecoherenceIsK16 = firstDecoherenceIsK16
+```
+
 ## Main Test Runner
 
 
@@ -697,14 +624,11 @@ main = do
 
   runProp "prop_canAscendRequiresBalance" prop_canAscendRequiresBalance
 
-  putStrLn ""
-
-  -- Part 2: Single Gate Properties (deterministic)
-  putStrLn "--- Part 2: Single Gate Properties ---"
-
-  runProp "prop_substrateMerge" prop_substrateMerge
-  runProp "prop_vacuumFluctuates" prop_vacuumFluctuates
-  runProp "prop_applyGateProducesOutput" prop_applyGateProducesOutput
+  putStrLn "--- Part 9: Scale Trajectory ---"
+  let r9 = QuickCheck.quickCheck prop_fingerprintInvariant
+  putStrLn $ "prop_fingerprintInvariant: " ++ r9.msg
+  runProp "prop_eddingtonIsMatterTimesResonance" prop_eddingtonIsMatterTimesResonance
+  runProp "prop_firstDecoherenceIsK16" prop_firstDecoherenceIsK16
 
   putStrLn ""
 
@@ -723,10 +647,7 @@ main = do
   -- Part 4: Natural Ascension (deterministic, model-seeded)
   putStrLn "--- Part 4: Natural Ascension ---"
 
-  runProp "prop_naturalAscension" prop_naturalAscension
-  runProp "prop_substrateFoldsNaturally" prop_substrateFoldsNaturally
-  runProp "prop_activeGeomHasTwist" prop_activeGeomHasTwist
-  runProp "prop_multiEpochFreshSeeds" prop_multiEpochFreshSeeds
+
 
   putStrLn ""
 

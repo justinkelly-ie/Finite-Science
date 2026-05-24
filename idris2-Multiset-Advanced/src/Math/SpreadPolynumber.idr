@@ -1,4 +1,4 @@
-module Math.SpreadPolynomial
+module Math.SpreadPolynumber
 
 import Data.Linear
 import Math.Interfaces

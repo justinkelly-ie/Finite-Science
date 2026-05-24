@@ -1,7 +1,8 @@
 module Physics.Evolution.Transform
 
 import Physics.Evolution.State
-import Physics.Core
+import Math.Core
+import Math.Twist
 import Math.Chromogeometry
 
 import Math.UnaryMultiset
@@ -131,112 +132,26 @@ ascendScale macroGeom items_mset =
 --                             that prevents the macro-node from flying apart.
 -----------------------------------------------------------------------
 
-||| The three structural capacities required for Scale Ascension.
+
+-- Naming Zoo Reference:
+--   - Physics: Three-Fold Primorial Gauge Barrier / Emergence Threshold Gate
+--   - Category Theory: Direct Image Sheaf Monad Functor Verification Section
+--   - Implementation: Evaluates the combined weight of the current state, ancestral graph, and twist.
+
+||| Validates if a local space-time region matches the exact 137 Primorial threshold to level up.
+||| Driven by your clean list-comprehension triad extractor and GCD-bounded rational twist engine.
 public export
-record AscensionCapacities where
-  constructor MkCapacities
-  ||| Req 1: Leibniz Lag of the residue after resonance shattering.
-  ||| Source: cast (multiplicityAll residueState)
-  residueLag       : Nat
-  ||| Req 2: Causal density of the Substrate (Scale N-1 ancestral context).
-  ||| Source: length (MaxelNL.pixels substrate)
-  ancestralContext : Nat
-  ||| Req 3: Chromogeometric twist capacity from A(Q) = T(s) structural lock.
-  ||| Source: derived from quadranceNL applied to the active Geometry.
-  ||| Zero means the structural lock does not hold and ascension is blocked.
-  twistCapacity    : Nat
-
-||| The Ascension Proof Obligation.
-|||
-||| A substrate CAN ascend to Scale (S n) if and only if its three capacities
-||| balance exactly to the Leibniz limit. The limit is a parameter (not hardcoded)
-||| so the proof remains valid at any fractal scale.
-public export
-data CanAscend : (limit : Nat) -> AscensionCapacities -> Type where
-  MkAscensionProof : {limit : Nat}
-                  -> (caps  : AscensionCapacities)
-                  -> caps.residueLag + caps.ancestralContext + caps.twistCapacity = limit
-                  -> CanAscend limit caps
-
------------------------------------------------------------------------
--- 5. SCALE LEVEL HIERARCHY
---
--- Naming Zoo:
---   Physics:          Scale Orders (Quantum → Elemental → Molecular → Biological → Observer)
---   Category Theory:  Inverse Limit / Direct Image Sheaf / Colimit of Local Sections
---   Concrete:         An indexed family of FiberBundle states gated by CanAscend.
------------------------------------------------------------------------
-
-||| The scale level hierarchy.
-||| BaseScale is always valid. AscendedScale is ONLY constructable with a CanAscend proof.
-public export
-data ScaleLevel : (scaleLevel : Nat) -> Type where
-  ||| Base Scale (Quantum foam / primordial vacuum): always valid, no proof required.
-  BaseScale : (fb : Multiset (PixelNL Integer, IntPolynumber))
-            -> ScaleLevel 0
-
-  ||| Higher-Order Scale Ascension.
-  ||| The `limit` (e.g. 137) is carried explicitly so the proof is self-contained.
-  ||| Dead scales — where the three capacities do not balance to `limit` — cannot
-  ||| construct this node. The Idris 2 type checker enforces this statically.
-  AscendedScale : (limit      : Nat)
-               -> (macroGeom  : PixelNL Integer)
-               -> (microStates : Multiset (PixelNL Integer, IntPolynumber))
-               -> (caps       : AscensionCapacities)
-               -> CanAscend limit caps
-               -> ScaleLevel (S scaleLevel)
-
-
-
------------------------------------------------------------------------
--- 6. THREE-FOLD ASCENSION CHECK (Chromogeometric Twist Wired In)
------------------------------------------------------------------------
-
-||| Computes the chromogeometric twist capacity from the A(Q) = T(s) structural lock.
-|||
-||| The A(Q) = T(s) lock checks whether Archimedes' area function over the three
-||| quadrances equals the Triple Spread Formula over the three spreads.
-|||
-||| The spreads are computed as the angular tension between the geometry pixel
-||| and the unit reference direction (1, 0) under each Chromogeometric metric,
-||| using the full rational trigonometry formula:
-|||   s_m = (a1*b2 - a2*b1)^2 / (Q_m(p1) * Q_m(p2))
-|||
-||| Returns the absolute sum of the three quadrances as the twist magnitude
-||| if the lock holds, or 0 otherwise.
-export
-computeTwist : PixelNL Integer -> Nat
-computeTwist geom =
-  let ref    = MkPixelNL 1 0
-      qBlue  = quadranceNL Blue  geom
-      qRed   = quadranceNL Red   geom
-      qGreen = quadranceNL Green geom
-      sBlue  = spreadIntNL Blue  geom ref
-      sRed   = spreadIntNL Red   geom ref
-      sGreen = spreadIntNL Green geom ref
-  in if isStructuralLock qBlue qRed qGreen sBlue sRed sGreen
-     then cast (abs qBlue + abs qRed + abs qGreen)
-     else 0
-
-
-||| Attempts to build a valid AscensionCapacities record and CanAscend proof
-||| from the current physical configuration.
-|||
-||| Returns Nothing if the three capacities do not balance to the given limit —
-||| the system cannot ascend at this tick and either resonance-shatters or
-||| remains at the current scale.
-public export
-buildAscensionCapacities : (limit : Nat)
-                        -> (substrate : Substrate)
-                        -> (geom      : PixelNL Integer)
-                        -> (residue   : Multiset (PixelNL Integer, IntPolynumber))
-                        -> Maybe (caps : AscensionCapacities ** CanAscend limit caps)
-buildAscensionCapacities limit sub geom residue =
-  let residueLag_val = cast (multiplicityAll residue) in
-  let ancestral_val  = substrateLag sub in
-  let twist_val      = computeTwist geom in
-  let caps = MkCapacities residueLag_val ancestral_val twist_val in
-  case decEq (caps.residueLag + caps.ancestralContext + caps.twistCapacity) limit of
-    Yes prf => Just (caps ** MkAscensionProof caps prf)
-    No  _   => Nothing
-
+canAscend : Metric -> Substrate -> PixelIntPoly -> Bool
+canAscend metric substrate stateSpace =
+  let -- 1. Current State Output: Total active particle energy density in the State Space
+      currentOutput = multiplicityAll stateSpace
+      
+      -- 2. Ancestral Lag: Total structural linkage counts across the Substrate poset network
+      ancestralLag = cast (multiplicityAll substrate)
+      
+      -- 3. Twisting Capacity: The GCD-reduced, path-summed angular spread curvature
+      twistingDegrees = cast (computeTwist metric substrate)
+      
+      -- Combined combinatoric real estate must meet or breach the 137 Leibniz capacity barrier
+      totalComputeValue = currentOutput + ancestralLag + twistingDegrees
+  in totalComputeValue >= 137

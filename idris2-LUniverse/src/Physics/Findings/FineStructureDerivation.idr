@@ -2,7 +2,7 @@ module Physics.Findings.FineStructureDerivation
 
 import Math.IntPolynumber
 import Math.Multiset
-import Physics.Core
+import Math.Core
 import Physics.Findings.GravitationalTimeDilation
 import Physics.Findings.CosmicEnergyBudget
 

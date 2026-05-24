@@ -1,6 +1,6 @@
 module Physics.Evolution.Identity
 
-import Physics.Core
+import Math.Core
 import Physics.Findings.CosmicEnergyBudget
 
 %default total

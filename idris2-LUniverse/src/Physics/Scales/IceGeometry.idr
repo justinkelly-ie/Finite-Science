@@ -1,13 +1,13 @@
 module Physics.Scales.IceGeometry
 
-import Physics.Core
+import Math.Core
 import Physics.Evolution.Gate
 import Physics.Elements.Water
 import Physics.Scales.PythagoreanFixedPoint
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Chromogeometry
 
 %default total
@@ -84,7 +84,7 @@ iceFingerprint = fingerprint iceDirection
 ||| This is the folding number — the product of structure and time.
 public export
 iceFoldingNumber : Integer
-iceFoldingNumber = quadranceNL Red iceDirection
+iceFoldingNumber = quadranceNL Red (MkPixelNL 0 0) iceDirection
 
 ||| The folding number factors into MatterGate × TimeGate.
 public export
@@ -102,7 +102,7 @@ foldingIsMatterTimesTime =
 ||| The product signals the onset of decoherence.
 public export
 iceBlueQuadrance : Integer
-iceBlueQuadrance = quadranceNL Blue iceDirection
+iceBlueQuadrance = quadranceNL Blue (MkPixelNL 0 0) iceDirection
 
 ||| 221 = 13 × 17: ResonanceGate × first non-gate prime.
 public export
@@ -132,7 +132,7 @@ edgeIsWaterFixedPoint =
 public export
 edgeQuadranceIsWater : Bool
 edgeQuadranceIsWater =
-  quadranceNL Blue iceEdgeDirection == bondQuadrance
+  quadranceNL Blue (MkPixelNL 0 0) iceEdgeDirection == bondQuadrance
 
 -----------------------------------------------------------------------
 -- THE ARCHIMEDES INVARIANT
@@ -143,13 +143,7 @@ edgeQuadranceIsWater =
 ||| The chromogeometric signature is inherited across scales.
 public export
 iceArchimedes : Integer
-iceArchimedes =
-  let q1 = quadranceNL Blue hydrogenBondDirection
-      q2 = quadranceNL Blue iceDirection
-      diff = MkPixelNL (iceDirection.x - hydrogenBondDirection.x)
-                        (iceDirection.y - hydrogenBondDirection.y)
-      q3 = quadranceNL Blue diff
-  in archimedesUr q1 q2 q3
+iceArchimedes = archimedesNL Blue (MkPixelNL 0 0) hydrogenBondDirection iceDirection
 
 -----------------------------------------------------------------------
 -- FOLDING CONNECTION

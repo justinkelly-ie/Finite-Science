@@ -8,10 +8,11 @@ The "interference pattern" observed on the detector screen is purely an arithmet
 module Main
 
 import QuickCheck
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.IntPolynumber
-import Math.FractionalEvaluator
 import Math.Fraction
+import Math.FractionalEvaluator
+
 import Data.Maybe
 
 %default covering
@@ -34,7 +35,7 @@ projectsToBrightFringe : Nat -> Spread -> Bool
 projectsToBrightFringe gateDegree spread =
   let algebraicPoly = memoSpreadPoly gateDegree
       polyResult = evaluateIntPoly algebraicPoly spread
-  in polyResult.denominator == 1 || isDivisible polyResult.numerator polyResult.denominator
+  in polyResult.value.denominator == 1 || isDivisible polyResult.value.numerator polyResult.value.denominator
 ```
 
 ## QuickCheck Properties
@@ -51,7 +52,7 @@ restrictGate (S k) =
 prop_fringesAreDeterministic : Property
 prop_fringesAreDeterministic = forAll {a = (Nat, Nat, Nat)} {prop = Bool} arbitrary (MkFn (\(gateDeg, num, den) =>
   let den' = if den == 0 then 1 else den
-      spread = MkFraction num den'
+      spread = MkSpread (MkFraction num den')
       -- It should either be a bright or dark fringe, there is no ambiguity.
       -- We just evaluate it to ensure it completes without crashing.
       res = projectsToBrightFringe (restrictGate gateDeg) spread

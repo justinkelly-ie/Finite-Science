@@ -1,13 +1,13 @@
 module Physics.Scales.ScaleTrajectory
 
-import Physics.Core
+import Math.Core
 import Physics.Evolution.Gate
 import Physics.Elements.Water
 import Physics.Scales.PythagoreanFixedPoint
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.Chromogeometry
 
 %default total

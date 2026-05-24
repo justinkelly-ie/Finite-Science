@@ -13,6 +13,11 @@ record PixelNL (a : Type) where
   x : a
   y : a
 
+||| A discrete spatial coordinate / structural unit on the lattice.
+public export
+0 VoxelNL : Type
+VoxelNL = PixelNL Integer
+
 public export
 Eq a => Eq (PixelNL a) where
   (MkPixelNL x1 y1) == (MkPixelNL x2 y2) = x1 == x2 && y1 == y2

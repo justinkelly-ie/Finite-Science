@@ -8,5 +8,5 @@ sourcedir = "src"
 
 modules = Math.Interfaces, Math.UnaryMultiset, Math.UnaryMultiset.Labeled, Math.SignedUnaryMultiset, Math.SignedUnaryMultiset.Labeled, Math.Multiset, Math.Polynumber
        , Math.IntPolynumber
-       , Math.SpreadPolynomial, Math.Maxel, Math.MaxelNL
+       , Math.SpreadPolynumber, Math.Maxel, Math.MaxelNL
        , Math.Fraction, Math.FractionalEvaluator

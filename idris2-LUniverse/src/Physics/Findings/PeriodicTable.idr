@@ -4,10 +4,10 @@ import Physics.Evolution.State
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate
 
-import Physics.Core
+import Math.Core
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 
 %default total
 

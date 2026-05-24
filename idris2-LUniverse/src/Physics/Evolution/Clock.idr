@@ -1,11 +1,11 @@
 module Physics.Evolution.Clock
 
 import Physics.Evolution.State
-import Physics.Core
+import Math.Core
 
 import Math.Multiset
 import Math.IntPolynumber
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Data.List
 
 %default covering

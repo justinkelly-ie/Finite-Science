@@ -1,6 +1,6 @@
 module Physics.Findings.Spread13
 
-import Math.SpreadPolynomial
+import Math.SpreadPolynumber
 import Math.IntPolynumber
 
 %default total
