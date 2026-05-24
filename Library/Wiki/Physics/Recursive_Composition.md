@@ -21,7 +21,7 @@ The inner multiset evaluates through the polynomial recurrence. The outer multis
 In standard continuous physics, time ($t$) is an external dimension that objects passively drift through. In the discrete deterministic grid of LUniverse, time does not exist as a dimension. 
 
 Instead, it is an **event-driven ontology** mirrored perfectly by Idris 2 functional evaluation:
-1. **The State (Phase):** The universe exists as frozen, discrete geometric layouts (e.g., the `UniverseState` record containing a `Substrate` graph and a state vector). A state is static.
+1. **The State:** The universe evolves until it reaches the next event; until then it maintains a static configuration of substrates (e.g., the `UniverseState` record containing a `Substrate` graph, stable state vector and geometry).
 2. **The Event (Polynomial):** Time only "advances" when a Spread Polynomial is mathematically executed. The polynomial *is the event*. It consumes the current state and geometrically projects the grid into the next discrete phase.
 
 ---
