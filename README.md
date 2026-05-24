@@ -234,9 +234,9 @@ If you are unfamiliar with Idris2 but wish to explore the project, download Goog
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
 *   📖 **[Physics Index](Library/Wiki/Physics/Index.md)** — Overview of research areas and key discoveries
-*   🧮 **[Mathematical Type Architecture](Library/Wiki/Physics/Types.md)** — How every physical concept is one parameterised Multiset
 *   ⚛️ **[Primorial Particle Mapping](Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
-*   🔄 **[Fractal Unification](Library/Wiki/Physics/Fractal_Unification.md)** — Time, scale, and the 137-scale trajectory as fractal polynomial composition
+*   🔄 **[Recursive Multiset Composition](Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
+*   🧮 **[Mathematical Type Architecture](Library/Wiki/Maths/Types.md)** — How every physical concept is one parameterised Multiset
 
 ---
 
