@@ -8,7 +8,7 @@ Unlike standard quantum mechanics which relies on continuous wave functions, fie
 
 | Particle | Standard Physics Description | Primorial Architecture / Algebraic Mapping |
 | :--- | :--- | :--- |
-| **Neutrino** | Elusive, nearly massless particle that rarely interacts. | **$n=1$ Absolute Vacuum Lock**. Mirrohttps://github.com/justinkelly-ie/Linear-Physicsrs the fractional input spread without fractional change. It acts as an invisible vacuum configuration passing smoothly through the dark substrate. |
+| **Neutrino** | Elusive, nearly massless particle that rarely interacts. | **$n=1$ Absolute Vacuum Lock**. Mirrors the fractional input spread without fractional change. It acts as an invisible vacuum configuration passing smoothly through the dark substrate. |
 | **Photon** | Light quanta; travels at $c$, zero rest mass, mediates EM force. | **Red Metric Null-Quadrance Operator**. A 2D path where $x^2 - y^2 = 0$. Purely spatial energy ($Q_b > 0$) with zero projective time passage ($Q_r = 0$). |
 | **Electron / Lepton** | Stable fundamental point particle with distinct mass. | **$n=3$ Matter Gate Topological Knot**. A strictly non-fractional knot anchored in the visible blue geometric space. It needs no color confinement because it fundamentally satisfies grid stability on its own. |
 | **Molecular Bond** | Glue binding chemical/molecular structures (e.g. electron sharing). | **$n=4$ Composite Gate**. A "double-squeezed" gate ($2^2$) allowing multiple matter states to share the identical natural-number coordinate simultaneously, perfectly skirting Pauli Exclusion via arithmetic overlap. |
@@ -20,7 +20,7 @@ Unlike standard quantum mechanics which relies on continuous wave functions, fie
 ## Key Insights
 
 1. **Mass and Stability are Arithmetic Thresholds**: Particles do not possess "mass" in the traditional sense; mass is a measure of geometric localization ($n \in \mathbb{N}$) on the Blue Euclidean metric. If the arithmetic clears, it materializes. If it doesn't, it is either confined or bleeds into Dark Energy.
-2. **Physics is Compiler-Enforced**: We have successfully tested this mapping using dependent types (Quantitative Type Theory). The behavior of these particles—such as Baryon confinement, Photon absorption resulting in purely spatial impulses, and Weak Boson decomposition—is enforced mathematically by the Idris 2 type-checker and rigorously verified by Hedgehog property testing.
+2. **Physics is Compiler-Enforced**: We have successfully tested this mapping using dependent types (Quantitative Type Theory). The behavior of these particles—such as Baryon confinement, Photon absorption resulting in purely spatial impulses, and Weak Boson decomposition—is enforced mathematically by the Idris 2 type-checker and rigorously verified by QuickCheck property testing (51 tests, zero failures).
 3. **Continuous Properties are Illusions**: Interactions are simply matrix transformations (e.g., the Cross-Ratio matrix transforming null-quadrance photons into pure integer impulses upon absorption). No infinite waves, no $c$ constants—just integer mathematics.
 
 ## Standard Physics vs. Primorial Architecture
@@ -42,3 +42,27 @@ Our model explicitly discards continuous fields and forces, replacing them with 
 *   **Our Model says:** "Quarks are trapped because the $n=5$ spread polynomial mathematically outputs fractions that cannot be plotted onto a discrete integer pixel grid. Confinement isn't a continuous 'force' pulling them together; it's the fact that single fractional coordinates simply do not compute on the 137-grid."
 
 In RCIT, the symptoms (fractional quarks and confinement) are perfectly aligned with reality, but the diagnosis is entirely deterministic: particles are trapped because radiation tried to divide by a complex polynomial and failed to yield a whole integer, stranding the data in cross-coupled algebraic tension.
+
+---
+
+## Elements and Chemistry
+
+The gate pipeline doesn't stop at subatomic particles. It derives chemistry:
+
+### Oxygen (Z=8) — The Universal Mediator
+
+Oxygen is $2^3$ (BackgroundGate cubed). It perfectly divides the dark energy pool ($128 / 8 = 16$), and its residue in visible matter IS the MatterGate ($27 \bmod 8 = 3$). This is why Oxygen is the universal electron acceptor driving metabolism. Its valence of 2 (= BackgroundGate degree) means it accepts exactly 2 electrons.
+
+### Water (H₂O) — The Pythagorean Fixed Point
+
+Water's bond triangle at $(4,3) \leftrightarrow (3,4)$ with Oxygen at origin is the **unique** coordinate where the chromogeometric quadrances decode back to gate degrees:
+
+| Metric | Formula | Value | Gate |
+|---|---|---|---|
+| Blue | $4^2 + 3^2$ | $25 = 5^2$ | ChargeGate² |
+| Red | $4^2 - 3^2$ | $7$ | TimeGate |
+| Green | $2 \cdot 4 \cdot 3$ | $24 = 8 \times 3$ | Oxygen × MatterGate |
+
+The electron at position (4,3) has the same spread as the bond. At this coordinate, the distinction between **particle** and **interaction** dissolves.
+
+See `Physics.Elements.Water` and `Physics.Scales.PythagoreanFixedPoint` for the full derivation.
