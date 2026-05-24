@@ -108,9 +108,9 @@ We have stripped away legacy linear types (`Fraction`, `Spread`, `Quadrance` rec
 
 ```idris
 -- Exact rational integer math. No division truncation!
-quadranceNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
-spreadNL    : Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> (Integer, Integer)
-archimedesNL: Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> Integer
+quadranceNL : Metric -> VoxelNL -> VoxelNL -> Integer
+spreadNL    : Metric -> VoxelNL -> VoxelNL -> VoxelNL -> (Integer, Integer)
+archimedesNL: Metric -> VoxelNL -> VoxelNL -> VoxelNL -> Integer
 ```
 
 The Three-Fold Spread Theorem is mathematically guaranteed via exact cross-multiplication over triad geometry.
@@ -132,11 +132,11 @@ Amplitude = IntPolynumber                  -- = Multiset (Nat, Nat)
 
 -- The causal graph (directed edges between coordinates)
 0 Substrate : Type
-Substrate = Multiset (Geometry, Geometry)  -- = Multiset (PixelNL Integer, PixelNL Integer)
+Substrate = Multiset (Geometry, Geometry)  -- = Multiset (VoxelNL, VoxelNL)
 
 -- The quantum state vector (coordinates mapped to amplitudes)
 0 PixelIntPoly : Type
-PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (PixelNL Integer, Multiset (Nat, Nat))
+PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (VoxelNL, Multiset (Nat, Nat))
 
 -- The complete universe state
 0 UniverseState : Type
@@ -210,10 +210,10 @@ Historical aliases that resolved to these types:
 
 | Old Name | Current Type | Resolves To |
 |---|---|---|
-| FiberBundle | `PixelIntPoly` | `Multiset (PixelNL Integer, IntPolynumber)` |
-| StateVector | `PixelIntPoly` | `Multiset (PixelNL Integer, IntPolynumber)` |
-| SpacetimeManifold | `Substrate` | `Multiset (PixelNL Integer, PixelNL Integer)` |
-| Poset | `Substrate` | `Multiset (PixelNL Integer, PixelNL Integer)` |
-| Sheaf | `PixelIntPoly` | `Multiset (PixelNL Integer, IntPolynumber)` |
+| FiberBundle | `PixelIntPoly` | `Multiset (VoxelNL, IntPolynumber)` |
+| StateVector | `PixelIntPoly` | `Multiset (VoxelNL, IntPolynumber)` |
+| SpacetimeManifold | `Substrate` | `Multiset (VoxelNL, VoxelNL)` |
+| Poset | `Substrate` | `Multiset (VoxelNL, VoxelNL)` |
+| Sheaf | `PixelIntPoly` | `Multiset (VoxelNL, IntPolynumber)` |
 | DenseAMSet | `Multiset` | `Multiset a` |
 | AMSet | `SignedUnaryMultiset` | `record { 1 pos, 1 neg : UnaryMultiset a }` |

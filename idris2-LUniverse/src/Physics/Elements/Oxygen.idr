@@ -37,13 +37,13 @@ public export
 record OxygenAtom where
   constructor MkOxygen
   ||| The nucleus: 8 baryonic units (Z=8)
-  1 nucleus   : Multiset (PixelNL Integer, IntPolynumber)
+  1 nucleus   : Multiset (VoxelNL, IntPolynumber)
   ||| The electron cloud: 8 electrons on the MatterGate
-  1 electrons : Multiset (PixelNL Integer, IntPolynumber)
+  1 electrons : Multiset (VoxelNL, IntPolynumber)
 
 ||| Constructs an Oxygen atom from the pipeline.
 public export
-oxygen : PixelNL Integer -> OxygenAtom
+oxygen : VoxelNL -> OxygenAtom
 oxygen geom =
   let nucleusState  = elementalState 8 geom
       electronCloud = fromList [((geom, spreadPoly 3), 8)]
@@ -51,7 +51,7 @@ oxygen geom =
 
 ||| The total structural lag of an Oxygen atom.
 public export
-oxygenLag : PixelNL Integer -> Integer
+oxygenLag : VoxelNL -> Integer
 oxygenLag geom =
   let o = oxygen geom
   in stateLag o.nucleus + stateLag o.electrons

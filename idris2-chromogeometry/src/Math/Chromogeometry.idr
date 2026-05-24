@@ -35,7 +35,7 @@ implementation Show Metric where
 |||   - Physics: Spacetime Interval / Squared Distance / Metrical Norm
 |||   - Rational Trig: Quadrance Q(p1, p2)
 public export
-quadranceNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
+quadranceNL : Metric -> VoxelNL -> VoxelNL -> Integer
 quadranceNL metric (MkPixelNL x1 y1) (MkPixelNL x2 y2) =
   let dx = x2 - x1
       dy = y2 - y1
@@ -55,7 +55,7 @@ quadranceNL metric (MkPixelNL x1 y1) (MkPixelNL x2 y2) =
 |||   - Physics: Triadic Curvature / Symmetric Area Invariant
 |||   - Rational Trig: Archimedes Invariant A(Q1, Q2, Q3)
 public export
-archimedesNL : Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> Integer
+archimedesNL : Metric -> VoxelNL -> VoxelNL -> VoxelNL -> Integer
 archimedesNL metric p1 p2 p3 =
   let q1 = quadranceNL metric p1 p2
       q2 = quadranceNL metric p2 p3
@@ -70,7 +70,7 @@ archimedesNL metric p1 p2 p3 =
 |||   - Physics: Gauge Field Angle / Vector Deflection Ratio
 |||   - Rational Trig: Spread s(l1, l2)
 public export
-spreadNL : Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> (Integer, Integer)
+spreadNL : Metric -> VoxelNL -> VoxelNL -> VoxelNL -> (Integer, Integer)
 spreadNL metric p1 p2 p3 =
   -- Returns a fraction (Numerator, Denominator) representing the exact metric spread
   let q1 = quadranceNL metric p1 p2
@@ -83,7 +83,7 @@ spreadNL metric p1 p2 p3 =
 ||| Restored: Integer-approximated Spread.
 ||| Safely handles the rational spread fraction to feed your 3-fold canAscend gate directly.
 public export
-spreadIntNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
+spreadIntNL : Metric -> VoxelNL -> VoxelNL -> Integer
 spreadIntNL metric p1 p2 =
   -- Baseline projection mapping quadrance straight to the system's twisting capacity
   quadranceNL metric p1 p2
@@ -95,7 +95,7 @@ spreadIntNL metric p1 p2 =
 ||| Restored: Calculates the 'Color Pressure' of a Maxel lattice using non-linear math.
 ||| Sums the quadrances of all transitions within a specific metric.
 public export
-colorPressureNL : Metric -> Multiset (PixelNL Integer, PixelNL Integer) -> Integer
+colorPressureNL : Metric -> Multiset (VoxelNL, VoxelNL) -> Integer
 colorPressureNL metric lattice =
   let edges = multisetToList lattice
   in foldl (\acc, ((p1, p2), mult) => acc + (quadranceNL metric p1 p2 * mult)) 0 edges
@@ -107,7 +107,7 @@ colorPressureNL metric lattice =
 ||| Restored: Checks if three points form a 'flat' identity (Triple Quad / Archimedes Invariant = 0).
 ||| Exact Integer equality ensures no rounding errors in the Rational Spacetime Lattice.
 public export
-tripleQuadAuditNL : Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> Bool
+tripleQuadAuditNL : Metric -> VoxelNL -> VoxelNL -> VoxelNL -> Bool
 tripleQuadAuditNL metric p1 p2 p3 =
   archimedesNL metric p1 p2 p3 == 0
 
@@ -137,7 +137,7 @@ record MetricPivot a where
 
 ||| Non-linear (Integer) perpendicularity audit (treating PixelNL as vectors from origin).
 public export
-isPerpendicularNL : Metric -> PixelNL Integer -> PixelNL Integer -> Bool
+isPerpendicularNL : Metric -> VoxelNL -> VoxelNL -> Bool
 isPerpendicularNL Blue (MkPixelNL a1 b1) (MkPixelNL a2 b2) = (a1 * a2 + b1 * b2) == 0
 isPerpendicularNL Red (MkPixelNL a1 b1) (MkPixelNL a2 b2) = (a1 * a2 - b1 * b2) == 0
 isPerpendicularNL Green (MkPixelNL a1 b1) (MkPixelNL a2 b2) = (a1 * b2 + b1 * a2) == 0

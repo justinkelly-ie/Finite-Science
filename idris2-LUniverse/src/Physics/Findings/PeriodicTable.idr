@@ -63,7 +63,7 @@ moduloBase = 13
 ||| geometry. The spread polynomial S_1 is the unit baryon — Z protons
 ||| means multiplicity Z. The resonance gate checks if Z > 137.
 public export
-elementalState : (z : Nat) -> PixelNL Integer -> Multiset (PixelNL Integer, IntPolynumber)
+elementalState : (z : Nat) -> VoxelNL -> Multiset (VoxelNL, IntPolynumber)
 elementalState z geom =
   let unitBaryon = spreadPoly 1
   in fromList [((geom, unitBaryon), cast z)]
@@ -91,7 +91,7 @@ public export
 record Element where
   constructor MkElement
   atomicNumber : Nat
-  stateVector  : Multiset (PixelNL Integer, IntPolynumber)
+  stateVector  : Multiset (VoxelNL, IntPolynumber)
   stable       : isStableElement atomicNumber = True
 
 -----------------------------------------------------------------------

@@ -17,7 +17,7 @@ interface ObeysPauliExclusion a where
   hasNoCoordinateOverlap : a -> Bool
 
 ||| Helper function to check if a pixel exists in a list
-isPixelInList : PixelNL Integer -> List (PixelNL Integer) -> Bool
+isPixelInList : VoxelNL -> List (VoxelNL) -> Bool
 isPixelInList _ [] = False
 isPixelInList (MkPixelNL x y) ((MkPixelNL x' y') :: ps) =
   if (x == x' && y == y') 
@@ -25,7 +25,7 @@ isPixelInList (MkPixelNL x y) ((MkPixelNL x' y') :: ps) =
     else isPixelInList (MkPixelNL x y) ps
 
 ||| Helper function to check for any duplicates in a list of pixels
-hasDuplicates : List (PixelNL Integer) -> Bool
+hasDuplicates : List (VoxelNL) -> Bool
 hasDuplicates [] = False
 hasDuplicates (p :: ps) = 
   if isPixelInList p ps 
@@ -35,7 +35,7 @@ hasDuplicates (p :: ps) =
 ||| A Multiset of (Geometry, Amplitude) obeys Pauli Exclusion
 ||| if and only if no two entries share the exact same coordinates.
 public export
-implementation ObeysPauliExclusion (Multiset (PixelNL Integer, IntPolynumber)) where
+implementation ObeysPauliExclusion (Multiset (VoxelNL, IntPolynumber)) where
   hasNoCoordinateOverlap items_mset =
     let coords = map (fst . fst) (multisetToList items_mset)
     in not (hasDuplicates coords)

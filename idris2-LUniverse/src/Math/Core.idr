@@ -13,7 +13,7 @@ import Data.List
 --
 -- Every concept in this engine is built from two nested structures:
 --
---   Geometry  = PixelNL Integer   (a 2-component chromogeometric coordinate)
+--   Geometry  = VoxelNL   (a 2-component chromogeometric coordinate)
 --   Amplitude = IntPolynumber     (a polynomial of integer coefficients)
 --
 -- All categorical and physics naming conventions below are aliases or
@@ -44,7 +44,7 @@ import Data.List
 |||   Green → ResidueState  (Background / Dark Matter dust after resonance collapse)
 public export
 0 Geometry : Type
-Geometry = PixelNL Integer
+Geometry = VoxelNL
 
 -----------------------------------------------------------------------
 -- 2. AMPLITUDE (The Quantum State Value)
@@ -74,7 +74,7 @@ Amplitude = IntPolynumber
 -- is a directed causal edge from parent to child. No wrapper record,
 -- no intermediate List — just the same Multiset engine used everywhere.
 --
---   Substrate = Multiset (G, G)     where G = PixelNL Integer
+--   Substrate = Multiset (G, G)     where G = VoxelNL
 --
 -- This makes the architecture diagram exact:
 --
@@ -112,7 +112,7 @@ Substrate = Multiset (Geometry, Geometry)
 ||| Naming Zoo:
 |||   - Physics:          Fiber Bundle / Wavefunction / Fock Space State Vector / Gauge Field
 |||   - Category Theory:  Sheaf of Polynumbers over the Poset Base Space
-|||   - Concrete:         Multiset (PixelNL Integer, IntPolynumber) — each pixel
+|||   - Concrete:         Multiset (VoxelNL, IntPolynumber) — each pixel
 |||                       mapped to its local quantum amplitude polynomial.
 |||   - Replaces:         Math.Topology.Sheaf / FiberBundle / DenseAMSet wrappers
 |||

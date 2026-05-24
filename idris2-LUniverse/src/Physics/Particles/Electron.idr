@@ -26,4 +26,4 @@ import Data.Linear
 public export
 record Electron where
   constructor MkElectron
-  1 state : Multiset (PixelNL Integer, IntPolynumber)
+  1 state : Multiset (VoxelNL, IntPolynumber)

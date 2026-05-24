@@ -13,18 +13,18 @@ import Math.UnaryMultiset
 
 %default total
 
-implementation Show (PixelNL Integer) where
+implementation Show (VoxelNL) where
   show (MkPixelNL x y) = "PixelNL(" ++ show x ++ ", " ++ show y ++ ")"
 
--- Generate a lattice coordinate (PixelNL Integer)
-genPixelNL : Gen (PixelNL Integer)
+-- Generate a lattice coordinate (VoxelNL)
+genPixelNL : Gen (VoxelNL)
 genPixelNL = do
   x <- int (linear 0 10)
   y <- int (linear 0 10)
   pure (MkPixelNL (cast x) (cast y))
 
 -- Add N copies of the SAME pixel to a multiset
-replicateMSet : Nat -> PixelNL Integer -> UnaryMultiset (PixelNL Integer)
+replicateMSet : Nat -> VoxelNL -> UnaryMultiset (VoxelNL)
 replicateMSet Z _ = Zero
 replicateMSet (S k) p = Add p (replicateMSet k p)
 

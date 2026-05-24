@@ -43,7 +43,7 @@ capacityLimit = 137
 public export
 runAdaptiveCycle : Integer         -- The capacityLimit (137)
                 -> Metric          -- Gauge metric configuration (Blue/Red/Green)
-                -> PixelNL Integer -- Target macro coordinate for Scale N+1 condensation
+                -> VoxelNL -- Target macro coordinate for Scale N+1 condensation
                 -> UniverseState   -- Current generation state
                 -> UniverseState   -- Next generation state
 runAdaptiveCycle capacityLimit metric macroTarget (MkUniverseState sub field) =

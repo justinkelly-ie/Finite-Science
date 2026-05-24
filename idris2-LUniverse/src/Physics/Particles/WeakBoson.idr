@@ -20,4 +20,4 @@ import Math.Polynumber
 public export
 record WeakBoson where
   constructor MkWeakBoson
-  1 state : Multiset (PixelNL Integer, IntPolynumber)
+  1 state : Multiset (VoxelNL, IntPolynumber)

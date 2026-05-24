@@ -31,7 +31,7 @@ record DimensionFreeze where
 ||| Evaluates Epoch 3 by deriving the spatial dimensionality from the
 ||| visible matter pool and checking the holographic condition.
 public export
-evaluateEpoch3 : Multiset (PixelNL Integer, IntPolynumber) -> DimensionFreeze
+evaluateEpoch3 : Multiset (VoxelNL, IntPolynumber) -> DimensionFreeze
 evaluateEpoch3 _ = 
   let grid = constructPrimorialGrid
       vmCount = cast {to=Integer} (multiplicityAll (visibleMatter grid))

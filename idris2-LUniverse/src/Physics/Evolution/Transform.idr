@@ -32,9 +32,9 @@ isLatentTerm latentBarrier (_, coef) = coef >= latentBarrier
 ||| The fundamental partition gate. 
 public export
 partitionLogic : Integer 
-              -> PixelNL Integer
+              -> VoxelNL
               -> IntPolynumber 
-              -> (Multiset (PixelNL Integer, IntPolynumber), Multiset (PixelNL Integer, IntPolynumber))
+              -> (Multiset (VoxelNL, IntPolynumber), Multiset (VoxelNL, IntPolynumber))
 partitionLogic latentBarrier geom rawTerms_mset =
   let (latentTerms, visibleTerms) = partition (isLatentTerm latentBarrier) (multisetToList rawTerms_mset)
       latentPoly  = fromList latentTerms
@@ -63,9 +63,9 @@ shatterTerm moduloBase (powers, coef) =
 public export
 evaluateResonance : Integer 
                  -> Integer
-                 -> PixelNL Integer 
-                 -> Multiset (PixelNL Integer, IntPolynumber) 
-                 -> Multiset (PixelNL Integer, IntPolynumber)
+                 -> VoxelNL 
+                 -> Multiset (VoxelNL, IntPolynumber) 
+                 -> Multiset (VoxelNL, IntPolynumber)
 evaluateResonance capacityLimit moduloBase geom visibleSpace@items_mset =
   let totalLag = multiplicityAll visibleSpace
   in if totalLag > capacityLimit
@@ -91,16 +91,16 @@ evaluateResonance capacityLimit moduloBase geom visibleSpace@items_mset =
 ||| Scalar-only ascension check.
 ||| Use buildAscensionCapacities for the full three-fold proof.
 public export
-checkAscension : Integer -> Multiset (PixelNL Integer, IntPolynumber) -> Bool
+checkAscension : Integer -> Multiset (VoxelNL, IntPolynumber) -> Bool
 checkAscension capacityLimit stateSpace =
   let totalLag = multiplicityAll stateSpace
   in totalLag == capacityLimit
 
 ||| Macro Scale Condensation.
 public export
-ascendScale : PixelNL Integer 
-           -> Multiset (PixelNL Integer, IntPolynumber) 
-           -> Multiset (PixelNL Integer, IntPolynumber)
+ascendScale : VoxelNL 
+           -> Multiset (VoxelNL, IntPolynumber) 
+           -> Multiset (VoxelNL, IntPolynumber)
 ascendScale macroGeom items_mset =
   let macroPoly = foldl (\acc, ((_, poly), count) =>
                           addMultiset acc (scaleMultiset count poly)
