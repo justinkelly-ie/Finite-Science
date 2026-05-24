@@ -12,7 +12,7 @@ import Math.Fraction
 ||| A Photon in the DarkPlusMatter framework is defined not as a continuous wave,
 ||| but as an algebraic Null-Quadrance Operator on the Red (Relativistic) Metric.
 public export
-isPhotonPixel : VoxelNL -> Bool
+isPhotonPixel : PixelNL Integer -> Bool
 isPhotonPixel p = quadranceNL Red (MkPixelNL 0 0) p == 0
 
 ||| Represents a validated Photon.
@@ -21,13 +21,13 @@ isPhotonPixel p = quadranceNL Red (MkPixelNL 0 0) p == 0
 public export
 record Photon where
   constructor MkPhoton
-  particle : VoxelNL
+  particle : PixelNL Integer
   -- In a fully dependently typed theorem, we would include:
   -- 0 prf : isPhotonPixel particle = True
 
 ||| Safely instantiates a Photon if the coordinate meets the speed of light limit.
 public export
-createPhoton : VoxelNL -> Maybe Photon
+createPhoton : PixelNL Integer -> Maybe Photon
 createPhoton p = 
   if isPhotonPixel p then Just (MkPhoton p) else Nothing
 
@@ -44,7 +44,7 @@ blueEnergy (MkPhoton p) = quadranceNL Blue (MkPixelNL 0 0) p
 ||| (1 1) (x)   (2x)
 ||| (1 -1)(x) = (0 )
 public export
-absorbPhoton : Photon -> VoxelNL
+absorbPhoton : Photon -> PixelNL Integer
 absorbPhoton (MkPhoton (MkPixelNL x y)) = MkPixelNL (x + y) (x - y)
 
 ||| Calculates the physical propagation speed of a state across the grid.

@@ -37,7 +37,7 @@ record DarkPlusMatter where
   ||| The current generation encoded as a Spread Polynomial.
   statePoly    : IntPolynumber
   ||| The underlying lattice topology (Support of the Maxel) embedding the 128+27 states.
-  maxelProjection : Multiset (VoxelNL)
+  maxelProjection : Multiset (PixelNL Integer)
   ||| The current unified Flavor configuration.
   flavor       : Flavor
 
@@ -55,7 +55,7 @@ Eq DarkPlusMatter where
 
 ||| Creates a foundational, unexcited (Background) DarkPlusMatter state.
 public export
-primordialDarkPlusMatter : Multiset (VoxelNL) -> DarkPlusMatter
+primordialDarkPlusMatter : Multiset (PixelNL Integer) -> DarkPlusMatter
 primordialDarkPlusMatter supp = MkDarkPlusMatter Z emptyIntPoly supp Background
 
 ||| Progresses the DarkPlusMatter state to the N-th spread polynomial.
@@ -70,7 +70,7 @@ pivotFlavor newF (MkDarkPlusMatter gen p supp _) = MkDarkPlusMatter gen p supp n
 
 ||| Extracts the primary topological pixel from a DarkPlusMatter state.
 public export
-extractPixel : DarkPlusMatter -> VoxelNL
+extractPixel : DarkPlusMatter -> PixelNL Integer
 extractPixel state =
   case state.maxelProjection of
     ZeroM      => MkPixelNL 0 0

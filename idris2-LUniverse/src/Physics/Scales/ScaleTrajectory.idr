@@ -43,7 +43,7 @@ import Math.Chromogeometry
 
 ||| The position at scale k.
 public export
-scalePosition : Nat -> VoxelNL
+scalePosition : Nat -> PixelNL Integer
 scalePosition k =
   let n = cast {to=Integer} k + 1
   in MkPixelNL (4 * n) (3 * n)

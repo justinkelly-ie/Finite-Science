@@ -60,7 +60,7 @@ import Math.Chromogeometry
 ||| The N+2 ice direction: hydrogen bond + fixed point.
 ||| (7,7) + (4,3) = (11, 10)
 public export
-iceDirection : VoxelNL
+iceDirection : PixelNL Integer
 iceDirection = MkPixelNL (hydrogenBondDirection.x + h1Position.x)
                           (hydrogenBondDirection.y + h1Position.y)
 
@@ -117,7 +117,7 @@ blueIsResonanceTimesDecoherence = iceBlueQuadrance == 13 * 17
 ||| Q = (11-7)² + (10-7)² = 4² + 3² = 25 = ChargeGate²
 ||| This is IDENTICAL to Water's bond quadrance.
 public export
-iceEdgeDirection : VoxelNL
+iceEdgeDirection : PixelNL Integer
 iceEdgeDirection = MkPixelNL (iceDirection.x - hydrogenBondDirection.x)
                               (iceDirection.y - hydrogenBondDirection.y)
 

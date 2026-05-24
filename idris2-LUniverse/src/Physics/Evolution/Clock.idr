@@ -39,8 +39,8 @@ mergeGraph = mergeSubstrate
 public export
 stepMaxelTime : Substrate                                    -- Active spacetime graph at T
              -> Substrate                                    -- New structural relations to merge
-             -> Multiset (VoxelNL, IntPolynumber) -- State vector to evolve
-             -> Multiset (VoxelNL, IntPolynumber) -- Evolved state vector at T + delta
+             -> Multiset (PixelNL Integer, IntPolynumber) -- State vector to evolve
+             -> Multiset (PixelNL Integer, IntPolynumber) -- Evolved state vector at T + delta
 stepMaxelTime currentGraph incomingRelations items_mset =
   let -- 1. Merge the new causal relations directly using native multiset union
       updatedGraph = mergeGraph currentGraph incomingRelations
@@ -53,7 +53,7 @@ stepMaxelTime currentGraph incomingRelations items_mset =
       -- 3. Look up the matching Wildberger spread polynomial for this density
       temporalSpread = spreadPoly structuralDensity
       
-      evolvePair : ((VoxelNL, IntPolynumber), Integer) -> ((VoxelNL, IntPolynumber), Integer)
+      evolvePair : ((PixelNL Integer, IntPolynumber), Integer) -> ((PixelNL Integer, IntPolynumber), Integer)
       evolvePair ((geom, poly), count) =
         let evolvedPoly = mulIntPoly poly temporalSpread
         in ((geom, evolvedPoly), count)

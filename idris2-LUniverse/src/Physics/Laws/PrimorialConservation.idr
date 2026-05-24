@@ -22,11 +22,11 @@ interface ConservesInformation a where
 
 ||| Checks if the multiset maintains exactly 210 states.
 ||| Safe because Multiset is a standard ADT — linearity is interface-level only.
-primorialCheck : Multiset (VoxelNL, IntPolynumber) -> Bool
+primorialCheck : Multiset (PixelNL Integer, IntPolynumber) -> Bool
 primorialCheck mset = multiplicityAll mset == 210
 
-||| In the Unified Multiset (VoxelNL, IntPolynumber) model, Primorial Information is exactly conserved
+||| In the Unified Multiset (PixelNL Integer, IntPolynumber) model, Primorial Information is exactly conserved
 ||| if the overall state count natively maps to the 210-state bound (2 × 3 × 5 × 7).
 public export
-implementation ConservesInformation (Multiset (VoxelNL, IntPolynumber)) where
+implementation ConservesInformation (Multiset (PixelNL Integer, IntPolynumber)) where
   isPrimorialManifoldIntact = primorialCheck

@@ -47,7 +47,7 @@ record CosmologicalScale where
 
 ||| Evaluates the scale of an Epoch without physically consuming it.
 public export
-evaluateScale : Nat -> Multiset (VoxelNL, IntPolynumber) -> CosmologicalScale
+evaluateScale : Nat -> Multiset (PixelNL Integer, IntPolynumber) -> CosmologicalScale
 evaluateScale n _ = 
   let dynamicGridLimit = cast {to=Integer} (calculateGridLimit constructPrimorialGrid)
   in MkCosmologicalScale n (dynamicGridLimit ^ n)

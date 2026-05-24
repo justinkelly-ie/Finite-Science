@@ -20,7 +20,7 @@ import Physics.Evolution.Gate
 public export
 generateLocalSpreadPoly : Metric 
                        -> Substrate 
-                       -> VoxelNL -- The local voxel point being evaluated
+                       -> PixelNL Integer -- The local voxel point being evaluated
                        -> IntPolynumber
 generateLocalSpreadPoly metric substrate currentGeom =
   let edges = multisetToList substrate

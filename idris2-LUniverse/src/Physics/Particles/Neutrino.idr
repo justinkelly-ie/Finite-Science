@@ -21,4 +21,4 @@ import Math.Polynumber
 public export
 record Neutrino where
   constructor MkNeutrino
-  1 state : Multiset (VoxelNL, IntPolynumber)
+  1 state : Multiset (PixelNL Integer, IntPolynumber)

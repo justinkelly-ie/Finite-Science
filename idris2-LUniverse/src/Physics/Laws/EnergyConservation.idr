@@ -23,13 +23,13 @@ interface ConservesEnergy a b where
 ||| A simple implementation demonstrating energy conservation between two pixels.
 ||| (e.g. a Photon transforming into another state, or elastic scattering).
 public export
-implementation ConservesEnergy (VoxelNL) (VoxelNL) where
+implementation ConservesEnergy (PixelNL Integer) (PixelNL Integer) where
   isEnergyConserved (MkPixelNL x1 y1) (MkPixelNL x2 y2) = 
     let res = quadranceNL Blue (MkPixelNL 0 0) (MkPixelNL x1 y1) == quadranceNL Blue (MkPixelNL 0 0) (MkPixelNL x2 y2)
     in Builtin.(#) res (Builtin.(#) (MkPixelNL x1 y1) (MkPixelNL x2 y2))
 
-||| For the Unified Multiset (VoxelNL, IntPolynumber) model, Energy is mathematically conserved if the total 
+||| For the Unified Multiset (PixelNL Integer, IntPolynumber) model, Energy is mathematically conserved if the total 
 ||| multiset sizes (or total degree) of the input polynomial equals the output polynomial.
 public export
-implementation ConservesEnergy (Multiset (VoxelNL, IntPolynumber)) (Multiset (VoxelNL, IntPolynumber)) where
+implementation ConservesEnergy (Multiset (PixelNL Integer, IntPolynumber)) (Multiset (PixelNL Integer, IntPolynumber)) where
   isEnergyConserved sp1_mset sp2_mset = Builtin.(#) True (Builtin.(#) sp1_mset sp2_mset)

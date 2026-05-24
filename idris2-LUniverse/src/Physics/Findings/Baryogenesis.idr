@@ -39,7 +39,7 @@ data BaryonGenesis : Type where
 ||| Evaluates the Epoch 2 partition by constructing the Primorial Grid
 ||| and measuring the actual pool sizes.
 public export
-evaluateEpoch2 : Multiset (VoxelNL, IntPolynumber) -> BaryonGenesis
+evaluateEpoch2 : Multiset (PixelNL Integer, IntPolynumber) -> BaryonGenesis
 evaluateEpoch2 _ = 
   let grid = constructPrimorialGrid
       de   = cast {to=Nat} (multiplicityAll (darkEnergy grid))

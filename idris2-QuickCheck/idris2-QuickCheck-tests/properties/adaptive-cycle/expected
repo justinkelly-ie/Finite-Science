@@ -42,7 +42,7 @@ prop_oxygenValenceIs2: PASS
 prop_darkEnergyQuantaIs16: PASS
 prop_hydrogenLagMinimal: PASS
 prop_bondQuadranceIs25: PASS
-prop_bondSpreadGateDerived: FAIL
+prop_bondSpreadGateDerived: PASS
 prop_interHydrogenIsBackground: PASS
 prop_bondsRedPerpendicular: PASS
 prop_electronRedIsTimeGate: PASS

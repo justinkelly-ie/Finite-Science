@@ -108,9 +108,9 @@ We have stripped away legacy linear types (`Fraction`, `Spread`, `Quadrance` rec
 
 ```idris
 -- Exact rational integer math. No division truncation!
-quadranceNL : Metric -> VoxelNL -> VoxelNL -> Integer
-spreadNL    : Metric -> VoxelNL -> VoxelNL -> VoxelNL -> (Integer, Integer)
-archimedesNL: Metric -> VoxelNL -> VoxelNL -> VoxelNL -> Integer
+quadranceNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
+spreadNL    : Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> (Integer, Integer)
+archimedesNL: Metric -> PixelNL Integer -> PixelNL Integer -> PixelNL Integer -> Integer
 ```
 
 The Three-Fold Spread Theorem is mathematically guaranteed via exact cross-multiplication over triad geometry.
@@ -124,7 +124,7 @@ Every physical concept is a **type alias** over the Multiset engine. No wrappers
 ```idris
 -- A coordinate on the integer pixel grid
 0 Geometry  : Type
-Geometry = VoxelNL
+Geometry = PixelNL Integer
 
 -- A polynomial amplitude at a coordinate
 0 Amplitude : Type
@@ -132,11 +132,11 @@ Amplitude = IntPolynumber                  -- = Multiset (Nat, Nat)
 
 -- The causal graph (directed edges between coordinates)
 0 Substrate : Type
-Substrate = Multiset (Geometry, Geometry)  -- = Multiset (VoxelNL, VoxelNL)
+Substrate = Multiset (Geometry, Geometry)  -- = Multiset (PixelNL Integer, PixelNL Integer)
 
 -- The quantum state vector (coordinates mapped to amplitudes)
 0 PixelIntPoly : Type
-PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (VoxelNL, Multiset (Nat, Nat))
+PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (PixelNL Integer, Multiset (Nat, Nat))
 
 -- The complete universe state
 0 UniverseState : Type
@@ -154,7 +154,7 @@ graph TD
     C --> E[UniverseState]
     D --> E
     
-    F[Geometry / VoxelNL] --> C
+    F[Geometry / PixelNL Integer] --> C
     F --> D
 ```
 
@@ -176,7 +176,7 @@ computeTwist : Metric -> Metric -> Metric -> IntPolynumber
 Bridge functions that map spatial chromogeometric curvature directly into an active time-evolution Polynumber operator.
 
 ```idris
-generateLocalSpreadPoly : Metric -> Substrate -> VoxelNL -> IntPolynumber
+generateLocalSpreadPoly : Metric -> Substrate -> PixelNL Integer -> IntPolynumber
 
 stepUniverseLocalized : Integer -> Metric -> Substrate -> PixelIntPoly -> (Substrate, PixelIntPoly)
 ```
@@ -198,8 +198,8 @@ The temporal engine orchestrates the phase transitions across scales.
 Coordinate partition and resonance logic applied globally across the state vector during a clock tick.
 
 ```idris
-partitionLogic : Integer -> VoxelNL -> IntPolynumber -> (IntPolynumber, IntPolynumber)
-evaluateResonance : Integer -> Integer -> VoxelNL -> IntPolynumber -> IntPolynumber
+partitionLogic : Integer -> PixelNL Integer -> IntPolynumber -> (IntPolynumber, IntPolynumber)
+evaluateResonance : Integer -> Integer -> PixelNL Integer -> IntPolynumber -> IntPolynumber
 ```
 
 ---
@@ -210,10 +210,10 @@ Historical aliases that resolved to these types:
 
 | Old Name | Current Type | Resolves To |
 |---|---|---|
-| FiberBundle | `PixelIntPoly` | `Multiset (VoxelNL, IntPolynumber)` |
-| StateVector | `PixelIntPoly` | `Multiset (VoxelNL, IntPolynumber)` |
-| SpacetimeManifold | `Substrate` | `Multiset (VoxelNL, VoxelNL)` |
-| Poset | `Substrate` | `Multiset (VoxelNL, VoxelNL)` |
-| Sheaf | `PixelIntPoly` | `Multiset (VoxelNL, IntPolynumber)` |
+| FiberBundle | `PixelIntPoly` | `Multiset (PixelNL Integer, IntPolynumber)` |
+| StateVector | `PixelIntPoly` | `Multiset (PixelNL Integer, IntPolynumber)` |
+| SpacetimeManifold | `Substrate` | `Multiset (PixelNL Integer, PixelNL Integer)` |
+| Poset | `Substrate` | `Multiset (PixelNL Integer, PixelNL Integer)` |
+| Sheaf | `PixelIntPoly` | `Multiset (PixelNL Integer, IntPolynumber)` |
 | DenseAMSet | `Multiset` | `Multiset a` |
 | AMSet | `SignedUnaryMultiset` | `record { 1 pos, 1 neg : UnaryMultiset a }` |

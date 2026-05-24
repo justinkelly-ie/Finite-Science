@@ -41,22 +41,22 @@ hash key path = foldl combine (key * 31) path
                                    O => 0
                                    I => 1)
 
--- LCG state hijacked to hold the MaxelNL (VoxelNL)!
+-- LCG state hijacked to hold the MaxelNL (PixelNL Integer)!
 public export
 record LCGState where
   constructor MkLCGState
   seed : Int
   path : List Digit
-  universe : MaxelNL (VoxelNL)
+  universe : MaxelNL (PixelNL Integer)
 
 -- Initialize LCG with a seed and the absolute vacuum root
 public export
 initLCG : Int -> LCGState
 initLCG seed = MkLCGState seed [] (MkMaxelNL [])
 
--- Initialize LCG with a seed and a specific custom MaxelNL (VoxelNL) root
+-- Initialize LCG with a seed and a specific custom MaxelNL (PixelNL Integer) root
 public export
-initLCGWith : Int -> MaxelNL (VoxelNL) -> LCGState
+initLCGWith : Int -> MaxelNL (PixelNL Integer) -> LCGState
 initLCGWith seed startUniv = MkLCGState seed [] startUniv
 
 -- Update the path by treating it as a binary counter and incrementing it

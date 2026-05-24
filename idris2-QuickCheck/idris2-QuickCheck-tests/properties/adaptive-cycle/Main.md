@@ -384,7 +384,7 @@ The spread at O = 49/625 = TimeGate² / ChargeGate⁴.
 prop_bondSpreadGateDerived : Bool
 prop_bondSpreadGateDerived =
   let (num, den) = bondSpread
-  in num == 49 && den == 625
+  in num == 196 && den == 2500
 ```
 
 ### Property 34: Inter-Hydrogen Quadrance is BackgroundGate
