@@ -1,6 +1,5 @@
 module Physics.Findings.HadronGluonDynamics
 
-import Math.FiberBundle
 import Physics.Particles.Baryon
 import Math.Chromogeometry
 import Data.Linear
@@ -18,7 +17,7 @@ import Data.Linear
 ||| Quarks must pair into Triads (Baryons) to structurally offset their fractional 
 ||| tension so that $A(Q) = T(s)$.
 |||
-||| However, as the Baryon moves across the grid, the geometry constantly shifts.
+||| However, as the Baryon grid, the geometry constantly shifts.
 ||| A "Gluon" is merely the mathematical transaction—a `ColorPivot`—that dynamically
 ||| shifts the fractional remainder across the Red, Green, and Blue metrics 
 ||| to continuously re-balance the $A(Q) = T(s)$ lock.
@@ -31,7 +30,7 @@ interface ColorDynamics a where
   ||| Returns a geometrically stable Baryon.
   executeGluonTransaction : (1 _ : a) -> a
 
-||| Simulates a structural "color" shift within a Baryon to maintain stability.
+||| Simulates a structural "color" shift within a Baryon.
 public export
-implementation ColorDynamics (Baryon t1 t2 t3) where
+implementation ColorDynamics (Baryon) where
   executeGluonTransaction baryon = baryon

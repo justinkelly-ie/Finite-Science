@@ -5,8 +5,8 @@ Advanced labeled multisets use the `Ref1` state thread to achieve high performan
 ```idris
 module Main
 
-import Math.Multiset
-import Math.Multiset.Labeled
+import Math.UnaryMultiset
+import Math.UnaryMultiset.Labeled
 import Data.Linear
 import QuickCheck
 
@@ -36,13 +36,13 @@ We use `withLMS` to initiate a state thread where we can safely mutate our colle
 
 ```idris
 ||| A stateful example of building a labeled collection.
-exampleUsage : MSet ()
+exampleUsage : UnaryMultiset ()
 exampleUsage =
-  let lms1 = Math.Multiset.Labeled.empty {l=Integer} {a=Integer}
-      lms2 = Math.Multiset.Labeled.add 1 5 lms1
-      lms3 = Math.Multiset.Labeled.add 2 3 lms2
-      lms4 = Math.Multiset.Labeled.add 1 2 lms3
-      Builtin.(#) c lms5 = Math.Multiset.Labeled.countL 1 lms4
+  let lms1 = Math.UnaryMultiset.Labeled.empty {l=Integer} {a=Integer}
+      lms2 = Math.UnaryMultiset.Labeled.add 1 5 lms1
+      lms3 = Math.UnaryMultiset.Labeled.add 2 3 lms2
+      lms4 = Math.UnaryMultiset.Labeled.add 1 2 lms3
+      Builtin.(#) c lms5 = Math.UnaryMultiset.Labeled.countL 1 lms4
   in case lconsume lms5 of () => c
 ```
 
@@ -59,9 +59,9 @@ prop_partitionIsolation : Property
 prop_partitionIsolation = forAll {a = PartitionTest} {prop = Bool} arbitrary (MkFn (\p => 
   if p.lbl1 == p.lbl2 then True
   else
-    let lms1 = Math.Multiset.Labeled.empty {l=Integer} {a=Integer}
-        lms2 = Math.Multiset.Labeled.add p.lbl1 p.val lms1
-        Builtin.(#) n lms3 = Math.Multiset.Labeled.countL p.lbl2 lms2
+    let lms1 = Math.UnaryMultiset.Labeled.empty {l=Integer} {a=Integer}
+        lms2 = Math.UnaryMultiset.Labeled.add p.lbl1 p.val lms1
+        Builtin.(#) n lms3 = Math.UnaryMultiset.Labeled.countL p.lbl2 lms2
     in case lconsume lms3 of
          () => countMSet n == 0))
 ```

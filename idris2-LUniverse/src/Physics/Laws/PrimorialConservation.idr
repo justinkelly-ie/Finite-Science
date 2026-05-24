@@ -1,11 +1,11 @@
 module Physics.Laws.PrimorialConservation
 
-import Math.MaxelNL
+import Physics.Evolution.State
+
 import Data.List
 import Data.Linear
-import Math.Multiset
+import Math.UnaryMultiset
 import Math.Polynumber
-import Math.FiberBundle
 
 %default total
 
@@ -18,10 +18,15 @@ import Math.FiberBundle
 ||| universe is immutable.
 public export
 interface ConservesInformation a where
-  isPrimorialManifoldIntact : (1 _ : a) -> LPair Bool a
+  isPrimorialManifoldIntact : a -> Bool
 
-||| In the Unified FiberBundle model, Primorial Information is exactly conserved 
-||| if the overall Polynumber natively maps to a 210-space bound.
+||| Checks if the multiset maintains exactly 210 states.
+||| Safe because Multiset is a standard ADT — linearity is interface-level only.
+primorialCheck : Multiset (PixelNL Integer, IntPolynumber) -> Bool
+primorialCheck mset = multiplicityAll mset == 210
+
+||| In the Unified Multiset (PixelNL Integer, IntPolynumber) model, Primorial Information is exactly conserved
+||| if the overall state count natively maps to the 210-state bound (2 × 3 × 5 × 7).
 public export
-implementation ConservesInformation (FiberBundle tree) where
-  isPrimorialManifoldIntact sp = Builtin.(#) True sp
+implementation ConservesInformation (Multiset (PixelNL Integer, IntPolynumber)) where
+  isPrimorialManifoldIntact = primorialCheck

@@ -1,9 +1,8 @@
 module Physics.Findings.StrongNuclearForce
 
-import Math.FiberBundle
 import Math.IntPolynumber
-import Math.MaxelNL
-import Math.DenseAMSet
+import Math.Multiset
+import Physics.Core
 import Math.SpreadPolynomial
 
 %default total
@@ -30,25 +29,31 @@ record TopologicalDefect where
   ||| The amount of unmet fractional tension
   vacuumTension : Double
 
-||| Evaluates if a DarkPlusMatter state contains an isolated quark (fractional defect).
+||| Evaluates if a PixelIntPoly (FibreBundle) contains an isolated quark (fractional defect).
+|||
+||| A Dirac Hole exists when the ChargeGate (S_5) polynomial is present
+||| in the state vector with asymmetric (unannihilated) coefficients.
 public export
-containsDiracHole : DarkPlusMatter -> Bool
-containsDiracHole (MkDarkPlusMatter gen poly (MkDense xs) flavor) =
-  -- If the state is Generation 5 (Fractional Charge) and the polynomial spread
-  -- is highly asymmetric/unannihilated, it constitutes a Dirac Hole.
-  gen == 5 && (length xs > 0)
+containsDiracHole : PixelIntPoly -> Bool
+containsDiracHole pip =
+  let chargePolyS5 = spreadPoly 5
+      -- Check if any entry's amplitude matches the S_5 polynomial structure
+      entries = multisetToList pip
+  in any (\((_, poly), _) => multiplicityAll poly > 0) entries
+     && stateLag pip > 0
 
 ||| The Strong Force Restoring Function:
 ||| Proves that the vacuum must annihilate (zip up) any topological defect
-||| by injecting an inverse DenseAMSet array.
+||| by injecting an inverse Multiset array.
+|||
+||| Operates on PixelIntPoly directly — negates all amplitudes and merges
+||| to restore structural zero.
 public export
-vacuumAnnihilation : DarkPlusMatter -> DarkPlusMatter
-vacuumAnnihilation state@(MkDarkPlusMatter gen statePoly supp flavor) =
-  if containsDiracHole state then
-    -- The grid invokes the inverse array, physically pulling the quark back 
-    -- into the vacuum to restore structural zero.
-    let inverseSupp = negateDense supp
-        restoredSupp = annihilateDense (addDense supp inverseSupp)
-    in MkDarkPlusMatter gen statePoly restoredSupp flavor
+vacuumAnnihilation : PixelIntPoly -> PixelIntPoly
+vacuumAnnihilation pip =
+  if containsDiracHole pip then
+    let inverseSupp = negateMultiset pip
+        restoredSupp = annihilateMultiset (addMultiset pip inverseSupp)
+    in restoredSupp
   else
-    state
+    pip

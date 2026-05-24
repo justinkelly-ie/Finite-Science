@@ -1,6 +1,6 @@
 module Main
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 import Data.List
 
 isDivisibleBy : Integer -> Integer -> Bool
@@ -12,14 +12,14 @@ divisors k = filter (\d => isDivisibleBy (cast k) (cast d)) [1..k]
 dCount : Nat -> Nat
 dCount k = length (divisors k)
 
-repeatElements : Nat -> Nat -> List (MSet (MSet ()))
-repeatElements count val = replicate count (Math.Multiset.fromNat val)
+repeatElements : Nat -> Nat -> List (UnaryMultiset (UnaryMultiset ()))
+repeatElements count val = replicate count (Math.UnaryMultiset.fromNat val)
 
-divisorCountBox : Nat -> MSet (MSet (MSet ()))
+divisorCountBox : Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
 divisorCountBox n = fromList (concatMap (\k => repeatElements (dCount k) k) [1..n])
 
-zetaBox : Nat -> MSet (MSet (MSet ()))
-zetaBox n = fromList (map Math.Multiset.fromNat [1..n])
+zetaBox : Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+zetaBox n = fromList (map Math.UnaryMultiset.fromNat [1..n])
 
 prop_zeta_zeta_dcount : Property
 prop_zeta_zeta_dcount = property $ do

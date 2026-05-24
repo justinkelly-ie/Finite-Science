@@ -3,7 +3,7 @@ module Math.Chromogeometry
 import Math.BoxInt
 import Math.Maxel
 import Math.MaxelNL
-import Math.Multiset
+import Math.UnaryMultiset
 import Math.Interfaces
 
 %default total
@@ -102,7 +102,7 @@ implementation Show Metric where
 -- ||| Calculates the 'Color Pressure' of a Maxel lattice.
 -- ||| Sums the quadrances of all transitions within a specific metric.
 -- public export
--- colorPressure : (m : Metric) -> (val : (1 _ : a) -> BoxInt) -> (1 _ : MSet (Pixel a)) -> BoxInt
+-- colorPressure : (m : Metric) -> (val : (1 _ : a) -> BoxInt) -> (1 _ : UnaryMultiset (Pixel a)) -> BoxInt
 -- colorPressure m v Zero = Zero
 -- colorPressure m v (Add p ps) = 
 --   let q = Math.Chromogeometry.quadrance m v p
@@ -200,8 +200,66 @@ isPerpendicularNL Red (MkPixelNL a1 b1) (MkPixelNL a2 b2) = (a1 * a2 - b1 * b2) 
 isPerpendicularNL Green (MkPixelNL a1 b1) (MkPixelNL a2 b2) = (a1 * b2 + b1 * a2) == 0
 
 -----------------------------------------------------------------------
--- 7. PERPENDICULARITY
+-- 6b. SPREAD (Angular Tension Between Two Directions)
+--
+-- Naming Zoo:
+--   Physics:          Angular Tension / Twist Capacity / Phase Angle
+--   Category Theory:  Cosheaf Angular Measurement / Metric Form Restriction
+--   Rational Trig:    Spread s(l1, l2) = (a1*b2 - a2*b1)^2 / (Q(l1) * Q(l2))
+--
+-- The spread measures the angular separation between two direction vectors
+-- in each of the three Chromogeometric metrics. In the Blue metric this is
+-- the classical sin²(θ). In Red and Green it has hyperbolic and product
+-- interpretations respectively.
 -----------------------------------------------------------------------
+
+||| Cross product of two 2D direction vectors: a1*b2 - a2*b1.
+||| This is the fundamental building block for spread computation.
+public export
+crossNL : PixelNL Integer -> PixelNL Integer -> Integer
+crossNL (MkPixelNL a1 b1) (MkPixelNL a2 b2) = a1 * b2 - a2 * b1
+
+||| The spread numerator: (a1*b2 - a2*b1)^2.
+||| Always non-negative. Equal to zero iff the two directions are parallel.
+public export
+spreadNumeratorNL : PixelNL Integer -> PixelNL Integer -> Integer
+spreadNumeratorNL p1 p2 =
+  let c = crossNL p1 p2
+  in c * c
+
+||| The full spread between two direction vectors under a given Metric.
+|||
+||| Returns (numerator, denominator) where:
+|||   numerator   = (cross product)^2
+|||   denominator = Q_m(p1) * Q_m(p2)
+|||
+||| The spread is exactly numerator / denominator.
+||| Returns (0, 1) if either direction has zero quadrance (degenerate).
+|||
+||| Naming Zoo:
+|||   Physics:        sin²(θ) in Blue / sinh²(θ) in Red
+|||   Rational Trig:  s(l1, l2) = (a1*b2 - a2*b1)^2 / (Q1 * Q2)
+public export
+spreadNL : Metric -> PixelNL Integer -> PixelNL Integer -> (Integer, Integer)
+spreadNL m p1 p2 =
+  let q1  = quadranceNL m p1
+      q2  = quadranceNL m p2
+      num = spreadNumeratorNL p1 p2
+      den = q1 * q2
+  in if den == 0 then (0, 1) else (num, den)
+
+||| Integer-approximate spread: returns the spread numerator divided by the
+||| denominator using integer division. Exact when the spread is rational
+||| with integer value (e.g., s = 0 or s = 1 for perpendicular directions).
+|||
+||| This is the form used by computeTwist for the ascension check, where
+||| we need a Nat-compatible value.
+public export
+spreadIntNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
+spreadIntNL m p1 p2 =
+  let (num, den) = spreadNL m p1 p2
+  in if den == 0 then 0 else div num den
+
 
 -- ||| Checks if two vectors (represented as Pixels) are perpendicular
 -- ||| according to the specified Chromogeometric Metric.

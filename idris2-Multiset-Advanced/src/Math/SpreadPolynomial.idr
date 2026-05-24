@@ -2,10 +2,10 @@ module Math.SpreadPolynomial
 
 import Data.Linear
 import Math.Interfaces
-import Math.Multiset
+import Math.UnaryMultiset
 import Math.Polynumber
 import Math.IntPolynumber
-import Math.AMSet
+import Math.SignedUnaryMultiset
 
 %default total
 
@@ -48,6 +48,24 @@ spreadPoly (S (S k)) =
       
       -- combine: part1 - sn2 + part3
   in annihilateIntPoly (addIntPoly (subIntPoly part1 sn2) twoS)
+
+||| Iterative (bottom-up) approach for generating the n-th Spread Polynomial.
+||| Computes in O(N) time instead of O(2^N) by keeping the last two results.
+export covering
+memoSpreadPoly : Nat -> IntPolynumber
+memoSpreadPoly Z = emptyIntPoly
+memoSpreadPoly (S Z) = sPoly
+memoSpreadPoly (S (S n)) =
+  let oneMinus2s = subIntPoly onePoly (scalarMul 2 sPoly)
+      twoS = scalarMul 2 sPoly
+      
+      step : Nat -> (IntPolynumber, IntPolynumber) -> (IntPolynumber, IntPolynumber)
+      step Z state = state
+      step (S k) (sn1, sn2) =
+          let part1 = scalarMul 2 (mulIntPoly oneMinus2s sn1)
+              sn = annihilateIntPoly (addIntPoly (subIntPoly part1 sn2) twoS)
+          in step k (sn, sn1)
+      in fst (step n (sPoly, emptyIntPoly))
 
 ||| Explicit definitions for n=1 to 13 as required by the knowledge base.
 export covering S1 : IntPolynumber; S1 = spreadPoly 1

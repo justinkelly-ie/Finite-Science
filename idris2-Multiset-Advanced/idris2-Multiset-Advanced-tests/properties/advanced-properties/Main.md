@@ -5,7 +5,7 @@ Multisets are more than just collections; they form a robust algebraic structure
 ```idris
 module Main
 
-import Math.Multiset
+import Math.UnaryMultiset
 import QuickCheck
 import Data.So
 
@@ -21,7 +21,7 @@ To test our properties, we need a way to generate random multisets. We define cu
 record MSetSingle where
   constructor MkMSetSingle
   n : Nat
-  xs : MSet Int
+  xs : UnaryMultiset Int
 
 Show MSetSingle where
   show (MkMSetSingle n _) = "(" ++ show n ++ ")"
@@ -33,7 +33,7 @@ Arbitrary MSetSingle where
     xs' <- genMSet n'
     pure (MkMSetSingle n' xs')
   where
-    genMSet : (n : Nat) -> Gen (MSet Int)
+    genMSet : (n : Nat) -> Gen (UnaryMultiset Int)
     genMSet 0 = pure Zero
     genMSet (S k) = do
       x <- arbitrary
@@ -43,8 +43,8 @@ Arbitrary MSetSingle where
 
 record MSetPair where
   constructor MkMSetPair
-  n : Nat; xs : MSet Int
-  m : Nat; ys : MSet Int
+  n : Nat; xs : UnaryMultiset Int
+  m : Nat; ys : UnaryMultiset Int
 
 Show MSetPair where
   show (MkMSetPair n _ m _) = "(" ++ show n ++ ", " ++ show m ++ ")"
@@ -57,7 +57,7 @@ Arbitrary MSetPair where
     ys' <- genMSet m'
     pure (MkMSetPair n' xs' m' ys')
   where
-    genMSet : (n : Nat) -> Gen (MSet Int)
+    genMSet : (n : Nat) -> Gen (UnaryMultiset Int)
     genMSet 0 = pure Zero
     genMSet (S k) = do
       x <- arbitrary
@@ -67,9 +67,9 @@ Arbitrary MSetPair where
 
 record MSetTriple where
   constructor MkMSetTriple
-  n : Nat; xs : MSet Int
-  m : Nat; ys : MSet Int
-  k : Nat; zs : MSet Int
+  n : Nat; xs : UnaryMultiset Int
+  m : Nat; ys : UnaryMultiset Int
+  k : Nat; zs : UnaryMultiset Int
 
 Show MSetTriple where
   show (MkMSetTriple n _ m _ k _) = "(" ++ show n ++ ", " ++ show m ++ ", " ++ show k ++ ")"
@@ -84,7 +84,7 @@ Arbitrary MSetTriple where
     zs' <- genMSet k'
     pure (MkMSetTriple n' xs' m' ys' k' zs')
   where
-    genMSet : (n : Nat) -> Gen (MSet Int)
+    genMSet : (n : Nat) -> Gen (UnaryMultiset Int)
     genMSet 0 = pure Zero
     genMSet (S k) = do
       x <- arbitrary
@@ -103,7 +103,7 @@ The size of the sum of two multisets must be equal to the sum of their individua
 ```idris
 prop_sizeAdd : Property
 prop_sizeAdd = forAll {a = MSetPair} {prop = Bool} arbitrary (MkFn (\p => 
-  Math.Multiset.size (Math.Multiset.add (xs p) (ys p)) == (n p + m p)))
+  Math.UnaryMultiset.size (Math.UnaryMultiset.add (xs p) (ys p)) == (n p + m p)))
 ```
 
 ### Commutativity
@@ -112,17 +112,17 @@ Multiset addition is commutative: `A + B = B + A`.
 ```idris
 prop_addCommutative : Property
 prop_addCommutative = forAll {a = MSetPair} {prop = Bool} arbitrary (MkFn (\p => 
-  Math.Multiset.add (xs p) (ys p) == Math.Multiset.add (ys p) (xs p)))
+  Math.UnaryMultiset.add (xs p) (ys p) == Math.UnaryMultiset.add (ys p) (xs p)))
 ```
 
 ### Associativity
 Multiset addition is associative: `(A + B) + C = A + (B + C)`.
 
 ```idris
-prop_addAssociative : Property
-prop_addAssociative = forAll {a = MSetTriple} {prop = Bool} arbitrary (MkFn (\t =>
-  Math.Multiset.add (Math.Multiset.add (xs t) (ys t)) (zs t) == 
-  Math.Multiset.add (xs t) (Math.Multiset.add (ys t) (zs t))))
+prop_addSignedssociative : Property
+prop_addSignedssociative = forAll {a = MSetTriple} {prop = Bool} arbitrary (MkFn (\t =>
+  Math.UnaryMultiset.add (Math.UnaryMultiset.add (xs t) (ys t)) (zs t) == 
+  Math.UnaryMultiset.add (xs t) (Math.UnaryMultiset.add (ys t) (zs t))))
 ```
 
 ### Identity
@@ -131,11 +131,11 @@ The `Zero` multiset acts as the identity element for addition.
 ```idris
 prop_addLeftIdentity : Property
 prop_addLeftIdentity = forAll {a = MSetSingle} {prop = Bool} arbitrary (MkFn (\s =>
-  Math.Multiset.add Zero (xs s) == (xs s)))
+  Math.UnaryMultiset.add Zero (xs s) == (xs s)))
 
 prop_addRightIdentity : Property
 prop_addRightIdentity = forAll {a = MSetSingle} {prop = Bool} arbitrary (MkFn (\s =>
-  Math.Multiset.add (xs s) Zero == (xs s)))
+  Math.UnaryMultiset.add (xs s) Zero == (xs s)))
 ```
 
 ### Sigma Size
@@ -145,7 +145,7 @@ The `sigma` operation flattens a multiset of multisets. Its size must be equal t
 prop_sizeSigma : Property
 prop_sizeSigma = forAll {a = MSetPair} {prop = Bool} arbitrary (MkFn (\p =>
   let xss = Add (xs p) (Add (ys p) Zero)
-  in Math.Multiset.size (Math.Multiset.sigma xss) == (n p + m p)))
+  in Math.UnaryMultiset.size (Math.UnaryMultiset.sigma xss) == (n p + m p)))
 ```
 
 ## 3. Verification Execution
@@ -159,8 +159,8 @@ main = do
   putStrLn $ "prop_sizeAdd: " ++ res1.msg
   let res2 = QuickCheck.quickCheck prop_addCommutative
   putStrLn $ "prop_addCommutative: " ++ res2.msg
-  let res3 = QuickCheck.quickCheck prop_addAssociative
-  putStrLn $ "prop_addAssociative: " ++ res3.msg
+  let res3 = QuickCheck.quickCheck prop_addSignedssociative
+  putStrLn $ "prop_addSignedssociative: " ++ res3.msg
   let res4 = QuickCheck.quickCheck prop_addLeftIdentity
   putStrLn $ "prop_addLeftIdentity: " ++ res4.msg
   let res5 = QuickCheck.quickCheck prop_addRightIdentity

@@ -5,19 +5,17 @@ module Main
 
 import Hedgehog
 import Math.MaxelNL
-import Math.DenseAMSet
+import Math.Multiset
 import Math.Chromogeometry
 import Math.Polynumber
-import Math.Multiset
-import Physics.FiberBundle
-import Physics.QuantumGates
+import Math.UnaryMultiset
+import Physics.FiberBundle Physics.QuantumGates
 import Physics.WeakForce
 import Physics.Particles.Photon
 import Physics.Particles.Electron
 import Physics.Particles.Quark
 import Physics.Particles.Baryon
-import Physics.Particles.Meson
-import Physics.Particles.Neutrino
+import Physics.Particles.Meson.Particles.Neutrino
 import Physics.Particles.Bond
 import Physics.Particles.WeakBoson
 import Physics.Laws.ColorConfinement
@@ -54,17 +52,17 @@ prop_weak_boson_interaction = withTests 1 $ property $ do
   -- but this mathematically proves that the exact interaction signature compiles linearly!
   res === False
 
--- 3. Baryon Color Confinement Interaction
+-- 3. Baryon
 -- Known Physics: Quarks cannot exist in isolation; they interact via the strong force to form colorless hadrons.
--- Model Interaction: A solitary quark alone cannot satisfy the A(Q) = T(s) lock, but a Baryon triad perfectly balances it.
+-- Model Interaction: A solitary quark alone cannot satisfy the A(Q) = T(s) lock, but a Baryon it.
 prop_baryon_confinement : Property
 prop_baryon_confinement = withTests 1 $ property $ do
   let q1 = MkQuark (MkRootPhase {geom = MkGeometry 5 Rigid} {label = "Quark"} Zero) (believe_me ())
   let q2 = MkQuark (MkRootPhase {geom = MkGeometry 5 Rigid} {label = "Quark"} Zero) (believe_me ())
   let q3 = MkQuark (MkRootPhase {geom = MkGeometry 5 Rigid} {label = "Quark"} Zero) (believe_me ())
-  let baryon = MkBaryon q1 q2 q3
+  let baryon = MkBaryon
   
-  -- The Baryon successfully satisfies the Colorless trait via the structural lock.
+  -- The Baryon Colorless trait via the structural lock.
   -- We extract the linear pair to respect QTT constraints.
   let (stable # _) = isColorless baryon
   stable === True

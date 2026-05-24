@@ -4,18 +4,17 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Math.MaxelNL
-import Math.AMSet
-import Math.DenseAMSet
+import Physics.FiberBundle Math.MaxelNL
+import Math.SignedUnaryMultiset
 import Math.Multiset
+import Math.UnaryMultiset
 import Math.Chromogeometry
 
 %default covering
 
 prop_pivot_changes_flavor : Property
 prop_pivot_changes_flavor = property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
       dark = pivotFlavor DarkEnergy prim
   flavorMetric dark.flavor === Red
 

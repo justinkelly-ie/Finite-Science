@@ -5,7 +5,7 @@ The Multiset is a fundamental structure in combinatorial algebra, representing a
 ```idris
 module Main
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 
 %default total
 ```

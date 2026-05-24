@@ -1,12 +1,12 @@
 module Physics.Findings.TullyFisherRelation
 
-import Math.FiberBundle
 import Math.IntPolynumber
-import Math.MaxelNL
-import Math.DenseAMSet
+import Math.Multiset
+import Physics.Core
 import Math.SpreadPolynomial
 import Physics.Findings.CosmicEnergyBudget
 import Math.Fraction
+import Math.Chromogeometry
 
 import Physics.Findings.CosmicPartition
 %default total
@@ -28,25 +28,34 @@ interface ExhibitsGalacticRotation a where
   ||| Returns a tuple: (Velocity Squared (Quadrance), Visible Mass Equivalent)
   calculateRotationMetrics : a -> (Quadrance, Fraction)
 
+||| Galactic rotation for a PixelIntPoly (FibreBundle).
+|||
+||| Visible Mass is proportional to the total state vector occupancy.
+||| Velocity Squared is structurally proportional to the polynomial spread
+||| minus the baseline vacuum friction (the Dark Matter ratio).
 public export
-implementation ExhibitsGalacticRotation DarkPlusMatter where
-  calculateRotationMetrics (MkDarkPlusMatter gen poly (MkDense xs) flavor) =
-    -- Visible Mass Equivalent is proportional to the number of non-zero nodes
-    let visibleMass = length xs
-        -- Velocity Squared is structurally proportional to the polynomial spread 
-        -- minus the baseline vacuum friction (the Dark Matter ratio)
-        -- In the dynamic grid, max stable rational rotation velocity is dictated by 
-        -- the Fine Structure coupling
-        velocitySq = MkFraction (visibleMass * primordialGridStates) darkMatterStates -- total primorial partition states
-    in (velocitySq, MkFraction visibleMass 1)
+ExhibitsGalacticRotation PixelIntPoly where
+  calculateRotationMetrics pip =
+    let visibleMass = cast {to = Nat} (stateLag pip)
+        velocitySq = MkFraction (visibleMass * primordialGridStates) darkMatterStates
+    in (MkQuadrance velocitySq, MkFraction visibleMass 1)
+
+||| Galactic rotation for a full UniverseState.
+||| The substrate causal density contributes to the effective rotational drag.
+public export
+ExhibitsGalacticRotation UniverseState where
+  calculateRotationMetrics state =
+    let visibleMass = cast {to = Nat} (stateLag (stateVector state))
+        causalDrag  = substrateLag (substrate state)
+        velocitySq  = MkFraction ((visibleMass + causalDrag) * primordialGridStates) darkMatterStates
+    in (MkQuadrance velocitySq, MkFraction visibleMass 1)
 
 ||| A formal audit of the Tully-Fisher limit.
 ||| Proves that the flat rotation curve of the galaxy is mathematically anchored
 ||| to the ratio between Visible Matter (27 states) and Vacuum Friction (55 states).
 public export
-verifyTullyFisherLaw : DarkPlusMatter -> Bool
+verifyTullyFisherLaw : ExhibitsGalacticRotation a => a -> Bool
 verifyTullyFisherLaw state =
   let (v2, m) = calculateRotationMetrics state
-      -- V^2 must be directly proportional to M scaled by the structural constants
       thresholdSq = MkFraction (m.numerator * primordialGridStates) (m.denominator * darkMatterStates)
-  in (v2.numerator * thresholdSq.denominator) >= (thresholdSq.numerator * v2.denominator)
+  in (v2.value.numerator * thresholdSq.denominator) >= (thresholdSq.numerator * v2.value.denominator)

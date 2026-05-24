@@ -13,13 +13,15 @@ record Fraction where
 
 ||| A fraction semantically representing a Spread (sin^2 theta).
 public export
-0 Spread : Type
-Spread = Fraction
+record Spread where
+  constructor MkSpread
+  value : Fraction
 
 ||| A fraction semantically representing a Quadrance (distance squared).
 public export
-0 Quadrance : Type
-Quadrance = Fraction
+record Quadrance where
+  constructor MkQuadrance
+  value : Fraction
 
 ||| Multiplies two fractions exactly.
 public export
@@ -29,7 +31,7 @@ mulFraction f1 f2 =
 
 ||| A safe recursive natural division that returns 0 if dividing by zero.
 ||| NOTE: This may need to be revised in the future. Idris 2's zero linearity 
-||| (e.g., `0` multiplicity) on the type definition of the empty MSet could 
+||| (e.g., `0` multiplicity) on the type definition of the empty UnaryMultiset could 
 ||| potentially be leveraged to structurally forbid zero denominators natively,
 ||| making this explicit zero-catching logic obsolete.
 public export

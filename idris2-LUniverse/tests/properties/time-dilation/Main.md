@@ -4,8 +4,7 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Math.DenseAMSet
+import Physics.FiberBundle Math.Multiset
 import Math.MaxelNL
 import Physics.Findings.GravitationalTimeDilation
 
@@ -13,7 +12,7 @@ import Physics.Findings.GravitationalTimeDilation
 
 prop_time_dilation_generation_7 : Property
 prop_time_dilation_generation_7 = property $ do
-  let prim = primordialDarkPlusMatter (MkDense [(MkPixelNL 1 2, 10)])
+  let prim = primordialDarkPlusMatter (MkMultiset [(MkPixelNL 1 2, 10)])
   let state = unfoldState 7 prim
   
   -- Lag should spike significantly at the S_7 gate

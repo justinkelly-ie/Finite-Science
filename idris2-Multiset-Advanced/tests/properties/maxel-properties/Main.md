@@ -1,12 +1,12 @@
 # Multiset and Polynumber Property Tests
 
-This test suite rigorously validates the mathematical properties of `MSet`, `Maxel`, `Polynumber`, and `SpreadPolynomial` in the `idris2-Multiset-Advanced` library.
+This test suite rigorously validates the mathematical properties of `UnaryMultiset`, `Maxel`, `Polynumber`, and `SpreadPolynomial` in the `idris2-Multiset-Advanced` library.
 
 ```idris
 module Main
 
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 import Math.Maxel
 import Math.MaxelNL
 import Math.Polynumber
@@ -43,12 +43,12 @@ prop_maxel_transpose = property $ do
   let p = MkPixelNL s t
   let pT = transposePixNL p
   
-  pT.src === p.tgt
-  pT.tgt === p.src
+  pT.x === p.y
+  pT.y === p.x
 
 main : IO ()
 main = do
-  success <- checkGroup $ MkGroup "Math.MultisetAdvanced"
+  success <- checkGroup $ MkGroup "Math.UnaryMultisetAdvanced"
     [ ("Spread Polynomial evaluations scale predictably", prop_spread_polynomial_scale)
     , ("Maxel Pixels transpose their coordinates correctly", prop_maxel_transpose)
     ]

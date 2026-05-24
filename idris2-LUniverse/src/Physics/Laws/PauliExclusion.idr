@@ -1,9 +1,9 @@
 module Physics.Laws.PauliExclusion
 
-import Math.MaxelNL
-import Math.Multiset
+import Physics.Evolution.State
+
+import Math.UnaryMultiset
 import Math.Polynumber
-import Math.FiberBundle
 
 %default total
 
@@ -14,7 +14,7 @@ import Math.FiberBundle
 public export
 interface ObeysPauliExclusion a where
   ||| Returns True if the collection of states contains no overlapping coordinates.
-  hasNoCoordinateOverlap : (1 _ : a) -> LPair Bool a
+  hasNoCoordinateOverlap : a -> Bool
 
 ||| Helper function to check if a pixel exists in a list
 isPixelInList : PixelNL Integer -> List (PixelNL Integer) -> Bool
@@ -32,14 +32,10 @@ hasDuplicates (p :: ps) =
     then True 
     else hasDuplicates ps
 
-||| A List of Pixels (a macroscopic state or structure) obeys Pauli Exclusion
-||| if and only if no two pixels share the exact same coordinates.
+||| A Multiset of (Geometry, Amplitude) obeys Pauli Exclusion
+||| if and only if no two entries share the exact same coordinates.
 public export
-implementation ObeysPauliExclusion (List (PixelNL Integer)) where
-  hasNoCoordinateOverlap ps = Builtin.(#) False ps -- Dummy fix to preserve linearity for now
-
-||| A FiberBundle geometrically obeys Pauli Exclusion if its underlying polynomial
-||| has no coefficients greater than 1 (meaning no two particles occupy the same basis).
-public export
-implementation ObeysPauliExclusion (FiberBundle tree) where
-  hasNoCoordinateOverlap sp = Builtin.(#) True sp
+implementation ObeysPauliExclusion (Multiset (PixelNL Integer, IntPolynumber)) where
+  hasNoCoordinateOverlap items_mset =
+    let coords = map (fst . fst) (multisetToList items_mset)
+    in not (hasDuplicates coords)

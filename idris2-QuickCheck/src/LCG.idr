@@ -7,8 +7,8 @@ import Data.Vect
 import Data.SnocList
 import public Data.Binary
 import public Data.Binary.Digit
-import Math.FiberBundle
-import Physics.Evolution.QuantumGates
+import Physics.Evolution.State
+import Physics.Evolution.Gate
 
 %default total
 
@@ -41,22 +41,22 @@ hash key path = foldl combine (key * 31) path
                                    O => 0
                                    I => 1)
 
--- LCG state hijacked to hold the SpacetimeManifold!
+-- LCG state hijacked to hold the MaxelNL (PixelNL Integer)!
 public export
 record LCGState where
   constructor MkLCGState
   seed : Int
   path : List Digit
-  universe : SpacetimeManifold
+  universe : MaxelNL (PixelNL Integer)
 
 -- Initialize LCG with a seed and the absolute vacuum root
 public export
 initLCG : Int -> LCGState
-initLCG seed = MkLCGState seed [] (Root "Absolute Vacuum" (MkGeometry 1 Rigid))
+initLCG seed = MkLCGState seed [] (MkMaxelNL [])
 
--- Initialize LCG with a seed and a specific custom SpacetimeManifold root
+-- Initialize LCG with a seed and a specific custom MaxelNL (PixelNL Integer) root
 public export
-initLCGWith : Int -> SpacetimeManifold -> LCGState
+initLCGWith : Int -> MaxelNL (PixelNL Integer) -> LCGState
 initLCGWith seed startUniv = MkLCGState seed [] startUniv
 
 -- Update the path by treating it as a binary counter and incrementing it
@@ -86,7 +86,7 @@ nextLCG (MkLCGState seed path univ) =
       nextSeed = (lcgA * input + lcgC) `mod` lcgM
       nextPath = updatePath path
       gate = pickGate nextSeed
-      nextUniverse = Node gate.name univ (Root "VacuumSubstrate" (MkGeometry 1 Rigid)) (MkGeometry gate.degree Rigid)
+      nextUniverse = univ
   in (nextSeed, MkLCGState seed nextPath nextUniverse)
 
 -- Split the generator (branches the universe timeline)

@@ -4,19 +4,17 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Physics.QuantumGates
+import Physics.FiberBundle Physics.QuantumGates
 import Math.MaxelNL
-import Math.DenseAMSet
-import Math.Polynumber
 import Math.Multiset
+import Math.Polynumber
+import Math.UnaryMultiset
 import Math.Chromogeometry
 import Physics.Particles.Photon
 import Physics.Particles.Electron
 import Physics.Particles.Quark
 import Physics.Particles.Baryon
-import Physics.Particles.Meson
-import Physics.Particles.Neutrino
+import Physics.Particles.Meson.Particles.Neutrino
 import Physics.Particles.Bond
 import Physics.Particles.WeakBoson
 import Physics.WeakForce

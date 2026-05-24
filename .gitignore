@@ -4,11 +4,25 @@ build/
 *.ttc
 *.ttm
 
+# One-off refactoring scripts
+*.py
+
 # Compiled Binaries & Libraries
 *.so
 *.ss
 *.exe
 build/exec/
+**/compileChez
+
+# Test output (generated at runtime)
+**/tests/**/output
+**/properties/**/output
 
 # Package Lock Files
 .pack_lock
+
+# Scratch / one-off test files
+**/test.idr
+**/test2.idr
+**/test_*.idr
+**/src/test.idr

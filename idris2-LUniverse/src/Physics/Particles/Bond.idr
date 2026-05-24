@@ -1,6 +1,7 @@
 module Physics.Particles.Bond
 
-import Math.FiberBundle
+import Physics.Evolution.State
+
 import Math.Polynumber
 
 %default total
@@ -16,8 +17,6 @@ import Math.Polynumber
 ||| matter particles to share the exact same natural-number coordinate 
 ||| simultaneously without violating the Pauli Exclusion Principle.
 public export
-record Bond tree where
+record Bond where
   constructor MkBond
-  1 state : FiberBundle tree
-  ||| The bond corresponds to the n=4 Molecular Bond gate.
-  0 isBondGatePrf : dimensions (getGeometry tree) = 4
+  1 state : Multiset (PixelNL Integer, IntPolynumber)

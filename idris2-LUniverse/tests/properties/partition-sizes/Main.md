@@ -4,8 +4,7 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Physics.Findings.CosmicPartition
+import Physics.FiberBundle Physics.Findings.CosmicPartition
 import Data.List
 
 %default total

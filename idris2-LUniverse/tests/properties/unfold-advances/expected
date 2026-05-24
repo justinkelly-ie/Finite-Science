@@ -1,6 +1,3 @@
-━━━ Physics.FiberBundle ━━━
-  ✓ Unfolding correctly advances polynomial passed 100 tests.
-  ✓ Unfolding resolves Generation 11 instantly passed 100 tests.
-  ✓ Unfolding resolves Generation 13 instantly passed 100 tests.
-  ✓ 3 succeeded.
-SUCCESS
+[ fatal ] Error when executing system command.
+          Command: "/var/home/justin/.local/state/pack/install/214eb45472e15187e6f932c6820a0f0d5542a18e/idris2/bin/idris2" "--build" "test.ipkg"
+          Error code: 1

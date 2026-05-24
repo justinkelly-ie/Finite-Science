@@ -5,9 +5,8 @@ module Main
 
 import Hedgehog
 import Physics.Evolution.HolographicFreeze
-import Physics.Evolution.Transition
-import Physics.FiberBundle
-import Math.Multiset
+import Physics.Evolution.Cycle
+import Physics.FiberBundle Math.UnaryMultiset
 import Math.Polynumber
 
 %default covering

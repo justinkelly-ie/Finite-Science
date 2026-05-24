@@ -7,7 +7,7 @@ import Hedgehog
 import Physics.Epochs.Cosmology
 import Physics.Epochs.Core
 import Math.Maxel
-import Math.Multiset
+import Math.UnaryMultiset
 
 %default covering
 

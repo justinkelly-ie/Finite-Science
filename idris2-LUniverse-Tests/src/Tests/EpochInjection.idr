@@ -2,7 +2,7 @@ module Tests.EpochInjection
 
 import QuickCheck
 import Math.FiberBundle
-import Physics.Evolution.QuantumGates
+import Physics.Evolution.Gate
 import Tests.Common
 import Tests.DimensionalCausality
 

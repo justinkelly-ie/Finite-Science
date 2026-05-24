@@ -2,64 +2,64 @@ module Math.Maxel
 
 import Data.Linear
 import Math.Interfaces
-import Math.Multiset
+import Math.UnaryMultiset
 
 %default total
 
-||| A Pixel is a directed edge between two elements of type a.
-||| It is represented linearly as an LPair.
+||| A Pixel is a 2D coordinate cell [x, y], following Wildberger's Algebraic Calculus.
+||| It represents a discrete point in a Cartesian grid or an element of an algebraic relation.
 public export
 0 Pixel : Type -> Type
 Pixel a = LPair a a
 
-||| A Maxel is a multiset of Pixels.
+||| A Maxel is a multiset of Pixels, representing a discrete curve, region, or multi-relation.
 public export
 0 Maxel : Type -> Type
-Maxel a = MSet (Pixel a)
+Maxel a = UnaryMultiset (Pixel a)
 
-||| The support of a Pixel is the multiset of its two vertices.
+||| The projection of a Pixel onto its X and Y coordinate axes, collected as a multiset.
 export
-pixelSupport : (1 p : Pixel a) -> MSet a
-pixelSupport (Builtin.(#) x y) = Add x (Add y Zero)
+pixelProjection : (1 p : Pixel a) -> UnaryMultiset a
+pixelProjection (Builtin.(#) x y) = Add x (Add y Zero)
 
-||| The support of a Maxel is the multiset of all vertices in all its pixels.
+||| The projection of a Maxel onto the coordinate axes (the support of the relation).
 export
-maxelSupport : (1 m : Maxel a) -> MSet a
-maxelSupport Zero = Zero
-maxelSupport (Add p ps) = pixelSupport p ++ maxelSupport ps
+maxelProjection : (1 m : Maxel a) -> UnaryMultiset a
+maxelProjection Zero = Zero
+maxelProjection (Add p ps) = pixelProjection p ++ maxelProjection ps
 
-||| Flatten an MSet of MSets into a single MSet.
+||| Flatten an UnaryMultiset of MSets into a single UnaryMultiset.
 export
-concatMSetL : (1 _ : MSet (MSet a)) -> MSet a
+concatMSetL : (1 _ : UnaryMultiset (UnaryMultiset a)) -> UnaryMultiset a
 concatMSetL Zero = Zero
 concatMSetL (Add xs xss) = xs ++ concatMSetL xss
 
-||| Multiply two pixels. If the target of p1 equals the source of p2,
-||| it yields a new pixel from the source of p1 to the target of p2.
-||| Otherwise, it yields an empty multiset.
+||| Algebraic Relational Composition of two pixels. 
+||| If the Y-coordinate of p1 equals the X-coordinate of p2,
+||| it yields a new pixel [p1.x, p2.y]. Otherwise, it yields an empty multiset.
 export
-mulPix : (LEq a, LComonoid a, LConsumable a) => (1 p1 : Pixel a) -> (1 p2 : Pixel a) -> Maxel a
-mulPix (Builtin.(#) a b) (Builtin.(#) c d) =
-  case lEq b c of
-    Builtin.(#) res (Builtin.(#) b' c') =>
+composePix : (LEq a, LComonoid a, LConsumable a) => (1 p1 : Pixel a) -> (1 p2 : Pixel a) -> Maxel a
+composePix (Builtin.(#) x1 y1) (Builtin.(#) x2 y2) =
+  case lEq y1 x2 of
+    Builtin.(#) res (Builtin.(#) y1' x2') =>
       case res of
         True => 
-          let () = lconsume b'
-              () = lconsume c'
-          in Add (Builtin.(#) a d) Zero
+          let () = lconsume y1'
+              () = lconsume x2'
+          in Add (Builtin.(#) x1 y2) Zero
         False => 
-          let () = lconsume a
-              () = lconsume b'
-              () = lconsume c'
-              () = lconsume d
+          let () = lconsume x1
+              () = lconsume y1'
+              () = lconsume x2'
+              () = lconsume y2
           in Zero
 
-||| The Transitive Product of two Maxels (M1 * M2).
-||| Computes all chained pixels [a,c] where [a,b] is in m1 and [b,c] is in m2.
+||| The Relational Composition of two Maxels (M1 ∘ M2).
+||| Computes all composite coordinate cells [x, z] where [x, y] is in m1 and [y, z] is in m2.
 export
-mulMaxel : (LEq a, LComonoid a, LConsumable a) => (1 m1 : Maxel a) -> (1 m2 : Maxel a) -> Maxel a
-mulMaxel m1 m2 = 
-  concatMSetL (mulL mulPix m1 m2)
+composeMaxel : (LEq a, LComonoid a, LConsumable a) => (1 m1 : Maxel a) -> (1 m2 : Maxel a) -> Maxel a
+composeMaxel m1 m2 = 
+  concatMSetL (mulL composePix m1 m2)
 
 ||| Transpose a single pixel (reverse its direction).
 export

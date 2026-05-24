@@ -6,9 +6,7 @@ depends = base, contrib, linear, ref1
 
 sourcedir = "src"
 
-modules = Math.Interfaces, Math.Multiset, Math.Multiset.Labeled, Math.AMSet, Math.AMSet.Labeled, Math.DenseAMSet, Math.Polynumber
-       , Math.Topology.Poset
-       , Math.Topology.Sheaf
+modules = Math.Interfaces, Math.UnaryMultiset, Math.UnaryMultiset.Labeled, Math.SignedUnaryMultiset, Math.SignedUnaryMultiset.Labeled, Math.Multiset, Math.Polynumber
        , Math.IntPolynumber
        , Math.SpreadPolynomial, Math.Maxel, Math.MaxelNL
        , Math.Fraction, Math.FractionalEvaluator

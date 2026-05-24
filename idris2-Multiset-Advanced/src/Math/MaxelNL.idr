@@ -1,7 +1,7 @@
 module Math.MaxelNL
 
 import Math.Maxel
-import Math.Multiset
+import Math.UnaryMultiset
 import Data.List
 
 %default total
@@ -10,12 +10,12 @@ import Data.List
 public export
 record PixelNL (a : Type) where
   constructor MkPixelNL
-  src : a
-  tgt : a
+  x : a
+  y : a
 
 public export
 Eq a => Eq (PixelNL a) where
-  (MkPixelNL s1 t1) == (MkPixelNL s2 t2) = s1 == s2 && t1 == t2
+  (MkPixelNL x1 y1) == (MkPixelNL x2 y2) = x1 == x2 && y1 == y2
 
 ||| Non-Linear representation of a Maxel
 public export
@@ -25,13 +25,13 @@ record MaxelNL (a : Type) where
 
 deleteFirst : Eq a => PixelNL a -> List (PixelNL a) -> Maybe (List (PixelNL a))
 deleteFirst _ [] = Nothing
-deleteFirst x (y :: ys) = if x == y then Just ys else map (y ::) (deleteFirst x ys)
+deleteFirst p (q :: qs) = if p == q then Just qs else map (q ::) (deleteFirst p qs)
 
 isSubmultiset : Eq a => List (PixelNL a) -> List (PixelNL a) -> Bool
 isSubmultiset [] _ = True
-isSubmultiset (x :: xs) ys = case deleteFirst x ys of
+isSubmultiset (p :: ps) qs = case deleteFirst p qs of
   Nothing => False
-  Just ys' => isSubmultiset xs ys'
+  Just qs' => isSubmultiset ps qs'
 
 public export
 Eq a => Eq (MaxelNL a) where
@@ -39,7 +39,7 @@ Eq a => Eq (MaxelNL a) where
 
 export
 transposePixNL : PixelNL a -> PixelNL a
-transposePixNL (MkPixelNL s t) = MkPixelNL t s
+transposePixNL (MkPixelNL x y) = MkPixelNL y x
 
 export
 transposeMaxelNL : MaxelNL a -> MaxelNL a
@@ -51,8 +51,8 @@ isSymmetricNL m = m == transposeMaxelNL m
 
 
 export
-supportNL : Eq a => MaxelNL a -> List a
-supportNL (MkMaxelNL pxs) = nub (concatMap (\(MkPixelNL s t) => [s, t]) pxs)
+projectionNL : Eq a => MaxelNL a -> List a
+projectionNL (MkMaxelNL pxs) = nub (concatMap (\(MkPixelNL x y) => [x, y]) pxs)
 
 export
 isSetNL : Eq a => MaxelNL a -> Bool
@@ -61,33 +61,33 @@ isSetNL (MkMaxelNL pxs) = length (nub pxs) == length pxs
 export
 isAntiSymmetricNL : Eq a => MaxelNL a -> Bool
 isAntiSymmetricNL (MkMaxelNL pxs) =
-  all (\(MkPixelNL a b) => a == b || not (elem (MkPixelNL b a) pxs)) pxs
+  all (\(MkPixelNL x y) => x == y || not (elem (MkPixelNL y x) pxs)) pxs
 
 export
 isReflexiveNL : Eq a => MaxelNL a -> Bool
 isReflexiveNL m@(MkMaxelNL pxs) =
-  let j = supportNL m
-  in all (\a => elem (MkPixelNL a a) pxs) j
+  let j = projectionNL m
+  in all (\x => elem (MkPixelNL x x) pxs) j
 
 export
 isIrreflexiveNL : Eq a => MaxelNL a -> Bool
 isIrreflexiveNL m@(MkMaxelNL pxs) =
-  let j = supportNL m
-  in all (\a => not (elem (MkPixelNL a a) pxs)) j
+  let j = projectionNL m
+  in all (\x => not (elem (MkPixelNL x x) pxs)) j
 
 export
 isTotalNL : Eq a => MaxelNL a -> Bool
 isTotalNL m@(MkMaxelNL pxs) =
-  let j = supportNL m
-  in all (\a => all (\b => a == b || elem (MkPixelNL a b) pxs || elem (MkPixelNL b a) pxs) j) j
+  let j = projectionNL m
+  in all (\x => all (\y => x == y || elem (MkPixelNL x y) pxs || elem (MkPixelNL y x) pxs) j) j
 
-||| Helper to convert unrestricted MSet back to List for NL processing.
+||| Helper to convert unrestricted UnaryMultiset back to List for NL processing.
 ||| This requires an unrestricted context, used in Property tests.
 export
-toListNL : MSet a -> List a
+toListNL : UnaryMultiset a -> List a
 toListNL Zero = []
 toListNL (Add x xs) = x :: toListNL xs
 
 export
-maxelToNL : MSet (LPair a a) -> MaxelNL a
-maxelToNL m = MkMaxelNL (map (\(Builtin.(#) s t) => MkPixelNL s t) (toListNL m))
+maxelToNL : UnaryMultiset (LPair a a) -> MaxelNL a
+maxelToNL m = MkMaxelNL (map (\(Builtin.(#) x y) => MkPixelNL x y) (toListNL m))

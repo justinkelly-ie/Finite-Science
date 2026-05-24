@@ -5,8 +5,8 @@ This module verifies the core algebraic invariants of the **Labeled Multiset**. 
 ```idris
 module Main
 
-import Math.Multiset
-import Math.Multiset.Labeled
+import Math.UnaryMultiset
+import Math.UnaryMultiset.Labeled
 import Data.Linear
 import QuickCheck
 
@@ -41,8 +41,8 @@ The most fundamental property of a labeled multiset is that adding an atom to a 
 ||| Verify that adding an atom to a label correctly increments its cardinality.
 prop_addCount : Property
 prop_addCount = forAll {a = LblVal} {prop = Bool} arbitrary (MkFn (\p => 
-  let lms = Math.Multiset.Labeled.add p.lbl p.val (Math.Multiset.Labeled.empty {l=Integer} {a=Integer})
-      Builtin.(#) n lms2 = Math.Multiset.Labeled.countL p.lbl lms
+  let lms = Math.UnaryMultiset.Labeled.add p.lbl p.val (Math.UnaryMultiset.Labeled.empty {l=Integer} {a=Integer})
+      Builtin.(#) n lms2 = Math.UnaryMultiset.Labeled.countL p.lbl lms
   in case lconsume lms2 of
        () => countMSet n == 1))
 

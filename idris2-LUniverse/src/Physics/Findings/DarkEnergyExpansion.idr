@@ -1,17 +1,14 @@
 module Physics.Findings.DarkEnergyExpansion
 
-import Math.FiberBundle
 import Math.Chromogeometry
-import Math.DenseAMSet
-import Math.MaxelNL
+import Math.Multiset
+import Physics.Core
 import Physics.Findings.CosmicEnergyBudget
 
 import Physics.Findings.CosmicPartition
 import Math.Fraction
 
 %default total
-
-
 
 ||| Cosmic Expansion & Dark Energy
 |||
@@ -43,35 +40,36 @@ interface ExertsExpansivePressure a where
   ||| the higher the expansive coefficient.
   calculateExpansivePressure : a -> Spread
 
-||| A dummy representation of a Dark Energy Fractional Cluster
+||| Expansive pressure for a PixelIntPoly (FibreBundle).
+||| The pressure is proportional to the state vector occupancy scaled by the
+||| primorial grid limit — more polynomial terms = more fractional overflow
+||| = more expansion.
 public export
-record DarkEnergyCluster where
-  constructor MkDarkEnergyCluster
-  states : List DarkPlusMatter
-  -- A measure of how deeply nested the fractional denominators are
-  fractionalComplexity : Spread
+ExertsExpansivePressure PixelIntPoly where
+  calculateExpansivePressure pip =
+    let occupancy = cast {to = Nat} (stateLag pip)
+    in MkSpread (MkFraction (occupancy * darkEnergyStates) (primordialGridStates * primordialGridStates))
 
-||| Dark Energy pushes the visible universe apart due to fractional overflow.
+||| Expansive pressure for a full UniverseState.
 public export
-implementation ExertsExpansivePressure DarkEnergyCluster where
-  calculateExpansivePressure cluster = 
-    scaleFraction primordialGridStates cluster.fractionalComplexity -- Scaled by the Fine Structure threshold
+ExertsExpansivePressure UniverseState where
+  calculateExpansivePressure state =
+    let occupancy   = cast {to = Nat} (stateLag (stateVector state))
+        causalDepth = substrateLag (substrate state)
+    in MkSpread (MkFraction ((occupancy + causalDepth) * darkEnergyStates) (primordialGridStates * primordialGridStates))
 
-||| Maps a spatial dilation function over the PixelNL coordinates natively.
-||| Because DenseAMSet is an O(N) array, we can stretch the entire universe
-||| geometry without triggering combinatorial evaluation trees!
+||| Maps a spatial dilation function over the Geometry coordinates of a PixelIntPoly.
+||| Because Multiset is an O(N) array, we can stretch the entire universe
+||| geometry without triggering combinatorial evaluation trees.
 public export
-dilateSpace : (Integer -> Integer) -> DenseAMSet (PixelNL Integer) -> DenseAMSet (PixelNL Integer)
-dilateSpace f (MkDense xs) = 
-  MkDense (map (\(MkPixelNL s t, count) => (MkPixelNL (f s) (f t), count)) xs)
+dilateSpace : (Integer -> Integer) -> PixelIntPoly -> PixelIntPoly
+dilateSpace f pip =
+  fromList (map (\((MkPixelNL s t, amp), count) => ((MkPixelNL (f s) (f t), amp), count)) (multisetToList pip))
 
-||| Applies the physical outward pressure to the underlying DarkPlusMatter lattice,
+||| Applies the physical outward pressure to the underlying FibreBundle,
 ||| physically moving the coordinates apart (simulating Cosmic Expansion).
 public export
-applyDarkEnergyExpansion : DarkPlusMatter -> Spread -> DarkPlusMatter
-applyDarkEnergyExpansion (MkDarkPlusMatter gen statePoly supp flavor) pressure =
-  -- Recover the raw fractional complexity by dividing out the primordialGridStates scaling
-  -- Actually, the physical scale integer is derived directly from the fraction
-  let scale = fractionDivNat pressure.numerator (pressure.denominator * primordialGridStates) + 1
-      newSupp = dilateSpace (\x => x * (cast {to=Integer} scale)) supp
-  in MkDarkPlusMatter gen statePoly newSupp flavor
+applyDarkEnergyExpansion : PixelIntPoly -> Spread -> PixelIntPoly
+applyDarkEnergyExpansion pip pressure =
+  let scale = fractionDivNat pressure.value.numerator (pressure.value.denominator * primordialGridStates) + 1
+  in dilateSpace (\x => x * (cast {to=Integer} scale)) pip

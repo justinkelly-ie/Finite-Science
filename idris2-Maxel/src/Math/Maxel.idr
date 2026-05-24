@@ -2,7 +2,7 @@ module Math.Maxel
 
 import Data.Linear
 import Math.Interfaces
-import Math.Multiset
+import Math.UnaryMultiset
 
 %default total
 
@@ -15,22 +15,22 @@ Pixel a = LPair a a
 ||| A Maxel is a multiset of Pixels.
 public export
 0 Maxel : Type -> Type
-Maxel a = MSet (Pixel a)
+Maxel a = UnaryMultiset (Pixel a)
 
 ||| The support of a Pixel is the multiset of its two vertices.
 export
-pixelSupport : (1 p : Pixel a) -> MSet a
-pixelSupport (Builtin.(#) x y) = Add x (Add y Zero)
+pixelProjection : (1 p : Pixel a) -> UnaryMultiset a
+pixelProjection (Builtin.(#) x y) = Add x (Add y Zero)
 
 ||| The support of a Maxel is the multiset of all vertices in all its pixels.
 export
-maxelSupport : (1 m : Maxel a) -> MSet a
-maxelSupport Zero = Zero
-maxelSupport (Add p ps) = pixelSupport p ++ maxelSupport ps
+maxelProjection : (1 m : Maxel a) -> UnaryMultiset a
+maxelProjection Zero = Zero
+maxelProjection (Add p ps) = pixelProjection p ++ maxelProjection ps
 
-||| Flatten an MSet of MSets into a single MSet.
+||| Flatten an UnaryMultiset of MSets into a single UnaryMultiset.
 export
-concatMSetL : (1 _ : MSet (MSet a)) -> MSet a
+concatMSetL : (1 _ : UnaryMultiset (UnaryMultiset a)) -> UnaryMultiset a
 concatMSetL Zero = Zero
 concatMSetL (Add xs xss) = xs ++ concatMSetL xss
 
@@ -38,8 +38,8 @@ concatMSetL (Add xs xss) = xs ++ concatMSetL xss
 ||| it yields a new pixel from the source of p1 to the target of p2.
 ||| Otherwise, it yields an empty multiset.
 export
-mulPix : (LEq a, LComonoid a, LConsumable a) => (1 p1 : Pixel a) -> (1 p2 : Pixel a) -> Maxel a
-mulPix (Builtin.(#) a b) (Builtin.(#) c d) =
+composePix : (LEq a, LComonoid a, LConsumable a) => (1 p1 : Pixel a) -> (1 p2 : Pixel a) -> Maxel a
+composePix (Builtin.(#) a b) (Builtin.(#) c d) =
   case lEq b c of
     Builtin.(#) res (Builtin.(#) b' c') =>
       case res of
@@ -57,9 +57,9 @@ mulPix (Builtin.(#) a b) (Builtin.(#) c d) =
 ||| The Transitive Product of two Maxels (M1 * M2).
 ||| Computes all chained pixels [a,c] where [a,b] is in m1 and [b,c] is in m2.
 export
-mulMaxel : (LEq a, LComonoid a, LConsumable a) => (1 m1 : Maxel a) -> (1 m2 : Maxel a) -> Maxel a
-mulMaxel m1 m2 = 
-  concatMSetL (mulL mulPix m1 m2)
+composeMaxel : (LEq a, LComonoid a, LConsumable a) => (1 m1 : Maxel a) -> (1 m2 : Maxel a) -> Maxel a
+composeMaxel m1 m2 = 
+  concatMSetL (mulL composePix m1 m2)
 
 ||| Transpose a single pixel (reverse its direction).
 export

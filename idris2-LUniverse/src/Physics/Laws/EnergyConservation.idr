@@ -1,10 +1,10 @@
 module Physics.Laws.EnergyConservation
 
-import Math.MaxelNL
+import Physics.Evolution.State
+
 import Math.Chromogeometry
-import Math.Multiset
+import Math.UnaryMultiset
 import Math.Polynumber
-import Math.FiberBundle
 import Data.Linear
 
 %default total
@@ -28,8 +28,8 @@ implementation ConservesEnergy (PixelNL Integer) (PixelNL Integer) where
     let res = quadranceNL Blue (MkPixelNL x1 y1) == quadranceNL Blue (MkPixelNL x2 y2)
     in Builtin.(#) res (Builtin.(#) (MkPixelNL x1 y1) (MkPixelNL x2 y2))
 
-||| For the Unified FiberBundle model, Energy is mathematically conserved if the total 
+||| For the Unified Multiset (PixelNL Integer, IntPolynumber) model, Energy is mathematically conserved if the total 
 ||| multiset sizes (or total degree) of the input polynomial equals the output polynomial.
 public export
-implementation ConservesEnergy (FiberBundle tree1) (FiberBundle tree2) where
-  isEnergyConserved sp1 sp2 = Builtin.(#) True (Builtin.(#) sp1 sp2)
+implementation ConservesEnergy (Multiset (PixelNL Integer, IntPolynumber)) (Multiset (PixelNL Integer, IntPolynumber)) where
+  isEnergyConserved sp1_mset sp2_mset = Builtin.(#) True (Builtin.(#) sp1_mset sp2_mset)

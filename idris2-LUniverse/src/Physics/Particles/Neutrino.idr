@@ -1,8 +1,8 @@
 module Physics.Particles.Neutrino
 
-import Math.FiberBundle
+import Physics.Evolution.State
+
 import Math.Polynumber
-import Math.MaxelNL
 
 %default total
 
@@ -19,8 +19,6 @@ import Math.MaxelNL
 ||| invisible vacuum configuration that passes through the 137-grid almost 
 ||| without interaction.
 public export
-record Neutrino tree where
+record Neutrino where
   constructor MkNeutrino
-  1 state : FiberBundle tree
-  ||| The neutrino corresponds to the n=1 Absolute Vacuum Lock gate.
-  0 isVacuumLock : dimensions (getGeometry tree) = 1
+  1 state : Multiset (PixelNL Integer, IntPolynumber)

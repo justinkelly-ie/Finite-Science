@@ -1,7 +1,7 @@
 module Math.MaxelNL
 
 import Math.Maxel
-import Math.Multiset
+import Math.UnaryMultiset
 import Data.List
 
 %default total
@@ -51,8 +51,8 @@ isSymmetricNL m = m == transposeMaxelNL m
 
 
 export
-supportNL : Eq a => MaxelNL a -> List a
-supportNL (MkMaxelNL pxs) = nub (concatMap (\(MkPixelNL s t) => [s, t]) pxs)
+projectionNL : Eq a => MaxelNL a -> List a
+projectionNL (MkMaxelNL pxs) = nub (concatMap (\(MkPixelNL s t) => [s, t]) pxs)
 
 export
 isSetNL : Eq a => MaxelNL a -> Bool
@@ -66,28 +66,28 @@ isAntiSymmetricNL (MkMaxelNL pxs) =
 export
 isReflexiveNL : Eq a => MaxelNL a -> Bool
 isReflexiveNL m@(MkMaxelNL pxs) =
-  let j = supportNL m
+  let j = projectionNL m
   in all (\a => elem (MkPixelNL a a) pxs) j
 
 export
 isIrreflexiveNL : Eq a => MaxelNL a -> Bool
 isIrreflexiveNL m@(MkMaxelNL pxs) =
-  let j = supportNL m
+  let j = projectionNL m
   in all (\a => not (elem (MkPixelNL a a) pxs)) j
 
 export
 isTotalNL : Eq a => MaxelNL a -> Bool
 isTotalNL m@(MkMaxelNL pxs) =
-  let j = supportNL m
+  let j = projectionNL m
   in all (\a => all (\b => a == b || elem (MkPixelNL a b) pxs || elem (MkPixelNL b a) pxs) j) j
 
-||| Helper to convert unrestricted MSet back to List for NL processing.
+||| Helper to convert unrestricted UnaryMultiset back to List for NL processing.
 ||| This requires an unrestricted context, used in Property tests.
 export
-toListNL : MSet a -> List a
+toListNL : UnaryMultiset a -> List a
 toListNL Zero = []
 toListNL (Add x xs) = x :: toListNL xs
 
 export
-maxelToNL : MSet (LPair a a) -> MaxelNL a
+maxelToNL : UnaryMultiset (LPair a a) -> MaxelNL a
 maxelToNL m = MkMaxelNL (map (\(Builtin.(#) s t) => MkPixelNL s t) (toListNL m))

@@ -6,7 +6,7 @@ module Main
 import Hedgehog
 import Physics.Evolution.Life
 import Math.Maxel
-import Math.Multiset
+import Math.UnaryMultiset
 
 %default covering
 

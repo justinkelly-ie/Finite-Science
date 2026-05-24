@@ -4,18 +4,17 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Physics.WeakForce
+import Physics.FiberBundle Physics.WeakForce
 import Math.MaxelNL
-import Math.AMSet
-import Math.DenseAMSet
+import Math.SignedUnaryMultiset
 import Math.Multiset
+import Math.UnaryMultiset
 
 %default covering
 
 prop_weak_force : Property
 prop_weak_force = withTests 1 $ property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
   let gen10 = unfoldState 10 prim
   let gen11 = unfoldState 11 prim
   isDenominatorOverflow gen10 === False

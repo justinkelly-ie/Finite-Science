@@ -2,7 +2,7 @@ module Tests.CosmologicalScaling
 
 import QuickCheck
 import Math.FiberBundle
-import Physics.Evolution.Cosmology
+import Physics.Findings.Cosmology
 import Physics.Findings.CosmicPartition
 import Tests.Common
 

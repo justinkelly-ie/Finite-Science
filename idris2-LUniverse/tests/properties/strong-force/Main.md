@@ -4,8 +4,7 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Math.DenseAMSet
+import Physics.FiberBundle Math.Multiset
 import Math.MaxelNL
 import Physics.Findings.StrongNuclearForce
 
@@ -15,12 +14,12 @@ prop_vacuum_annihilates_fraction : Property
 prop_vacuum_annihilates_fraction = property $ do
   -- Generation 5 is the Fractional Charge Gate
   -- We inject a fractional defect (length > 0)
-  let defect = MkDarkPlusMatter 5 emptyIntPoly (MkDense [(MkPixelNL 1 2, 1)]) Matter
+  let defect = MkDarkPlusMatter 5 emptyIntPoly (MkMultiset [(MkPixelNL 1 2, 1)]) Matter
   
   -- The grid must forcibly zip up the anomaly
   let restored = vacuumAnnihilation defect
   
-  let (MkDense xs) = maxelSupport restored
+  let (MkMultiset xs) = maxelProjection restored
   length xs === 0
 
 main : IO ()

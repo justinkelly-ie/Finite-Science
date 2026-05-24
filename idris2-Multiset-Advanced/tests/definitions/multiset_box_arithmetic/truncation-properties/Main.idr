@@ -1,14 +1,14 @@
 module Main
 
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 import Data.List
 
 -- Generate polynumbers (boxes of natural numbers)
-genPolynumber : Gen (MSet (MSet (MSet ())))
+genPolynumber : Gen (UnaryMultiset (UnaryMultiset (UnaryMultiset ())))
 genPolynumber = do
   nats <- list (linear 0 15) (nat (linear 0 10))
-  pure (Math.Multiset.fromList (map (\x => alphaPow (Math.Multiset.fromNatLNat x)) nats))
+  pure (Math.UnaryMultiset.fromList (map (\x => alphaPow (Math.UnaryMultiset.fromNatLNat x)) nats))
 
 prop_truncate_add : Property
 prop_truncate_add = property $ do

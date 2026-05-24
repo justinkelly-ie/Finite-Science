@@ -1,9 +1,8 @@
 module Physics.Findings.CosmologicalConstant
 
-import Math.FiberBundle
 import Math.IntPolynumber
-import Math.MaxelNL
-import Math.DenseAMSet
+import Math.Multiset
+import Physics.Core
 import Math.SpreadPolynomial
 import Physics.Findings.CosmicEnergyBudget
 import Math.Fraction
@@ -28,23 +27,34 @@ public export
 interface CalculatesVacuumEnergy a where
   predictCosmologicalConstant : a -> Fraction
 
+||| The vacuum energy is bounded by the 210-state partition grid.
+||| For a raw FibreBundle (PixelIntPoly), the state vector occupancy modulates
+||| the effective vacuum density — more occupied states reduce the available
+||| vacuum capacity.
 public export
-implementation CalculatesVacuumEnergy DarkPlusMatter where
-  predictCosmologicalConstant _ =
-    -- The vacuum energy is bounded by the 210-state partition grid:
-    --   Dark Energy : 128 states -> ratio 128/210 ≈ 0.6095
-    --   Grid limit  : determined by the primorial #7 = 2*3*5*7*11*13*17 = 510510
-    -- Because our model is DISCRETE (not continuous), the result is finite and bounded.
+CalculatesVacuumEnergy PixelIntPoly where
+  predictCosmologicalConstant pip =
     let darkEnergyCount : Nat = darkEnergyStates
         gridLimit       : Nat = primordialGridStates
-    in MkFraction darkEnergyCount (gridLimit * gridLimit)
+        stateOccupancy  : Nat = cast (stateLag pip)
+    in MkFraction darkEnergyCount (gridLimit * gridLimit + stateOccupancy)
+
+||| For a full UniverseState, the substrate density also contributes to the
+||| effective cosmological constant — denser substrates reduce available vacuum energy.
+public export
+CalculatesVacuumEnergy UniverseState where
+  predictCosmologicalConstant state =
+    let darkEnergyCount : Nat = darkEnergyStates
+        gridLimit       : Nat = primordialGridStates
+        stateOccupancy  : Nat = cast (stateLag (stateVector state))
+        causalDensity   : Nat = substrateLag (substrate state)
+    in MkFraction darkEnergyCount (gridLimit * gridLimit + stateOccupancy + causalDensity)
 
 ||| Verifies that the Vacuum Energy Density is finite and strictly bounded
 ||| by the primorial combinatorial limits, proving why the 10^120 QFT error is a
 ||| mathematical artifact of false continuous assumptions.
 public export
-verifyFiniteVacuumDensity : DarkPlusMatter -> Bool
+verifyFiniteVacuumDensity : CalculatesVacuumEnergy a => a -> Bool
 verifyFiniteVacuumDensity state =
   let lambda = predictCosmologicalConstant state
   in (lambda.numerator > 0) && (lambda.numerator * 100 < lambda.denominator)
-

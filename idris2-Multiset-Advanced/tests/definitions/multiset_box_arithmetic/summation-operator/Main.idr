@@ -1,13 +1,13 @@
 module Main
 
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 import Data.List
 
-genPolynumber : Gen (MSet (MSet (MSet ())))
+genPolynumber : Gen (UnaryMultiset (UnaryMultiset (UnaryMultiset ())))
 genPolynumber = do
   nats <- list (linear 0 10) (nat (linear 0 10))
-  pure (Math.Multiset.fromList (map (\x => alphaPow (Math.Multiset.fromNatLNat x)) nats))
+  pure (Math.UnaryMultiset.fromList (map (\x => alphaPow (Math.UnaryMultiset.fromNatLNat x)) nats))
 
 prop_sigma_caret : Property
 prop_sigma_caret = property $ do

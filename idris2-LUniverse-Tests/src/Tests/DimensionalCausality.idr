@@ -2,7 +2,7 @@ module Tests.DimensionalCausality
 
 import QuickCheck
 import Math.FiberBundle
-import Physics.Evolution.QuantumGates
+import Physics.Evolution.Gate
 import Tests.Common
 
 %default total

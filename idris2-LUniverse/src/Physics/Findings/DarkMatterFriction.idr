@@ -1,6 +1,6 @@
 module Physics.Findings.DarkMatterFriction
 
-import Math.FiberBundle
+import Physics.Core
 import Math.Chromogeometry
 import Physics.Findings.CosmicEnergyBudget
 
@@ -34,17 +34,29 @@ interface ExertsGravitationalDrag a where
   ||| Computes the inertial resistance applied by the Dark Matter grid tension.
   calculateTensionDrag : a -> Spread
 
-||| A dummy representation of a Dark Matter Background Array
+||| A Dark Matter Background modeled as a Substrate (causal graph density).
+|||
+||| The grid density is derived from the substrate's causal edge count —
+||| more edges = denser vacuum scaffold = more gravitational drag.
 public export
 record DarkMatterGrid where
   constructor MkDarkMatterGrid
-  states : List DarkPlusMatter
-  -- Represents the physical density of the grid bounds
+  ||| The substrate topology encoding the 55-state vacuum scaffold
+  scaffold    : Substrate
+  ||| The physical density derived from causal edge count
   gridDensity : Spread
 
 ||| Dark Matter structurally anchors the visible universe.
+||| The drag is proportional to the scaffold density scaled by the primorial grid.
 public export
-implementation ExertsGravitationalDrag DarkMatterGrid where
+ExertsGravitationalDrag DarkMatterGrid where
   calculateTensionDrag grid = 
-    -- The drag is directly proportional to the density of the 55-state vacuum.
-    scaleFraction primordialGridStates grid.gridDensity -- Scaled by the dynamic grid limit derived from the partition state
+    MkSpread (scaleFraction primordialGridStates grid.gridDensity.value)
+
+||| Direct drag calculation from a Substrate.
+||| The causal density of the directed graph IS the gravitational drag.
+public export
+ExertsGravitationalDrag Substrate where
+  calculateTensionDrag sub =
+    let density = substrateLag sub
+    in MkSpread (MkFraction (density * darkMatterStates) (primordialGridStates * primordialGridStates))

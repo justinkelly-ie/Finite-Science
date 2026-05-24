@@ -13,3 +13,8 @@ ipkg = "ref1.ipkg"
 type = "local"
 path = "../idris2-QuickCheck"
 ipkg = "idris2-QuickCheck.ipkg"
+
+[custom.all.idris2-LUniverse]
+type = "local"
+path = "../idris2-LUniverse"
+ipkg = "idris2-LUniverse.ipkg"

@@ -1,6 +1,7 @@
 module Physics.Particles.Photon
 
-import Math.MaxelNL
+import Physics.Evolution.State
+
 import Math.Polynumber
 import Math.Chromogeometry
 import Math.SpreadPolynomial

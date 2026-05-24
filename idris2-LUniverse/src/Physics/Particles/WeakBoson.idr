@@ -1,6 +1,7 @@
 module Physics.Particles.WeakBoson
 
-import Math.FiberBundle
+import Physics.Evolution.State
+
 import Math.Polynumber
 
 %default total
@@ -17,8 +18,6 @@ import Math.Polynumber
 ||| the state to mathematically split into a Quark (n=5), a Bond (n=4), 
 ||| and a Lepton (n=2), simulating beta decay.
 public export
-record WeakBoson tree where
+record WeakBoson where
   constructor MkWeakBoson
-  1 state : FiberBundle tree
-  ||| The weak boson corresponds to the Weak Force gate.
-  0 isWeakForce : dimensions (getGeometry tree) = 11
+  1 state : Multiset (PixelNL Integer, IntPolynumber)

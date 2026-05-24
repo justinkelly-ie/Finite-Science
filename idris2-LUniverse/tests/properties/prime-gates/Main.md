@@ -4,18 +4,17 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Physics.QuantumGates
+import Physics.FiberBundle Physics.QuantumGates
 import Math.MaxelNL
-import Math.AMSet
-import Math.DenseAMSet
+import Math.SignedUnaryMultiset
 import Math.Multiset
+import Math.UnaryMultiset
 
 %default covering
 
 prop_prime_gates : Property
 prop_prime_gates = withTests 1 $ property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
   
   -- Test n=2 (Background)
   let gen2 = unfoldState 2 prim

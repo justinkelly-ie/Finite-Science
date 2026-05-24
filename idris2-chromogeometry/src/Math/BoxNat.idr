@@ -2,8 +2,8 @@ module Math.BoxNat
 
 import Data.Linear
 import Math.Interfaces
-import Math.Multiset
-import Math.Multiset.Labeled
+import Math.UnaryMultiset
+import Math.UnaryMultiset.Labeled
 
 %default total
 

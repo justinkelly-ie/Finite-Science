@@ -1,6 +1,6 @@
 module Main
 
-import Math.Multiset
+import Math.UnaryMultiset
 
 main : IO ()
 main = do

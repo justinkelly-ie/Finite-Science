@@ -1,1 +1,0 @@
-(parameterize ([optimize-level 3] [compile-file-message #f]) (compile-program "/var/home/justin/Projects/idris2-QuickCheck/idris2-QuickCheck-tests/build/exec/quickcheck-tests_app/quickcheck-tests.ss"))

@@ -1,16 +1,15 @@
 # Baryogenesis Annihilation Verification
 
-We verify that the `DarkPlusMatter` state implicitly resolves matter/antimatter asymmetry via the structural decay inherited from `AMSet`.
+We verify that the `DarkPlusMatter` state implicitly resolves matter/antimatter asymmetry via the structural decay inherited from `SignedUnaryMultiset`.
 
 ```idris
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Math.AMSet
-import Math.DenseAMSet
-import Math.MaxelNL
+import Physics.FiberBundle Math.SignedUnaryMultiset
 import Math.Multiset
+import Math.MaxelNL
+import Math.UnaryMultiset
 
 %default total
 
@@ -25,7 +24,7 @@ genPixelNL = do
   pure (MkPixelNL (cast x) (cast y))
 
 -- Add N copies of the SAME pixel to a multiset
-replicateMSet : Nat -> PixelNL Integer -> MSet (PixelNL Integer)
+replicateMSet : Nat -> PixelNL Integer -> UnaryMultiset (PixelNL Integer)
 replicateMSet Z _ = Zero
 replicateMSet (S k) p = Add p (replicateMSet k p)
 
@@ -43,13 +42,13 @@ prop_perfectAnnihilation = property $ do
   let negAtoms = replicateMSet n pixel
   
   -- The pre-annihilation state
-  let supp = MkAMSet posAtoms negAtoms
+  let supp = MkSignedUnaryMultiset posAtoms negAtoms
   
   -- Wrap it in the DarkPlusMatter engine, and let it annihilate
   let state = primordialDarkPlusMatter (toDense supp)
   
   -- Verify the vacuum is totally clean (Size = 0)
-  let (MkAMSet pSet nSet) = toUnary (maxelSupport state)
+  let (MkSignedUnaryMultiset pSet nSet) = toUnary (maxelProjection state)
   (size pSet + size nSet) === 0
 
 export covering
@@ -63,12 +62,12 @@ prop_baryogenesisAsymmetry = property $ do
   
   let posAtoms = replicateMSet n pixel
   let negAtoms = replicateMSet m pixel
-  let supp = MkAMSet posAtoms negAtoms
+  let supp = MkSignedUnaryMultiset posAtoms negAtoms
   
   -- Process annihilation natively
   let state = primordialDarkPlusMatter (toDense supp)
   
-  let (MkAMSet pSet nSet) = toUnary (maxelSupport state)
+  let (MkSignedUnaryMultiset pSet nSet) = toUnary (maxelProjection state)
   -- Verify that EXACTLY N - M matter particles remain
   size pSet === minus n m
   

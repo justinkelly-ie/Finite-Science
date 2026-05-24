@@ -12,7 +12,7 @@ prop_decoherence_threshold : Property
 prop_decoherence_threshold = property $ do
   -- An Observer decoheres the system if lag > 137
   let mockIdentity : IdentityDiagonal Nat = MkDiagonal 1 Refl
-  let observer : FormalObserver Nat 6 = MkObserver Observer mockIdentity
+  let observer : PersistentIdentity Nat 6 = MkIdentity Observer mockIdentity
   
   assert (not (enforceDecoherence observer 100))
   assert (enforceDecoherence observer 150)

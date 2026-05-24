@@ -3,7 +3,7 @@
 ```idris
 module Main
 
-import Math.Multiset
+import Math.UnaryMultiset
 import QuickCheck
 import Data.List
 
@@ -25,14 +25,14 @@ powersUpTo p n = gen 1
     gen : Nat -> List Nat
     gen curr = if curr > n then [] else curr :: gen (curr * p)
 
-primePowerBox : Nat -> Nat -> MSet (MSet (MSet ()))
-primePowerBox p n = Math.Multiset.fromList (map Math.Multiset.fromNat (powersUpTo p n))
+primePowerBox : Nat -> Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+primePowerBox p n = Math.UnaryMultiset.fromList (map Math.UnaryMultiset.fromNat (powersUpTo p n))
 
-fiaLeft : Nat -> MSet (MSet (MSet ()))
-fiaLeft n = foldl (\acc, p => Math.Multiset.truncate n (Math.Multiset.carret acc (primePowerBox p n))) (Math.Multiset.fromList [Math.Multiset.fromNat 1]) (primesUpTo n)
+fiaLeft : Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+fiaLeft n = foldl (\acc, p => Math.UnaryMultiset.truncate n (Math.UnaryMultiset.carret acc (primePowerBox p n))) (Math.UnaryMultiset.fromList [Math.UnaryMultiset.fromNat 1]) (primesUpTo n)
 
-box1ToN : Nat -> MSet (MSet (MSet ()))
-box1ToN n = Math.Multiset.fromList (map Math.Multiset.fromNat [1 .. n])
+box1ToN : Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+box1ToN n = Math.UnaryMultiset.fromList (map Math.UnaryMultiset.fromNat [1 .. n])
 
 record FIATest where
   constructor MkFIATest

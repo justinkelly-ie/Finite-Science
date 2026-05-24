@@ -1,9 +1,8 @@
 module Physics.Findings.VacuumPairProduction
 
-import Math.FiberBundle
 import Math.IntPolynumber
-import Math.MaxelNL
-import Math.DenseAMSet
+import Math.Multiset
+import Physics.Core
 import Math.SpreadPolynomial
 
 %default total
@@ -16,34 +15,38 @@ import Math.SpreadPolynomial
 ||| particles are ripped apart into real particle-antiparticle pairs.
 |||
 ||| In the Primorial architecture, the vacuum is exactly represented by 
-||| the DenseAMSet where the sum of multiplicities is 0, but the list contains 
+||| the Multiset where the sum of multiplicities is 0, but the list contains 
 ||| latent (1, -1) pairings waiting to be extracted.
 |||
 ||| Pair production is simply a structural mapping: applying a metrical gradient 
-||| to an empty DenseAMSet forces the array to explicitly unroll a +1 and -1 
+||| to an empty Multiset forces the array to explicitly unroll a +1 and -1 
 ||| node onto the blue visible grid.
 
 ||| Creates a spontaneous Matter/Antimatter pair out of the empty grid
 ||| using the intense gradient of the S_13 Resonance Gate.
+|||
+||| Operates directly on the PixelIntPoly (FibreBundle = Multiset (Geometry, Amplitude)).
+||| By injecting +1 and -1 multiplicities at a target coordinate, we model
+||| the vacuum being ripped into a pair.
 public export
-simulateSchwingerEffect : DarkPlusMatter -> PixelNL Integer -> DarkPlusMatter
-simulateSchwingerEffect (MkDarkPlusMatter gen poly (MkDense xs) flavor) targetCoord =
-  -- By explicitly injecting a +1 and -1 at the target coordinate,
-  -- we simulate the vacuum being ripped into a pair.
-  -- Because addDense is lazy, the pair exists structurally until explicitly 
-  -- annihilated by the Grid.
-  let pairInjection = [(targetCoord, 1), (targetCoord, -1)]
-      newSupp = MkDense (xs ++ pairInjection)
-  in MkDarkPlusMatter gen poly newSupp flavor
+simulateSchwingerEffect : PixelIntPoly -> Geometry -> PixelIntPoly
+simulateSchwingerEffect pip targetCoord =
+  let -- Inject a particle (+1) and antiparticle (-1) at the target
+      particlePoly     = fromList [((1, 0), 1)]  -- monomial s^1
+      antiparticlePoly = fromList [((1, 0), -1)] -- monomial s^1 with negative coefficient
+      pairInjection = fromList [ ((targetCoord, particlePoly), 1)
+                               , ((targetCoord, antiparticlePoly), 1) ]
+  in addMultiset pip pairInjection
 
 ||| Hawking Radiation: Near a Grid Fracture boundary (Event Horizon),
 ||| one half of the pair is captured by the fractional anomaly, while the 
 ||| other escapes as visible Hawking radiation.
+|||
+||| Structurally, the grid fracture swallows the negative coefficient,
+||| leaving the positive particle stranded on the visible grid.
 public export
-simulateHawkingRadiation : DarkPlusMatter -> PixelNL Integer -> DarkPlusMatter
-simulateHawkingRadiation (MkDarkPlusMatter gen poly (MkDense xs) flavor) targetCoord =
-  -- The grid fracture swallows the negative multiplicity (-1),
-  -- leaving the positive particle (+1) stranded on the visible grid.
-  let hawkingEmission = [(targetCoord, 1)]
-      newSupp = MkDense (xs ++ hawkingEmission)
-  in MkDarkPlusMatter gen poly newSupp flavor
+simulateHawkingRadiation : PixelIntPoly -> Geometry -> PixelIntPoly
+simulateHawkingRadiation pip targetCoord =
+  let hawkingPoly = fromList [((1, 0), 1)]
+      hawkingEmission = fromList [ ((targetCoord, hawkingPoly), 1) ]
+  in addMultiset pip hawkingEmission

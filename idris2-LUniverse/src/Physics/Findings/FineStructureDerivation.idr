@@ -1,9 +1,8 @@
 module Physics.Findings.FineStructureDerivation
 
-import Math.FiberBundle
 import Math.IntPolynumber
-import Math.MaxelNL
-import Math.DenseAMSet
+import Math.Multiset
+import Physics.Core
 import Physics.Findings.GravitationalTimeDilation
 import Physics.Findings.CosmicEnergyBudget
 
@@ -24,9 +23,9 @@ import Math.Fraction
 ||| the "Leibniz Lag" of the local coordinate system!
 
 ||| Derives the local running Fine Structure Constant based on the topological 
-||| lag of a given DarkPlusMatter state.
+||| lag of any state that experiences time dilation.
 public export
-deriveRunningAlpha : DarkPlusMatter -> Fraction
+deriveRunningAlpha : ExperiencesTimeDilation a => a -> Fraction
 deriveRunningAlpha state =
   let 
       -- The base saturation limit of the combinatorial grid (210/1)
@@ -44,12 +43,14 @@ deriveRunningAlpha state =
 
 ||| Validates that the Fine Structure limit asymptotically approaches 1/137 
 ||| for empty, primordial vacuum space.
+|||
+||| For a PixelIntPoly (FibreBundle), an empty multiset should yield alpha = 1/210.
 public export
-verifyPrimordialAlpha : DarkPlusMatter -> Bool
-verifyPrimordialAlpha state@(MkDarkPlusMatter gen _ (MkDense xs) _) =
-  let alpha = deriveRunningAlpha state
+verifyPrimordialAlpha : PixelIntPoly -> Bool
+verifyPrimordialAlpha pip =
+  let alpha = deriveRunningAlpha pip
       -- For empty space, Alpha should exactly equal 1 / 210
       primordialAlpha = MkFraction 1 primordialGridStates
-  in if length xs == 0 
+  in if stateLag pip == 0 
        then (alpha.numerator * primordialAlpha.denominator) == (alpha.denominator * primordialAlpha.numerator)
        else (alpha.numerator * primordialAlpha.denominator) < (alpha.denominator * primordialAlpha.numerator)

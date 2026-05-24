@@ -4,8 +4,7 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Math.DenseAMSet
+import Physics.FiberBundle Math.Multiset
 import Math.MaxelNL
 import Physics.Findings.VacuumPairProduction
 
@@ -13,14 +12,14 @@ import Physics.Findings.VacuumPairProduction
 
 prop_vacuum_rips_into_pairs : Property
 prop_vacuum_rips_into_pairs = property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
   let target = MkPixelNL 5 7
   
   -- Ripping the vacuum
   let paired = simulateSchwingerEffect prim target
   
   -- The grid must now contain 2 nodes: (+1) and (-1) multiplicities
-  let (MkDense xs) = maxelSupport paired
+  let (MkMultiset xs) = maxelProjection paired
   length xs === 2
 
 main : IO ()

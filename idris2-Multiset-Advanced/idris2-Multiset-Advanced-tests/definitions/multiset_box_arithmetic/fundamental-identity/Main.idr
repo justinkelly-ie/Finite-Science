@@ -1,7 +1,7 @@
 module Main
 
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 import Data.List
 
 isDivisibleBy : Integer -> Integer -> Bool
@@ -22,14 +22,14 @@ powersUpTo p n = gen 1
     gen : Nat -> List Nat
     gen curr = if curr > n then [] else curr :: gen (curr * p)
 
-primePowerBox : Nat -> Nat -> MSet (MSet (MSet ()))
-primePowerBox p n = fromList (map Math.Multiset.fromNat (powersUpTo p n))
+primePowerBox : Nat -> Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+primePowerBox p n = fromList (map Math.UnaryMultiset.fromNat (powersUpTo p n))
 
-fiaLeft : Nat -> MSet (MSet (MSet ()))
-fiaLeft n = foldl (\acc, p => truncate n (carret acc (primePowerBox p n))) (fromList [Math.Multiset.fromNat 1]) (primesUpTo n)
+fiaLeft : Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+fiaLeft n = foldl (\acc, p => truncate n (carret acc (primePowerBox p n))) (fromList [Math.UnaryMultiset.fromNat 1]) (primesUpTo n)
 
-box1ToN : Nat -> MSet (MSet (MSet ()))
-box1ToN n = fromList (map Math.Multiset.fromNat [1 .. n])
+box1ToN : Nat -> UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+box1ToN n = fromList (map Math.UnaryMultiset.fromNat [1 .. n])
 
 prop_fia : Property
 prop_fia = property $ do

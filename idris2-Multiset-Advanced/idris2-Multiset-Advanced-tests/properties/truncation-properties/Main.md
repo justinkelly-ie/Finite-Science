@@ -3,7 +3,7 @@
 ```idris
 module Main
 
-import Math.Multiset
+import Math.UnaryMultiset
 import QuickCheck
 import Data.So
 
@@ -12,8 +12,8 @@ import Data.So
 record TruncTest where
   constructor MkTruncTest
   k : Nat
-  p : MSet (MSet (MSet ()))
-  q : MSet (MSet (MSet ()))
+  p : UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
+  q : UnaryMultiset (UnaryMultiset (UnaryMultiset ()))
 
 Show TruncTest where
   show (MkTruncTest k _ _) = "TruncTest(" ++ show k ++ ")"
@@ -23,8 +23,8 @@ Arbitrary TruncTest where
     k <- arbitrary {a=Int}; let k' = cast (mod (abs k) 10)
     pNats <- genListNat
     qNats <- genListNat
-    let p = Math.Multiset.fromList (map Math.Multiset.fromNat pNats)
-    let q = Math.Multiset.fromList (map Math.Multiset.fromNat qNats)
+    let p = Math.UnaryMultiset.fromList (map Math.UnaryMultiset.fromNat pNats)
+    let q = Math.UnaryMultiset.fromList (map Math.UnaryMultiset.fromNat qNats)
     pure (MkTruncTest k' p q)
   where
     genListNat : Gen (List Nat)
@@ -42,11 +42,11 @@ Arbitrary TruncTest where
 
 prop_truncate_add : Property
 prop_truncate_add = forAll {a = TruncTest} {prop = Bool} arbitrary (MkFn (\t => 
-  Math.Multiset.truncate t.k (Math.Multiset.add t.p t.q) == Math.Multiset.add (Math.Multiset.truncate t.k t.p) (Math.Multiset.truncate t.k t.q)))
+  Math.UnaryMultiset.truncate t.k (Math.UnaryMultiset.add t.p t.q) == Math.UnaryMultiset.add (Math.UnaryMultiset.truncate t.k t.p) (Math.UnaryMultiset.truncate t.k t.q)))
 
 prop_truncate_mul : Property
 prop_truncate_mul = forAll {a = TruncTest} {prop = Bool} arbitrary (MkFn (\t => 
-  Math.Multiset.truncate t.k (Math.Multiset.mul t.p t.q) == Math.Multiset.truncate t.k (Math.Multiset.mul (Math.Multiset.truncate t.k t.p) (Math.Multiset.truncate t.k t.q))))
+  Math.UnaryMultiset.truncate t.k (Math.UnaryMultiset.mul t.p t.q) == Math.UnaryMultiset.truncate t.k (Math.UnaryMultiset.mul (Math.UnaryMultiset.truncate t.k t.p) (Math.UnaryMultiset.truncate t.k t.q))))
 
 main : IO ()
 main = do

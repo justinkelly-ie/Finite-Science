@@ -1,6 +1,6 @@
 module Main
 import Hedgehog
-import Math.Multiset
+import Math.UnaryMultiset
 import Math.Maxel
 import Math.MaxelNL
 import Math.BoxInt

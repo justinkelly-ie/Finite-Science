@@ -4,29 +4,28 @@
 module Main
 
 import Hedgehog
-import Physics.FiberBundle
-import Math.MaxelNL
-import Math.AMSet
-import Math.DenseAMSet
+import Physics.FiberBundle Math.MaxelNL
+import Math.SignedUnaryMultiset
 import Math.Multiset
+import Math.UnaryMultiset
 
 %default covering
 
 prop_unfold_advances_poly : Property
 prop_unfold_advances_poly = property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
       gen3 = unfoldState 3 prim
   gen3.generation === 3
 
 prop_unfold_gen11 : Property
 prop_unfold_gen11 = property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
       gen11 = unfoldState 11 prim
   gen11.generation === 11
 
 prop_unfold_gen13 : Property
 prop_unfold_gen13 = property $ do
-  let prim = primordialDarkPlusMatter (MkDense [])
+  let prim = primordialDarkPlusMatter (MkMultiset [])
       gen13 = unfoldState 13 prim
   gen13.generation === 13
 

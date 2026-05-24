@@ -7,9 +7,8 @@ module Main
 
 import Hedgehog
 import Physics.Evolution.Cosmology
-import Physics.FiberBundle
-import Math.Polynumber
-import Math.Multiset
+import Physics.FiberBundle Math.Polynumber
+import Math.UnaryMultiset
 
 %default covering
 

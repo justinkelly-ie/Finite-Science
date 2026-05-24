@@ -1,9 +1,9 @@
 module Physics.Particles.Electron
 
-import Math.FiberBundle
+import Physics.Evolution.State
+
 import Math.Polynumber
-import Math.DenseAMSet
-import Math.MaxelNL
+import Math.Multiset
 import Math.IntPolynumber
 import Data.Linear
 
@@ -24,8 +24,6 @@ import Data.Linear
 ||| to stabilize! It natively balances the grid perfectly by itself.
 
 public export
-record Electron tree where
+record Electron where
   constructor MkElectron
-  1 state : FiberBundle tree
-  ||| The electron must be bound to the visible Spatial Matter gate
-  0 isVisibleMatter : dimensions (getGeometry tree) = 3
+  1 state : Multiset (PixelNL Integer, IntPolynumber)
