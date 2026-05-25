@@ -1,22 +1,17 @@
 module Tests.LabelExtraction
 
 import QuickCheck
-import Math.FiberBundle
+import Math.Core
 import Physics.Evolution.Gate
 import Tests.Common
 
 %default total
 
-||| A simple property test ensuring that the generated SpacetimeManifold
-||| successfully extracts a valid string label (verifying our Poset traversal works).
-||| 
-||| Why this matters:
-||| As the QuickCheck engine unfolds the universe, every new topological epoch
-||| MUST be formally labeled by its prime gate. This test proves that the Poset
-||| is intact and string extraction never segfaults or points to a null node!
+||| A simple property test ensuring that the generated UniverseState
+||| successfully extracts a valid string label (verifying our topology can be printed).
 public export
 prop_spacetimeHasLabel : Property
-prop_spacetimeHasLabel = forAll genSpacetime (MkFn (\tree => 
-    let label = getLabel tree
+prop_spacetimeHasLabel = forAll genUniverseStateWithDepth (MkFn (\(depth, univ) => 
+    let label = show univ
     in property (length label > 0)
   ))

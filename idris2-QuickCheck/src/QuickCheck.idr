@@ -17,7 +17,6 @@ import public Data.Maybe
 import public Data.Primitives.Views
 
 import public LCG
-import Physics.Evolution.State
 
 
 import Data.Vect
@@ -145,12 +144,7 @@ Monad Gen where
                          (MkGen g2) = c (g1 n r1)
                      in g2 n r2)
 
-||| Generates the current topological MaxelNL (PixelNL Integer) of the test execution!
-||| Because the LCG state natively unfolds the Poset, this exposes the exact
-||| quantum gate history of the test to the user.
-public export
-genSpacetime : Gen (MaxelNL (PixelNL Integer))
-genSpacetime = MkGen (\n, r => r.universe)
+-- removed genSpacetime
 
 
 ||| Generate an element of the given list
@@ -583,33 +577,15 @@ check c x =
       newGen = initLCG 42
   in tests c (evaluate x) newGen c.maxTest c.maxFail [<] []
 
-||| Check a testable property using the given `Config` and custom starting Universe.
-public export
-checkFrom : Testable a => Config -> MaxelNL (PixelNL Integer) -> a -> QCRes
-checkFrom c univ x =
-  let newGen : LCGState
-      newGen = initLCGWith 42 univ
-  in tests c (evaluate x) newGen c.maxTest c.maxFail [<] []
-
 ||| Check a testable property using the `quick` config.
 public export
 test : Testable a => a -> QCRes
 test = check quick
 
-||| Check a testable property from a custom starting Universe.
-public export
-testFrom : Testable a => MaxelNL (PixelNL Integer) -> a -> QCRes
-testFrom univ = checkFrom quick univ
-
 ||| Check a testable property using the `quick` config.
 public export
 quickCheck : Testable a => a -> QCRes
 quickCheck = check quick
-
-||| Check a testable property from a custom starting Universe using `quick` config.
-public export
-quickCheckFrom : Testable a => MaxelNL (PixelNL Integer) -> a -> QCRes
-quickCheckFrom univ = checkFrom quick univ
 
 ||| Check a testable property using the `verbose` config.
 public export

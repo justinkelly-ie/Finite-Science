@@ -7,9 +7,7 @@ import Data.Vect
 import Data.SnocList
 import public Data.Binary
 import public Data.Binary.Digit
-import Physics.Evolution.State
-import Physics.Evolution.Gate
-
+import public Data.Binary.Digit
 %default total
 
 -- Linear Congruential Generator (LCG) parameters
@@ -41,23 +39,17 @@ hash key path = foldl combine (key * 31) path
                                    O => 0
                                    I => 1)
 
--- LCG state hijacked to hold the MaxelNL (PixelNL Integer)!
+-- LCG state
 public export
 record LCGState where
   constructor MkLCGState
   seed : Int
   path : List Digit
-  universe : MaxelNL (PixelNL Integer)
 
--- Initialize LCG with a seed and the absolute vacuum root
+-- Initialize LCG with a seed
 public export
 initLCG : Int -> LCGState
-initLCG seed = MkLCGState seed [] (MkMaxelNL [])
-
--- Initialize LCG with a seed and a specific custom MaxelNL (PixelNL Integer) root
-public export
-initLCGWith : Int -> MaxelNL (PixelNL Integer) -> LCGState
-initLCGWith seed startUniv = MkLCGState seed [] startUniv
+initLCG seed = MkLCGState seed []
 
 -- Update the path by treating it as a binary counter and incrementing it
 public export
@@ -66,34 +58,20 @@ updatePath [] = [I]
 updatePath (O :: xs) = I :: xs
 updatePath (I :: xs) = O :: updatePath xs
 
--- Map pseudo-random integers to fundamental quantum gates
-public export
-pickGate : Int -> FundamentalGate
-pickGate n = 
-  let rem = abs n `mod` 6
-  in if rem == 0 then BackgroundGate
-     else if rem == 1 then MatterGate
-     else if rem == 2 then ChargeGate
-     else if rem == 3 then TimeGate
-     else if rem == 4 then WeakForceGate
-     else ResonanceGate
-
--- Generate the next number in the sequence and TOPOLOGICALLY APPEND the gate!
+-- Generate the next number in the sequence!
 public export
 nextLCG : LCGState -> (Int, LCGState)
-nextLCG (MkLCGState seed path univ) =
+nextLCG (MkLCGState seed path) =
   let input = hash seed path
       nextSeed = (lcgA * input + lcgC) `mod` lcgM
       nextPath = updatePath path
-      gate = pickGate nextSeed
-      nextUniverse = univ
-  in (nextSeed, MkLCGState seed nextPath nextUniverse)
+  in (nextSeed, MkLCGState seed nextPath)
 
--- Split the generator (branches the universe timeline)
+-- Split the generator
 public export
 splitLCG : LCGState -> (LCGState, LCGState)
-splitLCG (MkLCGState seed path univ) =
-  (MkLCGState seed (I :: path) univ, MkLCGState seed (O :: path) univ)
+splitLCG (MkLCGState seed path) =
+  (MkLCGState seed (I :: path), MkLCGState seed (O :: path))
 
 -- Extract the generated number
 public export

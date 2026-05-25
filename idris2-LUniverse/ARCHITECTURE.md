@@ -338,3 +338,92 @@ This is the vacuum fluctuation quantum — constant across all Z.
 ```
 
 Repeat × 38 cycles → Eddington Number (≈ 10⁸¹ particles)
+
+---
+
+## §12 True Linear Memory (LUniverse Refactor)
+
+> *This is the defining feature distinguishing `LUniverse` from the pure functional `Universe` baseline.*
+
+### Enforcing $O(1)$ Thermodynamic Fluid Dynamics
+In the original design, the state vector `PixelIntPoly` was a `Multiset (Geometry, Amplitude)`. Evolving the universe required structurally replacing the old amplitude with the new amplitude, which in Idris allocates a new node, effectively cloning a universe branch on every gate application.
+
+By incorporating `Linear` and `Ref1` (Quantitative Type Theory) into the core primitives, we achieve true in-place $O(1)$ mutation, accurately reflecting the energy-conserving properties of a physical fluid dynamic system:
+
+```idris
+public export
+0 LCell0 : (s : Type) -> Type
+LCell0 s = Ref s (Geometry, Amplitude)
+
+public export
+0 LPixelIntPoly : (s : Type) -> Type
+LPixelIntPoly s = Multiset (LCell0 s)
+```
+
+### The Linear Gate Engine (`LGate.idr`)
+With the geometry and amplitude strictly bundled behind the `Ref1` pointer, the state vector is reduced to a pure graph of physical pointers. Evolving a gate no longer branches the state; it consumes the linear `F1 s` execution token, reads the cell, applies the local propagator, and writes it back in place:
+
+```idris
+export
+applyLinearMatterGate : LCell0 s -> ((Geometry, Amplitude) -> (Geometry, Amplitude)) -> F1 s ()
+applyLinearMatterGate cell f = T1.do
+  -- Read the old state (Geometry, Amplitude) linearly
+  oldState <- read1 cell
+  
+  -- Compute the new state locally
+  let newState = f oldState
+  
+  -- Write the new state in-place, consuming the linear F1 context
+  write1 cell newState
+```
+
+This transforms `stepUniverseLocalized` from a functional pipeline mapping over tuples into a GPU-like kernel shader that zips over the `Multiset` pointers, mutating space-time perfectly without dropping bits or relying on garbage collection.
+
+**Status: ✅ COMPILED**
+
+---
+
+## §13 The Cosmological Bridge (`LPhysics.Bridge`)
+
+The `idris2-Universe` (pure math) and `idris2-LUniverse` (physical memory) pathways are explicitly linked via a Cosmological Bridge. This safely transforms pure geometry into a thermodynamic fluid and back.
+
+### Melt (Instantiation Engine)
+The `melt` operation condenses mathematical truth into an instantiated spatial reality. It operates over the entire `Math.Core.UniverseState`, discovering every unique geometric coordinate actively represented in either the Causal Graph (`Substrate`) or the State Vector. 
+
+It then enters the linear `F1 s` token and allocates exactly **one** physical `LCell0 s = Ref1 (Geometry, Amplitude)` pointer for each coordinate. Both the linear substrate edges and linear state vector nodes are woven together using these perfectly shared, exact physical addresses. 
+
+### Freeze (Photographic Snapshot)
+The `freeze` operation provides a static cross-section of the linear universe's state at a precise cycle boundary. It traverses the `LUniverseState` invoking `read1`, seamlessly recovering the non-linear pure `UniverseState` graph of geometries without consuming or destroying the underlying pointers.
+
+**Status: ✅ COMPILED**
+
+---
+
+## §14 The Linear Adaptive Cycle (`runLEpochs`)
+
+With `LCell0` correctly established, `runLEpochs` and `runLAdaptiveCycle` bypass architectural duplication completely. They function entirely as GPU-kernel shaders:
+
+```idris
+runLAdaptiveCycle : Integer -> Metric -> LMath.Core.Geometry -> LUniverseState s -> F1 s ()
+```
+
+Rather than folding, mapping, or reducing an immutable tree, `runLAdaptiveCycle` accepts the execution token `F1 s` and loops through the physical nodes of the `LStateVec`. It applies linear updates in-place, meaning hundreds of epochs can tick by locally without allocating a single byte of structural memory. 
+
+The universe is physically mutated exactly as it evolved!
+
+### Physical Wave-Function Shift (`executeLocalShift`)
+
+Inside `runLAdaptiveCycle`, the execution of the wave-function shift has been successfully wired to the `SpreadPolynumber` mechanics. Because the `Substrate` causal graph edges do not mutate dynamically within a single cycle, the engine takes a static pure snapshot of the substrate geometry via `freezeSub`. 
+
+This frozen graph is then passed into `executeLocalShift`, which loops over every single `Ref1` cell and computes the localized pure `generateLocalSpreadPoly` operator for its geometric coordinate. The `IntPolynumber` amplitude inside the memory cell is then directly mutated by multiplying it against the generated spatial twist.
+
+This eliminates structural tree reallocation entirely — the state vector's probabilities flow continuously through memory as an unboxed thermodynamic fluid.
+### Topological Condensation (`canAscend` & `melt`)
+
+The engine perfectly models topological collapse (the transition from 137 micro-states into a single macro-node at Scale N+1) by exploiting Idris 2's GC and linear types:
+1. **Freeze State**: After the linear wave-function shift completes, the state vector pointers are photographed into a pure topological graph via `freezeState`.
+2. **Pure Condensation**: `canAscend` and `ascendScale` execute entirely in pure math to collapse the graph into a new monolithic target topology.
+3. **Melt Instantiation**: If ascension triggers, `melt` is invoked on the collapsed state. This allocates an entirely fresh, continuous block of physical memory for the newly ascended macro-universe. The previous cycle's `Ref1` pointers fall out of scope and are abandoned cleanly to the Scheme GC.
+4. **Fluid Grind**: If ascension does not trigger, the original physical layout pointers are returned unmodified, allowing the `runLEpochs` shader to instantly recurse through another cycle using exactly the same unboxed memory.
+
+**Status: ✅ COMPILED**

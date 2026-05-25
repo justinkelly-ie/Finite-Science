@@ -10,3 +10,4 @@ modules = Math.Interfaces, Math.UnaryMultiset, Math.UnaryMultiset.Labeled, Math.
        , Math.IntPolynumber
        , Math.SpreadPolynumber, Math.Maxel, Math.MaxelNL
        , Math.Fraction, Math.FractionalEvaluator
+       , Data.Linear.Ref1.Swap

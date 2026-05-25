@@ -28,17 +28,24 @@ implementation Show Metric where
   show Red = "Red"
   show Green = "Green"
 
+||| The Algebraic Boundary Operator (∂) for a 1-Cell (Directed Edge).
+||| In simplicial homology, the boundary of an edge from A to B is exactly (B - A).
+||| This formal difference is the generator for all metric quadrances.
+public export
+boundaryNL : PixelNL Integer -> PixelNL Integer -> PixelNL Integer
+boundaryNL (MkPixelNL xA yA) (MkPixelNL xB yB) = MkPixelNL (xB - xA) (yB - yA)
+
 ||| Restored: Pure non-linear Quadrance computation.
 ||| Replaces legacy linear types with flat integer coordinate math.
+||| Computes the metric norm over the algebraic boundary (∂) of the 1-Cell.
 |||
 ||| Naming Zoo:
 |||   - Physics: Spacetime Interval / Squared Distance / Metrical Norm
 |||   - Rational Trig: Quadrance Q(p1, p2)
 public export
 quadranceNL : Metric -> PixelNL Integer -> PixelNL Integer -> Integer
-quadranceNL metric (MkPixelNL x1 y1) (MkPixelNL x2 y2) =
-  let dx = x2 - x1
-      dy = y2 - y1
+quadranceNL metric pA pB =
+  let (MkPixelNL dx dy) = boundaryNL pA pB
   in case metric of
        Blue  => (dx * dx) + (dy * dy) -- Euclidean metric signature (+, +)
        Red   => (dx * dx) - (dy * dy) -- Relativistic Minkowski metric signature (+, -)
