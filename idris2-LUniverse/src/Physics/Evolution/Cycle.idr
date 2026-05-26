@@ -73,11 +73,11 @@ runAdaptiveCycle capacityLimit metric macroTarget (MkUniverseState sub field) =
           -- =================================================================
           -- BRANCH TRUE: SCALE ASCENSION (The 137 Primorial Horizon)
           -- =================================================================
-          -- The micro-history is entirely annihilated into an emptySubstrate,
-          -- dropping the local clock back to T=0 for the next layer up.
+          -- The micro-history causal graph is preserved to act as the starting boundary condition
+          -- for the next scale layer up.
           -- The field amplitudes collapse down into the monolithic macro-node target.
           let ascendedField = ascendScale macroTarget postField.maxelMap
-          in MkUniverseState emptySubstrate (MkSparseMaxel ascendedField)
+          in MkUniverseState postSubstrate (MkSparseMaxel ascendedField)
           
         else
           -- =================================================================
@@ -155,12 +155,12 @@ runLAdaptiveCycle capacityLimit metric macroTarget (MkLUniverseState lSub lState
   
   if canAscend metric pureSub (the SparseMaxel (MkSparseMaxel pureStateVec))
      then
-       -- ASCENSION: The entire micro-history annihilates.
+       -- ASCENSION: The micro-history causal graph is preserved.
        -- The field amplitudes collapse down into the monolithic macro-node target.
        let ascendedField = ascendScale macroTarget pureStateVec
-       -- We melt the new pure state into a completely fresh physical memory layout.
-       -- The old `lSub` and `lStateVec` are implicitly abandoned to the GC.
-       in melt (MkUniverseState emptySubstrate (MkSparseMaxel ascendedField))
+       -- We melt the new pure state into a completely fresh physical memory layout,
+       -- carrying the preserved pureSub forward as the starting boundary condition.
+       in melt (MkUniverseState pureSub (MkSparseMaxel ascendedField))
      else
        -- GRIND: Just return the existing physical layout for the next cycle.
        pure (MkLUniverseState lSub lStateVec)
