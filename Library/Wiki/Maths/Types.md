@@ -144,8 +144,8 @@ Amplitude = IntPolynumber                  -- = Multiset (Nat, Nat)
 Substrate = Chain1                         -- = Multiset Cell1
 
 -- The quantum state vector (coordinates mapped to amplitudes)
-0 PixelIntPoly : Type
-PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (Cell0, Multiset (Nat, Nat))
+0 SparseMaxel : Type
+SparseMaxel = Multiset (Geometry, Amplitude)  -- = Multiset (Cell0, Multiset (Nat, Nat))
 
 -- The complete universe state
 0 UniverseState : Type
@@ -157,7 +157,7 @@ PixelIntPoly = Multiset (Geometry, Amplitude)  -- = Multiset (Cell0, Multiset (N
 graph TD
     A[Multiset a] --> B["IntPolynumber<br/>a = (Nat, Nat)"]
     A --> C["Substrate / Chain1<br/>a = Cell1"]
-    A --> D["PixelIntPoly<br/>a = (Cell0, Amplitude)"]
+    A --> D["SparseMaxel<br/>a = (Cell0, Amplitude)"]
     
     B --> D
     C --> E[UniverseState]
@@ -187,7 +187,7 @@ Bridge functions that map spatial chromogeometric curvature directly into an act
 ```idris
 generateLocalSpreadPoly : Metric -> Substrate -> Cell0 -> IntPolynumber
 
-stepUniverseLocalized : Integer -> Metric -> Substrate -> PixelIntPoly -> (Substrate, PixelIntPoly)
+stepUniverseLocalized : Integer -> Metric -> Substrate -> SparseMaxel -> (Substrate, SparseMaxel)
 ```
 
 ---
@@ -220,11 +220,11 @@ Historical aliases that resolved to these types:
 
 | Old Name | Current Type | Resolves To |
 |---|---|---|
-| FiberBundle | `PixelIntPoly` | `Multiset (Cell0, IntPolynumber)` |
-| StateVector | `PixelIntPoly` | `Multiset (Cell0, IntPolynumber)` |
+| FiberBundle | `SparseMaxel` | `Multiset (Cell0, IntPolynumber)` |
+| StateVector | `SparseMaxel` | `Multiset (Cell0, IntPolynumber)` |
 | SpacetimeManifold | `Substrate` | `Multiset Cell1` |
 | Poset | `Substrate` | `Multiset Cell1` |
-| Sheaf | `PixelIntPoly` | `Multiset (Cell0, IntPolynumber)` |
+| Sheaf | `SparseMaxel` | `Multiset (Cell0, IntPolynumber)` |
 | DenseAMSet | `Multiset` | `Multiset a` |
 | AMSet | `SignedUnaryMultiset` | `record { 1 pos, 1 neg : UnaryMultiset a }` |
 | MaxelNL Cell0 | `Chain0` | `Multiset Cell0` |

@@ -8,10 +8,6 @@ type = "local"
 path = "idris2-LUniverse"
 ipkg = "idris2-LUniverse.ipkg"
 
-[custom.all.idris2-Universe]
-type = "local"
-path = "idris2-Universe"
-ipkg = "idris2-Universe.ipkg"
 
 [custom.all.idris2-chromogeometry]
 type = "local"

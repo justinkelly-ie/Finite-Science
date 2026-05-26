@@ -36,7 +36,6 @@ import Math.IntPolynumber
 import Math.SpreadPolynumber
 import Math.Chromogeometry
 import Math.Fraction
-import Physics.Twist
 
 import Data.List
 
@@ -62,11 +61,11 @@ capDegree n = if n > 7 then 7 else n
 seedPoly : IntPolynumber
 seedPoly = spreadPoly 3
 
-seedState : PixelIntPoly
+seedState : Multiset (Geometry, Amplitude)
 seedState = fromList [((origin, seedPoly), 1)]
 
 vacuumUniverse : UniverseState
-vacuumUniverse = MkUniverseState emptySubstrate emptyPixelIntPoly
+vacuumUniverse = MkUniverseState emptySubstrate emptySparseMaxel
 
 seededUniverse : UniverseState
 seededUniverse = MkUniverseState emptySubstrate seedState
@@ -136,7 +135,7 @@ On a vacuum substrate with origin geometry and empty residue, it should fail.
 ```idris
 prop_canAscendRequiresBalance : Bool
 prop_canAscendRequiresBalance =
-  let result = canAscend Blue emptySubstrate emptyPixelIntPoly
+  let result = canAscend Blue emptySubstrate emptySparseMaxel
   in result == False
 ```
 
@@ -277,7 +276,7 @@ For empty space (zero lag), the running Fine Structure Constant should equal 1/2
 ```idris
 prop_primordialAlpha : Bool
 prop_primordialAlpha =
-  verifyPrimordialAlpha (the PixelIntPoly ZeroM)
+  verifyPrimordialAlpha emptySparseMaxel
 ```
 
 ### Property 24: Vacuum Energy is Finite
@@ -288,7 +287,7 @@ bounded — no 10^120 catastrophe.
 ```idris
 prop_finiteVacuumEnergy : Bool
 prop_finiteVacuumEnergy =
-  let pip = the PixelIntPoly ZeroM
+  let pip = emptySparseMaxel
       lambda = predictCosmologicalConstant pip
   in lambda.numerator > 0 && lambda.denominator > 0 &&
      lambda.numerator * 100 < lambda.denominator
@@ -302,7 +301,7 @@ Schwinger pair production adds exactly +2 multiplicity to the state
 ```idris
 prop_pairProductionAdds : Bool
 prop_pairProductionAdds =
-  let pip = the PixelIntPoly ZeroM
+  let pip = emptySparseMaxel
       geom = MkPixelNL 0 0
       afterPair = simulateSchwingerEffect pip geom
       pairLag = stateLag afterPair

@@ -25,7 +25,7 @@ Unlike standard quantum mechanics which relies on continuous wave functions, fie
 
 ## Standard Physics vs. Primorial Architecture
 
-It is crucial to understand which aspects of this model are universally accepted orthodox physics, and which parts represent the novel theoretical interpretations of the Primorial Architecture (RCIT).
+It is crucial to understand which aspects of this model are universally accepted orthodox physics, and which parts represent the novel theoretical interpretations of the Primorial Architecture (Linear Physics).
 
 ### What is Orthodox Standard Physics (QCD)
 The physical behaviors modeled here map directly to verified observations in Quantum Chromodynamics:
@@ -34,14 +34,14 @@ The physical behaviors modeled here map directly to verified observations in Qua
 *   **Baryon Stability:** To exist stably in the universe, quarks must group together into "Colorless" triads (Baryons, like Protons and Neutrons) where their fractional charges sum to a clean integer.
 *   **Asymptotic Freedom:** If you try to separate quarks, the energy required scales up exponentially until it snaps and converts into mass, creating new quark pairs rather than letting one escape.
 
-### The RCIT / Primorial Shift
+### The Linear Physics / Primorial Shift
 Standard physics explains the above phenomena using continuous wave equations, virtual particles, and "gluon flux tubes" mapped over SU(3) gauge symmetry fields. 
 
 Our model explicitly discards continuous fields and forces, replacing them with **finitist arithmetic and geometric constraints**.
 *   **Standard Physics says:** "Quarks are trapped together by the Strong Nuclear Force via continuous gluon exchange."
 *   **Our Model says:** "Quarks are trapped because the $n=5$ spread polynomial mathematically outputs fractions that cannot be plotted onto a discrete integer pixel grid. Confinement isn't a continuous 'force' pulling them together; it's the fact that single fractional coordinates simply do not compute on the 137-grid."
 
-In RCIT, the symptoms (fractional quarks and confinement) are perfectly aligned with reality, but the diagnosis is entirely deterministic: particles are trapped because radiation tried to divide by a complex polynomial and failed to yield a whole integer, stranding the data in cross-coupled algebraic tension.
+In Linear Physics, the symptoms (fractional quarks and confinement) are perfectly aligned with reality, but the diagnosis is entirely deterministic: particles are trapped because radiation tried to divide by a complex polynomial and failed to yield a whole integer, stranding the data in cross-coupled algebraic tension.
 
 ---
 

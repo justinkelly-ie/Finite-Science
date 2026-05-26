@@ -1,6 +1,0 @@
-package holographic_freeze
-
-depends = base, hedgehog, idris2-LUniverse, idris2-Multiset-Advanced, idris2-chromogeometry, idris2-chromogeometry, idris2-Maxel, idris2-Multiset-Advanced
-
-main = Main
-executable = holographic-freeze

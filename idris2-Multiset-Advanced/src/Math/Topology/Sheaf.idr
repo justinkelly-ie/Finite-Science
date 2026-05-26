@@ -3,9 +3,9 @@ module Math.Topology.Sheaf
 -- ⚠️ DEPRECATED: This module has been retired.
 --
 -- All types and functions have been absorbed into Physics.Core:
---   FiberBundle         → Physics.Core.PixelIntPoly
---   emptyFiber          → Physics.Core.emptyPixelIntPoly
---   singletonFiber      → Physics.Core.singletonPixelIntPoly
+--   FiberBundle         → Physics.Core.SparseMaxel
+--   emptyFiber          → Physics.Core.emptySparseMaxel
+--   singletonFiber      → Physics.Core.singletonSparseMaxel
 --   superposeFibers     → Physics.Core.superposeStates
 --   fiberLag            → Physics.Core.stateLag
 --   restrictFiber       → Physics.Core.restrictToPixel

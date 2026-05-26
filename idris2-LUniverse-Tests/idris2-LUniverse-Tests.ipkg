@@ -2,7 +2,7 @@ package idris2-LUniverse-Tests
 version = 0.1.0
 authors = "Justin"
 
-depends = base, contrib, idris2-QuickCheck, idris2-Universe, idris2-LUniverse, ref1
+depends = base, contrib, idris2-QuickCheck, idris2-LUniverse, ref1
 
 sourcedir = "src"
 

@@ -9,7 +9,7 @@
 
 ```
 Physics/
-├── Core.idr                    ← Substrate, Geometry, PixelIntPoly, type aliases
+├── Core.idr                    ← Substrate, Geometry, SparseMaxel, type aliases
 ├── WeakForce.idr               ← Weak force model
 │
 ├── Evolution/                  ← The Engine (7 modules)
@@ -67,7 +67,7 @@ Physics/
 | `LatentState` | `partitionLogic` output (coeff ≥ 128) | Dark Energy — Red Metric — 2^7 potential |
 | `VisibleState` | `partitionLogic` output (coeff < 128) | Matter — Blue Metric — 3^3 manifest states |
 | `ResidueState` | `evaluateResonance` output | Background — Green Metric — dark matter dust |
-| `partitionLogic` | `Transform.partitionLogic : Integer -> Geometry -> IntPolynumber -> (PixelIntPoly, PixelIntPoly)` | Sheaf restriction |
+| `partitionLogic` | `Transform.partitionLogic : Integer -> Geometry -> IntPolynumber -> (SparseMaxel, SparseMaxel)` | Sheaf restriction |
 
 A system "levels up" if and only if `buildAscensionCapacities` constructs a `CanAscend` proof.
 
@@ -112,9 +112,9 @@ Uses propositional equality (`=`) — the Idris 2 type checker enforces this sta
 ```idris
 -- Compiled (Transform.idr):
 data ScaleLevel : (scaleLevel : Nat) -> Type where
-  BaseScale     : (fb : PixelIntPoly) -> ScaleLevel 0
+  BaseScale     : (fb : SparseMaxel) -> ScaleLevel 0
   AscendedScale : (limit : Nat) -> (macroGeom : Geometry)
-               -> (microStates : PixelIntPoly)
+               -> (microStates : SparseMaxel)
                -> (caps : AscensionCapacities)
                -> CanAscend limit caps
                -> ScaleLevel (S scaleLevel)
@@ -346,7 +346,7 @@ Repeat × 38 cycles → Eddington Number (≈ 10⁸¹ particles)
 > *This is the defining feature distinguishing `LUniverse` from the pure functional `Universe` baseline.*
 
 ### Enforcing $O(1)$ Thermodynamic Fluid Dynamics
-In the original design, the state vector `PixelIntPoly` was a `Multiset (Geometry, Amplitude)`. Evolving the universe required structurally replacing the old amplitude with the new amplitude, which in Idris allocates a new node, effectively cloning a universe branch on every gate application.
+In the original design, the state vector `SparseMaxel` was a `Multiset (Geometry, Amplitude)`. Evolving the universe required structurally replacing the old amplitude with the new amplitude, which in Idris allocates a new node, effectively cloning a universe branch on every gate application.
 
 By incorporating `Linear` and `Ref1` (Quantitative Type Theory) into the core primitives, we achieve true in-place $O(1)$ mutation, accurately reflecting the energy-conserving properties of a physical fluid dynamic system:
 
@@ -356,8 +356,8 @@ public export
 LCell0 s = Ref s (Geometry, Amplitude)
 
 public export
-0 LPixelIntPoly : (s : Type) -> Type
-LPixelIntPoly s = Multiset (LCell0 s)
+0 LSparseMaxel : (s : Type) -> Type
+LSparseMaxel s = Multiset (LCell0 s)
 ```
 
 ### The Linear Gate Engine (`LGate.idr`)

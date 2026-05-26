@@ -1,6 +1,0 @@
-package idris2-LUniverse-tests
-
-depends = base, hedgehog, idris2-LUniverse, idris2-chromogeometry, idris2-Maxel, idris2-Multiset-Advanced, golden-runner-helper
-
-executable = runtests
-main = Tests
