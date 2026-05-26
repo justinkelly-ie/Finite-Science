@@ -29,7 +29,7 @@ markdownTable results =
                         Nothing => "❓ Unknown"
                         Just True => "✅ PASS"
                         Just False => "❌ FAIL"
-      in "| " ++ name ++ " | " ++ desc ++ " | " ++ statusStr ++ " | " ++ msg res ++ " |\n"
+      in "| " ++ name ++ " | " ++ desc ++ " | " ++ statusStr ++ " | " ++ trim (msg res) ++ " |\n"
 
 main : IO ()
 main = do
