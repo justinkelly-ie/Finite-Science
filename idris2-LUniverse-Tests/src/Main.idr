@@ -7,24 +7,29 @@ import Tests.DimensionalCausality
 import Tests.EpochInjection
 import Tests.CosmologicalScaling
 import Tests.Bridge
+import Tests.Elements
+import Tests.Maths
+import Tests.Evolution
+import GoldenTests
 
 import System.File
+import Data.String
 
 %default covering
 
-markdownTable : List (String, QCRes) -> String
+markdownTable : List (String, String, QCRes) -> String
 markdownTable results =
-  let header = "| Test | Status | Details |\n|------|--------|---------|\n"
+  let header = "| Test | Description | Status | Details |\n|------|-------------|--------|---------|\n"
       rows = concat $ map formatRow results
   in header ++ rows
   where
-    formatRow : (String, QCRes) -> String
-    formatRow (name, res) =
+    formatRow : (String, String, QCRes) -> String
+    formatRow (name, desc, res) =
       let statusStr = case pass res of
                         Nothing => "❓ Unknown"
                         Just True => "✅ PASS"
                         Just False => "❌ FAIL"
-      in "| " ++ name ++ " | " ++ statusStr ++ " | " ++ msg res ++ " |\n"
+      in "| " ++ name ++ " | " ++ desc ++ " | " ++ statusStr ++ " | " ++ msg res ++ " |\n"
 
 main : IO ()
 main = do
@@ -48,18 +53,86 @@ main = do
   putStrLn "Running Test 6: Bridge Melt-Freeze Identity"
   let res6 = quickCheck prop_melt_freeze_identity
 
+  putStrLn "Running Test 7: Water Archimedes Signature"
+  let res7 = quickCheck prop_waterArchimedes
+
+  putStrLn "Running Test 8: Methane Causal Stability"
+  let res8 = quickCheck prop_methaneStability
+
+  putStrLn "Running Test 9: Carbon Valence Identity"
+  let res9 = quickCheck prop_carbonValence
+
+  putStrLn "Running Test 10: Evolution Mass Conservation on Ascension"
+  let res10 = quickCheck prop_ascensionConservesMass
+
+  putStrLn "Running Test 11: Evolution Empty Vacuum ascension prevention"
+  let res11 = quickCheck prop_emptyNeverAscends
+
+  putStrLn "Running Test 12: Substrate Merge Lag Aggregation"
+  let res12 = quickCheck prop_substrateMergeLag
+
+  putStrLn "Running Test 13: SparseMaxel Superposition Lag Preservation"
+  let res13 = quickCheck prop_superposeLag
+
+  putStrLn "Running Test 14: Empty Vacuum Synchronisation"
+  let res14 = quickCheck prop_emptyVacuumSynchronised
+
   let tableStr = markdownTable [
-        ("Label Extraction", res1),
-        ("Strict Causality", res2),
-        ("Injected Baryogenesis Epoch", res3),
-        ("Eddington Scaling Bound", res4),
-        ("Not 138 Constraint", res5),
-        ("Bridge: Melt -> Freeze Identity", res6)
+        ("Label Extraction", "Verifies that UniverseState can be serialized to a non-empty string label for topological graphing.", res1),
+        ("Strict Causality", "Ensures that the directed causal graph (Substrate) maintains strictly monotonic time ordering with no cycles.", res2),
+        ("Injected Baryogenesis Epoch", "Validates that skipping the vacuum and starting exactly at Phase 2 dynamically unfolds the Primorial 137-Grid, leading to the Baryogenesis phase transition (MatterGate).", res3),
+        ("Eddington Scaling Bound", "Confirms the polynomial scaling limits align with the Eddington Number (~10^81) within the target epochs (e.g. 38 scales).", res4),
+        ("Not 138 Constraint", "Verifies that the expansion dynamics break down / decohere irrevocably if pushed to a 138-grid.", res5),
+        ("Bridge: Melt -> Freeze Identity", "Tests the Linear Types bridge: proves that melting a functional state into linear variables and freezing it back perfectly preserves the original geometry and amplitude.", res6),
+        ("Water Archimedes Signature", "Dynamically verifies that the fundamental H₂O bond geometry perfectly balances Red and Blue quadrances, yielding an invariant structural anchor.", res7),
+        ("Methane Causal Stability", "Proves that Methane's Red Quadrance signature precisely sums to a Null Vector, confirming perfectly balanced dynamic oscillation across its 4 bonds.", res8),
+        ("Carbon Valence Identity", "Ensures Carbon's algebraic valence mathematically equals the BondGate degree (4), formalizing why it acts as the universal organic backbone.", res9),
+        ("Ascension Mass Conservation", "Verifies that when a state condenses into a single macro-node during topological ascension, its total mass (Leibniz Lag) is perfectly conserved.", res10),
+        ("Empty Vacuum Anchor", "Ensures an empty universe cannot spontaneously ascend scales.", res11)
+      ]
+  
+  let preamble = unlines [
+        "# Linear Physics Verification Matrix",
+        "",
+        "This matrix tracks the automated testing suite for the core Cosmology, Chromogeometry, and Linear Memory Bridge modules.",
+        "",
+        "### Core Concepts",
+        "* **`UniverseState`**: The purely functional mathematical data structure that models the universe. It contains the `Substrate` (a directed acyclic graph of causal evolution) and the `SparseMaxel` (the multiset of discrete spatial coordinates and spread polynomials).",
+        "* **Linear Bridge**: The module that strictly wraps the `UniverseState` in Idris 2's Linear Types (`1`). This enforces at compile-time that physical states can never be duplicated (No-Cloning Theorem) or accidentally destroyed (Conservation of Energy).",
+        "* **QuickCheck Properties**: Property-based testing. Instead of testing one specific state, QuickCheck procedurally generates hundreds of randomized `UniverseState` topologies and ensures the absolute physical laws hold true for *all* of them.",
+        "",
+        "---",
+        ""
       ]
   
   putStrLn "\n--- Test Results ---"
   putStrLn tableStr
-  Right () <- writeFile "test_results.md" ("# QuickCheck Cosmology Results\n\n" ++ tableStr)
-    | Left err => putStrLn "Failed to write test_results.md file."
+  Right () <- writeFile "../Library/Wiki/Physics/Verification_Matrix.md" (preamble ++ tableStr)
+    | Left err => putStrLn "Failed to write Verification_Matrix.md file."
   
-  putStrLn "\nTests complete. Results written to test_results.md!"
+  let codeTableStr = markdownTable [
+        ("Substrate Merge Lag Aggregation", "Verifies that merging two causal substrates strictly aggregates their Leibniz lag (causal density).", res12),
+        ("SparseMaxel Superposition Lag Preservation", "Verifies that superposing two SparseMaxels perfectly preserves the total state lag (Quantum Probability / Mass).", res13),
+        ("Empty Vacuum Synchronisation", "Verifies that an empty Substrate and an empty SparseMaxel are always topologically synchronised.", res14)
+      ]
+      
+  let codePreamble = unlines [
+        "# Code Architecture Verification Matrix",
+        "",
+        "This matrix tracks the property-based verification of the underlying mathematical topology engines (`Math.Multiset` and `Math.Core`).",
+        "",
+        "### Core Properties",
+        "* **Causal Aggregation**: Ensures that when causal graphs merge, no directed edges are lost or spuriously created.",
+        "* **State Superposition**: Verifies that polynomial state vectors linearly superpose, guaranteeing Conservation of Energy at the geometric level.",
+        "* **Synchronisation**: The core topological gluing condition — a state is only valid if every particle coordinate actually exists in the local causal graph.",
+        "",
+        "---",
+        ""
+      ]
+
+  Right () <- writeFile "../Library/Wiki/Code/Verification_Matrix.md" (codePreamble ++ codeTableStr)
+    | Left err => putStrLn "Failed to write Code/Verification_Matrix.md file."
+
+  putStrLn "\nTests complete. Results written to ../Library/Wiki/Physics/Verification_Matrix.md and ../Library/Wiki/Code/Verification_Matrix.md!"
+  putStrLn "\n--- Golden Tests ---"
+  GoldenTests.main

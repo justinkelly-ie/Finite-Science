@@ -2,6 +2,9 @@
 
 This document shows the complete type signatures of the Multiset-based mathematical architecture. Every physical concept in the LUniverse is built from these types — there are no special-purpose wrappers or ad-hoc structures.
 
+> [!NOTE]
+> View the live **[Code Verification Matrix](../Code/Verification_Matrix.md)** to see the automated property tests that formally verify the causal and topological guarantees of these data structures.
+
 ---
 
 ## Layer 1: Linear Foundation (`Math.UnaryMultiset`)

@@ -125,6 +125,19 @@ public export
 methaneChargeConservation : (Physics.Elements.Methane.methaneBondQuadrance = 25)
 methaneChargeConservation = Refl
 
+public export
+methaneBaryonicLag : Integer
+methaneBaryonicLag =
+  multiplicityAll (elementalState 1 ch4_h1)
+   + multiplicityAll (elementalState 1 ch4_h2)
+   + multiplicityAll (elementalState 1 ch4_h3)
+   + multiplicityAll (elementalState 1 ch4_h4)
+   + multiplicityAll (elementalState 6 cPosition)
+
+public export
+methaneBaryonicLagIs10 : (Physics.Elements.Methane.methaneBaryonicLag = 10)
+methaneBaryonicLagIs10 = Refl
+
 ||| Formal Proof of Discrete E=mc² (Mass-Energy Equivalence).
 ||| The total Baryonic Mass (Z) of Methane is 10.
 ||| The total Euclidean Energy (Blue Quadrance) of its 4 bonds is 100 (25 × 4).
@@ -133,7 +146,7 @@ methaneChargeConservation = Refl
 ||| "Complete" particle in the scale hierarchy where bond energy perfectly
 ||| squares the mass.
 public export
-methaneMassEnergyEquivalence : (Physics.Elements.Methane.methaneBondQuadrance * 4 = methaneBaryonicLag * methaneBaryonicLag)
+methaneMassEnergyEquivalence : (Physics.Elements.Methane.methaneBondQuadrance * 4 = Physics.Elements.Methane.methaneBaryonicLag * Physics.Elements.Methane.methaneBaryonicLag)
 methaneMassEnergyEquivalence = Refl
 
 -----------------------------------------------------------------------
@@ -167,14 +180,4 @@ methane =
                        , ((ch4_h4, bondPoly), 1) ]
   in MkMethane h1 h2 h3 h4 c bonds
 
-||| The total baryonic lag of Methane: Z_total = 4×1 + 6 = 10
-||| Remarkably, Methane has exactly the same baryonic mass (10) as Water (H2O)!
-public export
-methaneBaryonicLag : Integer
-methaneBaryonicLag =
-  let m = methane
-  in multiplicityAll (proton m.hydrogen1) 
-   + multiplicityAll (proton m.hydrogen2)
-   + multiplicityAll (proton m.hydrogen3)
-   + multiplicityAll (proton m.hydrogen4)
-   + multiplicityAll (nucleus m.carbonAtom)
+

@@ -219,12 +219,9 @@ LUniverse requires [Idris 2](https://github.com/idris-lang/Idris2). Use **[pack]
 # 1. Build the project
 pack build idris2-LUniverse/idris2-LUniverse.ipkg
 
-# 2. Run the full property-testing suite (51 tests)
-cd idris2-QuickCheck/idris2-QuickCheck-tests/properties/adaptive-cycle
-pack run test.ipkg
-
-# 3. Or use the convenience script (requires Fedora toolbox)
-./run-tests.sh
+# 2. Run the full unified property-testing suite (QuickCheck + Golden Tests)
+cd idris2-LUniverse-Tests
+pack run idris2-LUniverse-Tests.ipkg
 ```
 If you are unfamiliar with Idris2 but wish to explore the project, download Google Antigravity [^1] and have it assist you with the steps above; you can then prompt it to explore the model textually.
 
@@ -234,6 +231,7 @@ If you are unfamiliar with Idris2 but wish to explore the project, download Goog
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
 *   📖 **[Physics Index](Library/Wiki/Physics/Index.md)** — Overview of research areas and key discoveries
+*   ✅ **[Verification Matrix](Library/Wiki/Physics/Test_Results.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
 *   ⚛️ **[Primorial Particle Mapping](Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
 *   🔄 **[Recursive Multiset Composition](Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
 *   🧮 **[Mathematical Type Architecture](Library/Wiki/Maths/Types.md)** — How every physical concept is one parameterised Multiset

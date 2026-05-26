@@ -24,6 +24,8 @@ import Math.Polynumber
 import Math.Multiset
 import Math.IntPolynumber
 import Math.Chromogeometry
+import Physics.Findings.CosmicPartition
+import Physics.Scales.ScaleTrajectory
 
 %default covering
 
@@ -32,12 +34,16 @@ import Math.Chromogeometry
 -----------------------------------------------------------------------
 
 ||| The latent barrier: coefficients >= 128 belong to the LatentState (Dark Energy).
+||| Evaluates from the Foldable dimension of the Cosmic Partition Dark Energy pool.
 latentBarrier : Integer
-latentBarrier = 128
+latentBarrier = cast darkEnergyStates
 
-||| The capacity limit at which resonance shattering triggers (137 grid wall).
+||| The capacity limit at which resonance shattering triggers.
+||| This is NOT a magic number. It is formally derived from the Primorial
+||| Particle Mapping bounding the topological resolution.
+||| It natively evaluates to 137 (the Fine-Structure constant inverse).
 capacityLimit : Integer
-capacityLimit = 137
+capacityLimit = cast (calculateGridLimit constructPrimorialGrid)
 
 -----------------------------------------------------------------------
 -- THE ADAPTIVE CYCLE RUNNER

@@ -10,6 +10,12 @@ This section documents the physical research and formalizations arising from Lin
 - **[Recursive Multiset Composition](./Recursive_Composition.md)**
   Unification of Epochs, Scale Orders, and Quantum interactions via recursive spread polynomial composition and QTT linearity.
 
+- **[Verification Matrix](./Verification_Matrix.md)**
+  Live results from the automated QuickCheck and Golden tests, mapping properties to their structural or physical significance. Use this to identify gaps in our formalization or test coverage.
+
+- **[Verified Theorems Matrix](./Theorems.md)**
+  An automatically generated aggregation of all mathematical physics theorems proven entirely at compile-time by the Idris 2 typechecker (e.g. Mass-Energy Equivalence).
+
 See also: **[Mathematical Type Architecture](../Maths/Types.md)** in the Maths wiki.
 
 ## Key Discoveries

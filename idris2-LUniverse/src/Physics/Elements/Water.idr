@@ -197,8 +197,9 @@ water =
 public export
 waterBaryonicLag : Integer
 waterBaryonicLag =
-  let w = water
-  in multiplicityAll (proton w.hydrogen1) + multiplicityAll (proton w.hydrogen2) + multiplicityAll (nucleus w.oxygenAtom)
+  multiplicityAll (elementalState 1 h1Position)
+   + multiplicityAll (elementalState 1 h2Position)
+   + multiplicityAll (elementalState 8 oPosition)
 
 ||| Number of bonds = Oxygen's valence = BackgroundGate degree = 2
 public export

@@ -1,5 +1,0 @@
-package baryogenesis-annihilation-test
-
-depends = base, hedgehog, idris2-LUniverse, idris2-Multiset-Advanced, idris2-chromogeometry, idris2-chromogeometry, idris2-Maxel, idris2-Multiset-Advanced
-executable = test
-main = Main
