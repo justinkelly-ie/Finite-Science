@@ -16,7 +16,6 @@ This matrix tracks the automated testing suite for the core Cosmology, Chromogeo
 | Injected Baryogenesis Epoch | Validates that skipping the vacuum and starting exactly at Phase 2 dynamically unfolds the Primorial 137-Grid, leading to the Baryogenesis phase transition (MatterGate). | ✅ PASS | OK, passed 100 tests . |
 | Eddington Scaling Bound | Confirms the polynomial scaling limits align with the Eddington Number (~10^81) within the target epochs (e.g. 38 scales). | ✅ PASS | OK, passed 100 tests . |
 | Not 138 Constraint | Verifies that the expansion dynamics break down / decohere irrevocably if pushed to a 138-grid. | ✅ PASS | OK, passed 100 tests . |
-| Bridge: Melt -> Freeze Identity | Tests the Linear Types bridge: proves that melting a functional state into linear variables and freezing it back perfectly preserves the original geometry and amplitude. | ✅ PASS | OK, passed 100 tests . |
 | Water Archimedes Signature | Dynamically verifies that the fundamental H₂O bond geometry perfectly balances Red and Blue quadrances, yielding an invariant structural anchor. | ✅ PASS | OK, passed 100 tests . |
 | Methane Causal Stability | Proves that Methane's Red Quadrance signature precisely sums to a Null Vector, confirming perfectly balanced dynamic oscillation across its 4 bonds. | ✅ PASS | OK, passed 100 tests . |
 | Carbon Valence Identity | Ensures Carbon's algebraic valence mathematically equals the BondGate degree (4), formalizing why it acts as the universal organic backbone. | ✅ PASS | OK, passed 100 tests . |

@@ -29,7 +29,7 @@ Whether it is a subatomic quantum scattering event or the cellular division of a
 
 ## Key Results
 
-> **46 modules. 51 property tests. Zero failures. No hardcoded constants.**
+> **48 modules. 53 property tests. Zero failures. No hardcoded constants.**
 
 | Result | Verified By |
 |---|---|
@@ -184,8 +184,11 @@ Life is formalized as a linear wrapper that preserves geometric integrity. Biolo
 ```
 Linear-Physics/
 ├── idris2-LUniverse/           ← The physics engine (46 modules)
+│   ├── src/Math/
+│   │   ├── SigmaLinear.idr         ← Linear Dependent Multisets, Dynamic DPairs
 │   ├── src/Physics/
 │   │   ├── Core.idr                ← Substrate, Geometry, type aliases
+│   │   ├── SigmaBridge.idr         ← Sigma-Linear Execution Engine Bridge
 │   │   ├── Evolution/              ← Gate, Cycle, Clock, Transform, Identity (7 modules)
 │   │   ├── Particles/              ← Photon, Quark, Baryon, Electron, etc. (8 modules)
 │   │   ├── Laws/                   ← Conservation laws (4 modules)
@@ -199,13 +202,13 @@ Linear-Physics/
 │   │   └── Elements/              ← Derived chemistry (3 modules)
 │   │       ├── Hydrogen.idr            Z=1 unit baryon
 │   │       ├── Oxygen.idr              Z=8 universal mediator
-│   │       └── Water.idr               H₂O Pythagorean fixed point
-│   └── ARCHITECTURE.md
+│       └── Water.idr               H₂O Pythagorean fixed point
 │
+├── Library/Wiki/Code/           ← Comprehensive Code Architecture
 ├── idris2-chromogeometry/       ← Wildberger's 3-metric geometry
 ├── idris2-Maxel/                ← Pixel/Maxel grid types
-├── idris2-Multiset-Advanced/    ← Multiset algebra + topology
-└── idris2-QuickCheck/           ← Property-testing suite (51 tests)
+├── idris2-Multiset/    ← Multiset algebra + topology
+└── idris2-QuickCheck/           ← Property-testing suite (53 tests)
 ```
 
 ---
@@ -221,7 +224,7 @@ pack build idris2-LUniverse/idris2-LUniverse.ipkg
 
 # 2. Run the full unified property-testing suite (QuickCheck + Golden Tests)
 cd idris2-LUniverse-Tests
-pack run idris2-LUniverse-Tests.ipkg
+pack run idris2-LUniverse-Tests
 ```
 If you are unfamiliar with Idris2 but wish to explore the project, download Google Antigravity [^1] and have it assist you with the steps above; you can then prompt it to explore the model textually.
 
@@ -231,7 +234,8 @@ If you are unfamiliar with Idris2 but wish to explore the project, download Goog
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
 *   📖 **[Physics Index](Library/Wiki/Physics/Index.md)** — Overview of research areas and key discoveries
-*   ✅ **[Verification Matrix](Library/Wiki/Physics/Test_Results.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
+*   💻 **[Code Architecture](Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
+*   ✅ **[Verification Matrix](Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
 *   ⚛️ **[Primorial Particle Mapping](Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
 *   🔄 **[Recursive Multiset Composition](Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
 *   🧮 **[Mathematical Type Architecture](Library/Wiki/Maths/Types.md)** — How every physical concept is one parameterised Multiset

@@ -7,7 +7,6 @@ import public Math.Chromogeometry
 import public Math.Topology.Simplex
 import public Math.Topology.Chain
 import Data.List
-import public Data.Linear.Ref1
 
 %default total
 
@@ -262,29 +261,3 @@ isSynchronised sub (MkSparseMaxel pip) =
   let subNodes = substrateNodes sub
       pipCoords = map (fst . fst) (multisetToList pip)
   in all (\g => elem g subNodes) pipCoords
-
------------------------------------------------------------------------
--- LINEAR DEFINITIONS
------------------------------------------------------------------------
-
-public export
-0 LCell0 : (s : Type) -> Type
-LCell0 s = Ref s (Geometry, Amplitude)
-
-public export
-0 LCell1 : (s : Type) -> Type
-LCell1 s = (LCell0 s, LCell0 s)
-
-public export
-0 LSubstrate : (s : Type) -> Type
-LSubstrate s = Multiset (LCell1 s)
-
-public export
-0 LSparseMaxel : (s : Type) -> Type
-LSparseMaxel s = Multiset (LCell0 s)
-
-public export
-record LUniverseState s where
-  constructor MkLUniverseState
-  lSubstrate : LSubstrate s
-  lStateVector : LSparseMaxel s

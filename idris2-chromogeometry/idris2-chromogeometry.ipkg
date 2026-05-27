@@ -2,7 +2,7 @@ package idris2-chromogeometry
 version = 0.1.0
 authors = "Justin"
 
-depends = base, contrib, idris2-Multiset-Advanced, idris2-Multiset-Advanced
+depends = base, contrib, idris2-Multiset, idris2-Multiset
 
 sourcedir = "src"
 

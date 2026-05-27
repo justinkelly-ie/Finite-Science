@@ -4,10 +4,10 @@ path = "."
 ipkg = "idris2-Maxel.ipkg"
 test = "tests/tests.ipkg"
 
-[custom.all.idris2-Multiset-Advanced]
+[custom.all.idris2-Multiset]
 type = "local"
-path = "../idris2-Multiset-Advanced"
-ipkg = "idris2-Multiset-Advanced.ipkg"
+path = "../idris2-Multiset"
+ipkg = "idris2-Multiset.ipkg"
 
 [custom.all.idris2-ref1]
 type = "local"

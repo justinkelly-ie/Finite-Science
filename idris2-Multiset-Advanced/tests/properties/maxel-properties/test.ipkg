@@ -1,9 +1,0 @@
-package test
-
-depends = hedgehog
-        , idris2-Multiset-Advanced
-
-modules = Main
-
-main = Main
-executable = test-run

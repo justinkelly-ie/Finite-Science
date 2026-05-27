@@ -1,6 +1,0 @@
-package multiset-properties
-
-depends = base, contrib, idris2-Multiset-Advanced, idris2-QuickCheck
-
-main = Main
-executable = multiset-properties

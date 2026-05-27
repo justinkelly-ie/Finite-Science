@@ -1,0 +1,13 @@
+package idris2-Multiset
+version = 0.1.0
+authors = "Justin"
+
+depends = base, contrib, linear, ref1
+
+sourcedir = "src"
+
+modules = Math.Interfaces, Math.UnaryMultiset, Math.UnaryMultiset.Labeled, Math.SignedUnaryMultiset, Math.SignedUnaryMultiset.Labeled, Math.Multiset, Math.Polynumber
+       , Math.IntPolynumber
+       , Math.SpreadPolynumber, Math.Maxel, Math.MaxelNL
+       , Math.Fraction, Math.FractionalEvaluator
+       , Data.Linear.Ref1.Swap

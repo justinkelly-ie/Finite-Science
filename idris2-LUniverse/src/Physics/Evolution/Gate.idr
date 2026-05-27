@@ -1,16 +1,6 @@
 module Physics.Evolution.Gate
 
-import public Data.Linear.Ref1
-import Physics.Evolution.State
-
-import Physics.Evolution.State
-
-import Math.SpreadPolynumber
-import Math.Polynumber
-import Math.IntPolynumber
-import Syntax.T1
 import Math.Core
-import Data.Linear.Ref1.Swap
 
 %default total
 
@@ -172,25 +162,3 @@ adaptiveCycle = [ BackgroundGate   -- Phase 1:  Unfolding
 public export
 cycleDegree : Nat
 cycleDegree = foldl (*) 1 (map degree adaptiveCycle)
-
------------------------------------------------------------------------
--- LINEAR GATES
------------------------------------------------------------------------
-
-||| A true Linear Gate acts on a physical spatial pointer in-place.
-||| It consumes the F1 linear state token and returns it, mutating
-||| the geometry without allocating a new universe state branch.
-export
-applyLinearMatterGate : LCell0 s -> ((Math.Core.Geometry, Math.Core.Amplitude) -> (Math.Core.Geometry, Math.Core.Amplitude)) -> F1 s ()
-applyLinearMatterGate cell f = T1.do
-  -- Read the old state (Geometry, Amplitude) linearly
-  oldState <- read1 cell
-  
-  -- Compute the new state. Since Geometry/Amplitude aren't strictly linear types 
-  -- themselves (they don't contain resources), we can just apply f.
-  let newState = f oldState
-  
-  -- Write the new state, consuming the linear F1 context
-  write1 cell newState
-
-

@@ -2,7 +2,7 @@ package idris2-RationalTopology
 version = 0.1.0
 authors = "Justin"
 
-depends = base, idris2-Maxel, idris2-Multiset-Advanced
+depends = base, idris2-Maxel, idris2-Multiset
 
 sourcedir = "src"
 

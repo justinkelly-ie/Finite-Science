@@ -6,7 +6,6 @@ import Tests.LabelExtraction
 import Tests.DimensionalCausality
 import Tests.EpochInjection
 import Tests.CosmologicalScaling
-import Tests.Bridge
 import Tests.Elements
 import Tests.Maths
 import Tests.Evolution
@@ -50,9 +49,6 @@ main = do
   putStrLn "Running Test 5: Negative Testing (Not 138)"
   let res5 = quickCheck prop_not138
 
-  putStrLn "Running Test 6: Bridge Melt-Freeze Identity"
-  let res6 = quickCheck prop_melt_freeze_identity
-
   putStrLn "Running Test 7: Water Archimedes Signature"
   let res7 = quickCheck prop_waterArchimedes
 
@@ -83,7 +79,6 @@ main = do
         ("Injected Baryogenesis Epoch", "Validates that skipping the vacuum and starting exactly at Phase 2 dynamically unfolds the Primorial 137-Grid, leading to the Baryogenesis phase transition (MatterGate).", res3),
         ("Eddington Scaling Bound", "Confirms the polynomial scaling limits align with the Eddington Number (~10^81) within the target epochs (e.g. 38 scales).", res4),
         ("Not 138 Constraint", "Verifies that the expansion dynamics break down / decohere irrevocably if pushed to a 138-grid.", res5),
-        ("Bridge: Melt -> Freeze Identity", "Tests the Linear Types bridge: proves that melting a functional state into linear variables and freezing it back perfectly preserves the original geometry and amplitude.", res6),
         ("Water Archimedes Signature", "Dynamically verifies that the fundamental H₂O bond geometry perfectly balances Red and Blue quadrances, yielding an invariant structural anchor.", res7),
         ("Methane Causal Stability", "Proves that Methane's Red Quadrance signature precisely sums to a Null Vector, confirming perfectly balanced dynamic oscillation across its 4 bonds.", res8),
         ("Carbon Valence Identity", "Ensures Carbon's algebraic valence mathematically equals the BondGate degree (4), formalizing why it acts as the universal organic backbone.", res9),

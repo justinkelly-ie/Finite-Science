@@ -1,4 +1,4 @@
 package run_test
-depends = base, hedgehog, contrib, idris2-chromogeometry, idris2-Maxel, idris2-Multiset-Advanced, idris2-RationalTopology, linear, ref1, idris2-QuickCheck
+depends = base, hedgehog, contrib, idris2-chromogeometry, idris2-Maxel, idris2-Multiset, idris2-RationalTopology, linear, ref1, idris2-QuickCheck
 main = Main
 executable = run_test

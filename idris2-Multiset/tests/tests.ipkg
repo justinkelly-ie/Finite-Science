@@ -1,0 +1,8 @@
+package idris2-Multiset-tests
+
+depends = idris2-Multiset, hedgehog, golden-runner-helper
+
+modules = Tests
+
+main = Tests
+executable = runtests
