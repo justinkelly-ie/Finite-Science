@@ -1,5 +1,0 @@
-package truncation-properties
-
-depends = hedgehog, idris2-Multiset
-main = Main
-executable = truncation-properties

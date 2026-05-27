@@ -34,7 +34,7 @@ Verifies that ascending a scale perfectly preserves the total mass (Leibniz Lag)
 public export
 prop_ascensionConservesMass : Property
 prop_ascensionConservesMass = forAll genUniverseStateWithDepth (MkFn (\(depth, u) => 
-  let targetNode = MkPixelNL 0 0
+  let targetNode = MkPixel 0 0
       ascendedField = ascendScale targetNode u.stateVector.maxelMap
       originalMass = totalPolyLag u.stateVector
       ascendedMass = totalPolyLag (MkSparseMaxel ascendedField)

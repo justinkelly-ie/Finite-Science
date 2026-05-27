@@ -1,5 +1,0 @@
-package dirichlet-divisor-sum
-
-depends = hedgehog, idris2-Multiset
-main = Main
-executable = dirichlet-divisor-sum

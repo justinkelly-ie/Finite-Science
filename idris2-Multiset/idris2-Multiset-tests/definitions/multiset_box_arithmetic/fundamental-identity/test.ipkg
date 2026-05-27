@@ -1,5 +1,0 @@
-package fundamental-identity
-
-depends = hedgehog, idris2-Multiset
-main = Main
-executable = fundamental-identity

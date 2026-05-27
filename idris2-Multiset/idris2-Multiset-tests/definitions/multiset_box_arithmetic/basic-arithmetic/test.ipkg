@@ -1,5 +1,0 @@
-package basic-arithmetic
-
-depends = idris2-Multiset
-main = Main
-executable = basic-arithmetic
