@@ -30,7 +30,7 @@ The quantum state vector mapping discrete spatial coordinates to their current a
 
 ## The Building Blocks (The "Friends")
 
-### `Geometry` (or `Cell0` / `PixelNL Integer`)
+### `Geometry` (or `Cell0` / `Pixel Integer`)
 A naked 2D coordinate point `(x, y)` in the Chromogeometric grid.
 
 ### `Amplitude` (or `IntPolynumber`)

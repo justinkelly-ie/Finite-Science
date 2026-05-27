@@ -2,7 +2,7 @@ module Physics.Findings.CosmicEnergyBudget
 
 import Physics.Findings.CosmicPartition
 
-import Math.SignedUnaryMultiset
+import Math.Multiset
 import Math.IntPolynumber
 import Math.Polynumber
 import Math.Fraction

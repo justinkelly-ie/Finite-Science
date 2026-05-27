@@ -42,24 +42,24 @@ import Math.Chromogeometry
 -----------------------------------------------------------------------
 
 public export
-ch4_h1 : PixelNL Integer
-ch4_h1 = MkPixelNL 4 3
+ch4_h1 : Pixel Integer
+ch4_h1 = MkPixel 4 3
 
 public export
-ch4_h2 : PixelNL Integer
-ch4_h2 = MkPixelNL (-3) 4
+ch4_h2 : Pixel Integer
+ch4_h2 = MkPixel (-3) 4
 
 public export
-ch4_h3 : PixelNL Integer
-ch4_h3 = MkPixelNL (-4) (-3)
+ch4_h3 : Pixel Integer
+ch4_h3 = MkPixel (-4) (-3)
 
 public export
-ch4_h4 : PixelNL Integer
-ch4_h4 = MkPixelNL 3 (-4)
+ch4_h4 : Pixel Integer
+ch4_h4 = MkPixel 3 (-4)
 
 public export
-cPosition : PixelNL Integer
-cPosition = MkPixelNL 0 0
+cPosition : Pixel Integer
+cPosition = MkPixel 0 0
 
 -----------------------------------------------------------------------
 -- BOND PROPERTIES
@@ -161,7 +161,7 @@ record MethaneMolecule where
   1 hydrogen3  : HydrogenAtom
   1 hydrogen4  : HydrogenAtom
   1 carbonAtom : CarbonAtom
-  1 bonds      : Multiset (PixelNL Integer, IntPolynumber)
+  1 bonds      : Multiset (Pixel Integer, IntPolynumber)
 
 ||| Constructs a Methane molecule at the canonical geometry.
 public export

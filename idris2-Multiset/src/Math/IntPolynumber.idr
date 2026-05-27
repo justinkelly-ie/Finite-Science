@@ -3,10 +3,8 @@ module Math.IntPolynumber
 import Data.List
 import Data.Linear
 import Math.Interfaces
-import Math.UnaryMultiset
 import Math.Polynumber
 import public Math.Multiset
-import Math.SignedUnaryMultiset
 
 %default covering
 
@@ -21,18 +19,10 @@ export
 emptyIntPoly : IntPolynumber
 emptyIntPoly = ZeroM
 
-||| Convert a linear unary UnaryMultiset() to a Nat
-countUnary : UnaryMultiset () -> Nat
-countUnary Zero = 0
-countUnary (Add () xs) = 1 + countUnary xs
-
-||| Create a single term with a given alpha, beta, and coefficient.
-||| We accept the raw UnaryMultiset () structure to maintain interface compatibility with QTT layers,
-||| but immediately compress it to Nat and Integer.
 export
-posTerm : UnaryMultiset () -> UnaryMultiset () -> UnaryMultiset () -> IntPolynumber
+posTerm : Nat -> Nat -> Integer -> IntPolynumber
 posTerm alpha beta coeff = 
-  AddM (countUnary alpha, countUnary beta) (cast (countUnary coeff)) ZeroM
+  AddM (alpha, beta) coeff ZeroM
 
 ||| Add two IntPolynumbers, automatically annihilating opposites in O(N).
 export

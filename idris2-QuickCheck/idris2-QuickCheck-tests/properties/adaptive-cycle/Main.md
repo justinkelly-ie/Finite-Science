@@ -52,7 +52,7 @@ generates polynomials with thousands of terms.
 
 ```idris
 origin : Geometry
-origin = MkPixelNL 0 0
+origin = MkPixel 0 0
 
 -- Cap degree to avoid huge polynomial explosion (spreadPoly 13 has thousands of terms)
 capDegree : Nat -> Nat
@@ -68,7 +68,7 @@ vacuumUniverse : UniverseState
 vacuumUniverse = MkUniverseState emptySubstrate emptySparseMaxel
 
 seededUniverse : UniverseState
-seededUniverse = MkUniverseState emptySubstrate seedState
+seededUniverse = MkUniverseState emptySubstrate (MkSparseMaxel seedState)
 ```
 
 ## Part 1: Pipeline Properties
@@ -121,7 +121,7 @@ prop_ascensionCondenses = forAll {a = Nat} {prop = Bool} arbitrary (MkFn (\rawDe
   let degree = capDegree rawDeg
       poly1 = spreadPoly degree
       poly2 = spreadPoly (degree + 1)
-      microStates = fromList [((origin, poly1), 1), ((MkPixelNL 1 1, poly2), 1)]
+      microStates = fromList [((origin, poly1), 1), ((MkPixel 1 1, poly2), 1)]
       macroNode = ascendScale origin microStates
       entries = multisetToList macroNode
   in length entries == 1))
@@ -302,7 +302,7 @@ Schwinger pair production adds exactly +2 multiplicity to the state
 prop_pairProductionAdds : Bool
 prop_pairProductionAdds =
   let pip = emptySparseMaxel
-      geom = MkPixelNL 0 0
+      geom = MkPixel 0 0
       afterPair = simulateSchwingerEffect pip geom
       pairLag = stateLag afterPair
   in pairLag == 2
@@ -363,7 +363,7 @@ Hydrogen is the unit baryon — lag = 1.
 
 ```idris
 prop_hydrogenLagMinimal : Bool
-prop_hydrogenLagMinimal = hydrogenLag (MkPixelNL 0 0) > 0
+prop_hydrogenLagMinimal = hydrogenLag (MkPixel 0 0) > 0
 ```
 
 ### Property 32: Bond Quadrance is ChargeGate²
@@ -458,7 +458,7 @@ At N+1, the hydrogen bond direction = (7, 7) = TimeGate diagonal.
 prop_hydrogenBondIsTimeGateDiagonal : Bool
 prop_hydrogenBondIsTimeGateDiagonal =
   let hb = hydrogenBondDirection
-  in hb.x == cast (degree TimeGate) && hb.y == cast (degree TimeGate)
+  in hb.src == cast (degree TimeGate) && hb.tgt == cast (degree TimeGate)
 ```
 
 ### Property 41: Hydrogen Bond is Red-Null (Identity Diagonal)

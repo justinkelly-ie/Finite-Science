@@ -1,14 +1,9 @@
 module Math.Twist
 
 import Math.Multiset
-import Math.MaxelNL
 import Math.Chromogeometry
 import Math.Core
 
--- Naming Zoo Reference:
---   - Physics: Chromogeometric Twisting / Gauge Field Holonomy / Curvature
---   - Rational Trig: Exact Metric Spread s(p1, p2, p3) = Numerator / Denominator
---   - Implementation: Triad extraction across the active Substrate poset and exact rational cross-multiplication.
 
 ||| Computes the Greatest Common Divisor to safely reduce integers.
 gcd : Integer -> Integer -> Integer

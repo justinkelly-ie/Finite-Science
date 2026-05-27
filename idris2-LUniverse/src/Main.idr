@@ -11,7 +11,7 @@ main = do
   putStrLn "--- Initializing Sigma-Linear Architecture Test ---"
   
   -- Create a basic geometry point and amplitude
-  let geom = MkPixelNL 0 0
+  let geom = MkPixel 0 0
   let amp = emptyAmplitude
   
   -- Create a SparseMaxel with count 5
@@ -34,8 +34,8 @@ main = do
   putStrLn "--- Testing Topological Boundary Operator ---"
   
   -- Create two distinct geometry nodes (Vertices)
-  let nodeA = MkPixelNL 0 0
-  let nodeB = MkPixelNL 1 1
+  let nodeA = MkPixel 0 0
+  let nodeB = MkPixel 1 1
   
   -- Create a Substrate (Edge) from nodeA to nodeB
   let edge = (nodeA, nodeB)

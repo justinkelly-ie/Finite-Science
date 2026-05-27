@@ -1,28 +1,6 @@
-# Idris 2 Build Artifacts
 build/
-**/.build/
-*.ttc
-*.ttm
-
-# One-off refactoring scripts
-*.py
-
-# Compiled Binaries & Libraries
-*.so
-*.ss
-*.exe
-build/exec/
-**/compileChez
-
-# Test output (generated at runtime)
-**/tests/**/output
-**/properties/**/output
-
-# Package Lock Files
-.pack_lock
-
-# Scratch / one-off test files
-**/test.idr
-**/test2.idr
-**/test_*.idr
-**/src/test.idr
+**/*.ibc
+idris2-LUniverse/build/
+idris2-Multiset/build/
+idris2-chromogeometry/build/
+idris2-QuickCheck/idris2-QuickCheck/build/

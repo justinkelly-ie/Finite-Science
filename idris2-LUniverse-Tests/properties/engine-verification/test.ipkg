@@ -1,6 +1,0 @@
-package engine-verification
-
-depends = base, contrib, idris2-QuickCheck
-
-main = Main
-executable = engine-verification

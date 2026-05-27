@@ -10,11 +10,11 @@
 ```
 Physics/
 ├── Core.idr                    ← Substrate, Geometry, SparseMaxel, type aliases
-├── SigmaBridge.idr             ← Sigma-Linear Execution Engine Bridge
 ├── WeakForce.idr               ← Weak force model
 │
 ├── Math/                       ← Mathematical Specifications
-│   ├── SigmaLinear.idr             ← Linear Dependent Multisets, Dynamic DPairs
+│   ├── Multiset.idr                ← Pure integer multiset data structures
+│   ├── Pixel.idr                   ← 2D Chromogeometric integer coordinate
 ├── Evolution/                  ← The Engine (7 modules)
 │   ├── State.idr                   Re-exports of math libraries
 │   ├── Gate.idr                    FundamentalGate, adaptiveCycle, primorialManifold

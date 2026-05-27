@@ -5,7 +5,7 @@ import Physics.Evolution.State
 import Physics.Evolution.State
 
 import Math.Chromogeometry
-import Math.UnaryMultiset
+import Math.Multiset
 import Math.Polynumber
 import Data.Linear
 
@@ -25,15 +25,15 @@ interface ConservesEnergy a b where
 ||| A simple implementation demonstrating energy conservation between two pixels.
 ||| (e.g. a Photon transforming into another state, or elastic scattering).
 public export
-implementation ConservesEnergy (PixelNL Integer) (PixelNL Integer) where
-  isEnergyConserved (MkPixelNL x1 y1) (MkPixelNL x2 y2) = 
-    let res = quadranceNL Blue (MkPixelNL 0 0) (MkPixelNL x1 y1) == quadranceNL Blue (MkPixelNL 0 0) (MkPixelNL x2 y2)
-    in Builtin.(#) res (Builtin.(#) (MkPixelNL x1 y1) (MkPixelNL x2 y2))
+implementation ConservesEnergy (Pixel Integer) (Pixel Integer) where
+  isEnergyConserved (MkPixel x1 y1) (MkPixel x2 y2) = 
+    let res = quadranceNL Blue (MkPixel 0 0) (MkPixel x1 y1) == quadranceNL Blue (MkPixel 0 0) (MkPixel x2 y2)
+    in Builtin.(#) res (Builtin.(#) (MkPixel x1 y1) (MkPixel x2 y2))
 
-||| For the Unified Multiset (PixelNL Integer, IntPolynumber) model, Energy is mathematically conserved if the total 
+||| For the Unified Multiset (Pixel Integer, IntPolynumber) model, Energy is mathematically conserved if the total 
 ||| multiset sizes (or total degree) of the input polynomial equals the output polynomial.
 public export
-implementation ConservesEnergy (Multiset (PixelNL Integer, IntPolynumber)) (Multiset (PixelNL Integer, IntPolynumber)) where
+implementation ConservesEnergy (Multiset (Pixel Integer, IntPolynumber)) (Multiset (Pixel Integer, IntPolynumber)) where
   isEnergyConserved sp1_mset sp2_mset = Builtin.(#) True (Builtin.(#) sp1_mset sp2_mset)
 
 

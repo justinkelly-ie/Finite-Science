@@ -2,8 +2,6 @@ module Math.Multiset
 
 import Data.List
 import Data.Linear
-import Math.UnaryMultiset
-import Math.SignedUnaryMultiset
 import Math.Interfaces
 
 %default covering
@@ -12,13 +10,7 @@ import Math.Interfaces
 ||| Instead of storing N identical elements structurally, it stores the element and an Integer count.
 ||| Positive count represents pos (Matter), negative count represents neg (Antimatter).
 |||
-||| Naming Zoo Aliases (Historical Context):
-|||   - FiberBundle: The unified state space metric over the topological manifold.
-|||   - StateVector / State Space: The quantum super-position states in a linear structure.
-|||   - Direct Image Sheaf: A transformation mapping sections across layers.
-|||
-||| This `Multiset` structure entirely replaces all the above categorical wrappers
-||| with a pure linear data structure.
+
 
 public export
 data Multiset : Type -> Type where
@@ -85,47 +77,7 @@ public export
 subMultiset : Multiset a -> Multiset a -> Multiset a
 subMultiset a b = addMultiset a (negateMultiset b)
 
--- ---------------------------------------------------------------------
--- ISOMORPHISMS TO UNARY AMSET
--- ---------------------------------------------------------------------
 
--- Helper to convert unary UnaryMultiset into a List
-msetToList : UnaryMultiset a -> List a
-msetToList Math.UnaryMultiset.Zero = []
-msetToList (Math.UnaryMultiset.Add x xs) = x :: msetToList xs
-
--- Helper to convert List to unary UnaryMultiset
-listToMSet : List a -> UnaryMultiset a
-listToMSet [] = Math.UnaryMultiset.Zero
-listToMSet (x :: xs) = Math.UnaryMultiset.Add x (listToMSet xs)
-
--- Helper to expand a single (a, Integer) into a List of 'a's based on count.
-expandItem : a -> Nat -> List a
-expandItem x Z = []
-expandItem x (S k) = x :: expandItem x k
-
-||| Converts a unary SignedUnaryMultiset into a highly compressed Multiset.
-public export
-toDense : Eq a => SignedUnaryMultiset a -> Multiset a
-toDense (MkSignedUnaryMultiset p n) = 
-  let posMultiset = foldl (\acc, x => insertItem x 1 acc) ZeroM (msetToList p)
-      negMultiset = foldl (\acc, x => insertItem x (-1) acc) ZeroM (msetToList n)
-  in annihilateMultiset (addMultiset posMultiset negMultiset)
-
-||| Expands an optimized Multiset back into a unary SignedUnaryMultiset (for QTT proofs).
-public export
-toUnary : Multiset a -> SignedUnaryMultiset a
-toUnary xs =
-  let (posList, negList) = split xs
-  in MkSignedUnaryMultiset (listToMSet posList) (listToMSet negList)
-  where
-    split : Multiset a -> (List a, List a)
-    split ZeroM = ([], [])
-    split (AddM k v rest) = 
-      let (ps, ns) = split rest
-      in if v > 0 then (expandItem k (cast v) ++ ps, ns)
-         else if v < 0 then (ps, expandItem k (cast (-v)) ++ ns)
-         else (ps, ns)
 
 export
 Eq a => Eq (Multiset a) where

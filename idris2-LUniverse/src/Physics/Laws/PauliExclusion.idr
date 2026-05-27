@@ -4,7 +4,7 @@ import Physics.Evolution.State
 
 import Physics.Evolution.State
 
-import Math.UnaryMultiset
+import Math.Multiset
 import Math.Polynumber
 
 %default total
@@ -19,15 +19,15 @@ interface ObeysPauliExclusion a where
   hasNoCoordinateOverlap : a -> Bool
 
 ||| Helper function to check if a pixel exists in a list
-isPixelInList : PixelNL Integer -> List (PixelNL Integer) -> Bool
+isPixelInList : Pixel Integer -> List (Pixel Integer) -> Bool
 isPixelInList _ [] = False
-isPixelInList (MkPixelNL x y) ((MkPixelNL x' y') :: ps) =
+isPixelInList (MkPixel x y) ((MkPixel x' y') :: ps) =
   if (x == x' && y == y') 
     then True 
-    else isPixelInList (MkPixelNL x y) ps
+    else isPixelInList (MkPixel x y) ps
 
 ||| Helper function to check for any duplicates in a list of pixels
-hasDuplicates : List (PixelNL Integer) -> Bool
+hasDuplicates : List (Pixel Integer) -> Bool
 hasDuplicates [] = False
 hasDuplicates (p :: ps) = 
   if isPixelInList p ps 
@@ -37,7 +37,7 @@ hasDuplicates (p :: ps) =
 ||| A Multiset of (Geometry, Amplitude) obeys Pauli Exclusion
 ||| if and only if no two entries share the exact same coordinates.
 public export
-implementation ObeysPauliExclusion (Multiset (PixelNL Integer, IntPolynumber)) where
+implementation ObeysPauliExclusion (Multiset (Pixel Integer, IntPolynumber)) where
   hasNoCoordinateOverlap items_mset =
     let coords = map (fst . fst) (multisetToList items_mset)
     in not (hasDuplicates coords)

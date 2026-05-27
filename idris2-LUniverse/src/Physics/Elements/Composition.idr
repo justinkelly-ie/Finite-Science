@@ -24,7 +24,7 @@ import Math.Multiset
 
 ||| Instantiates a Platonic Element as a CompositeState at a specific origin point.
 public export
-fromElement : Element -> PixelNL Integer -> CompositeState
+fromElement : Element -> Pixel Integer -> CompositeState
 fromElement elem origin = translateState origin (MkSparseMaxel (Physics.Elements.Element.Element.stateVector elem))
 
 -----------------------------------------------------------------------

@@ -11,7 +11,7 @@ import Physics.Evolution.Clock
 import Math.Core
 import Physics.SpreadPolynumber
 
-import Math.UnaryMultiset
+import Math.Multiset
 import Math.Polynumber
 
 import Math.Multiset
@@ -95,7 +95,7 @@ public export
 runEpochs : (n : Nat) -> UniverseState -> UniverseState
 runEpochs Z     state = state
 runEpochs (S k) state =
-  let cycled = runAdaptiveCycle capacityLimit Blue (MkPixelNL 0 0) state
+  let cycled = runAdaptiveCycle capacityLimit Blue (MkPixel 0 0) state
   in runEpochs k cycled
 
 

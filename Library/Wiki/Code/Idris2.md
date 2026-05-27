@@ -21,7 +21,7 @@ main = do
   putStrLn "--- Initializing Sigma-Linear Architecture Test ---"
   
   -- Create a basic geometry point and amplitude
-  let geom = MkPixelNL 0 0
+  let geom = MkPixel 0 0
   let amp = emptyAmplitude
   
   -- Create a SparseMaxel with count 5

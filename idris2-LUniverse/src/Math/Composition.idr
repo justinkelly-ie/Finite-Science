@@ -4,7 +4,6 @@ import public Math.Core
 import public Math.Twist
 import public Math.Chromogeometry
 import public Math.Multiset
-import public Math.MaxelNL
 import public Data.List
 
 %default total
@@ -21,11 +20,11 @@ CompositeState = SparseMaxel
 
 ||| Translates a CompositeState's coordinates by a displacement vector.
 public export
-translateState : PixelNL Integer -> CompositeState -> CompositeState
-translateState (MkPixelNL dx dy) (MkSparseMaxel m) =
+translateState : Pixel Integer -> CompositeState -> CompositeState
+translateState (MkPixel dx dy) (MkSparseMaxel m) =
   let stateItems = multisetToList m
-      translatedState = map (\((MkPixelNL x y, amp), count) => 
-                              ((MkPixelNL (x + dx) (y + dy), amp), count)
+      translatedState = map (\((MkPixel x y, amp), count) => 
+                              ((MkPixel (x + dx) (y + dy), amp), count)
                             ) stateItems
   in MkSparseMaxel (fromList translatedState)
 
@@ -46,7 +45,7 @@ computeStateSpread metric (MkSparseMaxel m) =
                ]
       
       -- Helper function to destructure the triad and compute its spread
-      getSpread : (PixelNL Integer, PixelNL Integer, PixelNL Integer) -> (Integer, Integer)
+      getSpread : (Pixel Integer, Pixel Integer, Pixel Integer) -> (Integer, Integer)
       getSpread (p1, p2, p3) = spreadNL metric p1 p2 p3
       
       -- Map triads to exact rational spreads

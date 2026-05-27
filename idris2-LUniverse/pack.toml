@@ -9,10 +9,6 @@ type = "local"
 path = "../idris2-chromogeometry"
 ipkg = "idris2-chromogeometry.ipkg"
 
-[custom.all.idris2-Maxel]
-type = "local"
-path = "../idris2-Maxel"
-ipkg = "idris2-Maxel.ipkg"
 
 
 [custom.all.idris2-Multiset]

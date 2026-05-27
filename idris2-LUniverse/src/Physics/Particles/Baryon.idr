@@ -25,7 +25,7 @@ record Baryon where
   1 q3 : Quark
 
 ||| Extracts Quadrances (Q) and Spreads (s) from a Baryon triad.
-||| Re-implemented for the Unified Multiset (PixelNL Integer, IntPolynumber) Model.
+||| Re-implemented for the Unified Multiset (Pixel Integer, IntPolynumber) Model.
 public export
 extractBaryonGeometry : (1 _ : Baryon) -> LPair (Integer, Integer, Integer, Integer, Integer, Integer) Baryon
 extractBaryonGeometry b = Builtin.(#) (0, 0, 0, 0, 0, 0) b

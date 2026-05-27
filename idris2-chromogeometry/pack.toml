@@ -4,11 +4,6 @@ path = "."
 ipkg = "idris2-chromogeometry.ipkg"
 test = "tests/tests.ipkg"
 
-[custom.all.idris2-Maxel]
-type = "local"
-path = "../idris2-Maxel"
-ipkg = "idris2-Maxel.ipkg"
-
 
 [custom.all.idris2-Multiset]
 type = "local"

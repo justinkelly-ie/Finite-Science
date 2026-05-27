@@ -1,9 +1,9 @@
 module Math.Core
 
 import public Math.Multiset
-import public Math.MaxelNL
 import public Math.IntPolynumber
 import public Math.Chromogeometry
+import public Math.Pixel
 import Data.List
 
 %default total
@@ -13,11 +13,9 @@ import Data.List
 --
 -- Every concept in this engine is built from two nested structures:
 --
---   Geometry  = PixelNL Integer   (a 2-component chromogeometric coordinate)
+--   Geometry  = Pixel Integer   (a 2-component chromogeometric coordinate)
 --   Amplitude = IntPolynumber     (a polynomial of integer coefficients)
 --
--- All categorical and physics naming conventions below are aliases or
--- documentation wrappers around these two primitives.
 -----------------------------------------------------------------------
 
 -----------------------------------------------------------------------
@@ -26,25 +24,9 @@ import Data.List
 
 ||| A chromogeometric coordinate cell — the elementary spatial unit.
 |||
-||| Naming Zoo:
-|||   - Physics:          Spacetime Voxel / Chromogeometric Coordinate / Spin State
-|||   - Category Theory:  Object of the Base Category / Point of the Poset
-|||   - Concrete:         A two-component integer pair (x, y) where each component
-|||                       carries a magnitude evaluable under any of the three Metrics.
-|||
-||| The three Chromogeometric Metrics act on this type:
-|||   quadranceNL Blue  (MkPixelNL x y) = x² + y²   (Euclidean measure)
-|||   quadranceNL Red   (MkPixelNL x y) = x² - y²   (Minkowski measure)
-|||   quadranceNL Green (MkPixelNL x y) = 2xy        (Null / light-like measure)
-|||
-||| The Flavor (Matter / DarkEnergy / Background) is encoded by which Metric
-||| colour is used to evaluate the geometry:
-|||   Blue  → VisibleState  (Matter, 27 states, 3^3 integer grid)
-|||   Red   → LatentState   (DarkEnergy, 128 states, 2^7 fractional band)
-|||   Green → ResidueState  (Background / Dark Matter dust after resonance collapse)
 public export
 0 Geometry : Type
-Geometry = PixelNL Integer
+Geometry = Pixel Integer
 
 -----------------------------------------------------------------------
 -- 2. AMPLITUDE (The Quantum State Value)
@@ -52,15 +34,6 @@ Geometry = PixelNL Integer
 
 ||| The polynomial amplitude at a geometric coordinate.
 |||
-||| Naming Zoo:
-|||   - Physics:          Quantum Amplitude / Polynumber / Fock State / Energy Coefficient
-|||   - Category Theory:  Fiber Value / Local Section of the Sheaf
-|||   - Concrete:         A Run-Length Encoded multiset of (alpha_power, beta_power)
-|||                       pairs where the Integer multiplicity is the coefficient.
-|||                       IntPolynumber = Multiset (Nat, Nat)
-|||
-||| Rename history: was called DenseAMSet (before rename to Multiset).
-||| The linear QTT version is LabeledMSet in Math.UnaryMultiset.Labeled.
 public export
 0 Amplitude : Type
 Amplitude = IntPolynumber
@@ -72,13 +45,11 @@ emptyAmplitude = ZeroM
 -----------------------------------------------------------------------
 -- 3. SUBSTRATE (The Causal Graph — pure Multiset of directed edges)
 --
--- Formerly: MaxelNL / Poset / SpacetimeManifold
---
 -- The Substrate is now a pure Multiset (Geometry, Geometry) — each entry
 -- is a directed causal edge from parent to child. No wrapper record,
 -- no intermediate List — just the same Multiset engine used everywhere.
 --
---   Substrate = Multiset (G, G)     where G = PixelNL Integer
+--   Substrate = Multiset (G, G)     where G = Pixel Integer
 --
 -- This makes the architecture diagram exact:
 --
@@ -88,42 +59,16 @@ emptyAmplitude = ZeroM
 
 ||| The directed causal graph of the spacetime manifold.
 |||
-||| Naming Zoo:
-|||   - Physics:          Spacetime Manifold / Causal Graph / Spin Foam / Loop Quantum Gravity DAG
-|||   - Category Theory:  Poset Category / Base Space of the Sheaf / Category of Opens
-|||   - Concrete:         A Multiset of (Geometry, Geometry) directed edges.
-|||                       Each entry (g1, g2) with multiplicity n encodes
-|||                       "g1 causally precedes g2, with n parallel pathways."
-|||   - Replaces:         MaxelNL / Math.Topology.Poset / SpacetimeManifold
-|||
-||| Rename history: AMSet → MaxelNL → Multiset (Geometry, Geometry)
-|||
-||| This is the same RLE Multiset engine used by SparseMaxel, IntPolynumber,
-||| and SpreadPolynomial. Any optimisation to Multiset.idr flows through
-||| to the causal graph automatically.
 public export
 0 Substrate : Type
 Substrate = Multiset (Geometry, Geometry)
 
 -----------------------------------------------------------------------
--- 4. PIXEL-INT-POLY (The Quantum State Vector)
---
--- Formerly: FiberBundle / Sheaf / DenseAMSet (Geometry, Polynumber)
+-- 4. SPARSE MAXEL (The Quantum State Vector)
 -----------------------------------------------------------------------
 
-||| The quantum state vector — a dense map from coordinates to amplitudes.
+||| At the quantum level, this is the state vector — a dense map from coordinates to amplitudes.
 |||
-||| Naming Zoo:
-|||   - Physics:          Fiber Bundle / Wavefunction / Fock Space State Vector / Gauge Field
-|||   - Category Theory:  Sheaf of Polynumbers over the Poset Base Space
-|||   - Concrete:         Multiset (PixelNL Integer, IntPolynumber) — each pixel
-|||                       mapped to its local quantum amplitude polynomial.
-|||   - Replaces:         Math.Topology.Sheaf / FiberBundle / DenseAMSet wrappers
-|||
-||| The Flavor of each entry is determined by the Metric applied to its Geometry:
-|||   Blue Geometry  → VisibleState  (partitioned by partitionLogic latentBarrier)
-|||   Red  Geometry  → LatentState   (coefficients >= latentBarrier)
-|||   Green Geometry → ResidueState  (produced by evaluateResonance)
 public export
 record SparseMaxel where
   constructor MkSparseMaxel
@@ -136,13 +81,6 @@ record SparseMaxel where
 ||| The complete universe state: a causal substrate graph paired with a
 ||| quantum state vector.
 |||
-||| Naming Zoo:
-|||   - Physics:  Total Cosmological State / Universe Configuration at Scale N
-|||   - Category: Global Section of the Sheaf over the Poset Base Space
-|||   - Concrete: (Multiset (G,G), Multiset (G, Vector)) — both pure multisets
-|||
-||| This is the product type that should be threaded through the full
-||| stepRelationalTime pipeline once it is implemented.
 public export
 record UniverseState where
   constructor MkUniverseState
@@ -157,21 +95,12 @@ record UniverseState where
 
 ||| Computes the total causal density (Leibniz Lag) of the Substrate.
 |||
-||| Naming Zoo:
-|||   - Physics:  Local Proper Time / Causal Mesh Delay / Relational Clock Tick
-|||   - Category: Total Weight of Arrow Ideals / Poset Morphism Cardinality
-|||   - Concrete: sum of multiplicities of all directed edges
-|||
-||| This replaces MaxelClock.computeCausalLag and the old MaxelNL-based substrateLag.
 public export
 substrateLag : Substrate -> Nat
 substrateLag sub = cast (multiplicityAll sub)
 
 ||| Merge two Substrate causal graphs (native multiset union).
 |||
-||| Naming Zoo:
-|||   - Physics:  Causal Merge / Time Step Advance
-|||   - Category: Coproduct in the Poset Category
 public export
 mergeSubstrate : Substrate -> Substrate -> Substrate
 mergeSubstrate = addMultiset
@@ -194,7 +123,7 @@ substrateNodes sub =
   nub (concatMap (\((g1, g2), _) => [g1, g2]) (multisetToList sub))
 
 -----------------------------------------------------------------------
--- 7. PIXEL-INT-POLY UTILITIES
+-- 7. SparseMaxel UTILITIES
 -----------------------------------------------------------------------
 
 ||| The empty SparseMaxel — the physical vacuum state.
@@ -205,27 +134,18 @@ emptySparseMaxel = MkSparseMaxel ZeroM
 ||| A singleton SparseMaxel — a single coordinate mapped to one amplitude.
 ||| This is the result of ascendScale: the entire micro-graph collapses to one entry.
 |||
-||| Naming Zoo:
-|||   - Physics:  Point Particle / Localized Wavepacket
-|||   - Category: Stalk of the Sheaf at a Point / Unit Section
 public export
 singletonSparseMaxel : Geometry -> Amplitude -> SparseMaxel
 singletonSparseMaxel geom amp = MkSparseMaxel (fromList [((geom, amp), 1)])
 
 ||| Superposition — the native multiset union of two state vectors.
 |||
-||| Naming Zoo:
-|||   - Physics:  Quantum Superposition / State Overlap
-|||   - Category: Coproduct of Sheaf Sections / Direct Sum
 public export
 superposeStates : SparseMaxel -> SparseMaxel -> SparseMaxel
 superposeStates (MkSparseMaxel m1) (MkSparseMaxel m2) = MkSparseMaxel (addMultiset m1 m2)
 
 ||| The total Leibniz Lag of a SparseMaxel (sum of all entry multiplicities).
 |||
-||| Naming Zoo:
-|||   - Physics:  Total Energy / Occupation Number / Computational Cost
-|||   - Category: Global Sections Cardinality
 public export
 stateLag : SparseMaxel -> Integer
 stateLag (MkSparseMaxel m) = multiplicityAll m
@@ -235,9 +155,6 @@ stateLag (MkSparseMaxel m) = multiplicityAll m
 ||| This is the sheaf restriction map: pulling back entries from a large
 ||| open set to a smaller one. In multiset terms: filter by coordinate.
 |||
-||| Naming Zoo:
-|||   - Physics:  Local Measurement / Projection onto a Coordinate
-|||   - Category: Restriction Map of the Sheaf
 public export
 restrictToPixel : Geometry -> SparseMaxel -> SparseMaxel
 restrictToPixel geom (MkSparseMaxel pip) =
@@ -247,12 +164,9 @@ restrictToPixel geom (MkSparseMaxel pip) =
 ||| in the Substrate causal graph.
 |||
 ||| A synchronised state guarantees the state vector does not reference a
-||| spacetime location that has no causal history. An unsynchronised state
+||| location that has no causal history. An unsynchronised state
 ||| indicates a torn sheaf — undefined physics.
 |||
-||| Naming Zoo:
-|||   - Physics:  Causal Consistency / No-Signalling Check
-|||   - Category: Gluing Condition of the Sheaf
 public export
 isSynchronised : Substrate -> SparseMaxel -> Bool
 isSynchronised sub (MkSparseMaxel pip) =

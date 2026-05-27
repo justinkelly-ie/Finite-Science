@@ -65,16 +65,16 @@ import Math.Chromogeometry
 ||| The N+2 ice direction: hydrogen bond + fixed point.
 ||| (7,7) + (4,3) = (11, 10)
 public export
-iceDirection : PixelNL Integer
-iceDirection = MkPixelNL (hydrogenBondDirection.x + h1Position.x)
-                          (hydrogenBondDirection.y + h1Position.y)
+iceDirection : Pixel Integer
+iceDirection = MkPixel (hydrogenBondDirection.src + h1Position.src)
+                          (hydrogenBondDirection.tgt + h1Position.tgt)
 
 ||| The N+2 direction is the self-addition of the fixed point.
 public export
 isSelfAddition : Bool
 isSelfAddition =
-  iceDirection.x == hydrogenBondDirection.x + h1Position.x &&
-  iceDirection.y == hydrogenBondDirection.y + h1Position.y
+  iceDirection.src == hydrogenBondDirection.src + h1Position.src &&
+  iceDirection.tgt == hydrogenBondDirection.tgt + h1Position.tgt
 
 ||| N+2 fingerprint.
 public export
@@ -89,7 +89,7 @@ iceFingerprint = fingerprint iceDirection
 ||| This is the folding number — the product of structure and time.
 public export
 iceFoldingNumber : Integer
-iceFoldingNumber = quadranceNL Red (MkPixelNL 0 0) iceDirection
+iceFoldingNumber = quadranceNL Red (MkPixel 0 0) iceDirection
 
 ||| The folding number factors into MatterGate × TimeGate.
 public export
@@ -107,7 +107,7 @@ foldingIsMatterTimesTime =
 ||| The product signals the onset of decoherence.
 public export
 iceBlueQuadrance : Integer
-iceBlueQuadrance = quadranceNL Blue (MkPixelNL 0 0) iceDirection
+iceBlueQuadrance = quadranceNL Blue (MkPixel 0 0) iceDirection
 
 ||| 221 = 13 × 17: ResonanceGate × first non-gate prime.
 public export
@@ -122,22 +122,22 @@ blueIsResonanceTimesDecoherence = iceBlueQuadrance == 13 * 17
 ||| Q = (11-7)² + (10-7)² = 4² + 3² = 25 = ChargeGate²
 ||| This is IDENTICAL to Water's bond quadrance.
 public export
-iceEdgeDirection : PixelNL Integer
-iceEdgeDirection = MkPixelNL (iceDirection.x - hydrogenBondDirection.x)
-                              (iceDirection.y - hydrogenBondDirection.y)
+iceEdgeDirection : Pixel Integer
+iceEdgeDirection = MkPixel (iceDirection.src - hydrogenBondDirection.src)
+                              (iceDirection.tgt - hydrogenBondDirection.tgt)
 
 ||| The edge IS the water fixed point (4,3).
 public export
 edgeIsWaterFixedPoint : Bool
 edgeIsWaterFixedPoint =
-  iceEdgeDirection.x == h1Position.x &&
-  iceEdgeDirection.y == h1Position.y
+  iceEdgeDirection.src == h1Position.src &&
+  iceEdgeDirection.tgt == h1Position.tgt
 
 ||| The edge quadrance = 25 = ChargeGate² (same as Water).
 public export
 edgeQuadranceIsWater : Bool
 edgeQuadranceIsWater =
-  quadranceNL Blue (MkPixelNL 0 0) iceEdgeDirection == bondQuadrance
+  quadranceNL Blue (MkPixel 0 0) iceEdgeDirection == bondQuadrance
 
 -----------------------------------------------------------------------
 -- THE ARCHIMEDES INVARIANT
@@ -148,7 +148,7 @@ edgeQuadranceIsWater =
 ||| The chromogeometric signature is inherited across scales.
 public export
 iceArchimedes : Integer
-iceArchimedes = archimedesNL Blue (MkPixelNL 0 0) hydrogenBondDirection iceDirection
+iceArchimedes = archimedesNL Blue (MkPixel 0 0) hydrogenBondDirection iceDirection
 
 -----------------------------------------------------------------------
 -- FOLDING CONNECTION

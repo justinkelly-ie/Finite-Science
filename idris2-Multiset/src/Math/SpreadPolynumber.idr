@@ -2,10 +2,8 @@ module Math.SpreadPolynumber
 
 import Data.Linear
 import Math.Interfaces
-import Math.UnaryMultiset
 import Math.Polynumber
 import Math.IntPolynumber
-import Math.SignedUnaryMultiset
 
 %default total
 
@@ -18,12 +16,12 @@ scalarMul (S k) p = addIntPoly p (scalarMul k p)
 ||| Representation of the spread variable `s` as a polynomial: alpha^1 beta^0
 export
 sPoly : IntPolynumber
-sPoly = posTerm (fromNatLNat 1) (fromNatLNat 0) (fromNatLNat 1)
+sPoly = posTerm 1 0 1
 
 ||| The constant polynomial `1`
 export
 onePoly : IntPolynumber
-onePoly = posTerm (fromNatLNat 0) (fromNatLNat 0) (fromNatLNat 1)
+onePoly = posTerm 0 0 1
 
 ||| Generate the n-th Spread Polynomial recursively.
 ||| S_0(s) = 0

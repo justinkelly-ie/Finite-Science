@@ -6,4 +6,4 @@ depends = base, contrib, idris2-Multiset, idris2-Multiset
 
 sourcedir = "src"
 
-modules = Math.BoxNat, Math.BoxInt, Math.Chromogeometry
+modules = Math.Chromogeometry

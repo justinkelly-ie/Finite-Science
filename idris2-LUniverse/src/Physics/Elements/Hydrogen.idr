@@ -33,14 +33,14 @@ public export
 record HydrogenAtom where
   constructor MkHydrogen
   ||| The proton: unit baryonic state (Z=1)
-  1 proton   : Multiset (PixelNL Integer, IntPolynumber)
+  1 proton   : Multiset (Pixel Integer, IntPolynumber)
   ||| The electron: simplest stable knot on the MatterGate
-  1 electron : Multiset (PixelNL Integer, IntPolynumber)
+  1 electron : Multiset (Pixel Integer, IntPolynumber)
 
 ||| Constructs a Hydrogen atom from the pipeline.
 ||| The proton is Z=1 elemental state, the electron is S_3 (MatterGate).
 public export
-hydrogen : PixelNL Integer -> HydrogenAtom
+hydrogen : Pixel Integer -> HydrogenAtom
 hydrogen geom =
   let protonState   = elementalState 1 geom
       electronState = fromList [((geom, spreadPoly 3), 1)]
@@ -49,7 +49,7 @@ hydrogen geom =
 ||| The total structural lag of a Hydrogen atom.
 ||| Proton lag (1) + electron lag (S_3 multiplicity).
 public export
-hydrogenLag : PixelNL Integer -> Integer
+hydrogenLag : Pixel Integer -> Integer
 hydrogenLag geom =
   let h = hydrogen geom
   in multiplicityAll h.proton + multiplicityAll h.electron

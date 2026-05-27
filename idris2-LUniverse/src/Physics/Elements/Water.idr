@@ -77,18 +77,18 @@ import Math.Chromogeometry
 
 ||| Hydrogen 1 position on the grid: (BondGate, MatterGate) = (4, 3)
 public export
-h1Position : PixelNL Integer
-h1Position = MkPixelNL 4 3
+h1Position : Pixel Integer
+h1Position = MkPixel 4 3
 
 ||| Hydrogen 2 position on the grid: (MatterGate, BondGate) = (3, 4)
 public export
-h2Position : PixelNL Integer
-h2Position = MkPixelNL 3 4
+h2Position : Pixel Integer
+h2Position = MkPixel 3 4
 
 ||| Oxygen position: the origin
 public export
-oPosition : PixelNL Integer
-oPosition = MkPixelNL 0 0
+oPosition : Pixel Integer
+oPosition = MkPixel 0 0
 
 -----------------------------------------------------------------------
 -- BOND PROPERTIES (from chromogeometry)
@@ -130,7 +130,7 @@ bondsRedPerpendicular = isPerpendicularNL Red h1Position h2Position
 ||| The electron sits on the n=3 MatterGate, providing visible geometry.
 ||| Its state is the S_3 spread polynomial at the bond position.
 public export
-bondElectron : PixelNL Integer -> Electron
+bondElectron : Pixel Integer -> Electron
 bondElectron pos = MkElectron (fromList [((pos, spreadPoly 3), 1)])
 
 ||| The two bonding electrons in Water, one per O-H bond.
@@ -176,7 +176,7 @@ record WaterMolecule where
   1 hydrogen1  : HydrogenAtom
   1 hydrogen2  : HydrogenAtom
   1 oxygenAtom : OxygenAtom
-  1 bonds      : Multiset (PixelNL Integer, IntPolynumber)
+  1 bonds      : Multiset (Pixel Integer, IntPolynumber)
 
 ||| Constructs a Water molecule at the canonical geometry.
 ||| H₁ at (4,3), H₂ at (3,4), O at origin.

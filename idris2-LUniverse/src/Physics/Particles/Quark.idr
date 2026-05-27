@@ -16,6 +16,6 @@ import Math.Polynumber
 public export
 record Quark where
   constructor MkQuark
-  1 state : Multiset (PixelNL Integer, IntPolynumber)
+  1 state : Multiset (Pixel Integer, IntPolynumber)
 
 

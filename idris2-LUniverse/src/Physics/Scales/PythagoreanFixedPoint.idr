@@ -94,7 +94,7 @@ public export
 record PythagoreanFixedPoint where
   constructor MkFixedPoint
   ||| The coordinate
-  point : PixelNL Integer
+  point : Pixel Integer
   ||| Blue quadrance (Euclidean): a² + b²
   blueQ : Integer
   ||| Red quadrance (Minkowski): a² - b²
@@ -104,8 +104,8 @@ record PythagoreanFixedPoint where
 
 ||| Computes the full chromogeometric fingerprint of a grid coordinate.
 public export
-fingerprint : PixelNL Integer -> PythagoreanFixedPoint
-fingerprint p = MkFixedPoint p (quadranceNL Blue (MkPixelNL 0 0) p) (quadranceNL Red (MkPixelNL 0 0) p) (quadranceNL Green (MkPixelNL 0 0) p)
+fingerprint : Pixel Integer -> PythagoreanFixedPoint
+fingerprint p = MkFixedPoint p (quadranceNL Blue (MkPixel 0 0) p) (quadranceNL Red (MkPixel 0 0) p) (quadranceNL Green (MkPixel 0 0) p)
 
 ||| The Water fixed point: (4, 3)
 public export
@@ -167,9 +167,9 @@ waterIsFixedPoint = isFixedPoint waterFixedPoint
 ||| The hydrogen bond direction at N+1 is the DIFFERENCE between
 ||| two water fixed points, rotated by the BondGate.
 public export
-hydrogenBondDirection : PixelNL Integer
-hydrogenBondDirection = MkPixelNL (h1Position.x + h2Position.x)
-                                   (h1Position.y + h2Position.y)
+hydrogenBondDirection : Pixel Integer
+hydrogenBondDirection = MkPixel (h1Position.src + h2Position.src)
+                                   (h1Position.tgt + h2Position.tgt)
 -- = (4+3, 3+4) = (7, 7) — the TimeGate diagonal!
 
 ||| The N+1 hydrogen bond fingerprint.
@@ -212,7 +212,7 @@ hydrogenBondIsIsotropic =
 ||| The hydrogen bonds fluctuate because (7,7) is a null vector — 
 ||| it can form and dissolve without violating the structural lock.
 public export
-waterIdentityCoord : PixelNL Integer
+waterIdentityCoord : Pixel Integer
 waterIdentityCoord = h1Position
 
 ||| Water's identity is the coordinate where the self-referential
@@ -220,6 +220,6 @@ waterIdentityCoord = h1Position
 ||| because the fixed point is metric-invariant.
 public export
 waterIdentityQuadrance : Integer
-waterIdentityQuadrance = quadranceNL Blue (MkPixelNL 0 0) waterIdentityCoord
+waterIdentityQuadrance = quadranceNL Blue (MkPixel 0 0) waterIdentityCoord
 
 

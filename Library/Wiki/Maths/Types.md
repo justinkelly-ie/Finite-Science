@@ -54,7 +54,7 @@ The `idris2-RationalTopology` package completely defines discrete metrical geome
 ```idris
 -- A 0-Simplex (0-Cell) is a naked coordinate point (vertex) in space.
 0 Cell0 : Type
-Cell0 = PixelNL Integer
+Cell0 = Pixel Integer
 
 -- A 1-Simplex (1-Cell) is a directed edge connecting two 0-Cells.
 0 Cell1 : Type
@@ -166,7 +166,7 @@ graph TD
     C --> E[UniverseState]
     D --> E
     
-    F[Cell0 / PixelNL Integer] --> C
+    F[Cell0 / Pixel Integer] --> C
     F --> D
 ```
 

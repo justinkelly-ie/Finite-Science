@@ -14,8 +14,8 @@ import Math.Fraction
 ||| A Photon in the CellState framework is defined not as a continuous wave,
 ||| but as an algebraic Null-Quadrance Operator on the Red (Relativistic) Metric.
 public export
-isPhotonPixel : PixelNL Integer -> Bool
-isPhotonPixel p = quadranceNL Red (MkPixelNL 0 0) p == 0
+isPhotonPixel : Pixel Integer -> Bool
+isPhotonPixel p = quadranceNL Red (MkPixel 0 0) p == 0
 
 ||| Represents a validated Photon.
 ||| It explicitly encapsulates a particle state that satisfies the Red Null-Quadrance property,
@@ -23,13 +23,13 @@ isPhotonPixel p = quadranceNL Red (MkPixelNL 0 0) p == 0
 public export
 record Photon where
   constructor MkPhoton
-  particle : PixelNL Integer
+  particle : Pixel Integer
   -- In a fully dependently typed theorem, we would include:
   -- 0 prf : isPhotonPixel particle = True
 
 ||| Safely instantiates a Photon if the coordinate meets the speed of light limit.
 public export
-createPhoton : PixelNL Integer -> Maybe Photon
+createPhoton : Pixel Integer -> Maybe Photon
 createPhoton p = 
   if isPhotonPixel p then Just (MkPhoton p) else Nothing
 
@@ -38,7 +38,7 @@ createPhoton p =
 ||| This Blue Quadrance corresponds directly to its spatial energy / momentum.
 public export
 blueEnergy : Photon -> Integer
-blueEnergy (MkPhoton p) = quadranceNL Blue (MkPixelNL 0 0) p
+blueEnergy (MkPhoton p) = quadranceNL Blue (MkPixel 0 0) p
 
 ||| The Cross-Ratio Transformation Matrix (M_x) collapses a 2D null photon
 ||| into a pure 1D spatial impulse on the Blue grid. This models the
@@ -46,8 +46,8 @@ blueEnergy (MkPhoton p) = quadranceNL Blue (MkPixelNL 0 0) p
 ||| (1 1) (x)   (2x)
 ||| (1 -1)(x) = (0 )
 public export
-absorbPhoton : Photon -> PixelNL Integer
-absorbPhoton (MkPhoton (MkPixelNL x y)) = MkPixelNL (x + y) (x - y)
+absorbPhoton : Photon -> Pixel Integer
+absorbPhoton (MkPhoton (MkPixel x y)) = MkPixel (x + y) (x - y)
 
 ||| Calculates the physical propagation speed of a state across the grid.
 ||| By mapping the Pixel's X coordinate to Spatial Distance and Y coordinate 
@@ -55,7 +55,7 @@ absorbPhoton (MkPhoton (MkPixelNL x y)) = MkPixelNL (x + y) (x - y)
 ||| Because Red Quadrance (x^2 - y^2) is 0 for Photons, this will always return 1 or -1.
 public export
 propagationSpeed : Photon -> Fraction
-propagationSpeed (MkPhoton (MkPixelNL space time)) =
+propagationSpeed (MkPhoton (MkPixel space time)) =
   let spaceNat = cast {to=Nat} (abs space)
       timeNat = cast {to=Nat} (abs time)
   in MkFraction spaceNat timeNat

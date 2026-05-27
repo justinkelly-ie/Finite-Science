@@ -14,10 +14,7 @@ type = "local"
 path = "idris2-chromogeometry"
 ipkg = "idris2-chromogeometry.ipkg"
 
-[custom.all.idris2-Maxel]
-type = "local"
-path = "idris2-Maxel"
-ipkg = "idris2-Maxel.ipkg"
+
 
 [custom.all.idris2-Multiset]
 type = "local"
@@ -33,13 +30,3 @@ ipkg = "ref1.ipkg"
 type = "local"
 path = "idris2-QuickCheck"
 ipkg = "idris2-QuickCheck.ipkg"
-
-[custom.all.idris2-LUniverse-Tests]
-type = "local"
-path = "idris2-LUniverse-Tests"
-ipkg = "idris2-LUniverse-Tests.ipkg"
-
-[custom.all.idris2-RationalTopology]
-type = "local"
-path = "idris2-RationalTopology"
-ipkg = "idris2-RationalTopology.ipkg"

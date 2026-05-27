@@ -21,6 +21,6 @@ import Math.Polynumber
 public export
 record Bond where
   constructor MkBond
-  1 state : Multiset (PixelNL Integer, IntPolynumber)
+  1 state : Multiset (Pixel Integer, IntPolynumber)
 
 

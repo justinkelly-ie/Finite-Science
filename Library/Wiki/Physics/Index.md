@@ -16,7 +16,9 @@ This section documents the physical research and formalizations arising from Lin
 - **[Verified Theorems Matrix](./Theorems.md)**
   An automatically generated aggregation of all mathematical physics theorems proven entirely at compile-time by the Idris 2 typechecker (e.g. Mass-Energy Equivalence).
 
-See also: **[Mathematical Type Architecture](../Maths/Types.md)** in the Maths wiki.
+See also in the Maths wiki: 
+- **[Mathematical Type Architecture](../Maths/Types.md)**
+- **[The Simplicial Architecture of the Universe](../Maths/Simplicial_Architecture.md)**
 
 ## Key Discoveries
 
@@ -27,4 +29,30 @@ See also: **[Mathematical Type Architecture](../Maths/Types.md)** in the Maths w
 - **Ice Geometry & Folding Reciprocity:** At N+2, the folding number 21 = MatterGate × TimeGate establishes Matter↔Time reciprocity. See `Physics.Scales.IceGeometry`.
 
 ---
-*All findings are verified by 51 property tests with zero failures.*
+
+## Executable Documentation (Test Suites)
+
+Because the test suites are written in Literate Idris, the physics laws are structurally enforced by the compiler and executed at runtime. These files act as both pure documentation and rigorous property tests:
+
+### Adaptive Cycle & Cosmology
+- **[Adaptive Cycle: Pipeline](./Adaptive_Cycle_Pipeline.md)** — Partitioning, resonance shattering, and topological ascension.
+- **[Adaptive Cycle: Findings](./Adaptive_Cycle_Findings.md)** — Feynmanium boundary, periodic table, primordial grid state limits, and fine structure derivations.
+- **[Adaptive Cycle: Chemistry](./Adaptive_Cycle_Chemistry.md)** — Water's bond triangle, fixed point chromogeometry, and universal mediator properties.
+- **[Adaptive Cycle: Scales](./Adaptive_Cycle_Scales.md)** — N+2 Ice Geometry fold bounds, scale trajectories, and Eddington limits.
+
+### Core Physics & Topology
+- **[Ascension Probe](./Ascension_Probe.md)** — 137-Scale observer trajectory, verifying coherent and decoherent generations.
+- **[Double Slit Interference](./Double_Slit_Interference.md)** — Arithmetic projection of Spread Polynomials generating deterministic fringes.
+- **[Cosmological Scaling](./CosmologicalScaling.md)** — Validating expansion and the polynomial scaling bounds.
+- **[Evolution](./Evolution.md)** — Ascension mass conservation and empty vacuum anchors.
+- **[Dimensional Causality](./DimensionalCausality.md)** — Monotonic time ordering and acyclic strict causality in the Substrate graph.
+- **[Epoch Injection](./EpochInjection.md)** — Baryogenesis and primorial grid unfolding.
+- **[Elements](./Elements.md)** — Archimedes signature of water, structural invariants.
+- **[Label Extraction](./LabelExtraction.md)** — Topological graph serialization invariants.
+
+### Architecture & Engine
+- **[Engine Verification](../Code/Engine_Verification.md)** — Sanity checks for the core QuickCheck mathematical oracle.
+- **[Mathematical Properties](../Maths/Properties.md)** — Multiset algebraic invariants, Leibniz lag preservation, and topological synchronization.
+
+---
+*All findings are verified by 53 property tests with zero failures.*

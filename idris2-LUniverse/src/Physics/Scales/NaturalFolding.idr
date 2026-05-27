@@ -5,7 +5,7 @@ import Math.SpreadPolynumber
 
 %default total
 
-||| A formal model of Natural MaxelNL (PixelNL Integer) Folding.
+||| A formal model of Natural MaxelNL (Pixel Integer) Folding.
 |||
 ||| Captures how 1D chains of substrate units (e.g., amino acids, nucleotides) 
 ||| dynamically fold into complex 3D geometric structures. In the LUniverse model, 

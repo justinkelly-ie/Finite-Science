@@ -1,11 +1,8 @@
 module Physics.Evolution.State
 
 
-import public Math.UnaryMultiset
-import public Math.Polynumber
 import public Math.Multiset
 import public Math.IntPolynumber
-import public Math.MaxelNL
 import public Math.SpreadPolynumber
 import public Math.Chromogeometry
 import public Math.Twist
@@ -82,7 +79,7 @@ public export
 extractPixel : CellState -> Math.Core.Geometry
 extractPixel state =
   case state.maxelProjection of
-    ZeroM      => MkPixelNL 0 0
+    ZeroM      => MkPixel 0 0
     AddM p _ _ => p
 
 

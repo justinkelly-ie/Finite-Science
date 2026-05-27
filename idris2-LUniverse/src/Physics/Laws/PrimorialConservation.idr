@@ -6,7 +6,7 @@ import Physics.Evolution.State
 
 import Data.List
 import Data.Linear
-import Math.UnaryMultiset
+import Math.Multiset
 import Math.Polynumber
 
 %default total
@@ -24,13 +24,13 @@ interface ConservesInformation a where
 
 ||| Checks if the multiset maintains exactly 210 states.
 ||| Safe because Multiset is a standard ADT — linearity is interface-level only.
-primorialCheck : Multiset (PixelNL Integer, IntPolynumber) -> Bool
+primorialCheck : Multiset (Pixel Integer, IntPolynumber) -> Bool
 primorialCheck mset = multiplicityAll mset == 210
 
-||| In the Unified Multiset (PixelNL Integer, IntPolynumber) model, Primorial Information is exactly conserved
+||| In the Unified Multiset (Pixel Integer, IntPolynumber) model, Primorial Information is exactly conserved
 ||| if the overall state count natively maps to the 210-state bound (2 × 3 × 5 × 7).
 public export
-implementation ConservesInformation (Multiset (PixelNL Integer, IntPolynumber)) where
+implementation ConservesInformation (Multiset (Pixel Integer, IntPolynumber)) where
   isPrimorialManifoldIntact = primorialCheck
 
 

@@ -56,11 +56,11 @@ import public Physics.Elements.Element
 
 public export
 Hydrogen : Element
-Hydrogen = MkElement 1 (elementalState 1 (MkPixelNL 0 0)) Refl
+Hydrogen = MkElement 1 (elementalState 1 (MkPixel 0 0)) Refl
 
 public export
 Carbon : Element
-Carbon = MkElement 6 (elementalState 6 (MkPixelNL 0 0)) Refl
+Carbon = MkElement 6 (elementalState 6 (MkPixel 0 0)) Refl
 
 ||| Oxygen (Z=8): the universal mediator.
 |||
@@ -75,19 +75,19 @@ Carbon = MkElement 6 (elementalState 6 (MkPixelNL 0 0)) Refl
 ||| visible matter is the MatterGate — the gate that generates structure.
 public export
 Oxygen : Element
-Oxygen = MkElement 8 (elementalState 8 (MkPixelNL 0 0)) Refl
+Oxygen = MkElement 8 (elementalState 8 (MkPixel 0 0)) Refl
 
 ||| Iron (Z=26): the stellar fusion limit.
 ||| Heaviest element producible by core fusion before gravitational collapse.
 public export
 Iron : Element
-Iron = MkElement 26 (elementalState 26 (MkPixelNL 0 0)) Refl
+Iron = MkElement 26 (elementalState 26 (MkPixel 0 0)) Refl
 
 ||| The absolute maximum stable element on the grid.
 ||| Z=137 survives the resonance gate. Z=138 does not.
 public export
 Feynmanium : Element
-Feynmanium = MkElement 137 (elementalState 137 (MkPixelNL 0 0)) Refl
+Feynmanium = MkElement 137 (elementalState 137 (MkPixel 0 0)) Refl
 
 -----------------------------------------------------------------------
 -- STRUCTURAL FINDINGS

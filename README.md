@@ -15,15 +15,14 @@ Modern physics is plagued by infinities. Continuous wave equations, singularitie
 
 Built on [Norman Wildberger's](https://njwildberger.com/) Finitist Mathematics including Box Arithmetic (Multisets), Chromogeometry and Spread Polynomials, this project models the universe as a discrete, combinatorial engine. In the Linear Universe, continuous fields are unnecessary, particles are modelled simply as geometric and algebraic constraints, acting on a discrete integer pixel grid.
 
-### Why "Linear"?
-This project is written in **[Idris 2](https://github.com/idris-lang/Idris2)** to leverage its **Quantitative Type Theory (QTT)** and **Linear Types**. In QTT, a linear resource must be consumed *exactly once*. We use this compiler-level constraint to natively enforce absolute physical laws:
-*   **Energy Conservation:** You cannot compile an interaction that destroys or duplicates a quantum state.
-*   **Baryogenesis:** Matter naturally emerges from the geometry without requiring arbitrary parameters.
-*   **Color Confinement:** Quarks are trapped mathematically because their algebraic topology fails to evaluate to integer coordinates on the grid. It isn't a "force"—it's a computational limit.
-*   **Biological Uniqueness:** The specific natural foldings of life (e.g., the DNA double-helix or the Alpha Helix) are not evolutionary accidents. QTT natively enforces the No-Cloning theorem; thus, these structures emerge as the strictly unique, linear mathematical solutions capable of geometrically neutralizing topological debt without causing a Grid Fracture.
-*   **Autopoiesis & Evolution:** Life is modeled as a linear wrapper. Cellular replication (Mitosis/Meiosis) cannot "copy" state in violation of quantum mechanics. Instead, organisms linearly consume unallocated environmental space (discrete physical resources that strictly enforce linearity and prevent cloning) to instantiate fresh parallel identities, preserving absolute geometric lineage right down to the fundamental discrete grid.
+### Why "Linear Physics"?
+Originally, this project heavily utilized Idris 2's Quantitative Type Theory (QTT) and Linear Types to structurally enforce conservation laws. However, as the universe scaled, the compiler inevitably exhausted its memory attempting to mathematically track nested linear resource reductions.
 
-Whether it is a subatomic quantum scattering event or the cellular division of a biological organism, if an interaction violates these fundamental topological laws, **the code simply will not compile.**
+We have since stripped away the heavy categorical abstractions and replaced them with an ultra-lean **Pure Multiset Integer Architecture**. Rather than relying on rigid compile-time typestate tracking, the core simulation is now a flat $O(N)$ integer matrix.
+
+*   **Extreme Leanness**: The engine drops arbitrary rational fractions, topological wrappers, and linear variables in favor of raw structural algebraic arrays (`Math.Multiset`).
+*   **Exact Integer Calculations**: Using pure non-linear integer cross-multiplication, geometric spreads and quadrances never lose precision.
+*   **Automatic Conservation**: Because everything evaluates as flat additions and subtractions across a multiset (`addM`, `subM`), terms automatically annihilate when opposite, guaranteeing perfect conservation of mass and energy naturally.
 
 ---
 
@@ -219,12 +218,14 @@ Linear-Physics/
 LUniverse requires [Idris 2](https://github.com/idris-lang/Idris2). Use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to install Idris2 and as an Idris2 package manager.
 
 ```bash
-# 1. Build the project
+# 1. Build the main library
 pack build idris2-LUniverse/idris2-LUniverse.ipkg
 
-# 2. Run the full unified property-testing suite (QuickCheck + Golden Tests)
-cd idris2-LUniverse-Tests
-pack run idris2-LUniverse-Tests
+# 2. Run the full unified property-testing suite
+./Scripts/run-tests.sh
+
+# Or run it directly from the root package:
+pack run Linear-Physics.ipkg
 ```
 If you are unfamiliar with Idris2 but wish to explore the project, download Google Antigravity [^1] and have it assist you with the steps above; you can then prompt it to explore the model textually.
 

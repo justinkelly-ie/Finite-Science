@@ -1,7 +1,6 @@
 module Physics.SpreadPolynumber
 
 import Math.Multiset
-import Math.MaxelNL
 import Math.IntPolynumber
 import Math.Chromogeometry
 import Math.Core
@@ -10,17 +9,13 @@ import Physics.Evolution.State
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate
 
--- Naming Zoo Reference:
---   - Physics: Geodesic Operator Generator / Localized Chromogeometric Propagator
---   - Rational Trig: Polynomial expansion of point-specific Triadic Spreads
---   - Implementation: Maps localized Maxel triad spreads to distinct IntPolynumber monomials.
 
 ||| Restored Bridge Function: Converts the direct chromogeometric curvature 
 ||| of a local coordinate point into an active time-evolution Polynumber operator.
 public export
 generateLocalSpreadPoly : Metric 
                        -> Substrate 
-                       -> PixelNL Integer -- The local voxel point being evaluated
+                       -> Pixel Integer -- The local voxel point being evaluated
                        -> IntPolynumber
 generateLocalSpreadPoly metric substrate currentGeom =
   let edges = multisetToList substrate

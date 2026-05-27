@@ -1,35 +1,31 @@
 # The Linear Physics Code Architecture
 
-Welcome to the internal code documentation for the Linear Physics engine. This section outlines how the physical properties of the universe are strictly enforced not just by mathematics, but by the compiler itself!
+Welcome to the internal code documentation for the Linear Physics engine. This section outlines how the physical properties of the universe are strictly enforced not just by mathematics, but by the Idris 2 compiler itself.
 
-## The Power of Linearity: `Physics.SigmaBridge`
+## The Power of the Pure Multiset: `Math.Multiset`
 
-The most critical architectural achievement in this codebase is the **Sigma-Linear Architecture** (`Physics.SigmaBridge` and `Math.SigmaLinear`). 
+The most critical architectural achievement in this codebase is the **Pure Integer Multiset Architecture**.
 
-### The Problem with Functional Physics
-In a standard functional programming language (like Haskell or standard Idris), variables are immutable. When a state evolves from $N$ to $N+1$, the old state $N$ is kept in memory. Furthermore, functional languages allow you to passively duplicate variables by referencing them twice (e.g., `let x = state; let y = state`).
+### The Problem with Extraneous Abstraction
+Earlier iterations of this engine relied heavily on complex topological wrappers (`Cell0`, `Chain1`, `Simplex`), fractional algebraic structures (`RationalTopology`), and strictly-typed Quantitative Type Theory (Linear Types). While mathematically elegant, these abstractions caused several issues:
+1. **Performance**: Processing $O(N^2)$ topological reductions via nested recursive structures caused compilation and execution times to lag exponentially.
+2. **Compiler Exhaustion**: The Idris 2 compiler struggled to statically track deeply nested dependent linear pairs (`LDepMultiset`) and `Sigma` types, causing type-checker hang-ups.
+3. **Precision Loss**: Rational fractions and floating-point divisions natively drop bits or introduce floating-point drift over deep iterational scales.
 
-In a physical simulation, this is a disaster:
-1. **The No-Cloning Theorem**: You cannot duplicate quantum states.
-2. **Conservation of Energy**: You cannot accidentally drop or destroy mass.
-3. **Performance**: Processing $O(N^2)$ topological reductions by re-scanning immutable data structures causes the compiler to lag exponentially.
+### The Pure Multiset Solution
+We completely removed all legacy linear wrappers, posets, and fractions. The engine is now driven entirely by the `Math.Multiset` data structure operating over `Integer` arithmetic. This gives us extreme computational leanness:
 
-### The Sigma-Linear Solution
-Idris 2 introduces **Linear Types** (annotated with a `1`) and **Quantitative Type Theory (QTT)**. A linear variable *must* be consumed exactly once. It cannot be duplicated, and it cannot be discarded.
+1. **Flat Geometry**: The base substrate is simply `Multiset (Pixel Integer, Pixel Integer)`. No deeply nested topological wrappers.
+2. **O(N) Evaluation**: Automatic term annihilation (`addM`, `subM`) natively balances the multiset in $O(N)$ linear time.
+3. **Non-Linear Chromogeometry**: All geometric distances (Quadrance) and trigonometric ratios (Spread) are resolved via cross-multiplied exact numerators using purely integers. There is zero calculation drift.
+4. **Compile-Time Efficiency**: Eliminating the legacy QTT (Linear Types) and `Ref1` dependencies completely unclogged the compiler, allowing massive multiversal matrices to be computed securely.
 
-We constructed the engine using **Linear Dependent Multisets** (`LDepMultiset`), wrapped dynamically inside a **Sigma Type / Dependent Pair (DPair)**. This gives us the best of both worlds:
-1. **Strict Linearity**: The compiler structurally enforces $O(1)$ in-place mutation at runtime, shredding edges to vertices instantaneously without garbage collection blockages.
-2. **Dependent Proofs**: The runtime output is mathematically proven to map perfectly to pure topological specifications (like `computeBoundaryIndex`).
-3. **Sigma Wrapper**: Because the exact size/content of the universe is wrapped in a `DPair` (`DynamicUniverse`), the compiler isn't forced to statically track an infinitely growing universe at compile time, eliminating type-checker hang-ups.
+### The Unified State
+Every concept in this engine is built from two nested primitives:
+- `Geometry = Pixel Integer` (A 2-component chromogeometric coordinate)
+- `Amplitude = IntPolynumber` (A multiset of integer coefficients representing polynomial waves)
 
-The `Physics.SigmaBridge` module provides two functions:
-1. `sigmaMeltChain` / `sigmaMeltMaxel`: Takes a pure, functional Legacy `Substrate` or `SparseMaxel` and "melts" it down into a linear `DynamicUniverse`. 
-2. `sigmaFreezeMaxel`: Takes a linearly mutated `DynamicUniverse` and safely extracts the underlying data via a tail-recursive accumulator, freezing it back into a purely functional `SparseMaxel` for visualization.
-
-### The Test
-If you look at our `src/Main.idr` execution test or the Golden Runner tests, we rigorously verify this architecture by melting legacy geometry into the Dynamic loop, executing topological shredding (`runBoundary`), and freezing it back out.
-
-This ensures that the bridge is perfectly symmetric, and no physical mass is accidentally corrupted during the linear phase transition.
+The complete universe configuration is modeled compactly as `UniverseState`, carrying the causal substrate graph and quantum state vector side-by-side using these native multisets.
 
 ---
 **Verification Matrix:** View the live architecture test outputs in [Verification_Matrix.md](Verification_Matrix.md).

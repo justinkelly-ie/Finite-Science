@@ -3,7 +3,7 @@ module Math.DiscreteCalculus
 import Math.Polynumber
 import Math.IntPolynumber
 import Math.SpreadPolynumber
-import Math.SignedUnaryMultiset
+import Math.Multiset
 import Data.List
 
 %default total

@@ -68,7 +68,7 @@ ExertsExpansivePressure UniverseState where
 public export
 dilateSpace : (Integer -> Integer) -> SparseMaxel -> SparseMaxel
 dilateSpace f pip =
-  MkSparseMaxel (fromList (map (\((MkPixelNL s t, amp), count) => ((MkPixelNL (f s) (f t), amp), count)) (multisetToList pip.maxelMap)))
+  MkSparseMaxel (fromList (map (\((MkPixel s t, amp), count) => ((MkPixel (f s) (f t), amp), count)) (multisetToList pip.maxelMap)))
 
 ||| Applies the physical outward pressure to the underlying FibreBundle,
 ||| physically moving the coordinates apart (simulating Cosmic Expansion).
