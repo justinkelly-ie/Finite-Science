@@ -10,7 +10,6 @@
 ```
 Physics/
 ├── Core.idr                    ← Substrate, Geometry, SparseMaxel, type aliases
-├── WeakForce.idr               ← Weak force model
 │
 ├── Math/                       ← Mathematical Specifications
 │   ├── Multiset.idr                ← Pure integer multiset data structures
@@ -31,8 +30,8 @@ Physics/
 ├── Particles/                  ← 8 particle modules
 │   ├── Photon, Quark, Baryon, Meson, Electron, WeakBoson, Bond, Neutrino
 │
-├── Laws/                       ← 4 conservation laws
-│   ├── ColorConfinement, EnergyConservation, PrimorialConservation, PauliExclusion
+├── Laws/                       ← 5 conservation laws
+│   ├── ColorConfinement, EnergyConservation, PrimorialConservation, PauliExclusion, WeakForce
 │
 └── Findings/                   ← 16 compiled derivations
     ├── Baryogenesis, Cosmology, HolographicFreeze
@@ -360,7 +359,7 @@ LDepMultiset a [] = LEmptyM
 LDepMultiset a ((item, count) :: xs) = LAddM item count (LDepMultiset a xs)
 ```
 
-### The Linear Execution Engine (`Math.SigmaLinear`)
+### The Linear Execution Engine (`Simplex.SigmaLinear`)
 With the structural contents explicitly indexed in the type signature, the execution layer functions exactly like a topological shader. It guarantees perfectly deterministic geometric shredding (like computing a boundary) purely at the type level, while executing blazingly fast in-place memory mutations at runtime.
 
 ```idris

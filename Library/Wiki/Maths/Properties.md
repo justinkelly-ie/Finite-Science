@@ -2,7 +2,7 @@
 module Maths.Properties
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Math.Multiset
 import Math.Chromogeometry
 import Physics.Common

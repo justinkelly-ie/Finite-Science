@@ -8,7 +8,7 @@ correctly partitions, shatters, and evaluates the ascension/decoherence decision
 module Physics.Adaptive_Cycle_Pipeline
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Cycle
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate

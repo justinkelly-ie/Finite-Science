@@ -129,7 +129,7 @@ The Three-Fold Spread Theorem is mathematically guaranteed via exact cross-multi
 
 ---
 
-## Layer 6: Physics Type Aliases (`Math.Core`)
+## Layer 6: Physics Type Aliases (`Simplex.Core`)
 
 Every physical concept is a **type alias** over the Multiset engine. No wrappers.
 
@@ -174,7 +174,7 @@ All physical types are the **same data structure** parameterised differently. An
 
 ---
 
-## Layer 7: Twist and Localized Evolution (`Math.Twist` & `Physics.SpreadPolynumber`)
+## Layer 7: Twist and Localized Evolution (`Simplex.Twist` & `Physics.SpreadPolynumber`)
 
 ### Twist (Gauge Field Holonomy)
 

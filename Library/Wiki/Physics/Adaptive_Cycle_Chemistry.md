@@ -6,7 +6,7 @@ These tests verify the chromogeometric structure of the $H_2O$ molecule and the 
 module Physics.Adaptive_Cycle_Chemistry
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Cycle
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate

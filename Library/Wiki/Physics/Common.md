@@ -2,7 +2,7 @@
 module Physics.Common
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.State
 import Physics.Evolution.Cycle
 import Physics.Evolution.Init

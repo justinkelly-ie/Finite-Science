@@ -1,10 +1,10 @@
 module Physics.Findings.VacuumPairProduction
 
-import Math.Core
+import Simplex.Core
 
 import Math.IntPolynumber
 import Math.Multiset
-import Math.Core
+import Simplex.Core
 import Math.SpreadPolynumber
 
 %default total

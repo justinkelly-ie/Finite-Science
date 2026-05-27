@@ -1,11 +1,11 @@
 module Physics.Scales.ScaleTrajectory
 
-import Math.Core
+import Simplex.Core
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Elements.Water
 import Physics.Evolution.Gate
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Gate
 import Physics.Elements.Water
 import Physics.Scales.PythagoreanFixedPoint

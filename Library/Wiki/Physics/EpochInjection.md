@@ -2,7 +2,7 @@
 module Physics.EpochInjection
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Gate
 import Physics.Evolution.Init
 import Physics.Evolution.Cycle

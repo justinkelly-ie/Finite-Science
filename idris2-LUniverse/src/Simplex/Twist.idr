@@ -1,8 +1,8 @@
-module Math.Twist
+module Simplex.Twist
 
 import Math.Multiset
 import Math.Chromogeometry
-import Math.Core
+import Simplex.Core
 
 
 ||| Computes the Greatest Common Divisor to safely reduce integers.

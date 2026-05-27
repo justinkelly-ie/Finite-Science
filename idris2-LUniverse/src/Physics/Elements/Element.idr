@@ -1,6 +1,6 @@
 module Physics.Elements.Element
 
-import Math.Core
+import Simplex.Core
 import Math.Multiset
 import Math.IntPolynumber
 import Math.SpreadPolynumber

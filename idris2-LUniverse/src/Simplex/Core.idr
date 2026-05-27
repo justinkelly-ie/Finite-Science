@@ -1,4 +1,4 @@
-module Math.Core
+module Simplex.Core
 
 import public Math.Multiset
 import public Math.IntPolynumber

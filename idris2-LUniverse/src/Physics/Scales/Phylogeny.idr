@@ -1,9 +1,9 @@
 module Physics.Scales.Phylogeny
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Identity
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Identity
 
 %default total

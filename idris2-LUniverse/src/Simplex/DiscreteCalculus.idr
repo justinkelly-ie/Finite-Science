@@ -1,4 +1,4 @@
-module Math.DiscreteCalculus
+module Simplex.DiscreteCalculus
 
 import Math.Polynumber
 import Math.IntPolynumber

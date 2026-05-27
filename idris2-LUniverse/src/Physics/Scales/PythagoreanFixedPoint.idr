@@ -1,13 +1,13 @@
 module Physics.Scales.PythagoreanFixedPoint
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.PeriodicTable
 import Physics.Elements.Water
 import Physics.Evolution.Gate
 import Physics.Elements.Oxygen
 import Physics.Evolution.Identity
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Gate
 import Physics.Evolution.Identity
 import Physics.Elements.Water

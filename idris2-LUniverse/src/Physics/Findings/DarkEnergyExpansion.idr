@@ -1,12 +1,12 @@
 module Physics.Findings.DarkEnergyExpansion
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 import Physics.Findings.CosmicPartition
 
 import Math.Chromogeometry
 import Math.Multiset
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 
 import Physics.Findings.CosmicPartition

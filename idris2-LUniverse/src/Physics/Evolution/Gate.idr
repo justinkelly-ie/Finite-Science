@@ -1,6 +1,6 @@
 module Physics.Evolution.Gate
 
-import Math.Core
+import Simplex.Core
 
 %default total
 

@@ -2,7 +2,7 @@ module Physics.Elements.Methane
 
 import Physics.Elements.Hydrogen
 import Physics.Elements.Carbon
-import Math.Core
+import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
 import Physics.Evolution.Gate

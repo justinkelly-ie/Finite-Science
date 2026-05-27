@@ -49,6 +49,7 @@ Because the test suites are written in Literate Idris, the physics laws are stru
 - **[Epoch Injection](./EpochInjection.md)** — Baryogenesis and primorial grid unfolding.
 - **[Elements](./Elements.md)** — Archimedes signature of water, structural invariants.
 - **[Label Extraction](./LabelExtraction.md)** — Topological graph serialization invariants.
+- **[Weak Force (Arithmetic Decay)](./Laws/WeakForce.md)** — Orthogonal n=11 polynomial overflow bound triggering beta-decay decomposition.
 
 ### Architecture & Engine
 - **[Engine Verification](../Code/Engine_Verification.md)** — Sanity checks for the core QuickCheck mathematical oracle.

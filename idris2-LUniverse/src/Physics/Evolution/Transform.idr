@@ -1,12 +1,12 @@
 module Physics.Evolution.Transform
 
-import Math.Core
-import Math.Twist
+import Simplex.Core
+import Simplex.Twist
 import Physics.Evolution.State
 
 import Physics.Evolution.State
-import Math.Core
-import Math.Twist
+import Simplex.Core
+import Simplex.Twist
 import Math.Chromogeometry
 
 import Math.Multiset

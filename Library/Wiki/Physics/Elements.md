@@ -5,7 +5,7 @@ import QuickCheck
 import Physics.Elements.Water
 import Physics.Elements.Methane
 import Physics.Elements.Carbon
-import Math.Core
+import Simplex.Core
 import Math.Chromogeometry
 
 %default total

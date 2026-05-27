@@ -1,6 +1,6 @@
 module Main
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Gate
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Scales.ScaleTrajectory

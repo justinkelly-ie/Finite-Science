@@ -1,13 +1,13 @@
 module Physics.Findings.FineStructureDerivation
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 import Physics.Findings.CosmicPartition
 import Physics.Findings.GravitationalTimeDilation
 
 import Math.IntPolynumber
 import Math.Multiset
-import Math.Core
+import Simplex.Core
 import Physics.Findings.GravitationalTimeDilation
 import Physics.Findings.CosmicEnergyBudget
 

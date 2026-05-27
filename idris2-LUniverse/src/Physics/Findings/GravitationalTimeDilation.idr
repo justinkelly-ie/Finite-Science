@@ -1,13 +1,13 @@
 module Physics.Findings.GravitationalTimeDilation
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 import Physics.Findings.CosmicPartition
 
 import Math.SpreadPolynumber
 import Math.IntPolynumber
 import Math.Multiset
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 
 import Physics.Findings.CosmicPartition

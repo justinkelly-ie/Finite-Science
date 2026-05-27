@@ -8,7 +8,7 @@ natively emerge from the underlying primorial grid limits.
 module Physics.Adaptive_Cycle_Findings
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Cycle
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate

@@ -1,6 +1,6 @@
 module Physics.Findings.PeriodicTable
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.State
 import Physics.Evolution.Gate
 import Physics.Evolution.Transform
@@ -9,7 +9,7 @@ import Physics.Evolution.State
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate
 
-import Math.Core
+import Simplex.Core
 import Math.Multiset
 import Math.IntPolynumber
 import Math.SpreadPolynumber

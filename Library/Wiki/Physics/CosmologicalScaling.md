@@ -2,7 +2,7 @@
 module Physics.CosmologicalScaling
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Findings.Cosmology
 import Physics.Findings.CosmicPartition
 import Physics.Common

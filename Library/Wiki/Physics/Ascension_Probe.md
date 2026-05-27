@@ -5,7 +5,7 @@ This test script iterates across the complete 137-scale hierarchy of the `LUnive
 ```idris
 module Physics.Ascension_Probe
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Gate
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Scales.ScaleTrajectory

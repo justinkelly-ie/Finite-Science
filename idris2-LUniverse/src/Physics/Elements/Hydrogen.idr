@@ -1,10 +1,10 @@
 module Physics.Elements.Hydrogen
 
 import Physics.Elements.Element
-import Math.Core
+import Simplex.Core
 import Physics.Particles.Electron
 
-import Math.Core
+import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
 

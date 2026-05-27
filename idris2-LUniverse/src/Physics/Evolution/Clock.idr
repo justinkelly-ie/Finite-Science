@@ -1,10 +1,10 @@
 module Physics.Evolution.Clock
 
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.State
 
 import Physics.Evolution.State
-import Math.Core
+import Simplex.Core
 
 import Math.Multiset
 import Math.IntPolynumber

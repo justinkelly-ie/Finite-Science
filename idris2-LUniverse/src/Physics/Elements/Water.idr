@@ -1,13 +1,13 @@
 module Physics.Elements.Water
 
 import Physics.Elements.Hydrogen
-import Math.Core
+import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
 import Physics.Evolution.Gate
 import Physics.Elements.Oxygen
 
-import Math.Core
+import Simplex.Core
 import Physics.Elements.Hydrogen
 import Physics.Elements.Oxygen
 import Physics.Particles.Electron

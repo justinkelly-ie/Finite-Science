@@ -8,7 +8,7 @@ import Physics.Evolution.State
 import Physics.Evolution.Gate
 import Physics.Evolution.Transform
 import Physics.Evolution.Clock
-import Math.Core
+import Simplex.Core
 import Physics.SpreadPolynumber
 
 import Math.Multiset
@@ -53,7 +53,7 @@ capacityLimit = cast (calculateGridLimit constructPrimorialGrid)
 public export
 runAdaptiveCycle : Integer         -- The capacityLimit (137)
                 -> Metric          -- Gauge metric configuration (Blue/Red/Green)
-                -> Math.Core.Geometry        -- Target macro coordinate for Scale N+1 condensation
+                -> Simplex.Core.Geometry        -- Target macro coordinate for Scale N+1 condensation
                 -> UniverseState   -- Current generation state
                 -> UniverseState   -- Next generation state
 runAdaptiveCycle capacityLimit metric macroTarget (MkUniverseState sub field) =

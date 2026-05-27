@@ -3,8 +3,8 @@ module Physics.SpreadPolynumber
 import Math.Multiset
 import Math.IntPolynumber
 import Math.Chromogeometry
-import Math.Core
-import Math.Twist
+import Simplex.Core
+import Simplex.Twist
 import Physics.Evolution.State
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate

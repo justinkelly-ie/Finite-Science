@@ -1,9 +1,9 @@
 module Physics.Evolution.Identity
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 
 %default total

@@ -1,12 +1,12 @@
 module Physics.Findings.CosmologicalConstant
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 import Physics.Findings.CosmicPartition
 
 import Math.IntPolynumber
 import Math.Multiset
-import Math.Core
+import Simplex.Core
 import Math.SpreadPolynumber
 import Physics.Findings.CosmicEnergyBudget
 import Math.Fraction

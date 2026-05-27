@@ -1,7 +1,7 @@
 module Physics.SigmaBridge
 
-import Math.Core
-import Math.SigmaLinear
+import Simplex.Core
+import Simplex.SigmaLinear
 import Math.Multiset
 
 -----------------------------------------------------------------------
@@ -18,14 +18,14 @@ buildLDep ((item, count) :: rest) = LAddM item count (buildLDep rest)
 ||| Melts a standard SparseMaxel (Legacy) into a Dynamic Universe wrapper (Sigma).
 ||| This takes the raw non-linear field and locks it into the DPair wrapper.
 public export
-sigmaMeltMaxel : Math.Core.SparseMaxel -> Math.SigmaLinear.DynamicUniverse (Math.Core.Geometry, Math.Core.Amplitude)
+sigmaMeltMaxel : Simplex.Core.SparseMaxel -> Simplex.SigmaLinear.DynamicUniverse (Simplex.Core.Geometry, Simplex.Core.Amplitude)
 sigmaMeltMaxel (MkSparseMaxel mset) = 
   let c = multisetToList mset
   in (c ** buildLDep c)
 
 ||| Melts a standard Substrate (Legacy) into a Dynamic Substrate (Sigma).
 public export
-sigmaMeltChain : Math.Core.Substrate -> Math.SigmaLinear.DynamicSubstrate
+sigmaMeltChain : Simplex.Core.Substrate -> Simplex.SigmaLinear.DynamicSubstrate
 sigmaMeltChain sub = 
   let edges = multisetToList sub
   in (edges ** buildLDep edges)
@@ -49,12 +49,12 @@ freezeLDep m = freezeLDepAcc [] m
 ||| Freezes a Dynamic Universe back into the legacy SparseMaxel.
 ||| This allows the visualizer to render the output cleanly.
 public export
-sigmaFreezeMaxel : Math.SigmaLinear.DynamicUniverse (Math.Core.Geometry, Math.Core.Amplitude) -> Math.Core.SparseMaxel
+sigmaFreezeMaxel : Simplex.SigmaLinear.DynamicUniverse (Simplex.Core.Geometry, Simplex.Core.Amplitude) -> Simplex.Core.SparseMaxel
 sigmaFreezeMaxel (c ** m) = MkSparseMaxel (fromList (freezeLDep m))
 
 ||| Freezes a Geometry-only topological boundary into a legacy SparseMaxel.
 public export
-sigmaFreezeGeometryMaxel : Math.SigmaLinear.DynamicSparseMaxel -> Math.Core.SparseMaxel
+sigmaFreezeGeometryMaxel : Simplex.SigmaLinear.DynamicSparseMaxel -> Simplex.Core.SparseMaxel
 sigmaFreezeGeometryMaxel (c ** m) = 
   let geomList = freezeLDep m
       maxelList = map (\(g, count) => ((g, emptyAmplitude), count)) geomList
@@ -62,5 +62,5 @@ sigmaFreezeGeometryMaxel (c ** m) =
 
 ||| Freezes a Dynamic Substrate back into the legacy Substrate.
 public export
-sigmaFreezeChain : Math.SigmaLinear.DynamicSubstrate -> Math.Core.Substrate
+sigmaFreezeChain : Simplex.SigmaLinear.DynamicSubstrate -> Simplex.Core.Substrate
 sigmaFreezeChain (edges ** chain) = fromList (freezeLDep chain)

@@ -1,10 +1,10 @@
 module Physics.Elements.Composition
 
 import Math.Chromogeometry
-import Math.Core
+import Simplex.Core
 import Math.SpreadPolynumber
 import Physics.Elements.Element
-import Math.Twist
+import Simplex.Twist
 import Math.IntPolynumber
 import Physics.Evolution.State
 import Physics.Scales.NaturalFolding

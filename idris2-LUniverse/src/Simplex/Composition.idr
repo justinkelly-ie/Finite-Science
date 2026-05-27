@@ -1,7 +1,7 @@
-module Math.Composition
+module Simplex.Composition
 
-import public Math.Core
-import public Math.Twist
+import public Simplex.Core
+import public Simplex.Twist
 import public Math.Chromogeometry
 import public Math.Multiset
 import public Data.List

@@ -10,8 +10,8 @@ This document tracks formal verification tests run against the pure Idris 2 comp
 ```idris
 module Main
 
-import Math.Core
-import Math.SigmaLinear
+import Simplex.Core
+import Simplex.SigmaLinear
 import Physics.SigmaBridge
 import Math.Chromogeometry
 import Math.Multiset

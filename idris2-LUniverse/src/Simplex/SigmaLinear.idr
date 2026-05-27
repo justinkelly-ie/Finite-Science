@@ -1,6 +1,6 @@
-module Math.SigmaLinear
+module Simplex.SigmaLinear
 
-import Math.Core
+import Simplex.Core
 
 -----------------------------------------------------------------------
 -- PHASE 1: CORE FOUNDATIONAL TYPES (The Linear Dependent Multiset)
@@ -24,7 +24,7 @@ data LDepMultiset : (a : Type) -> (contents : List (a, Integer)) -> Type where
 ||| A Directed Edge (1-Simplex) pairing a source and target vertex coordinate.
 public export
 0 Edge : Type
-Edge = (Math.Core.Geometry, Math.Core.Geometry)
+Edge = (Simplex.Core.Geometry, Simplex.Core.Geometry)
 
 -----------------------------------------------------------------------
 -- TOPOLOGICAL ALIASES
@@ -32,8 +32,8 @@ Edge = (Math.Core.Geometry, Math.Core.Geometry)
 
 ||| The purely type-verified 0-Chain (replaces LCell0 logic)
 public export
-0 LDepSparseMaxel : (contents : List (Math.Core.Geometry, Integer)) -> Type
-LDepSparseMaxel contents = LDepMultiset Math.Core.Geometry contents
+0 LDepSparseMaxel : (contents : List (Simplex.Core.Geometry, Integer)) -> Type
+LDepSparseMaxel contents = LDepMultiset Simplex.Core.Geometry contents
 
 ||| The purely type-verified 1-Chain (replaces runtime multiset edges)
 public export
@@ -47,7 +47,7 @@ LDepSubstrate contents = LDepMultiset Edge contents
 ||| Computes the topological reduction of a Substrate boundary to a SparseMaxel boundary.
 ||| A directed edge (src, tgt) with count c adds `c` to tgt and subtracts `c` from src.
 public export
-computeBoundaryIndex : List (Edge, Integer) -> List (Math.Core.Geometry, Integer)
+computeBoundaryIndex : List (Edge, Integer) -> List (Simplex.Core.Geometry, Integer)
 computeBoundaryIndex [] = []
 computeBoundaryIndex (((src, tgt), count) :: xs) = 
   (tgt, count) :: (src, -count) :: computeBoundaryIndex xs
@@ -94,7 +94,7 @@ stepUniverse (LAddM item count prev) = LAddM item (count + 1) (stepUniverse prev
 ||| doesn't explode when the universe expands, while still formally proving execution.
 public export
 0 DynamicSparseMaxel : Type
-DynamicSparseMaxel = (c : List (Math.Core.Geometry, Integer) ** LDepSparseMaxel c)
+DynamicSparseMaxel = (c : List (Simplex.Core.Geometry, Integer) ** LDepSparseMaxel c)
 
 ||| The Dynamic Substrate.
 public export

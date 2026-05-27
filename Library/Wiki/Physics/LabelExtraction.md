@@ -2,7 +2,7 @@
 module Physics.LabelExtraction
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Gate
 import Physics.Common
 

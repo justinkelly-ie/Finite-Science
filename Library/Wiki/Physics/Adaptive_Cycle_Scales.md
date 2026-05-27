@@ -6,7 +6,7 @@ These tests verify the cosmological scales, ice geometry folding, and the 38-sca
 module Physics.Adaptive_Cycle_Scales
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Cycle
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate

@@ -1,6 +1,6 @@
 module Physics.Elements.Carbon
 
-import Math.Core
+import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
 import Physics.Evolution.Gate

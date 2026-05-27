@@ -1,10 +1,10 @@
 module Physics.Findings.DarkMatterFriction
 
-import Math.Core
+import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget
 import Physics.Findings.CosmicPartition
 
-import Math.Core
+import Simplex.Core
 import Math.Chromogeometry
 import Physics.Findings.CosmicEnergyBudget
 

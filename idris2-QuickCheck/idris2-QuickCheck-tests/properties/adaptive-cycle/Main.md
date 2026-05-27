@@ -11,7 +11,7 @@ as the pipeline evolves.
 module Main
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Physics.Evolution.Cycle
 import Physics.Evolution.Transform
 import Physics.Evolution.Gate

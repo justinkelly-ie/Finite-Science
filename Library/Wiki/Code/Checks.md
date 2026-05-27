@@ -1,6 +1,6 @@
 # Code Architecture Checks
 
-This matrix tracks the property-based verification of the underlying mathematical topology engines (`Math.Multiset` and `Math.Core`).
+This matrix tracks the property-based verification of the underlying mathematical topology engines (`Math.Multiset` and `Simplex.Core`).
 
 ### Core Properties
 * **Causal Aggregation**: Ensures that when causal graphs merge, no directed edges are lost or spuriously created.

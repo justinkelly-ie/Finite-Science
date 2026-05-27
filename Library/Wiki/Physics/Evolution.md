@@ -6,7 +6,7 @@ This module provides the rigorous QuickCheck proofs for the physics evolution en
 module Physics.Evolution
 
 import QuickCheck
-import Math.Core
+import Simplex.Core
 import Math.Multiset
 import Physics.Evolution.Cycle
 import Physics.Evolution.Clock

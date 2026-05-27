@@ -1,4 +1,4 @@
-module Physics.WeakForce
+module Physics.Laws.WeakForce
 
 import Physics.Evolution.State
 
