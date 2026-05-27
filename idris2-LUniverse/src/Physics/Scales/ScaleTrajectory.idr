@@ -1,6 +1,5 @@
 module Physics.Scales.ScaleTrajectory
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Elements.Water

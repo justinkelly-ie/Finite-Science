@@ -1,6 +1,5 @@
 module Physics.Findings.VacuumPairProduction
 
-import public Data.Linear.Ref1
 import Math.Core
 
 import Math.IntPolynumber

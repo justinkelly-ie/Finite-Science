@@ -1,6 +1,5 @@
 module Physics.Findings.CosmicEnergyBudget
 
-import public Data.Linear.Ref1
 import Physics.Findings.CosmicPartition
 
 import Math.SignedUnaryMultiset

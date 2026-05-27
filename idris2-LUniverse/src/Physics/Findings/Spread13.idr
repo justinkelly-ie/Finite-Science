@@ -1,6 +1,5 @@
 module Physics.Findings.Spread13
 
-import public Data.Linear.Ref1
 
 import Math.SpreadPolynumber
 import Math.IntPolynumber

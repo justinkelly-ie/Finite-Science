@@ -1,6 +1,5 @@
 module Physics.Findings.GravitationalTimeDilation
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Findings.CosmicEnergyBudget
 import Physics.Findings.CosmicPartition

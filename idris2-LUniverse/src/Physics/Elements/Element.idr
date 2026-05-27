@@ -1,6 +1,5 @@
 module Physics.Elements.Element
 
-import public Data.Linear.Ref1
 import Math.Core
 import Math.Multiset
 import Math.IntPolynumber

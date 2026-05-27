@@ -1,6 +1,5 @@
 module Physics.Laws.EnergyConservation
 
-import public Data.Linear.Ref1
 import Physics.Evolution.State
 
 import Physics.Evolution.State

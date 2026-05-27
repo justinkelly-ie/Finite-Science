@@ -1,6 +1,5 @@
 module Physics.Findings.Cosmology
 
-import public Data.Linear.Ref1
 import Physics.Evolution.Cycle
 import Physics.Findings.CosmicPartition
 import Physics.Evolution.State

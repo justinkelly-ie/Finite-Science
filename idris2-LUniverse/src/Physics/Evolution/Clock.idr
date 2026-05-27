@@ -1,6 +1,5 @@
 module Physics.Evolution.Clock
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Evolution.State
 

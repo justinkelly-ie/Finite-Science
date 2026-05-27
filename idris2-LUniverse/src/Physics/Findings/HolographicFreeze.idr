@@ -1,6 +1,5 @@
 module Physics.Findings.HolographicFreeze
 
-import public Data.Linear.Ref1
 import Physics.Findings.CosmicPartition
 import Physics.Findings.Baryogenesis
 import Physics.Evolution.State

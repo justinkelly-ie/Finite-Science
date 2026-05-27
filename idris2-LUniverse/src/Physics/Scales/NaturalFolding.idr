@@ -1,6 +1,5 @@
 module Physics.Scales.NaturalFolding
 
-import public Data.Linear.Ref1
 
 import Math.SpreadPolynumber
 

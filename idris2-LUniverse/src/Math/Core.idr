@@ -4,8 +4,6 @@ import public Math.Multiset
 import public Math.MaxelNL
 import public Math.IntPolynumber
 import public Math.Chromogeometry
-import public Math.Topology.Simplex
-import public Math.Topology.Chain
 import Data.List
 
 %default total
@@ -46,7 +44,7 @@ import Data.List
 |||   Green → ResidueState  (Background / Dark Matter dust after resonance collapse)
 public export
 0 Geometry : Type
-Geometry = Cell0
+Geometry = PixelNL Integer
 
 -----------------------------------------------------------------------
 -- 2. AMPLITUDE (The Quantum State Value)
@@ -105,7 +103,7 @@ emptyAmplitude = ZeroM
 ||| to the causal graph automatically.
 public export
 0 Substrate : Type
-Substrate = Chain1
+Substrate = Multiset (Geometry, Geometry)
 
 -----------------------------------------------------------------------
 -- 4. PIXEL-INT-POLY (The Quantum State Vector)

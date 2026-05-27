@@ -1,6 +1,5 @@
 module Physics.Laws.ColorConfinement
 
-import public Data.Linear.Ref1
 
 import Data.Linear
 

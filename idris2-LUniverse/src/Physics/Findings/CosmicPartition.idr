@@ -1,6 +1,5 @@
 module Physics.Findings.CosmicPartition
 
-import public Data.Linear.Ref1
 import Physics.Evolution.Gate
 import Physics.Evolution.State
 

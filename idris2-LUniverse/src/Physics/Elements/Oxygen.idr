@@ -1,6 +1,5 @@
 module Physics.Elements.Oxygen
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element

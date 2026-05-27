@@ -1,6 +1,5 @@
 module Physics.Particles.Baryon
 
-import public Data.Linear.Ref1
 import Physics.Particles.Quark
 import Physics.Laws.ColorConfinement
 import Physics.Evolution.State

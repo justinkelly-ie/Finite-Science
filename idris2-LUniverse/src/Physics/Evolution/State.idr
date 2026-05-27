@@ -1,6 +1,5 @@
 module Physics.Evolution.State
 
-import public Data.Linear.Ref1
 
 import public Math.UnaryMultiset
 import public Math.Polynumber
@@ -12,8 +11,7 @@ import public Math.Chromogeometry
 import public Math.Twist
 import public Math.Core
 import public Math.Composition
-import public Math.Topology.Chain
-import public Math.Topology.Simplex
+
 import public Data.List
 
 %default total
@@ -45,10 +43,10 @@ record CellState where
   ||| The current generation encoded as a Spread Polynomial.
   statePoly    : IntPolynumber
   ||| The underlying lattice topology (Support of the Maxel) embedding the 128+27 states.
-  ||| Note: This is explicitly a Chain0 (0-Chain of vertices/dust).
+  ||| Note: This is explicitly a Multiset Math.Core.Geometry (0-Chain of vertices/dust).
   ||| Because it lacks 1-Cell causal edges, this state is physically "frozen"
   ||| and possesses no relational time until it is bound to a Substrate graph.
-  maxelProjection : Chain0
+  maxelProjection : Multiset Math.Core.Geometry
   ||| The current unified Flavor configuration.
   flavor       : Flavor
 
@@ -66,7 +64,7 @@ Eq CellState where
 
 ||| Creates a foundational, unexcited (Background) CellState.
 public export
-primordialCellState : Chain0 -> CellState
+primordialCellState : Multiset Math.Core.Geometry -> CellState
 primordialCellState supp = MkCellState Z emptyIntPoly supp Background
 
 ||| Progresses the CellState to the N-th spread polynomial.
@@ -81,7 +79,7 @@ pivotFlavor newF (MkCellState gen p supp _) = MkCellState gen p supp newF
 
 ||| Extracts the primary topological pixel from a CellState.
 public export
-extractPixel : CellState -> Cell0
+extractPixel : CellState -> Math.Core.Geometry
 extractPixel state =
   case state.maxelProjection of
     ZeroM      => MkPixelNL 0 0

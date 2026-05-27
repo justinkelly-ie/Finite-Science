@@ -1,6 +1,5 @@
 module Physics.Particles.Quark
 
-import public Data.Linear.Ref1
 import Physics.Evolution.State
 
 import Physics.Evolution.State

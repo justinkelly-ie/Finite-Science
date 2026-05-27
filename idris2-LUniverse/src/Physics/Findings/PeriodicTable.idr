@@ -1,6 +1,5 @@
 module Physics.Findings.PeriodicTable
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Evolution.State
 import Physics.Evolution.Gate

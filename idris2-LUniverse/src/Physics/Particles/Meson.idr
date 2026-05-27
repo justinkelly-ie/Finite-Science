@@ -1,6 +1,5 @@
 module Physics.Particles.Meson
 
-import public Data.Linear.Ref1
 import Physics.Particles.Quark
 import Physics.Laws.ColorConfinement
 

@@ -1,6 +1,5 @@
 module Physics.Findings.HadronGluonDynamics
 
-import public Data.Linear.Ref1
 import Physics.Particles.Baryon
 
 import Physics.Particles.Baryon

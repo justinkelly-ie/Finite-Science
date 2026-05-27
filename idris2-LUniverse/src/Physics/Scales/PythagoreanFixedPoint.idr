@@ -1,6 +1,5 @@
 module Physics.Scales.PythagoreanFixedPoint
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Findings.PeriodicTable
 import Physics.Elements.Water

@@ -1,6 +1,5 @@
 module Physics.Findings.MassRatios
 
-import public Data.Linear.Ref1
 import Math.Core
 
 import Math.Core

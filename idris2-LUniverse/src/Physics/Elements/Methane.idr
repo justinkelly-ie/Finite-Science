@@ -1,6 +1,5 @@
 module Physics.Elements.Methane
 
-import public Data.Linear.Ref1
 import Physics.Elements.Hydrogen
 import Physics.Elements.Carbon
 import Math.Core

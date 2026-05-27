@@ -1,6 +1,5 @@
 module Physics.Elements.Water
 
-import public Data.Linear.Ref1
 import Physics.Elements.Hydrogen
 import Math.Core
 import Physics.Particles.Electron

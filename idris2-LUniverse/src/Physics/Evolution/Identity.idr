@@ -1,6 +1,5 @@
 module Physics.Evolution.Identity
 
-import public Data.Linear.Ref1
 import Math.Core
 import Physics.Findings.CosmicEnergyBudget
 

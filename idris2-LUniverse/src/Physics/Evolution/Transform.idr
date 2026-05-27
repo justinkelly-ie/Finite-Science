@@ -1,6 +1,5 @@
 module Physics.Evolution.Transform
 
-import public Data.Linear.Ref1
 import Math.Core
 import Math.Twist
 import Physics.Evolution.State
