@@ -3,11 +3,11 @@ module Physics.Elements.Oxygen
 import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
-import Physics.Evolution.Gate
+import Evolution.Gate
 
 import Simplex.Core
 import Physics.Particles.Electron
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Elements.Element
 
 import Math.Multiset

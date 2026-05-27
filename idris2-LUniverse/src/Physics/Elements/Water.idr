@@ -4,14 +4,14 @@ import Physics.Elements.Hydrogen
 import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Elements.Oxygen
 
 import Simplex.Core
 import Physics.Elements.Hydrogen
 import Physics.Elements.Oxygen
 import Physics.Particles.Electron
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Elements.Element
 
 import Math.Multiset

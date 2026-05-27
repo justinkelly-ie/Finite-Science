@@ -8,9 +8,9 @@ module Physics.Evolution
 import QuickCheck
 import Simplex.Core
 import Math.Multiset
-import Physics.Evolution.Cycle
-import Physics.Evolution.Clock
-import Physics.Evolution.Transform
+import Evolution.Cycle
+import Evolution.Clock
+import Evolution.Transform
 import Physics.Common
 
 %default total

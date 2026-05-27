@@ -52,10 +52,10 @@ Physics/
 |---|---|---|
 | `FiberBundle` | `Multiset (Geometry, Amplitude)` | `Physics.Core` |
 | `SpacetimeManifold` / `Maxel` | `Substrate` = `Multiset (Geometry, Geometry)` | `Physics.Core` |
-| `ScaleLevel n` | `data ScaleLevel : (scaleLevel : Nat) -> Type` | `Physics.Evolution.Transform` |
-| `BaseScale` | `ScaleLevel 0` constructor | `Physics.Evolution.Transform` |
-| `AscendedScale` | `ScaleLevel (S n)` constructor (requires `CanAscend` proof) | `Physics.Evolution.Transform` |
-| `PersistentIdentity` | The [J,J] diagonal at a ScaleOrder | `Physics.Evolution.Identity` |
+| `ScaleLevel n` | `data ScaleLevel : (scaleLevel : Nat) -> Type` | `Evolution.Transform` |
+| `BaseScale` | `ScaleLevel 0` constructor | `Evolution.Transform` |
+| `AscendedScale` | `ScaleLevel (S n)` constructor (requires `CanAscend` proof) | `Evolution.Transform` |
+| `PersistentIdentity` | The [J,J] diagonal at a ScaleOrder | `Evolution.Identity` |
 | `Ontogeny` | Alias for `PersistentIdentity` in phylogenetic context | `Physics.Scales.Phylogeny` |
 | `LineageNode` | Identity + linear Substrate + lag | `Physics.Scales.Phylogeny` |
 
@@ -73,7 +73,7 @@ Physics/
 
 A system "levels up" if and only if `buildAscensionCapacities` constructs a `CanAscend` proof.
 
-**Status: ✅ COMPILED** — `Physics.Evolution.Transform`
+**Status: ✅ COMPILED** — `Evolution.Transform`
 
 ---
 
@@ -92,7 +92,7 @@ Ascension Condition = f( residueLag, ancestralContext, twistCapacity )
 3. **twistCapacity** — Chromogeometric A(Q) = T(s) structural lock
    → `computeTwist geom` using `isStructuralLock` from `Math.Chromogeometry`
 
-**Status: ✅ COMPILED** — `Physics.Evolution.Transform.AscensionCapacities`
+**Status: ✅ COMPILED** — `Evolution.Transform.AscensionCapacities`
 
 ---
 

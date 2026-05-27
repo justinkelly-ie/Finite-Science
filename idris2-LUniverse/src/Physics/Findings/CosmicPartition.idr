@@ -1,11 +1,11 @@
 module Physics.Findings.CosmicPartition
 
-import Physics.Evolution.Gate
-import Physics.Evolution.State
+import Evolution.Gate
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Math.Fraction
 import Math.Multiset
 import Math.Polynumber

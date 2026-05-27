@@ -6,7 +6,7 @@ This test script iterates across the complete 137-scale hierarchy of the `LUnive
 module Physics.Ascension_Probe
 
 import Simplex.Core
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Scales.ScaleTrajectory
 

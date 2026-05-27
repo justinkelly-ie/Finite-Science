@@ -41,7 +41,7 @@ The high-performance Run-Length Encoded list that powers the entire engine. Ever
 * **Aliases / Historical Names**: `DenseAMSet`.
 
 ### `CellState`
-When the `Physics.Evolution` engine runs a tick, it bundles a single point in space (`Cell0`) with its `SparseMaxel` state and generation depth.
+When the `Evolution` engine runs a tick, it bundles a single point in space (`Cell0`) with its `SparseMaxel` state and generation depth.
 * **Aliases / Historical Names**: `DarkPlusMatter`. It was previously named `DarkPlusMatter` because it represented the complete state (both visible matter and latent dark energy fractions).
 
 ### `Flavor`

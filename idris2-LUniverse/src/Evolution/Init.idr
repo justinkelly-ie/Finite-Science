@@ -1,13 +1,13 @@
-module Physics.Evolution.Init
+module Evolution.Init
 
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 import Simplex.Core
 
 import Math.Multiset
 import Math.Chromogeometry
 import Math.IntPolynumber
 import Simplex.Core
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 
 %default total
 

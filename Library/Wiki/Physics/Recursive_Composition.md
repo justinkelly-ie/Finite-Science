@@ -36,12 +36,12 @@ When an event (Polynomial) evaluates a state:
 ---
 
 ## The Adaptive Cycle as Polynomial Geometry
-The Adaptive Cycle (`adaptiveCycle` in `Physics.Evolution.Gate`) is the geometric curve of the spread polynomial itself:
+The Adaptive Cycle (`adaptiveCycle` in `Evolution.Gate`) is the geometric curve of the spread polynomial itself:
 * **Expansion:** The algebraic climb of the polynomial (gates n=2, 3, 4).
 * **Saturation:** The peak of the polynomial where it hits integer lock (gates n=5, 7).
 * **Collapse:** The fractional overflow breaking linearity (gates n=11, 13).
 
-After all 7 gates, `buildAscensionCapacities` in `Physics.Evolution.Transform` constructs either a `CanAscend` proof (→ `ScaleLevel (S n)`) or returns `Nothing` (→ decoherence).
+After all 7 gates, `buildAscensionCapacities` in `Evolution.Transform` constructs either a `CanAscend` proof (→ `ScaleLevel (S n)`) or returns `Nothing` (→ decoherence).
 
 **Cosmological Epochs** are not measures of time. They are strictly the composed bounds of $S_{137}(S_{previous}(s))$. Universal expansion is simply the universal scale computing the next order of the recursive composition.
 

@@ -1,4 +1,4 @@
-module Physics.Evolution.Identity
+module Evolution.Identity
 
 import Simplex.Core
 import Physics.Findings.CosmicEnergyBudget

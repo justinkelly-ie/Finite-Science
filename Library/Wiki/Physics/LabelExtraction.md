@@ -3,7 +3,7 @@ module Physics.LabelExtraction
 
 import QuickCheck
 import Simplex.Core
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Common
 
 %default total

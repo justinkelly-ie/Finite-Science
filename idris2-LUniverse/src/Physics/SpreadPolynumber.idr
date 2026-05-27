@@ -5,9 +5,9 @@ import Math.IntPolynumber
 import Math.Chromogeometry
 import Simplex.Core
 import Simplex.Twist
-import Physics.Evolution.State
-import Physics.Evolution.Transform
-import Physics.Evolution.Gate
+import Evolution.State
+import Evolution.Transform
+import Evolution.Gate
 
 
 ||| Restored Bridge Function: Converts the direct chromogeometric curvature 

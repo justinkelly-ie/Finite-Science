@@ -1,8 +1,8 @@
 module Physics.Laws.PauliExclusion
 
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 
 import Math.Multiset
 import Math.Polynumber

@@ -3,10 +3,10 @@ module Physics.Scales.IceGeometry
 import Simplex.Core
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Elements.Water
-import Physics.Evolution.Gate
+import Evolution.Gate
 
 import Simplex.Core
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Elements.Water
 import Physics.Scales.PythagoreanFixedPoint
 

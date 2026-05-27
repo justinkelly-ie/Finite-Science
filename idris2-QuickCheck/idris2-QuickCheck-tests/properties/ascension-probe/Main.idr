@@ -1,7 +1,7 @@
 module Main
 
 import Simplex.Core
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Scales.ScaleTrajectory
 

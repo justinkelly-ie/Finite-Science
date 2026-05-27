@@ -3,10 +3,10 @@ module Physics.Common
 
 import QuickCheck
 import Simplex.Core
-import Physics.Evolution.State
-import Physics.Evolution.Cycle
-import Physics.Evolution.Init
-import Physics.Evolution.Gate
+import Evolution.State
+import Evolution.Cycle
+import Evolution.Init
+import Evolution.Gate
 
 import Physics.Findings.CosmicPartition
 

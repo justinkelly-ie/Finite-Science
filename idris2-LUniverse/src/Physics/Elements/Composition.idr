@@ -6,10 +6,10 @@ import Math.SpreadPolynumber
 import Physics.Elements.Element
 import Simplex.Twist
 import Math.IntPolynumber
-import Physics.Evolution.State
+import Evolution.State
 import Physics.Scales.NaturalFolding
 import Data.List
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Math.Multiset
 
 %default total

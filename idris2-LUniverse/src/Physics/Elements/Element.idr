@@ -4,9 +4,9 @@ import Simplex.Core
 import Math.Multiset
 import Math.IntPolynumber
 import Math.SpreadPolynumber
-import Physics.Evolution.State
-import Physics.Evolution.Gate
-import Physics.Evolution.Transform
+import Evolution.State
+import Evolution.Gate
+import Evolution.Transform
 
 %default total
 

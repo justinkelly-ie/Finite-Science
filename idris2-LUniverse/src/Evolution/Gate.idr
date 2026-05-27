@@ -1,4 +1,4 @@
-module Physics.Evolution.Gate
+module Evolution.Gate
 
 import Simplex.Core
 
@@ -11,7 +11,7 @@ import Simplex.Core
 ||| transitions through the 137-Grid.
 |||
 ||| STRUCTURAL DISCOVERY: The six gates map directly onto the 5 phases of the
-||| universal Adaptive Cycle (see Physics.Evolution.Transition):
+||| universal Adaptive Cycle (see Evolution.Transition):
 |||
 |||   Gate n=2  (BackgroundGate) → Phase 1: UNFOLDING
 |||     The first binary bit flips. Primordial vacuum potential unfolds into

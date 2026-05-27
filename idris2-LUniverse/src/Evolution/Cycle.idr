@@ -1,13 +1,13 @@
-module Physics.Evolution.Cycle
+module Evolution.Cycle
 
-import Physics.Evolution.Clock
-import Physics.Evolution.Gate
-import Physics.Evolution.Transform
+import Evolution.Clock
+import Evolution.Gate
+import Evolution.Transform
 
-import Physics.Evolution.State
-import Physics.Evolution.Gate
-import Physics.Evolution.Transform
-import Physics.Evolution.Clock
+import Evolution.State
+import Evolution.Gate
+import Evolution.Transform
+import Evolution.Clock
 import Simplex.Core
 import Physics.SpreadPolynumber
 

@@ -1,9 +1,9 @@
-module Physics.Evolution.Clock
+module Evolution.Clock
 
 import Simplex.Core
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 import Simplex.Core
 
 import Math.Multiset

@@ -7,10 +7,10 @@ module Physics.Adaptive_Cycle_Scales
 
 import QuickCheck
 import Simplex.Core
-import Physics.Evolution.Cycle
-import Physics.Evolution.Transform
-import Physics.Evolution.Gate
-import Physics.Evolution.Clock
+import Evolution.Cycle
+import Evolution.Transform
+import Evolution.Gate
+import Evolution.Clock
 import Physics.Scales.PythagoreanFixedPoint
 import Physics.Scales.ScaleTrajectory
 import Physics.Scales.IceGeometry

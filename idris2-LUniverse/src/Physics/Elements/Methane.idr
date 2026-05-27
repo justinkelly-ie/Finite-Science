@@ -5,7 +5,7 @@ import Physics.Elements.Carbon
 import Simplex.Core
 import Physics.Particles.Electron
 import Physics.Elements.Element
-import Physics.Evolution.Gate
+import Evolution.Gate
 
 import Math.Multiset
 import Math.IntPolynumber

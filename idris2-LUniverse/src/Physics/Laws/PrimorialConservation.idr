@@ -1,8 +1,8 @@
 module Physics.Laws.PrimorialConservation
 
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 
 import Data.List
 import Data.Linear

@@ -1,13 +1,13 @@
 module Physics.Findings.Baryogenesis
 
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 import Physics.Findings.CosmicPartition
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 
 import Math.SpreadPolynumber
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 import Physics.Findings.CosmicPartition
 
 %default total

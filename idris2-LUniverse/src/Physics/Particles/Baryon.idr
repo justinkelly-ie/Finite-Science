@@ -2,9 +2,9 @@ module Physics.Particles.Baryon
 
 import Physics.Particles.Quark
 import Physics.Laws.ColorConfinement
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 
 import Math.Polynumber
 import Physics.Particles.Quark

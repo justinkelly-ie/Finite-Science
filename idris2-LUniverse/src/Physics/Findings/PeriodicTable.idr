@@ -1,13 +1,13 @@
 module Physics.Findings.PeriodicTable
 
 import Simplex.Core
-import Physics.Evolution.State
-import Physics.Evolution.Gate
-import Physics.Evolution.Transform
+import Evolution.State
+import Evolution.Gate
+import Evolution.Transform
 
-import Physics.Evolution.State
-import Physics.Evolution.Transform
-import Physics.Evolution.Gate
+import Evolution.State
+import Evolution.Transform
+import Evolution.Gate
 
 import Simplex.Core
 import Math.Multiset

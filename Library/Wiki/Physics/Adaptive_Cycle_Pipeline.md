@@ -9,10 +9,10 @@ module Physics.Adaptive_Cycle_Pipeline
 
 import QuickCheck
 import Simplex.Core
-import Physics.Evolution.Cycle
-import Physics.Evolution.Transform
-import Physics.Evolution.Gate
-import Physics.Evolution.Clock
+import Evolution.Cycle
+import Evolution.Transform
+import Evolution.Gate
+import Evolution.Clock
 import Math.Multiset
 import Math.IntPolynumber
 import Math.SpreadPolynumber

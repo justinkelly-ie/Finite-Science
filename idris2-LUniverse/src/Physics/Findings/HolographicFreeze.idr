@@ -2,12 +2,12 @@ module Physics.Findings.HolographicFreeze
 
 import Physics.Findings.CosmicPartition
 import Physics.Findings.Baryogenesis
-import Physics.Evolution.State
-import Physics.Evolution.Cycle
+import Evolution.State
+import Evolution.Cycle
 
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 import Physics.Findings.Baryogenesis
 import Physics.Findings.CosmicPartition
 

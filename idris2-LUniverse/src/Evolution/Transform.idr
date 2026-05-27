@@ -1,10 +1,10 @@
-module Physics.Evolution.Transform
+module Evolution.Transform
 
 import Simplex.Core
 import Simplex.Twist
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 import Simplex.Core
 import Simplex.Twist
 import Math.Chromogeometry

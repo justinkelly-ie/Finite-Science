@@ -1,12 +1,12 @@
 module Physics.Findings.Cosmology
 
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 import Physics.Findings.CosmicPartition
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.Cycle
+import Evolution.Cycle
 import Physics.Findings.CosmicPartition
 
 %default total

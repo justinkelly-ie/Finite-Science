@@ -3,9 +3,9 @@ module Physics.EpochInjection
 
 import QuickCheck
 import Simplex.Core
-import Physics.Evolution.Gate
-import Physics.Evolution.Init
-import Physics.Evolution.Cycle
+import Evolution.Gate
+import Evolution.Init
+import Evolution.Cycle
 import Physics.Common
 import Physics.DimensionalCausality
 

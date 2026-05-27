@@ -1,8 +1,8 @@
 module Physics.Laws.WeakForce
 
-import Physics.Evolution.State
+import Evolution.State
 
-import Physics.Evolution.Gate
+import Evolution.Gate
 import Physics.Particles.Quark
 import Physics.Particles.Bond
 import Physics.Particles.Electron

@@ -195,11 +195,11 @@ stepUniverseLocalized : Integer -> Metric -> Substrate -> SparseMaxel -> (Substr
 
 ---
 
-## Layer 8: Cosmological Evolution (`Physics.Evolution`)
+## Layer 8: Cosmological Evolution (`Evolution`)
 
 The temporal engine orchestrates the phase transitions across scales.
 
-### `Physics.Evolution.State`
+### `Evolution.State`
 ```idris
 0 Flavor : Type
 
@@ -207,7 +207,7 @@ The temporal engine orchestrates the phase transitions across scales.
 0 CellState : Type
 ```
 
-### `Physics.Evolution.Transform` & `Gate`
+### `Evolution.Transform` & `Gate`
 Coordinate partition and resonance logic applied globally across the state vector during a clock tick.
 
 ```idris
