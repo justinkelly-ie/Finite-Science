@@ -1,5 +1,5 @@
 ```idris
-module Maths.Properties
+module Simplex.Properties
 
 import QuickCheck
 import Simplex.Core

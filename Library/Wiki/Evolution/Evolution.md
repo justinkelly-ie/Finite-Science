@@ -2,8 +2,36 @@
 
 This module provides the rigorous QuickCheck proofs for the physics evolution engine, specifically focusing on the phase transitions (Scale Ascensions).
 
+## The Adaptive Cycle & Spread Polynomial
+
+The Evolution engine is purely driven by the recursive convolution of spread polynomials across a 7-gate phase sequence. The structural density of the state itself dictates the degree of the polynomial expansion.
+
+```mermaid
+graph TD
+    %% Base Polynomial Input
+    P0["Base State P(s)"] --> |"Structural Density"| S["Spread Polynomial S_n(s)"]
+    
+    subgraph "The Adaptive Cycle (7 Gates)"
+        S --> G2["n=2: BackgroundGate<br/>(Phase 1: Unfolding)"]
+        G2 --> G3["n=3: MatterGate<br/>(Phase 2: Expansion)"]
+        G3 --> G4["n=4: BondGate<br/>(Phase 2b: Molecular Bonding)"]
+        G4 --> G5["n=5: ChargeGate<br/>(Phase 3a: Charge Saturation)"]
+        G5 --> G7["n=7: TimeGate<br/>(Phase 3b: Time Saturation)"]
+        G7 --> G11["n=11: WeakForceGate<br/>(Phase 4: Arithmetic Collapse)"]
+        G11 --> G13["n=13: ResonanceGate<br/>(Phase 5: Shatter / Residue)"]
+    end
+    
+    %% Output and Ascension
+    G13 --> |"Residue Capacity"| Ascend{"Ascension Check"}
+    Ascend -->|"CanAscend Proof"| Macro["Macro-Node<br/>Scale N+1"]
+    Ascend -->|"Decoherence"| Return["Latent Residue<br/>(Seeds Next Cycle)"]
+    
+    Macro -.-> |"Recursive Iteration"| P0
+```
+
+
 ```idris
-module Physics.Evolution
+module Evolution.Evolution
 
 import QuickCheck
 import Simplex.Core

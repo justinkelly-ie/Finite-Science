@@ -3,7 +3,7 @@
 These tests verify the chromogeometric structure of the $H_2O$ molecule and the Pythagorean fixed point underlying chemical stability.
 
 ```idris
-module Physics.Adaptive_Cycle_Chemistry
+module Evolution.Adaptive_Cycle_Chemistry
 
 import QuickCheck
 import Simplex.Core

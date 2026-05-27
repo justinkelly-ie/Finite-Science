@@ -7,16 +7,16 @@ import Physics.DimensionalCausality
 import Physics.EpochInjection
 import Physics.CosmologicalScaling
 import Physics.Elements
-import Maths.Properties
-import Physics.Evolution
+import Simplex.Properties
+import Evolution.Evolution
 -- New tests
 import Code.Engine_Verification
 import Physics.Double_Slit_Interference
 import Physics.Ascension_Probe
-import Physics.Adaptive_Cycle_Pipeline
-import Physics.Adaptive_Cycle_Findings
-import Physics.Adaptive_Cycle_Chemistry
-import Physics.Adaptive_Cycle_Scales
+import Evolution.Adaptive_Cycle_Pipeline
+import Evolution.Adaptive_Cycle_Findings
+import Evolution.Adaptive_Cycle_Chemistry
+import Evolution.Adaptive_Cycle_Scales
 
 import System.File
 import Data.String
@@ -148,13 +148,13 @@ main = do
   Physics.Ascension_Probe.main
   
   putStrLn "\n--- Adaptive Cycle: Pipeline ---"
-  Physics.Adaptive_Cycle_Pipeline.main
+  Evolution.Adaptive_Cycle_Pipeline.main
   
   putStrLn "\n--- Adaptive Cycle: Findings ---"
-  Physics.Adaptive_Cycle_Findings.main
+  Evolution.Adaptive_Cycle_Findings.main
   
   putStrLn "\n--- Adaptive Cycle: Chemistry ---"
-  Physics.Adaptive_Cycle_Chemistry.main
+  Evolution.Adaptive_Cycle_Chemistry.main
   
   putStrLn "\n--- Adaptive Cycle: Scales ---"
-  Physics.Adaptive_Cycle_Scales.main
+  Evolution.Adaptive_Cycle_Scales.main

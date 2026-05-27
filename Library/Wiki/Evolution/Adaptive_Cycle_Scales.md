@@ -3,7 +3,7 @@
 These tests verify the cosmological scales, ice geometry folding, and the 38-scale Eddington hypothesis.
 
 ```idris
-module Physics.Adaptive_Cycle_Scales
+module Evolution.Adaptive_Cycle_Scales
 
 import QuickCheck
 import Simplex.Core

@@ -5,7 +5,7 @@ It ensures the empirical outputs (Cosmic Budget, Fine Structure Constant, Feynma
 natively emerge from the underlying primorial grid limits.
 
 ```idris
-module Physics.Adaptive_Cycle_Findings
+module Evolution.Adaptive_Cycle_Findings
 
 import QuickCheck
 import Simplex.Core

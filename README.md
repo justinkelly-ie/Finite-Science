@@ -183,14 +183,16 @@ Life is formalized as a linear wrapper that preserves geometric integrity. Biolo
 ```
 Linear-Physics/
 ├── idris2-LUniverse/           ← The physics engine (46 modules)
-│   ├── src/Math/
-│   │   ├── SigmaLinear.idr         ← Linear Dependent Multisets, Dynamic DPairs
-│   ├── src/Physics/
+│   ├── src/Simplex/            ← Topological stage (5 modules)
 │   │   ├── Core.idr                ← Substrate, Geometry, type aliases
+│   │   ├── SigmaLinear.idr         ← Linear Dependent Multisets, Dynamic DPairs
+│   ├── src/Evolution/          ← The universal engine (7 modules)
+│   │   ├── Gate.idr                ← Adaptive cycle phases
+│   │   ├── Cycle.idr               ← The loop
+│   ├── src/Physics/            ← The emergent properties
 │   │   ├── SigmaBridge.idr         ← Sigma-Linear Execution Engine Bridge
-│   │   ├── Evolution/              ← Gate, Cycle, Clock, Transform, Identity (7 modules)
 │   │   ├── Particles/              ← Photon, Quark, Baryon, Electron, etc. (8 modules)
-│   │   ├── Laws/                   ← Conservation laws (4 modules)
+│   │   ├── Laws/                   ← Conservation laws (5 modules)
 │   │   ├── Findings/               ← Derived physics (16 modules)
 │   │   ├── Scales/                 ← Scale transitions (5 modules)
 │   │   │   ├── Phylogeny.idr           Fork/merge lineage tree
@@ -238,7 +240,7 @@ The physics mapping and derivation in this project are massive. If you are a phy
 *   ✅ **[Verification Matrix](Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
 *   ⚛️ **[Primorial Particle Mapping](Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
 *   🔄 **[Recursive Multiset Composition](Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
-*   🧮 **[Mathematical Type Architecture](Library/Wiki/Maths/Types.md)** — How every physical concept is one parameterised Multiset
+*   🧮 **[Mathematical Type Architecture](Library/Wiki/Simplex/Types.md)** — How every physical concept is one parameterised Multiset
 
 ---
 

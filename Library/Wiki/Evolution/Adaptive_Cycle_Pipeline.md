@@ -5,7 +5,7 @@ This test verifies that the full quantum gate pipeline ($n=2 \to n=3 \to n=4 \to
 correctly partitions, shatters, and evaluates the ascension/decoherence decision.
 
 ```idris
-module Physics.Adaptive_Cycle_Pipeline
+module Evolution.Adaptive_Cycle_Pipeline
 
 import QuickCheck
 import Simplex.Core
