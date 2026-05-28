@@ -17,6 +17,7 @@ import Evolution.Adaptive_Cycle_Pipeline
 import Evolution.Adaptive_Cycle_Findings
 import Evolution.Adaptive_Cycle_Chemistry
 import Evolution.Adaptive_Cycle_Scales
+import Maths.LinearBridgeProperties
 
 import System.File
 import Data.String
@@ -80,6 +81,12 @@ main = do
   putStrLn "Running Test 14: Empty Vacuum Synchronisation"
   let res14 = quickCheck prop_emptyVacuumSynchronised
 
+  putStrLn "Running Test 15: QTT SigmaBridge Round-Trip"
+  let res15 = quickCheck prop_sigmaBridgeRoundTrip
+
+  putStrLn "Running Test 16: Radiation Timelessness Proof"
+  let res16 = quickCheck prop_radiationTimelessnessProof
+
   let tableStr = markdownTable [
         ("Label Extraction", "Verifies that UniverseState can be serialized to a non-empty string label for topological graphing.", res1),
         ("Strict Causality", "Ensures that the directed causal graph (Substrate) maintains strictly monotonic time ordering with no cycles.", res2),
@@ -115,7 +122,9 @@ main = do
   let codeTableStr = markdownTable [
         ("Substrate Merge Lag Aggregation", "Verifies that merging two causal substrates strictly aggregates their Leibniz lag (causal density).", res12),
         ("SparseMaxel Superposition Lag Preservation", "Verifies that superposing two SparseMaxels perfectly preserves the total state lag (Quantum Probability / Mass).", res13),
-        ("Empty Vacuum Synchronisation", "Verifies that an empty Substrate and an empty SparseMaxel are always topologically synchronised.", res14)
+        ("Empty Vacuum Synchronisation", "Verifies that an empty Substrate and an empty SparseMaxel are always topologically synchronised.", res14),
+        ("QTT SigmaBridge Round-Trip", "Verifies that melting a state vector into a linear dependent multiset and freezing it back preserves the exact physical identity.", res15),
+        ("Radiation Timelessness Proof", "Verifies that a pure Radiation ensemble has exactly zero temporal lag in the Minkowski metric, proving photon timelessness.", res16)
       ]
       
   let codePreamble = unlines [

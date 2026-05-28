@@ -1,7 +1,7 @@
-[custom.all.Linear-Physics]
+[custom.all.Nat-Science]
 type = "local"
 path = "."
-ipkg = "Linear-Physics.ipkg"
+ipkg = "Nat-Science.ipkg"
 
 [custom.all.idris2-LUniverse]
 type = "local"
@@ -11,14 +11,14 @@ ipkg = "idris2-LUniverse.ipkg"
 
 [custom.all.idris2-chromogeometry]
 type = "local"
-path = "idris2-chromogeometry"
+path = "../idris2-chromogeometry"
 ipkg = "idris2-chromogeometry.ipkg"
 
 
 
 [custom.all.idris2-Multiset]
 type = "local"
-path = "idris2-Multiset"
+path = "../idris2-Multiset"
 ipkg = "idris2-Multiset.ipkg"
 
 [custom.all.idris2-ref1]
@@ -28,5 +28,5 @@ ipkg = "ref1.ipkg"
 
 [custom.all.idris2-QuickCheck]
 type = "local"
-path = "idris2-QuickCheck"
+path = "../idris2-QuickCheck"
 ipkg = "idris2-QuickCheck.ipkg"

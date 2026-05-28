@@ -1,10 +1,10 @@
 module Evolution.Identity
 
 import Simplex.Core
-import Physics.Findings.CosmicEnergyBudget
+import Physics.Analysis.CosmicEnergyBudget
 
 import Simplex.Core
-import Physics.Findings.CosmicEnergyBudget
+import Physics.Analysis.CosmicEnergyBudget
 
 %default total
 

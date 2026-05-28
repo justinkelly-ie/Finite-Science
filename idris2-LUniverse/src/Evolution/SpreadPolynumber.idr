@@ -61,7 +61,7 @@ stepUniverseLocalized capacityLimit metric currentSubstrate stateVector =
                             let localPropagator = generateLocalSpreadPoly metric currentSubstrate geom
                                 fusedAmplitude  = scaleMultiset stateCount (mulIntPoly amp localPropagator)
                             in ((geom, fusedAmplitude), stateCount))
-                          (multisetToList stateVector.maxelMap)
+                          (multisetToList stateVector)
       
       -- 2. Execute partition and resonance over the uniform coordinate pixels
       processedItems = concatMap (\((geom, amp), stateCount) =>
@@ -69,4 +69,4 @@ stepUniverseLocalized capacityLimit metric currentSubstrate stateVector =
                                        stabilizedVisible = evaluateResonance capacityLimit 13 geom visibleSpace
                                    in multisetToList (addMultiset latentSpace stabilizedVisible))
                                  evolvedStates
-  in (currentSubstrate, MkSparseMaxel (fromList processedItems))
+  in (currentSubstrate, fromList processedItems)

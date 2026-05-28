@@ -1,6 +1,6 @@
 # The Simplicial Architecture of the UniverseState
 
-In Linear Physics, the entire topological and quantum state of the universe is modeled as a **Weighted Simplicial Complex**. By breaking down the core data structures in `Simplex.Core`, we can map the exact Idris 2 types to their topological equivalents.
+In Linear Physics, the entire topological and quantum state of the universe is modelled as a **Weighted Simplicial Complex**. By breaking down the core data structures in `Simplex.Core`, we can map the exact Idris 2 types to their topological equivalents.
 
 ## The Core Types as Simplices
 

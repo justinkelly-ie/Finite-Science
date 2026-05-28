@@ -50,7 +50,7 @@ Calculates the total inner polynomial mass (sum of all coefficients) of a state 
 
 ```idris
 totalPolyLag : SparseMaxel -> Integer
-totalPolyLag (MkSparseMaxel m) = 
+totalPolyLag m = 
   foldl (\acc, ((_, poly), count) => acc + count * multiplicityAll poly) 0 (multisetToList m)
 ```
 
@@ -63,9 +63,9 @@ public export
 prop_ascensionConservesMass : Property
 prop_ascensionConservesMass = forAll genUniverseStateWithDepth (MkFn (\(depth, u) => 
   let targetNode = MkPixel 0 0
-      ascendedField = ascendScale targetNode u.stateVector.maxelMap
+      ascendedField = ascendScale targetNode u.stateVector
       originalMass = totalPolyLag u.stateVector
-      ascendedMass = totalPolyLag (MkSparseMaxel ascendedField)
+      ascendedMass = totalPolyLag ascendedField
   in property (originalMass == ascendedMass)))
 ```
 

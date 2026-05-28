@@ -19,7 +19,7 @@ buildLDep ((item, count) :: rest) = LAddM item count (buildLDep rest)
 ||| This takes the raw non-linear field and locks it into the DPair wrapper.
 public export
 sigmaMeltMaxel : Simplex.Core.SparseMaxel -> Simplex.SigmaLinear.DynamicUniverse (Simplex.Core.Geometry, Simplex.Core.Amplitude)
-sigmaMeltMaxel (MkSparseMaxel mset) = 
+sigmaMeltMaxel mset = 
   let c = multisetToList mset
   in (c ** buildLDep c)
 
@@ -50,7 +50,7 @@ freezeLDep m = freezeLDepAcc [] m
 ||| This allows the visualizer to render the output cleanly.
 public export
 sigmaFreezeMaxel : Simplex.SigmaLinear.DynamicUniverse (Simplex.Core.Geometry, Simplex.Core.Amplitude) -> Simplex.Core.SparseMaxel
-sigmaFreezeMaxel (c ** m) = MkSparseMaxel (fromList (freezeLDep m))
+sigmaFreezeMaxel (c ** m) = fromList (freezeLDep m)
 
 ||| Freezes a Geometry-only topological boundary into a legacy SparseMaxel.
 public export
@@ -58,7 +58,7 @@ sigmaFreezeGeometryMaxel : Simplex.SigmaLinear.DynamicSparseMaxel -> Simplex.Cor
 sigmaFreezeGeometryMaxel (c ** m) = 
   let geomList = freezeLDep m
       maxelList = map (\(g, count) => ((g, emptyAmplitude), count)) geomList
-  in MkSparseMaxel (fromList maxelList)
+  in fromList maxelList
 
 ||| Freezes a Dynamic Substrate back into the legacy Substrate.
 public export

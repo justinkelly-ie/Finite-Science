@@ -14,3 +14,5 @@ This matrix tracks the property-based verification of the underlying mathematica
 | Substrate Merge Lag Aggregation | Verifies that merging two causal substrates strictly aggregates their Leibniz lag (causal density). | ✅ PASS | OK, passed 100 tests . |
 | SparseMaxel Superposition Lag Preservation | Verifies that superposing two SparseMaxels perfectly preserves the total state lag (Quantum Probability / Mass). | ✅ PASS | OK, passed 100 tests . |
 | Empty Vacuum Synchronisation | Verifies that an empty Substrate and an empty SparseMaxel are always topologically synchronised. | ✅ PASS | OK, passed 100 tests . |
+| QTT SigmaBridge Round-Trip | Verifies that melting a state vector into a linear dependent multiset and freezing it back preserves the exact physical identity. | ✅ PASS | OK, passed 100 tests . |
+| Radiation Timelessness Proof | Verifies that a pure Radiation ensemble has exactly zero temporal lag in the Minkowski metric, proving photon timelessness. | ✅ PASS | OK, passed 100 tests . |

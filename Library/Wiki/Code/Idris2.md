@@ -25,7 +25,7 @@ main = do
   let amp = emptyAmplitude
   
   -- Create a SparseMaxel with count 5
-  let initialMaxel = MkSparseMaxel (AddM (geom, amp) 5 ZeroM)
+  let initialMaxel = AddM (geom, amp) 5 ZeroM
   
   putStrLn "1. Raw non-linear SparseMaxel constructed (Count = 5)."
   
@@ -42,7 +42,7 @@ main = do
   putStrLn "4. Frozen back to legacy SparseMaxel."
   
   -- Check conservation / result
-  let newCounts = multisetToList (maxelMap frozenMaxel)
+  let newCounts = multisetToList frozenMaxel
   case newCounts of
     (((g, a), c) :: _) => 
       if c == 6 

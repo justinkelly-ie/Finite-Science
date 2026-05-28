@@ -21,18 +21,18 @@ CompositeState = SparseMaxel
 ||| Translates a CompositeState's coordinates by a displacement vector.
 public export
 translateState : Pixel Integer -> CompositeState -> CompositeState
-translateState (MkPixel dx dy) (MkSparseMaxel m) =
+translateState (MkPixel dx dy) m =
   let stateItems = multisetToList m
       translatedState = map (\((MkPixel x y, amp), count) => 
                               ((MkPixel (x + dx) (y + dy), amp), count)
                             ) stateItems
-  in MkSparseMaxel (fromList translatedState)
+  in fromList translatedState
 
 ||| Computes the composite rational spread of the active coordinates in the state,
 ||| which directly determines the structural folding locks at higher scales.
 public export
 computeStateSpread : Metric -> CompositeState -> (Integer, Integer)
-computeStateSpread metric (MkSparseMaxel m) =
+computeStateSpread metric m =
   let coords = map (fst . fst) (multisetToList m)
       -- Keep only unique coordinates (active nodes)
       uniqueCoords = nub coords

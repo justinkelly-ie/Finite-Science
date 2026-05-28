@@ -37,6 +37,6 @@ seedChromogeometricVacuum capacityLimit =
                             , ((basisX, vacuumAmp), 1)
                             , ((basisY, vacuumAmp), 1)
                             ]
-  in MkUniverseState initSubstrate (MkSparseMaxel initFields)
+  in MkUniverseState initSubstrate initFields
 
 

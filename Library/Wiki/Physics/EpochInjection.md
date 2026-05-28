@@ -9,7 +9,7 @@ import Evolution.Cycle
 import Physics.Common
 import Physics.DimensionalCausality
 
-import Physics.Findings.CosmicPartition
+import Physics.System.CosmicPartition
 
 %default total
 

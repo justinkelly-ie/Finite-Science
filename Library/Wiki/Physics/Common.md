@@ -8,7 +8,7 @@ import Evolution.Cycle
 import Evolution.Init
 import Evolution.Gate
 
-import Physics.Findings.CosmicPartition
+import Physics.System.CosmicPartition
 
 %default total
 

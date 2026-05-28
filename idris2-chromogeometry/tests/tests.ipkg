@@ -1,6 +1,0 @@
-package idris2-chromogeometry-tests
-
-depends = base, hedgehog, idris2-chromogeometry, idris2-Multiset
-
-executable = runtests
-main = Main

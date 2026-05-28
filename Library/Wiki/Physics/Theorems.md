@@ -3,7 +3,7 @@
 This document aggregates all formal mathematical physics theorems proven entirely at compile-time by the Idris 2 typechecker. These are absolute structural guarantees, requiring no runtime execution.
 
 ### Hydrogen
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 ```idris
 Hydrogen : Element
@@ -12,7 +12,7 @@ Hydrogen : Element
 ---
 
 ### Carbon
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 ```idris
 Carbon : Element
@@ -21,7 +21,7 @@ Carbon : Element
 ---
 
 ### Oxygen
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 Oxygen (Z=8): the universal mediator.
 
@@ -42,7 +42,7 @@ Oxygen : Element
 ---
 
 ### Iron
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 Iron (Z=26): the stellar fusion limit.
 Heaviest element producible by core fusion before gravitational collapse.
@@ -54,7 +54,7 @@ Iron : Element
 ---
 
 ### Feynmanium
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 The absolute maximum stable element on the grid.
 Z=137 survives the resonance gate. Z=138 does not.
@@ -66,7 +66,7 @@ Feynmanium : Element
 ---
 
 ### oxygenDividesLatent
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 Oxygen divides the dark energy pool (128 = 2^7) exactly.
 128 / 8 = 16 quanta.
@@ -78,7 +78,7 @@ oxygenDividesLatent : (div 128 8 = 16)
 ---
 
 ### oxygenVisibleResidue
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 Oxygen's remainder in visible matter (27 = 3^3) is exactly
 the MatterGate degree (n=3).
@@ -90,7 +90,7 @@ oxygenVisibleResidue : (Prelude.mod 27 8 = 3)
 ---
 
 ### oxygenNotPrimorial
-**Module**: `Physics.Findings.PeriodicTable`
+**Module**: `Physics.System.PeriodicTable`
 
 Oxygen does NOT divide the primorial manifold (210).
 This is why it acts as a mediator rather than a structural primitive.

@@ -15,7 +15,7 @@ main = do
   let amp = emptyAmplitude
   
   -- Create a SparseMaxel with count 5
-  let initialMaxel = MkSparseMaxel (AddM (geom, amp) 5 ZeroM)
+  let initialMaxel = AddM (geom, amp) 5 ZeroM
   
   putStrLn "1. Raw non-linear SparseMaxel constructed (Count = 5)."
   
@@ -54,7 +54,7 @@ main = do
   -- Freeze back to Legacy SparseMaxel (Vertices)
   let frozenBoundary = sigmaFreezeGeometryMaxel dynamicBoundary
   
-  let boundaryCounts = multisetToList (maxelMap frozenBoundary)
+  let boundaryCounts = multisetToList frozenBoundary
   case boundaryCounts of
     (((nB, _), 10) :: ((nA, _), -10) :: _) => 
       putStrLn "\nSUCCESS: Boundary topological constraints enforced! B=+10, A=-10."

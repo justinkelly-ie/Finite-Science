@@ -1,7 +1,7 @@
 module Physics.Scales.PythagoreanFixedPoint
 
 import Simplex.Core
-import Physics.Findings.PeriodicTable
+import Physics.System.PeriodicTable
 import Physics.Elements.Water
 import Evolution.Gate
 import Physics.Elements.Oxygen
@@ -12,7 +12,7 @@ import Evolution.Gate
 import Evolution.Identity
 import Physics.Elements.Water
 import Physics.Elements.Oxygen
-import Physics.Findings.PeriodicTable
+import Physics.System.PeriodicTable
 
 import Math.Multiset
 import Math.IntPolynumber

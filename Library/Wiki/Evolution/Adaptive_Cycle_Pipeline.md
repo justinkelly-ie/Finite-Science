@@ -50,7 +50,7 @@ vacuumUniverse : UniverseState
 vacuumUniverse = MkUniverseState emptySubstrate emptySparseMaxel
 
 seededUniverse : UniverseState
-seededUniverse = MkUniverseState emptySubstrate (MkSparseMaxel seedState)
+seededUniverse = MkUniverseState emptySubstrate seedState
 ```
 
 ## Pipeline Properties

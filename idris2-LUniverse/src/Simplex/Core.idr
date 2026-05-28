@@ -49,16 +49,16 @@ emptyAmplitude = ZeroM
 -- is a directed causal edge from parent to child. No wrapper record,
 -- no intermediate List — just the same Multiset engine used everywhere.
 --
---   Substrate = Multiset (G, G)     where G = Pixel Integer
+--   Substrate = PixelGraph Integer
 --
 -- This makes the architecture diagram exact:
 --
 --       [ BASE SUBSTRATE ]              [ STATE SPACE ]
---       Multiset (G, G)                 Multiset (G, Vector)
+--       PixelGraph Integer              PixelCochain Integer Amplitude
 -----------------------------------------------------------------------
 
-||| The directed causal graph of the spacetime manifold.
-|||
+||| The directed causal relations of the spacetime grid (causal poset).
+||| Spacetime relations are literally a multiset of pixel-to-pixel edges.
 public export
 0 Substrate : Type
 Substrate = Multiset (Geometry, Geometry)
@@ -67,12 +67,11 @@ Substrate = Multiset (Geometry, Geometry)
 -- 4. SPARSE MAXEL (The Quantum State Vector)
 -----------------------------------------------------------------------
 
-||| At the quantum level, this is the state vector — a dense map from coordinates to amplitudes.
-|||
+||| The state vector (energy/mass field coefficients).
+||| A state is literally a multiset of pixel-amplitude pairs.
 public export
-record SparseMaxel where
-  constructor MkSparseMaxel
-  maxelMap : Multiset (Geometry, Amplitude)
+0 SparseMaxel : Type
+SparseMaxel = Multiset (Geometry, Amplitude)
 
 -----------------------------------------------------------------------
 -- 5. UNIVERSE STATE (The Total Cosmological Configuration)
@@ -129,26 +128,26 @@ substrateNodes sub =
 ||| The empty SparseMaxel — the physical vacuum state.
 public export
 emptySparseMaxel : SparseMaxel
-emptySparseMaxel = MkSparseMaxel ZeroM
+emptySparseMaxel = ZeroM
 
 ||| A singleton SparseMaxel — a single coordinate mapped to one amplitude.
 ||| This is the result of ascendScale: the entire micro-graph collapses to one entry.
 |||
 public export
 singletonSparseMaxel : Geometry -> Amplitude -> SparseMaxel
-singletonSparseMaxel geom amp = MkSparseMaxel (fromList [((geom, amp), 1)])
+singletonSparseMaxel geom amp = fromList [((geom, amp), 1)]
 
 ||| Superposition — the native multiset union of two state vectors.
 |||
 public export
 superposeStates : SparseMaxel -> SparseMaxel -> SparseMaxel
-superposeStates (MkSparseMaxel m1) (MkSparseMaxel m2) = MkSparseMaxel (addMultiset m1 m2)
+superposeStates = addMultiset
 
 ||| The total Leibniz Lag of a SparseMaxel (sum of all entry multiplicities).
 |||
 public export
 stateLag : SparseMaxel -> Integer
-stateLag (MkSparseMaxel m) = multiplicityAll m
+stateLag m = multiplicityAll m
 
 ||| Restriction of a SparseMaxel to entries matching a specific Geometry.
 |||
@@ -157,8 +156,8 @@ stateLag (MkSparseMaxel m) = multiplicityAll m
 |||
 public export
 restrictToPixel : Geometry -> SparseMaxel -> SparseMaxel
-restrictToPixel geom (MkSparseMaxel pip) =
-  MkSparseMaxel (fromList (filter (\((g, _), _) => g == geom) (multisetToList pip)))
+restrictToPixel geom pip =
+  fromList (filter (\((g, _), _) => g == geom) (multisetToList pip))
 
 ||| Checks that every Geometry referenced in the SparseMaxel exists as a node
 ||| in the Substrate causal graph.
@@ -169,7 +168,8 @@ restrictToPixel geom (MkSparseMaxel pip) =
 |||
 public export
 isSynchronised : Substrate -> SparseMaxel -> Bool
-isSynchronised sub (MkSparseMaxel pip) =
+isSynchronised sub pip =
   let subNodes = substrateNodes sub
       pipCoords = map (fst . fst) (multisetToList pip)
   in all (\g => elem g subNodes) pipCoords
+

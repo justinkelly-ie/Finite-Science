@@ -1,0 +1,26 @@
+package Nat-Science
+version = 0.1.0
+executable = luniverse
+
+depends = base, contrib, idris2-QuickCheck, idris2-Multiset, idris2-LUniverse, idris2-chromogeometry
+
+sourcedir = "Library/Wiki"
+
+modules = Physics.Common,
+          Physics.LabelExtraction,
+          Physics.DimensionalCausality,
+          Physics.EpochInjection,
+          Physics.CosmologicalScaling,
+          Physics.Elements,
+          Simplex.Properties,
+          Evolution.Evolution,
+          Physics.Double_Slit_Interference,
+          Physics.Ascension_Probe,
+          Evolution.Adaptive_Cycle_Pipeline,
+          Evolution.Adaptive_Cycle_Findings,
+          Evolution.Adaptive_Cycle_Chemistry,
+          Evolution.Adaptive_Cycle_Scales,
+          Maths.LinearBridgeProperties,
+          Code.Engine_Verification
+
+main = Main

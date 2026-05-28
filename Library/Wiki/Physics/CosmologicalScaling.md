@@ -3,8 +3,8 @@ module Physics.CosmologicalScaling
 
 import QuickCheck
 import Simplex.Core
-import Physics.Findings.Cosmology
-import Physics.Findings.CosmicPartition
+import Physics.Analysis.Cosmology
+import Physics.System.CosmicPartition
 import Physics.Common
 
 %default total

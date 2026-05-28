@@ -17,7 +17,7 @@ import Math.Polynumber
 import Math.Multiset
 import Math.IntPolynumber
 import Math.Chromogeometry
-import Physics.Findings.CosmicPartition
+import Physics.System.CosmicPartition
 import Physics.Scales.ScaleTrajectory
 
 %default covering
@@ -69,8 +69,8 @@ runAdaptiveCycle capacityLimit metric macroTarget (MkUniverseState sub field) =
           -- The micro-history causal graph is preserved to act as the starting boundary condition
           -- for the next scale layer up.
           -- The field amplitudes collapse down into the monolithic macro-node target.
-          let ascendedField = ascendScale macroTarget postField.maxelMap
-          in MkUniverseState postSubstrate (MkSparseMaxel ascendedField)
+          let ascendedField = ascendScale macroTarget postField
+          in MkUniverseState postSubstrate ascendedField
           
         else
           -- =================================================================

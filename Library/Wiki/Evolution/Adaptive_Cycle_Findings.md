@@ -13,15 +13,16 @@ import Evolution.Cycle
 import Evolution.Transform
 import Evolution.Gate
 import Evolution.Clock
-import Physics.Findings.CosmicPartition
-import Physics.Findings.CosmicEnergyBudget
-import Physics.Findings.Spread13
-import Physics.Findings.PeriodicTable
-import Physics.Findings.FineStructureDerivation
-import Physics.Findings.CosmologicalConstant
-import Physics.Findings.VacuumPairProduction
-import Physics.Findings.DarkEnergyExpansion
-import Physics.Findings.GravitationalTimeDilation
+import Physics.System.CosmicPartition
+import Physics.Analysis.CosmicEnergyBudget
+import Physics.System.Spread13
+import Physics.System.PeriodicTable
+import Physics.Analysis.FineStructureDerivation
+import Physics.Analysis.CosmologicalConstant
+import Physics.Analysis.VacuumPairProduction
+import Physics.Analysis.DarkEnergyExpansion
+import Physics.Analysis.GravitationalTimeDilation
+import Physics.Analysis.Radiation
 import Math.Multiset
 import Math.IntPolynumber
 import Math.SpreadPolynumber
@@ -185,6 +186,54 @@ prop_pairProductionAdds =
   in pairLag == 2
 ```
 
+### Property 15: Radiation Is Pure
+
+A state composed entirely of null-quadrance pixels is validated as pure radiation.
+
+```idris
+prop_radiationIsPure : Bool
+prop_radiationIsPure =
+  let geom = MkPixel 3 3 -- 3^2 - 3^2 = 0 (Null Minkowski Quadrance)
+      amp = spreadPoly 2
+      pip = fromList [((geom, amp), 1)]
+  in case validateRadiation pip of
+       Just r => isPureRadiation r
+       Nothing => False
+```
+
+### Property 16: Möbius Zero-Sum Balance
+
+A balanced radiation state resolves to exactly zero total amplitude.
+
+```idris
+prop_radiationMöbiusZeroSum : Bool
+prop_radiationMöbiusZeroSum =
+  let geom1 = MkPixel 3 3
+      geom2 = MkPixel (-3) (-3)
+      amp = spreadPoly 2
+      pip = fromList [((geom1, amp), 1), ((geom2, amp), -1)]
+  in case validateRadiation pip of
+       Just r => isZeroRemainder r
+       Nothing => False
+```
+
+### Property 17: Baryogenesis Trigger Threshold
+
+If the radiation state's energy density exceeds the 128-state spectral pool capacity, it triggers the baryogenesis phase transition.
+
+```idris
+prop_baryogenesisThresholdTrigger : Bool
+prop_baryogenesisThresholdTrigger =
+  -- Create a radiation state with 129 null photons
+  let geom = MkPixel 3 3
+      amp = spreadPoly 2
+      m = fromList [((geom, amp), 129)]
+      pip = m
+  in case validateRadiation pip of
+       Just r => checkBaryogenesisTrigger r
+       Nothing => False
+```
+
 ## Main Test Runner
 
 ```idris
@@ -211,4 +260,7 @@ main = do
   runProp "prop_primordialAlpha" prop_primordialAlpha
   runProp "prop_finiteVacuumEnergy" prop_finiteVacuumEnergy
   runProp "prop_pairProductionAdds" prop_pairProductionAdds
+  runProp "prop_radiationIsPure" prop_radiationIsPure
+  runProp "prop_radiationMöbiusZeroSum" prop_radiationMöbiusZeroSum
+  runProp "prop_baryogenesisThresholdTrigger" prop_baryogenesisThresholdTrigger
 ```
