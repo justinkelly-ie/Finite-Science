@@ -17,7 +17,10 @@ def replace_in_file(filepath):
         ("src/Math/Composition", "src/Simplex/Composition"),
         ("src/Math/DiscreteCalculus", "src/Simplex/DiscreteCalculus"),
         ("src/Math/SigmaLinear", "src/Simplex/SigmaLinear"),
-        ("src/Math/Twist", "src/Simplex/Twist")
+        ("src/Math/Twist", "src/Simplex/Twist"),
+        ("Linear-Physics", "Nat-Science"),
+        ("Substrate", "Multiset (Geometry, Geometry)"),
+        ("SparseMaxel", "Multiset (Geometry, Amplitude)")
     ]
     
     new_content = content

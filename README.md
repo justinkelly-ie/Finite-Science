@@ -1,34 +1,36 @@
-# Idris2 Linear Physics
+# Nat-Science
 
-**A deterministic, discrete-geometry physics engine where the laws of nature are enforced at compile-time.**
+**A deterministic, discrete-geometry natural science model where the laws of nature are enforced at compile-time over natural numbers.**
 
-[![Idris2](https://img.shields.io/badge/Idris2-Linear_Types-blue.svg)](https://github.com/idris-lang/Idris2)
-[![Physics](https://img.shields.io/badge/Physics-Rational_Chromogeometry-red.svg)]()
-[![Tests](https://img.shields.io/badge/Tests-51_passing-green.svg)]()
+[![Idris2](https://img.shields.io/badge/Idris2-Nat_Types-blue.svg)](https://github.com/idris-lang/Idris2)
+[![Science](https://img.shields.io/badge/Science-Scale_Invariant-red.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-55_passing-green.svg)]()
 
 ---
 
 ## Significance
-Modern physics is plagued by infinities. Continuous wave equations, singularities, arbitrary constants, and ad-hoc parameters like "gluons" or "virtual particles" dominate the Standard Model. 
+Modern science is plagued by continuous infinite models. Smooth wave equations, singularities, arbitrary constants, and ad-hoc parameters like "gluons" or "virtual particles" dominate physics, chemistry, and biology. 
 
-**Linear Physics** dispenses with that. Here we construct the **Linear Universe**, which attempts to provide a rational, algebraic and geometric explanation for the observed evidence.
+**Nat-Science** dispenses with that. Here we construct the **Natural Universe**, which attempts to provide a unified, rational, algebraic and scale-invariant explanation for observed evidence across physics, chemistry, biology, and neurology.
 
-Built on [Norman Wildberger's](https://njwildberger.com/) Finitist Mathematics including Box Arithmetic (Multisets), Chromogeometry and Spread Polynomials, this project models the universe as a discrete, combinatorial engine. In the Linear Universe, continuous fields are unnecessary, particles are modelled simply as geometric and algebraic constraints, acting on a discrete integer pixel grid.
+Built on finitist mathematics including Box Arithmetic (Multisets), Chromogeometry and Spread Polynomials, this project models the universe as a discrete, combinatorial engine. In the Natural Universe, continuous fields are unnecessary; particles, bonds, and organic folds are modeled simply as geometric and algebraic constraints, acting on a discrete integer pixel grid.
 
-### Why "Linear Physics"?
-Originally, this project heavily utilized Idris 2's Quantitative Type Theory (QTT) and Linear Types to structurally enforce conservation laws. However, as the universe scaled, the compiler inevitably exhausted its memory attempting to mathematically track nested linear resource reductions.
+### Why "Nat-Science"?
+Originally, this project was called *Linear Physics* and heavily utilized Idris 2's Quantitative Type Theory (QTT) to structurally enforce conservation laws. However, as the universe scaled, the compiler inevitably exhausted its memory attempting to mathematically track nested linear resources. 
 
-We have since stripped away the heavy categorical abstractions and replaced them with an ultra-lean **Pure Multiset Integer Architecture**. Rather than relying on rigid compile-time typestate tracking, the core simulation is now a flat $O(N)$ integer matrix.
+We realized that physics, chemistry, biology, and neurology are not distinct systems with different fundamental rules, but are **emergent phases** of the same underlying discrete multiset algebra. 
+
+We have since stripped away the heavy categorical abstractions, elevated the project beyond physics to **Natural Science**, and rebuilt it on an ultra-lean **Pure Multiset Integer Architecture**—representing the entire universe as algebraic properties over the **`Nat`** (Natural numbers) type.
 
 *   **Extreme Leanness**: The engine drops arbitrary rational fractions, topological wrappers, and linear variables in favor of raw structural algebraic arrays (`Math.Multiset`).
 *   **Exact Integer Calculations**: Using pure non-linear integer cross-multiplication, geometric spreads and quadrances never lose precision.
-*   **Automatic Conservation**: Because everything evaluates as flat additions and subtractions across a multiset (`addM`, `subM`), terms automatically annihilate when opposite, guaranteeing perfect conservation of mass and energy naturally.
+*   **Automatic Conservation**: Because everything evaluates as flat additions and subtractions across a multiset (`addMultiset`, `subMultiset`), terms automatically annihilate when opposite, guaranteeing perfect conservation naturally.
 
 ---
 
 ## Key Results
 
-> **48 modules. 53 property tests. Zero failures. No hardcoded constants.**
+> **57 modules. 55 property tests. Zero failures. No hardcoded constants.**
 
 | Result | Verified By |
 |---|---|
@@ -178,37 +180,23 @@ Life is formalized as a linear wrapper that preserves geometric integrity. Biolo
 
 ---
 
-## Project Structure
+## Project Topology
+
+The project is structured as a decentralized network of standalone libraries. `Nat-Science` functions as the main simulation coordinator, pulling algebra and geometry modules from independent sibling repositories:
 
 ```
-Linear-Physics/
-├── idris2-LUniverse/           ← The physics engine (46 modules)
-│   ├── src/Simplex/            ← Topological stage (5 modules)
-│   │   ├── Core.idr                ← Substrate, Geometry, type aliases
-│   │   ├── SigmaLinear.idr         ← Linear Dependent Multisets, Dynamic DPairs
-│   ├── src/Evolution/          ← The universal engine (7 modules)
-│   │   ├── Gate.idr                ← Adaptive cycle phases
-│   │   ├── Cycle.idr               ← The loop
-│   ├── src/Physics/            ← The emergent properties
-│   │   ├── SigmaBridge.idr         ← Sigma-Linear Execution Engine Bridge
-│   │   ├── Particles/              ← Photon, Quark, Baryon, Electron, etc. (8 modules)
-│   │   ├── Laws/                   ← Conservation laws (5 modules)
-│   │   ├── Findings/               ← Derived physics (16 modules)
-│   │   ├── Scales/                 ← Scale transitions (5 modules)
-│   │   │   ├── Phylogeny.idr           Fork/merge lineage tree
-│   │   │   ├── NaturalFolding.idr      Helix, DNA, cortical folding
-│   │   │   ├── PythagoreanFixedPoint.idr   The (4,3) self-referential encoding
-│   │   │   ├── IceGeometry.idr         N+2 folding reciprocity
-│   │   │   └── ScaleTrajectory.idr     Full 137-scale trajectory
-│   │   └── Elements/              ← Derived chemistry (3 modules)
-│   │       ├── Hydrogen.idr            Z=1 unit baryon
-│   │       ├── Oxygen.idr              Z=8 universal mediator
-│       └── Water.idr               H₂O Pythagorean fixed point
+Projects/
+├── Nat-Science/                 ← The main natural science engine (this repository)
+│   ├── idris2-LUniverse/       ← The core simulation engine (46 modules)
+│   │   ├── src/Simplex/        ← State and relation topologies
+│   │   ├── src/Evolution/      ← Polynomial evolution gates and loops
+│   │   └── src/Physics/        ← Physical, chemical, biological, and neurological folds
+│   ├── Library/Wiki/           ← Literate Idris verification proofs & documentation
+│   └── Nat-Science.ipkg        ← Main executable package config
 │
-├── Library/Wiki/Code/           ← Comprehensive Code Architecture
-├── idris2-chromogeometry/       ← Wildberger's 3-metric geometry
-├── idris2-Multiset/    ← Multiset algebra + topology
-└── idris2-QuickCheck/           ← Property-testing suite (53 tests)
+├── idris2-Multiset/            ← STANDALONE: Pure RLE multiset & polynumber algebra
+├── idris2-chromogeometry/      ← STANDALONE: Wildberger's RGB rational chromogeometry
+└── idris2-QuickCheck/          ← STANDALONE: Clean property-testing framework
 ```
 
 ---
@@ -216,17 +204,24 @@ Linear-Physics/
 ## Getting Started
 
 ### Prerequisites
-LUniverse requires [Idris 2](https://github.com/idris-lang/Idris2). Use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to install Idris2 and as an Idris2 package manager.
+`Nat-Science` requires [Idris 2](https://github.com/idris-lang/Idris2). We use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to manage dependencies and trigger test builds.
 
+### Sibling Package Development
+The sibling packages (`idris2-Multiset` and `idris2-chromogeometry`) are resolved locally during development via `pack.toml`:
+```toml
+idris2-Multiset = { path = "../idris2-Multiset" }
+idris2-chromogeometry = { path = "../idris2-chromogeometry" }
+```
+
+### Building and Testing
+
+To compile the libraries and execute the 55 property tests, run:
 ```bash
-# 1. Build the main library
-pack build idris2-LUniverse/idris2-LUniverse.ipkg
-
-# 2. Run the full unified property-testing suite
+# 1. Build and execute all tests:
 ./Scripts/run-tests.sh
 
-# Or run it directly from the root package:
-pack run Linear-Physics.ipkg
+# 2. Or run the package directly via pack:
+pack run Nat-Science.ipkg
 ```
 If you are unfamiliar with Idris2 but wish to explore the project, download Google Antigravity [^1] and have it assist you with the steps above; you can then prompt it to explore the model textually.
 
