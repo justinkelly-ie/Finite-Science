@@ -15,15 +15,14 @@ echo "╚═══════════════════════�
 echo ""
 
 # Step 1: Build the main library
-echo "▶ Building idris2-LUniverse..."
-(cd idris2-LUniverse && pack build idris2-LUniverse.ipkg 2>&1)
-echo "  ✅ LUniverse module"
+echo "▶ Building idris2-Universe..."
+(cd ../idris2-Universe && pack build idris2-LUniverse.ipkg 2>&1)
+echo "  ✅ idris2-Universe module"
 echo ""
 
 # Step 2: Run Unified Tests
 echo "▶ Running Unified Linear-Physics Test Harness (Wiki output)..."
-pack build Nat-Science.ipkg 2>&1
-./build/exec/luniverse
+(cd ../idris2-Universe-Wiki && pack build idris2-Universe-Wiki.ipkg 2>&1 && ./build/exec/luniverse 2>&1)
 echo ""
 
 echo "╔══════════════════════════════════════════╗"

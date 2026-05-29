@@ -1,17 +1,17 @@
-[custom.all.Nat-Science]
+[custom.all.idris2-Universe-Wiki]
 type = "local"
-path = "."
-ipkg = "Nat-Science.ipkg"
+path = "../idris2-Universe-Wiki"
+ipkg = "idris2-Universe-Wiki.ipkg"
 
 [custom.all.idris2-LUniverse]
 type = "local"
-path = "idris2-LUniverse"
+path = "../idris2-Universe"
 ipkg = "idris2-LUniverse.ipkg"
 
 
 [custom.all.idris2-chromogeometry]
 type = "local"
-path = "../idris2-chromogeometry"
+path = "../idris2-Chromogeometry"
 ipkg = "idris2-chromogeometry.ipkg"
 
 
