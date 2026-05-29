@@ -28,6 +28,18 @@ We have since stripped away the heavy categorical abstractions, elevated the pro
 
 ---
 
+## Key Concepts: A Primer
+
+Before reviewing the results and core architecture, it is helpful to establish the key definitions used in the Natural Science model:
+
+*   **Maxel (Material Pixel)**: The discrete unit of material coordinates—a spatial grid coordinate possessing both integer position and algebraic amplitude.
+*   **The 137-Grid**: Space in this model is not infinitely divisible. It is a discrete, scale-invariant integer grid bounded by exactly 137 nested scales of resolution. The number 137 represents the "grid wall"—the boundary where stable arithmetic factors break down and coordinates decohere.
+*   **The Primorial Architecture**: A coordinate space structurally bounded by the product of prime gates ($2 \times 3 \times 5 \times 7 = 210$ total base states), filtering coordinates through prime-degree polynomial "gates".
+*   **Leibniz Lag**: The discrete mathematical equivalent of "mass"—a functional measure of causal density and delay concentrated at a coordinate.
+*   **Spread Polynomial**: A discrete representation of spatial dispersion. When a spread polynomial resolves to a clean whole number (a "lock"), it projects a stable, observable state.
+
+---
+
 ## Key Results
 
 > **57 modules. 55 property tests. Zero failures. No hardcoded constants.**
@@ -187,15 +199,20 @@ The project is structured as a decentralized network of standalone libraries. `N
 ```
 Projects/
 ├── Nat-Science/                 ← The main natural science engine (this repository)
-│   ├── idris2-LUniverse/       ← The core simulation engine (46 modules)
-│   │   ├── src/Simplex/        ← State and relation topologies
-│   │   ├── src/Evolution/      ← Polynomial evolution gates and loops
-│   │   └── src/Physics/        ← Physical, chemical, biological, and neurological folds
+│   ├── visualizer/             ← The 3D Science Laboratory (Vite + Three.js + React-Three-Fiber)
+│   └── Scripts/                ← Orchestration and validation scripts
+│
+├── idris2-Universe-Wiki/        ← The literate wiki and verification proofs (executable)
 │   ├── Library/Wiki/           ← Literate Idris verification proofs & documentation
-│   └── Nat-Science.ipkg        ← Main executable package config
+│   └── idris2-Universe-Wiki.ipkg
+│
+├── [idris2-Universe/](https://github.com/justinkelly-ie/idris2-Universe)   ← The core simulation engine (59 modules)
+│   ├── src/Simplex/            ← State and relation topologies
+│   ├── src/Evolution/          ← Polynomial evolution gates and loops
+│   └── src/Physics/            ← Physical, chemical, biological, and neurological folds
 │
 ├── idris2-Multiset/            ← STANDALONE: Pure RLE multiset & polynumber algebra
-├── idris2-chromogeometry/      ← STANDALONE: Wildberger's RGB rational chromogeometry
+├── idris2-Chromogeometry/      ← STANDALONE: Wildberger's RGB rational chromogeometry
 └── idris2-QuickCheck/          ← STANDALONE: Clean property-testing framework
 ```
 
@@ -207,21 +224,25 @@ Projects/
 `Nat-Science` requires [Idris 2](https://github.com/idris-lang/Idris2). We use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to manage dependencies and trigger test builds.
 
 ### Sibling Package Development
-The sibling packages (`idris2-Multiset` and `idris2-chromogeometry`) are resolved locally during development via `pack.toml`:
+The sibling packages (`idris2-Multiset` and `idris2-Chromogeometry`) are resolved locally during development via `pack.toml`:
 ```toml
 idris2-Multiset = { path = "../idris2-Multiset" }
-idris2-chromogeometry = { path = "../idris2-chromogeometry" }
+idris2-chromogeometry = { path = "../idris2-Chromogeometry" }
 ```
 
 ### Building and Testing
 
-To compile the libraries and execute the 55 property tests, run:
+To compile the libraries and execute the 55 property tests, run the unified script from the root of this repository:
 ```bash
 # 1. Build and execute all tests:
 ./Scripts/run-tests.sh
+```
 
+Alternatively, you can build and run the test package directly via `pack` within the Wiki repository:
+```bash
 # 2. Or run the package directly via pack:
-pack run Nat-Science.ipkg
+cd ../idris2-Universe-Wiki
+pack run idris2-Universe-Wiki.ipkg
 ```
 If you are unfamiliar with Idris2 but wish to explore the project, download Google Antigravity [^1] and have it assist you with the steps above; you can then prompt it to explore the model textually.
 
