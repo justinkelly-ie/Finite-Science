@@ -9,11 +9,9 @@
 ---
 
 ## Significance
-Modern science is plagued by continuous infinite models. Smooth wave equations, singularities, arbitrary constants, and ad-hoc parameters like "gluons" or "virtual particles" dominate physics, chemistry, and biology. 
+Standard physics models heavily rely on continuous infinite space, smooth wave equations, singularities, and ad-hoc parameters to describe physical, chemical, and biological interactions.
 
-**Nat-Science** dispenses with that. Here we construct the **Natural Universe**, which attempts to provide a unified, rational, algebraic and scale-invariant explanation for observed evidence across physics, chemistry, biology, and neurology.
-
-Built on finitist mathematics including Box Arithmetic (Multisets), Chromogeometry and Spread Polynomials, this project models the universe as a discrete, combinatorial engine. In the Natural Universe, continuous fields are unnecessary; particles, bonds, and organic folds are modeled simply as geometric and algebraic constraints, acting on a discrete integer pixel grid.
+**Nat-Science** presents a discrete alternative. We model the universe as a purely discrete, combinatorial engine built on finitist mathematics, including Box Arithmetic (Multisets), Chromogeometry, and Spread Polynomials. By deriving physical properties, molecular bonds, and organic folds strictly as algebraic constraints on a discrete integer grid, this framework bypasses the need for continuous infinite fields, providing a unified and scale-invariant explanation for observed evidence across physics, chemistry, biology, and neurology.
 
 ### Why "Nat-Science"?
 Originally, this project was called *Linear Physics* and heavily utilized Idris 2's Quantitative Type Theory (QTT) to structurally enforce conservation laws. However, as the universe scaled, the compiler inevitably exhausted its memory attempting to mathematically track nested linear resources. 
@@ -251,12 +249,12 @@ If you are unfamiliar with Idris2 but wish to explore the project, download Goog
 ## Theoretical Foundation & Wiki
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
-*   📖 **[Physics Index](Library/Wiki/Physics/Index.md)** — Overview of research areas and key discoveries
-*   💻 **[Code Architecture](Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
-*   ✅ **[Verification Matrix](Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
-*   ⚛️ **[Primorial Particle Mapping](Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
-*   🔄 **[Recursive Multiset Composition](Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
-*   🧮 **[Mathematical Type Architecture](Library/Wiki/Simplex/Types.md)** — How every physical concept is one parameterised Multiset
+*   📖 **[Physics Index](../idris2-Universe-Wiki/Library/Wiki/Physics/Index.md)** — Overview of research areas and key discoveries
+*   💻 **[Code Architecture](../idris2-Universe-Wiki/Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
+*   ✅ **[Verification Matrix](../idris2-Universe-Wiki/Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
+*   ⚛️ **[Primorial Particle Mapping](../idris2-Universe-Wiki/Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
+*   🔄 **[Recursive Multiset Composition](../idris2-Universe-Wiki/Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
+*   🧮 **[Mathematical Type Architecture](../idris2-Universe-Wiki/Library/Wiki/Simplex/Types.md)** — How every physical concept is one parameterised Multiset
 
 ---
 
