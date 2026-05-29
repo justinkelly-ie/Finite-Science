@@ -537,14 +537,47 @@ export default function App() {
   const [edgeC, setEdgeC] = useState<number>(2);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
+  // Read query parameters on mount to allow direct linking from the Wiki
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlMode = params.get('mode');
+    if (urlMode === 'omega' || urlMode === 'live' || urlMode === 'sigmagate') {
+      setMode(urlMode);
+    }
+    const urlTension = params.get('tension');
+    if (urlTension !== null) {
+      const val = parseFloat(urlTension);
+      if (!isNaN(val)) setTension(Math.max(0, Math.min(1, val)));
+    }
+    const urlEdgeA = params.get('edgeA');
+    if (urlEdgeA !== null) {
+      const val = parseInt(urlEdgeA);
+      if (!isNaN(val)) setEdgeA(val);
+    }
+    const urlEdgeB = params.get('edgeB');
+    if (urlEdgeB !== null) {
+      const val = parseInt(urlEdgeB);
+      if (!isNaN(val)) setEdgeB(val);
+    }
+    const urlEdgeC = params.get('edgeC');
+    if (urlEdgeC !== null) {
+      const val = parseInt(urlEdgeC);
+      if (!isNaN(val)) setEdgeC(val);
+    }
+  }, []);
+
   // Fetch compiled state vectors from State Serialization Bridge
   useEffect(() => {
-    fetch('/state_vectors.json')
+    const params = new URLSearchParams(window.location.search);
+    const urlFile = params.get('file') || 'state_vectors.json';
+    const filePath = urlFile.endsWith('.json') ? `/${urlFile}` : `/${urlFile}.json`;
+    
+    fetch(filePath)
       .then(res => res.json())
       .then(data => {
         setSimData(data);
       })
-      .catch(err => console.error("Awaiting live pipeline serialization...", err));
+      .catch(err => console.error(`Awaiting live pipeline serialization for ${filePath}...`, err));
   }, []);
 
   // Playback timer
