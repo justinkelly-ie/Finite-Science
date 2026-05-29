@@ -272,11 +272,11 @@ The 3D Science Laboratory is built using Vite, React, and React-Three-Fiber. To 
 ## Theoretical Foundation & Wiki
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
-*   📖 **[Physics Index](../idris2-Universe-Wiki/Library/Wiki/Physics/Index.md)** — Overview of research areas and key discoveries
+*   📖 **[Physics Index](../idris2-Universe-Wiki/Library/Wiki/Verification_Matrix.md)** — Overview of research areas and key discoveries
 *   💻 **[Code Architecture](../idris2-Universe-Wiki/Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
 *   ✅ **[Verification Matrix](../idris2-Universe-Wiki/Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
-*   ⚛️ **[Primorial Particle Mapping](../idris2-Universe-Wiki/Library/Wiki/Physics/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
-*   🔄 **[Recursive Multiset Composition](../idris2-Universe-Wiki/Library/Wiki/Physics/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
+*   ⚛️ **[Primorial Particle Mapping](../idris2-Universe-Wiki/Library/Wiki/Symmetry/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
+*   🔄 **[Recursive Multiset Composition](../idris2-Universe-Wiki/Library/Wiki/Scale/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
 *   🧮 **[Mathematical Type Architecture](../idris2-Universe-Wiki/Library/Wiki/Simplex/Types.md)** — How every physical concept is one parameterised Multiset
 
 ---
