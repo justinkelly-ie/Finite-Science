@@ -12,7 +12,7 @@ replacements = {
     "LMath.Core.substrateLag": "Math.Core.substrateLag"
 }
 
-for root, dirs, files in os.walk("/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src"):
+for root, dirs, files in os.walk("/var/home/justin/Projects/Linear-Physi../idris2-Universe/src"):
     for file in files:
         if file.endswith(".idr"):
             path = os.path.join(root, file)

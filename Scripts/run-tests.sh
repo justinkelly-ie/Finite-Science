@@ -15,9 +15,9 @@ echo "╚═══════════════════════�
 echo ""
 
 # Step 1: Build the main library
-echo "▶ Building idris2-Universe..."
+echo "▶ Building idris2-LUniverse..."
 (cd ../idris2-Universe && pack build idris2-LUniverse.ipkg 2>&1)
-echo "  ✅ idris2-Universe module"
+echo "  ✅ idris2-LUniverse module"
 echo ""
 
 # Step 2: Run Unified Tests

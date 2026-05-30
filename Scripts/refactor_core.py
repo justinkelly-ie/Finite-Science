@@ -59,4 +59,4 @@ def process_file(filepath):
     with open(filepath, 'w') as f:
         f.write(content)
 
-process_file('/var/home/justin/Projects/Linear-Physics/idris2-Universe/src/Math/Core.idr')
+process_file('/var/home/justin/Projects/Linear-Physi../idris2-Universe/src/Math/Core.idr')

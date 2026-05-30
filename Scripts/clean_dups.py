@@ -1,6 +1,6 @@
 import os
 
-src_dir = "/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src"
+src_dir = "/var/home/justin/Projects/Linear-Physi../idris2-Universe/src"
 for root, _, files in os.walk(src_dir):
     for file in files:
         if file.endswith(".idr") and file != "Cycle.idr":

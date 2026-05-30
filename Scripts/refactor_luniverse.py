@@ -1,7 +1,7 @@
 import os
 import re
 
-base_dir = "/var/home/justin/Projects/Linear-Physics/idris2-LUniverse"
+base_dir = "/var/home/justin/Projects/Linear-Physi../idris2-Universe"
 
 for root, dirs, files in os.walk(base_dir):
     for file in files:

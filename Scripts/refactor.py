@@ -2,8 +2,8 @@ import os
 import re
 
 directories = [
-    '/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src',
-    '/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/tests',
+    '/var/home/justin/Projects/Linear-Physi../idris2-Universe/src',
+    '/var/home/justin/Projects/Linear-Physi../idris2-Universe/tests',
     '/var/home/justin/Projects/Linear-Physics/idris2-QuickCheck/idris2-QuickCheck-tests'
 ]
 

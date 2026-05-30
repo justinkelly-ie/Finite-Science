@@ -1,6 +1,6 @@
 import re
 
-file_path = "/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src/LMath/SparseMaxel.idr"
+file_path = "/var/home/justin/Projects/Linear-Physi../idris2-Universe/src/LMath/SparseMaxel.idr"
 with open(file_path, "r") as f:
     content = f.read()
 

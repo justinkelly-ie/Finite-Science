@@ -68,7 +68,7 @@ The universe's coordinate space is structurally bounded by the 210 states of the
 The geometry is governed by Chromogeometry's three interlocked metrics:
 *   **Blue Metric (Matter):** The standard Euclidean $x^2 + y^2$ geometry where stable particles materialize as integer states in the discrete space.
 *   **Red Metric (Dark Energy/Radiation):** The relativistic $x^2 - y^2$ geometry where photons and other energetic particles propagate along null-quadrance bounds invisible to us.
-*   **Green Metric (Background/Tension):** The $2xy$ geometry that traps unresolvable fractional states, generating topological tension (e.g., Color Confinement).
+*   **Green Metric (Background/Tension):** The $2xy$ geometry that traps unresolvable fractional states, generating multiset coordinate tension (e.g., Color Confinement).
 
 ### 2. The Spread Polynomial Primorial Quantum Gates
 The spread polynomial structure is visible in the particle realm. Particles are modeled as identical base data structures filtered through specific prime-number spread polynomial gates:
@@ -182,10 +182,10 @@ Water's bond triangle $(4,3) \leftrightarrow (3,4)$ is the Pythagorean Fixed Poi
 ---
 
 ## The Biological Fold
-Life is formalized as a linear wrapper that preserves geometric integrity. Biological folding is not a continuous thermodynamic accident; it is the geometric execution of a Spread Polynomial attempting to neutralize topological tension over a finite integer grid.
+Life is formalized as a linear wrapper that preserves geometric integrity. Biological folding is not a continuous thermodynamic accident; it is the geometric execution of a Spread Polynomial attempting to neutralize multiset coordinate tension over a finite integer grid.
 
 *   **The Helix Barrier:** The stability of the Alpha Helix and DNA Double Helix structures are enforced by specific geometric "locks". Driven by polynomials (such as $S_{10}$), these structures emerged only once in history because they are the strictly unique, linear mathematical solutions capable of folding and consuming the substrate without violating linearity or causing localized decoherence.
-*   **Neurological Folding:** The extreme folding of the cerebral cortex (Cortical Gyri) is modeled at the macro scale by massive polynomials (e.g., $S_{137}$). A dense neuronal substrate naturally generates high-frequency structural locks to neutralize topological tension, maximizing computational capacity.
+*   **Neurological Folding:** The extreme folding of the cerebral cortex (Cortical Gyri) is modeled at the macro scale by massive polynomials (e.g., $S_{137}$). A dense neuronal substrate naturally generates high-frequency structural locks to neutralize multiset coordinate tension, maximizing computational capacity.
 *   **Ice Geometry & Folding Reciprocity:** At the N+2 scale, the folding number $21 = 3 \times 7$ (MatterGate × TimeGate) establishes a reciprocity: $21/7 = 3$ (Matter folds from Time) and $21/3 = 7$ (Time folds from Matter). This is the scale at which structure and time become interchangeable.
 
 ---
@@ -204,7 +204,7 @@ Projects/
 │   ├── Library/Wiki/           ← Literate Idris verification proofs & documentation
 │   └── idris2-Universe-Wiki.ipkg
 │
-├── [idris2-Universe/](https://github.com/justinkelly-ie/idris2-Universe)   ← The core simulation engine (59 modules)
+├── [idris2-LUniverse/](https://github.com/justinkelly-../idris2-Universe)   ← The core simulation engine (59 modules)
 │   ├── src/Simplex/            ← State and relation topologies
 │   ├── src/Evolution/          ← Polynomial evolution gates and loops
 │   └── src/Physics/            ← Physical, chemical, biological, and neurological folds

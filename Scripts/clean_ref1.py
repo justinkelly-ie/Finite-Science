@@ -11,7 +11,7 @@ def process_file(filepath):
             f.writelines(new_lines)
         print(f"Cleaned {filepath}")
 
-for root, _, files in os.walk('/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src'):
+for root, _, files in os.walk('/var/home/justin/Projects/Linear-Physi../idris2-Universe/src'):
     for file in files:
         if file.endswith('.idr'):
             process_file(os.path.join(root, file))

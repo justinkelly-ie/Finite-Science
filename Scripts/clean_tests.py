@@ -2,7 +2,7 @@ import os
 import re
 
 directories = [
-    '/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/tests'
+    '/var/home/justin/Projects/Linear-Physi../idris2-Universe/tests'
 ]
 
 for d in directories:

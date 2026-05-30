@@ -53,7 +53,7 @@ def process_file(l_path, p_path):
         os.remove(l_path)
 
 
-src_dir = "/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src"
+src_dir = "/var/home/justin/Projects/Linear-Physi../idris2-Universe/src"
 
 for root, dirs, files in os.walk(src_dir):
     for file in files:

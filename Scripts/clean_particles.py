@@ -1,7 +1,7 @@
 import os
 import re
 
-directory = '/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src/Physics/Particles'
+directory = '/var/home/justin/Projects/Linear-Physi../idris2-Universe/src/Physics/Particles'
 
 record_pattern = re.compile(r'record\s+([A-Za-z0-9_]+)\s+tree\s+where')
 proof_pattern = re.compile(r'\s*0\s+is[A-Za-z0-9_]+\s*:\s*dimensions\s*\([^)]*\)\s*=\s*\d+\n')

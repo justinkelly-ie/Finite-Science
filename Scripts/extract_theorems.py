@@ -1,7 +1,7 @@
 import os
 import re
 
-SRC_DIR = "/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src/Physics/"
+SRC_DIR = "/var/home/justin/Projects/Linear-Physi../idris2-Universe/src/Physics/"
 OUTPUT_FILE = "/var/home/justin/Projects/Linear-Physics/Library/Wiki/Physics/Theorems.md"
 
 def extract():

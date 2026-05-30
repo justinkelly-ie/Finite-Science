@@ -2,7 +2,7 @@ import os
 import glob
 
 def refactor():
-    src_dir = "/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src"
+    src_dir = "/var/home/justin/Projects/Linear-Physi../idris2-Universe/src"
     
     # 1. Replace FiberBundle and Substrate in all files
     for root, _, files in os.walk(src_dir):

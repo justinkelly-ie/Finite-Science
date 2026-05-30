@@ -39,4 +39,4 @@ def process_dir(directory):
 process_dir("idris2-LUniverse/src")
 process_dir("Library/Wiki")
 process_dir("idris2-QuickCheck/idris2-QuickCheck-tests")
-process_dir("idris2-LUniverse/idris2-LUniverse.ipkg")
+process_dir("idris2-LUniver../idris2-Universe.ipkg")

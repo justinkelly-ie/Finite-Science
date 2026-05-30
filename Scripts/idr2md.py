@@ -45,7 +45,7 @@ def convert_file(path):
     # Remove old .idr
     os.remove(path)
 
-files = glob.glob('/var/home/justin/Projects/Linear-Physics/idris2-LUniverse-Tests/src/Tests/*.idr')
+files = glob.glob('/var/home/justin/Projects/Linear-Physi../idris2-Universe-Tests/src/Tests/*.idr')
 for f in files:
     if f.endswith('.idr'):
         convert_file(f)

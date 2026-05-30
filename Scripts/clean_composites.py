@@ -1,7 +1,7 @@
 import os
 import re
 
-directory = '/var/home/justin/Projects/Linear-Physics/idris2-LUniverse/src/Physics/Particles'
+directory = '/var/home/justin/Projects/Linear-Physi../idris2-Universe/src/Physics/Particles'
 
 for file in os.listdir(directory):
     if file.endswith('.idr'):
