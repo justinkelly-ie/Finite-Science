@@ -408,7 +408,7 @@ function SigmaGateSystem({
         />
       </Plane>
 
-      {/* Render Edges with dynamic visual weight (1-Chain Inputs) */}
+      {/* Render Edges with dynamic visual weight (Edge Multiset Inputs) */}
       {edgeA !== 0 && (
         <Line 
           points={[v0, v1]} 
@@ -431,7 +431,7 @@ function SigmaGateSystem({
         />
       )}
 
-      {/* Render Boundary Charge Vertices (0-Chain Outputs) */}
+      {/* Render Boundary Charge Vertices (Vertex Multiset Outputs) */}
       {nodes.map((node) => {
         const absQ = Math.abs(node.charge);
         const radius = absQ === 0 ? 0.7 : 0.9 + absQ * 0.4;
@@ -749,7 +749,7 @@ export default function App() {
         {mode === 'sigmagate' && (
           <div style={{ background: 'rgba(10,10,20,0.85)', padding: '20px', borderRadius: '6px', border: '1px solid #00ffcc', backdropFilter: 'blur(10px)' }}>
             <label style={{ display: 'block', marginBottom: '12px', fontSize: '11px', color: '#00ffcc', letterSpacing: '1.5px', fontWeight: 'bold' }}>
-              SIGMAGATE INPUT PARAMETERS (1-CHAIN)
+              SIGMAGATE INPUT PARAMETERS (EDGE MULTISET)
             </label>
             <p style={{ fontSize: '12px', color: '#aaa', lineHeight: '1.5', marginBottom: '15px' }}>
               Adjust the multiplicities of the directed causal edges. The non-linear SigmaGate boundary operator ($\partial$) maps these inputs to vertex charge outputs.
@@ -916,7 +916,7 @@ export default function App() {
                 </div>
               </div>
 
-              <h4 style={{ color: '#00ffcc', margin: '0 0 8px 0', fontSize: '12px' }}>OUTPUT STATE (0-CHAIN CHARGES)</h4>
+              <h4 style={{ color: '#00ffcc', margin: '0 0 8px 0', fontSize: '12px' }}>OUTPUT STATE (VERTEX MULTISET CHARGES)</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '8px 5px', fontSize: '12px', background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '4px', marginBottom: '15px' }}>
                 <span style={{ color: '#888' }}>Coordinate</span>
                 <span style={{ color: '#888' }}>Equation</span>
