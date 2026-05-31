@@ -232,40 +232,65 @@ idris2-chromogeometry = { path = "../idris2-Chromogeometry" }
 
 To compile the libraries and execute the 55 property tests, run the unified script from the root of this repository:
 ```bash
-# 1. Build and execute all tests:
+# Using host:
 ./Scripts/run-tests.sh
+
+# Or using the Fedora Toolbox environment:
+toolbox run -c fedora-toolbox-44 ./Scripts/run-tests.sh
 ```
 
 Alternatively, you can build and run the test package directly via `pack` within the Wiki repository:
 ```bash
-# 2. Or run the package directly via pack:
+# Using host:
 cd ../idris2-Universe-Wiki
 pack run idris2-Universe-Wiki.ipkg
+
+# Or using the Fedora Toolbox environment:
+toolbox run -c fedora-toolbox-44 bash -c "cd ../idris2-Universe-Wiki && pack run idris2-Universe-Wiki.ipkg"
 ```
 If you are unfamiliar with Idris2 but wish to explore the project, download Google Antigravity [^1] and have it assist you with the steps above; you can then prompt it to explore the model textually.
 
 ### Running the 3D Visualizer
 
-The 3D Science Laboratory is built using Vite, React, and React-Three-Fiber. To launch the interactive playground:
+The 3D Science Laboratory is built using Vite, React, and React-Three-Fiber. It is powered by the **live compiled Idris 2 physics engine** running directly in the browser!
 
-1. **Install Dependencies** (if first time):
+To launch the interactive visualizer:
+
+1. **Compile the Idris 2 JS Bridge Engine**:
+   To enable real-time dynamic simulation in the browser, build the browser JS bundle and copy it to the visualizer's public asset directory:
    ```bash
-   toolbox run -c fedora-toolbox-44 bash -c "cd visualizer && npm install"
+   # Using host:
+   cd ../idris2-Universe
+   pack --cg javascript build idris2-LUniverse-js.ipkg
+   cp build/exec/luniverse_js ../Nat-Science/visualizer/public/luniverse_js.js
+   
+   # Or using the Fedora Toolbox environment:
+   toolbox run -c fedora-toolbox-44 bash -c "cd ../idris2-Universe && pack --cg javascript build idris2-LUniverse-js.ipkg"
+   cp ../idris2-Universe/build/exec/luniverse_js visualizer/public/luniverse_js.js
    ```
 
-2. **Generate Live Simulation States**:
-   Before running the visualizer, execute the compiler runner to populate the state serialization vectors:
+2. **Install Visualizer Dependencies**:
    ```bash
-   ./Scripts/run-tests.sh
+   # Using host:
+   cd visualizer
+   npm install
+   
+   # Or using the Fedora Toolbox environment:
+   toolbox run -c fedora-toolbox-44 bash -c "cd visualizer && npm install"
    ```
 
 3. **Start the Development Server**:
    ```bash
+   # Using host:
+   npm run dev
+   
+   # Or using the Fedora Toolbox environment:
    toolbox run -c fedora-toolbox-44 bash -c "cd visualizer && npm run dev"
    ```
    Once started, open [http://localhost:5173](http://localhost:5173) in your browser to view the interactive 3D laboratory. Use the tabs at the top to toggle between:
    * **Simulated Baryon Lock**: Interactive quark metrical tension solver.
-   * **Live Serialization Pipeline**: Real-time Idris 2 state vectors loaded via the state serialization bridge!
+   * **Live Serialization Pipeline**: Real-time Idris 2 simulation running dynamically inside your browser! Includes a full preset selector, custom metric selector, and interactive mass-energy injection and causal edge creation sandboxes.
+   * **SigmaGate Modeler**: Causal edge boundary solver.
 
 ---
 
