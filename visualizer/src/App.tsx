@@ -1096,7 +1096,7 @@ export default function App() {
         return updated;
       });
       setActiveTick(prev => prev + 1);
-    }, 1200);
+    }, 10000); // Sample the engine once every 10 seconds (Wildberger Sequence polling)
     return () => clearInterval(interval);
   }, [isPlaying, activeTick, isEngineLoaded, simCapacity, simMetric, simTargetX, simTargetY]);
 
