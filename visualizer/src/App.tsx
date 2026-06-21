@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Line, Sphere, Html, Sparkles, Trail, Plane } from '@react-three/drei';
+import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import './index.css';
 
@@ -169,6 +170,36 @@ function formatSparseMaxel(maxels: Maxel[]): string {
   }).join(';');
 }
 
+let tempSubstrate: CausalEdge[] = [];
+let tempStateVector: Maxel[] = [];
+
+(globalThis as any).clearUniverseBuffers = () => {
+  tempSubstrate = [];
+  tempStateVector = [];
+};
+
+(globalThis as any).pushEdge = (px: number, py: number, cx: number, cy: number, count: number) => {
+  tempSubstrate.push({
+    parent: { src: px, tgt: py },
+    child: { src: cx, tgt: cy },
+    count
+  });
+};
+
+(globalThis as any).pushMaxel = (x: number, y: number, alpha: number, beta: number, count: number) => {
+  const geom = { src: x, tgt: y };
+  const existing = tempStateVector.find(m => m.geom.src === x && m.geom.tgt === y);
+  if (existing) {
+    existing.amplitude.push({ alpha, beta, count });
+  } else {
+    tempStateVector.push({
+      geom,
+      count: 1, // Normalized logic counts
+      amplitude: [{ alpha, beta, count }]
+    });
+  }
+};
+
 function runIdrisAdaptiveCycle(
   capacityLimit: number,
   metric: number,
@@ -185,8 +216,15 @@ function runIdrisAdaptiveCycle(
   const targetStr = `${macroTarget.src},${macroTarget.tgt}`;
   const subStr = formatSubstrate(substrate);
   const vecStr = formatSparseMaxel(stateVector);
-  const jsonResult = (window as any).idris_runAdaptiveCycle(capStr)(metStr)(targetStr)(subStr)(vecStr);
-  return JSON.parse(jsonResult);
+  
+  // The Idris function now synchronously fills tempSubstrate and tempStateVector
+  (window as any).idris_runAdaptiveCycle(capStr)(metStr)(targetStr)(subStr)(vecStr);
+  
+  // Clone to break references and trigger React render
+  return { 
+    substrate: [...tempSubstrate], 
+    stateVector: [...tempStateVector] 
+  };
 }
 
 // ---------------------------------------------------------------------
@@ -1669,6 +1707,11 @@ export default function App() {
         <color attach="background" args={['#020205']} />
         <ambientLight intensity={0.2} />
         
+        <EffectComposer multisampling={4}>
+          <Bloom luminanceThreshold={0.4} luminanceSmoothing={0.8} intensity={2.5} mipmapBlur />
+          <ChromaticAberration offset={[0.002, 0.002] as any} />
+        </EffectComposer>
+
         {mode === 'omega' && (
           <>
             <pointLight position={[0, 0, 10]} intensity={1.5} color="#00aaff" />

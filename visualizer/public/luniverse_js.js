@@ -216,22 +216,30 @@ const _strReverse = x => x.split('').reverse().join('')
 
 const _substr = (o,l,x) => x.slice(o, o + l)
 
-const JSBridge_prim_exportFunction4 = ((name, fn) => { globalThis[name] = fn; });
-const JSBridge_prim_exportFunction = ((name, fn) => { globalThis[name] = fn; });
+const JSBridge_prim_pushMaxel = ((x, y, alpha, beta, count) => { if (globalThis.pushMaxel) globalThis.pushMaxel(x, y, alpha, beta, count); });
+const JSBridge_prim_pushEdge = ((px, py, cx, cy, count) => { if (globalThis.pushEdge) globalThis.pushEdge(px, py, cx, cy, count); });
+const JSBridge_prim_exportFunction4 = ((name, fn) => { globalThis[name] = (a) => (b) => (c) => (d) => { fn(a)(b)(c)(d)(); return 0; }; });
+const JSBridge_prim_exportFunction = ((name, fn) => { globalThis[name] = (a) => (b) => (c) => (d) => (e) => { fn(a)(b)(c)(d)(e)(); return 0; }; });
+const JSBridge_prim_clearBuffers = (() => { if (globalThis.clearUniverseBuffers) globalThis.clearUniverseBuffers(); });
 const Prelude_Types_fastUnpack = ((str)=>__prim_js2idris_array(Array.from(str)));
 const Prelude_Types_fastPack = ((xs)=>__prim_idris2js_array(xs).join(''));
 const Prelude_IO_prim__putStr = (x=>console.log(x));
 /* {$tcOpt:1} */
 function x24tcOpt_1($0) {
- switch($0.a3.h) {
-  case 0: /* nil */ return {h: 0 /* {TcDone:1} */, a1: $0.a2};
-  case undefined: /* cons */ return {h: 1 /* {TcContinue1:1} */, a1: $0.a1, a2: $0.a1($0.a2)($0.a3.a1), a3: $0.a3.a2};
+ switch($0.a4) {
+  case 0n: return {h: 0 /* {TcDone:1} */, a1: $0.a5};
+  default: {
+   const $4 = ($0.a4-1n);
+   const $8 = Math_SpreadPolynumber_scalarMul(2n, Math_IntPolynumber_mulIntPoly($0.a2, $0.a5.a1));
+   const $f = Math_IntPolynumber_annihilateIntPoly(Math_IntPolynumber_addIntPoly(Math_IntPolynumber_subIntPoly($8, $0.a5.a2), $0.a3));
+   return {h: 1 /* {TcContinue1:1} */, a1: $0.a1, a2: $0.a2, a3: $0.a3, a4: $4, a5: {a1: $f, a2: $0.a5.a1}};
+  }
  }
 }
 
-/* Prelude.Types.foldl */
-function Prelude_Types_foldl_Foldable_List($0, $1, $2) {
- return __tailRec(x24tcOpt_1, {h: 1 /* {TcContinue1:1} */, a1: $0, a2: $1, a3: $2});
+/* Math.SpreadPolynumber.3613:2590:step */
+function Math_SpreadPolynumber_n__3613_2590_step($0, $1, $2, $3, $4) {
+ return __tailRec(x24tcOpt_1, {h: 1 /* {TcContinue1:1} */, a1: $0, a2: $1, a3: $2, a4: $3, a5: $4});
 }
 
 /* {$tcOpt:2} */
@@ -266,46 +274,64 @@ function Data_String_parseNumWithoutSign($0, $1) {
 /* {$tcOpt:3} */
 function x24tcOpt_3($0) {
  switch($0.a3.h) {
+  case 0: /* nil */ return {h: 0 /* {TcDone:3} */, a1: {h: 0}};
   case undefined: /* cons */ {
-   const $3 = $0.a2($0.a3.a1);
-   switch($3.h) {
-    case undefined: /* just */ return {h: 1 /* {TcContinue3:1} */, a1: {a1: $0.a1, a2: $3.a1}, a2: $0.a2, a3: $0.a3.a2};
-    case 0: /* nothing */ return {h: 1 /* {TcContinue3:1} */, a1: $0.a1, a2: $0.a2, a3: $0.a3.a2};
+   switch(Prelude_Types_elemBy(csegen_73(), $0.a2, $0.a3.a1)($0.a1)) {
+    case 1: return {h: 1 /* {TcContinue3:1} */, a1: $0.a1, a2: $0.a2, a3: $0.a3.a2};
+    case 0: return {h: 0 /* {TcDone:3} */, a1: {a1: $0.a3.a1, a2: Data_List_n__4934_5733_nubByx27({a1: $0.a3.a1, a2: $0.a1}, $0.a2, $0.a3.a2)}};
    }
   }
-  case 0: /* nil */ return {h: 0 /* {TcDone:3} */, a1: Prelude_Types_SnocList_x3cx3ex3e($0.a1, {h: 0})};
  }
 }
 
-/* Prelude.Types.List.mapMaybeAppend : SnocList b -> (a -> Maybe b) -> List a -> List b */
-function Prelude_Types_List_mapMaybeAppend($0, $1, $2) {
+/* Data.List.4934:5733:nubBy' */
+function Data_List_n__4934_5733_nubByx27($0, $1, $2) {
  return __tailRec(x24tcOpt_3, {h: 1 /* {TcContinue3:1} */, a1: $0, a2: $1, a3: $2});
 }
 
 /* {$tcOpt:4} */
 function x24tcOpt_4($0) {
  switch($0.a3.h) {
-  case undefined: /* cons */ return {h: 1 /* {TcContinue4:1} */, a1: {a1: $0.a1, a2: $0.a2($0.a3.a1)}, a2: $0.a2, a3: $0.a3.a2};
+  case undefined: /* cons */ {
+   const $3 = $0.a2($0.a3.a1);
+   switch($3.h) {
+    case undefined: /* just */ return {h: 1 /* {TcContinue4:1} */, a1: {a1: $0.a1, a2: $3.a1}, a2: $0.a2, a3: $0.a3.a2};
+    case 0: /* nothing */ return {h: 1 /* {TcContinue4:1} */, a1: $0.a1, a2: $0.a2, a3: $0.a3.a2};
+   }
+  }
   case 0: /* nil */ return {h: 0 /* {TcDone:4} */, a1: Prelude_Types_SnocList_x3cx3ex3e($0.a1, {h: 0})};
  }
 }
 
-/* Prelude.Types.List.mapAppend : SnocList b -> (a -> b) -> List a -> List b */
-function Prelude_Types_List_mapAppend($0, $1, $2) {
+/* Prelude.Types.List.mapMaybeAppend : SnocList b -> (a -> Maybe b) -> List a -> List b */
+function Prelude_Types_List_mapMaybeAppend($0, $1, $2) {
  return __tailRec(x24tcOpt_4, {h: 1 /* {TcContinue4:1} */, a1: $0, a2: $1, a3: $2});
 }
 
 /* {$tcOpt:5} */
 function x24tcOpt_5($0) {
+ switch($0.a3.h) {
+  case undefined: /* cons */ return {h: 1 /* {TcContinue5:1} */, a1: {a1: $0.a1, a2: $0.a2($0.a3.a1)}, a2: $0.a2, a3: $0.a3.a2};
+  case 0: /* nil */ return {h: 0 /* {TcDone:5} */, a1: Prelude_Types_SnocList_x3cx3ex3e($0.a1, {h: 0})};
+ }
+}
+
+/* Prelude.Types.List.mapAppend : SnocList b -> (a -> b) -> List a -> List b */
+function Prelude_Types_List_mapAppend($0, $1, $2) {
+ return __tailRec(x24tcOpt_5, {h: 1 /* {TcContinue5:1} */, a1: $0, a2: $1, a3: $2});
+}
+
+/* {$tcOpt:6} */
+function x24tcOpt_6($0) {
  switch($0.a1) {
   case '': {
    switch($0.a2.h) {
-    case 0: /* Nil */ return {h: 0 /* {TcDone:5} */, a1: ''};
+    case 0: /* Nil */ return {h: 0 /* {TcDone:6} */, a1: ''};
     default: {
      const $6 = ($0.a2.a1+$0.a2.a2);
      switch(Prelude_Types_isSpace($0.a2.a1)) {
-      case 1: return {h: 1 /* {TcContinue5:1} */, a1: $0.a2.a2, a2: $0.a2.a3()};
-      case 0: return {h: 0 /* {TcDone:5} */, a1: $6};
+      case 1: return {h: 1 /* {TcContinue6:1} */, a1: $0.a2.a2, a2: $0.a2.a3()};
+      case 0: return {h: 0 /* {TcDone:6} */, a1: $6};
      }
     }
    }
@@ -313,8 +339,8 @@ function x24tcOpt_5($0) {
   default: {
    const $11 = ($0.a2.a1+$0.a2.a2);
    switch(Prelude_Types_isSpace($0.a2.a1)) {
-    case 1: return {h: 1 /* {TcContinue5:1} */, a1: $0.a2.a2, a2: $0.a2.a3()};
-    case 0: return {h: 0 /* {TcDone:5} */, a1: $11};
+    case 1: return {h: 1 /* {TcContinue6:1} */, a1: $0.a2.a2, a2: $0.a2.a3()};
+    case 0: return {h: 0 /* {TcDone:6} */, a1: $11};
    }
   }
  }
@@ -322,71 +348,58 @@ function x24tcOpt_5($0) {
 
 /* Data.String.with block in ltrim */
 function Data_String_with__ltrim_9864($0, $1) {
- return __tailRec(x24tcOpt_5, {h: 1 /* {TcContinue5:1} */, a1: $0, a2: $1});
+ return __tailRec(x24tcOpt_6, {h: 1 /* {TcContinue6:1} */, a1: $0, a2: $1});
 }
 
-/* {$tcOpt:6} */
-function x24tcOpt_6($0) {
+/* {$tcOpt:7} */
+function x24tcOpt_7($0) {
  switch($0.a3.h) {
-  case 0: /* nil */ return {h: 0 /* {TcDone:6} */, a1: Prelude_Types_List_reverse($0.a2)};
-  case undefined: /* cons */ return {h: 1 /* {TcContinue6:1} */, a1: $0.a1, a2: Prelude_Types_List_reverseOnto($0.a2, $0.a1($0.a3.a1)), a3: $0.a3.a2};
+  case 0: /* nil */ return {h: 0 /* {TcDone:7} */, a1: Prelude_Types_List_reverse($0.a2)};
+  case undefined: /* cons */ return {h: 1 /* {TcContinue7:1} */, a1: $0.a1, a2: Prelude_Types_List_reverseOnto($0.a2, $0.a1($0.a3.a1)), a3: $0.a3.a2};
  }
 }
 
 /* Prelude.Types.listBindOnto : (a -> List b) -> List b -> List a -> List b */
 function Prelude_Types_listBindOnto($0, $1, $2) {
- return __tailRec(x24tcOpt_6, {h: 1 /* {TcContinue6:1} */, a1: $0, a2: $1, a3: $2});
+ return __tailRec(x24tcOpt_7, {h: 1 /* {TcContinue7:1} */, a1: $0, a2: $1, a3: $2});
 }
 
-/* {$tcOpt:7} */
-function x24tcOpt_7($0) {
+/* {$tcOpt:8} */
+function x24tcOpt_8($0) {
  switch($0.a2.h) {
-  case 0: /* nil */ return {h: 0 /* {TcDone:7} */, a1: $0.a1};
-  case undefined: /* cons */ return {h: 1 /* {TcContinue7:1} */, a1: {a1: $0.a2.a1, a2: $0.a1}, a2: $0.a2.a2};
+  case 0: /* nil */ return {h: 0 /* {TcDone:8} */, a1: $0.a1};
+  case undefined: /* cons */ return {h: 1 /* {TcContinue8:1} */, a1: {a1: $0.a2.a1, a2: $0.a1}, a2: $0.a2.a2};
  }
 }
 
 /* Prelude.Types.List.reverseOnto : List a -> List a -> List a */
 function Prelude_Types_List_reverseOnto($0, $1) {
- return __tailRec(x24tcOpt_7, {h: 1 /* {TcContinue7:1} */, a1: $0, a2: $1});
+ return __tailRec(x24tcOpt_8, {h: 1 /* {TcContinue8:1} */, a1: $0, a2: $1});
 }
 
-/* {$tcOpt:8} */
-function x24tcOpt_8($0) {
+/* {$tcOpt:9} */
+function x24tcOpt_9($0) {
  switch($0.a1.a2.h) {
-  case 0: /* nil */ return {h: 0 /* {TcDone:8} */, a1: $0.a1.a1};
-  case undefined: /* cons */ return {h: 1 /* {TcContinue8:1} */, a1: $0.a1.a2};
+  case 0: /* nil */ return {h: 0 /* {TcDone:9} */, a1: $0.a1.a1};
+  case undefined: /* cons */ return {h: 1 /* {TcContinue9:1} */, a1: $0.a1.a2};
  }
 }
 
 /* Data.List.last : (l : List a) -> {auto 0 _ : NonEmpty l} -> a */
 function Data_List_last($0) {
- return __tailRec(x24tcOpt_8, {h: 1 /* {TcContinue8:1} */, a1: $0});
+ return __tailRec(x24tcOpt_9, {h: 1 /* {TcContinue9:1} */, a1: $0});
 }
 
-/* {$tcOpt:9} */
-function x24tcOpt_9($0) {
+/* {$tcOpt:10} */
+function x24tcOpt_10($0) {
  switch($0.a2) {
-  case 0n: return {h: 0 /* {TcDone:9} */, a1: Prelude_Num_abs_Abs_Integer($0.a1)};
-  default: return {h: 1 /* {TcContinue9:1} */, a1: $0.a2, a2: Prelude_Num_mod_Integral_Integer($0.a1, $0.a2)};
+  case 0n: return {h: 0 /* {TcDone:10} */, a1: Prelude_Num_abs_Abs_Integer($0.a1)};
+  default: return {h: 1 /* {TcContinue10:1} */, a1: $0.a2, a2: Prelude_Num_mod_Integral_Integer($0.a1, $0.a2)};
  }
 }
 
 /* Simplex.Twist.gcd : Integer -> Integer -> Integer */
 function Simplex_Twist_gcd($0, $1) {
- return __tailRec(x24tcOpt_9, {h: 1 /* {TcContinue9:1} */, a1: $0, a2: $1});
-}
-
-/* {$tcOpt:10} */
-function x24tcOpt_10($0) {
- switch($0.a2.h) {
-  case 0: /* LEmptyM */ return {h: 0 /* {TcDone:10} */, a1: $0.a1};
-  case 1: /* LAddM */ return {h: 1 /* {TcContinue10:1} */, a1: {a1: {a1: $0.a2.a1, a2: $0.a2.a2}, a2: $0.a1}, a2: $0.a2.a3};
- }
-}
-
-/* SigmaBridge.freezeLDepAcc : List (a, Integer) -> (1 _ : LDepMultiset a c) -> List (a, Integer) */
-function SigmaBridge_freezeLDepAcc($0, $1) {
  return __tailRec(x24tcOpt_10, {h: 1 /* {TcContinue10:1} */, a1: $0, a2: $1});
 }
 
@@ -410,28 +423,41 @@ function Prelude_Types_List_filterAppend($0, $1, $2) {
 
 /* {$tcOpt:12} */
 function x24tcOpt_12($0) {
- switch($0.a4.h) {
-  case 0: /* ZeroM */ return {h: 0 /* {TcDone:12} */, a1: $0.a3};
-  case 1: /* AddM */ return {h: 1 /* {TcContinue12:1} */, a1: $0.a1, a2: $0.a2, a3: Math_Multiset_insertItem($0.a1, $0.a4.a1, $0.a4.a2, $0.a3), a4: $0.a4.a3};
+ switch($0.a3.h) {
+  case 0: /* nil */ return {h: 0 /* {TcDone:12} */, a1: $0.a2};
+  case undefined: /* cons */ return {h: 1 /* {TcContinue12:1} */, a1: $0.a1, a2: $0.a1($0.a2)($0.a3.a1), a3: $0.a3.a2};
  }
 }
 
-/* Math.Multiset.3641:1260:go */
-function Math_Multiset_n__3641_1260_go($0, $1, $2, $3) {
- return __tailRec(x24tcOpt_12, {h: 1 /* {TcContinue12:1} */, a1: $0, a2: $1, a3: $2, a4: $3});
+/* Prelude.Types.foldl */
+function Prelude_Types_foldl_Foldable_List($0, $1, $2) {
+ return __tailRec(x24tcOpt_12, {h: 1 /* {TcContinue12:1} */, a1: $0, a2: $1, a3: $2});
 }
 
 /* {$tcOpt:13} */
 function x24tcOpt_13($0) {
+ switch($0.a4.h) {
+  case 0: /* ZeroM */ return {h: 0 /* {TcDone:13} */, a1: $0.a3};
+  case 1: /* AddM */ return {h: 1 /* {TcContinue13:1} */, a1: $0.a1, a2: $0.a2, a3: Math_Multiset_insertItem($0.a1, $0.a4.a1, $0.a4.a2, $0.a3), a4: $0.a4.a3};
+ }
+}
+
+/* Math.Multiset.3702:1564:go */
+function Math_Multiset_n__3702_1564_go($0, $1, $2, $3) {
+ return __tailRec(x24tcOpt_13, {h: 1 /* {TcContinue13:1} */, a1: $0, a2: $1, a3: $2, a4: $3});
+}
+
+/* {$tcOpt:14} */
+function x24tcOpt_14($0) {
  switch($0.a1.h) {
-  case 0: /* nil */ return {h: 0 /* {TcDone:13} */, a1: $0.a2};
-  case undefined: /* cons */ return {h: 1 /* {TcContinue13:1} */, a1: $0.a1.a1, a2: {a1: $0.a1.a2, a2: $0.a2}};
+  case 0: /* nil */ return {h: 0 /* {TcDone:14} */, a1: $0.a2};
+  case undefined: /* cons */ return {h: 1 /* {TcContinue14:1} */, a1: $0.a1.a1, a2: {a1: $0.a1.a2, a2: $0.a2}};
  }
 }
 
 /* Prelude.Types.SnocList.(<>>) : SnocList a -> List a -> List a */
 function Prelude_Types_SnocList_x3cx3ex3e($0, $1) {
- return __tailRec(x24tcOpt_13, {h: 1 /* {TcContinue13:1} */, a1: $0, a2: $1});
+ return __tailRec(x24tcOpt_14, {h: 1 /* {TcContinue14:1} */, a1: $0, a2: $1});
 }
 
 /* {__mainExpression:0} */
@@ -446,80 +472,152 @@ const csegen_0 = __lazy(function () {
 
 /* {csegen:1} */
 const csegen_1 = __lazy(function () {
+ return {a1: Math_BoxInt_intToBoxInt(0n), a2: Math_BoxInt_intToBoxInt(0n)};
+});
+
+/* {csegen:2} */
+const csegen_2 = __lazy(function () {
  return c => Prelude_EqOrd_x3dx3d_Eq_Char(c, ';');
 });
 
-/* {csegen:4} */
-const csegen_4 = __lazy(function () {
- return {a1: $1 => $2 => Prelude_EqOrd_x3dx3d_Eq_Integer($1, $2), a2: $7 => $8 => Prelude_EqOrd_x2fx3d_Eq_Integer($7, $8)};
-});
-
-/* {csegen:7} */
-const csegen_7 = __lazy(function () {
- return {a1: $1 => $2 => Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $1, $2), a2: $9 => $a => Math_Pixel_x2fx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $9, $a)};
+/* {csegen:8} */
+const csegen_8 = __lazy(function () {
+ return {a1: $1 => $2 => ($1+$2), a2: $6 => $7 => ($6*$7), a3: $b => $b};
 });
 
 /* {csegen:10} */
 const csegen_10 = __lazy(function () {
- return {a1: $1 => $2 => Prelude_EqOrd_x3dx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_7(), csegen_7(), $1, $2), a2: $b => $c => Prelude_EqOrd_x2fx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_7(), csegen_7(), $b, $c)};
+ return {a1: csegen_8(), a2: $3 => (0n-$3), a3: $7 => $8 => ($7-$8)};
 });
 
-/* {csegen:13} */
-const csegen_13 = __lazy(function () {
- return {a1: $1 => $2 => (($1===$2)?1:0), a2: $6 => $7 => Prelude_Types_x2fx3d_Eq_Nat($6, $7)};
+/* {csegen:14} */
+const csegen_14 = __lazy(function () {
+ return {a1: csegen_8(), a2: {a1: $4 => $5 => Prelude_EqOrd_x3dx3d_Eq_Integer($4, $5), a2: $a => $b => Prelude_EqOrd_x2fx3d_Eq_Integer($a, $b)}};
 });
 
 /* {csegen:16} */
 const csegen_16 = __lazy(function () {
- return {a1: $1 => $2 => Prelude_EqOrd_x3dx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_13(), csegen_13(), $1, $2), a2: $b => $c => Prelude_EqOrd_x2fx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_13(), csegen_13(), $b, $c)};
+ return {a1: {a1: $2 => $3 => Math_BoxInt_x3dx3d_Eq_SignedUnit($2, $3), a2: $8 => $9 => Math_BoxInt_x2fx3d_Eq_SignedUnit($8, $9)}, a2: {a1: csegen_10(), a2: csegen_14()}};
 });
 
 /* {csegen:19} */
 const csegen_19 = __lazy(function () {
- return {a1: $1 => $2 => Math_Multiset_x3dx3d_Eq_x28Multisetx20x24ax29(csegen_16(), $1, $2), a2: $9 => $a => Math_Multiset_x2fx3d_Eq_x28Multisetx20x24ax29(csegen_16(), $9, $a)};
+ return {a1: $1 => $2 => Math_Multiset_x3dx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29(csegen_16(), $1, $2), a2: $9 => $a => Math_Multiset_x2fx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29(csegen_16(), $9, $a)};
 });
 
 /* {csegen:22} */
 const csegen_22 = __lazy(function () {
- return {a1: $1 => $2 => Prelude_EqOrd_x3dx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_7(), csegen_19(), $1, $2), a2: $b => $c => Prelude_EqOrd_x2fx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_7(), csegen_19(), $b, $c)};
+ return {a1: $1 => $2 => Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $1, $2), a2: $9 => $a => Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $9, $a)};
 });
 
-/* {csegen:23} */
-const csegen_23 = __lazy(function () {
- return c => Prelude_EqOrd_x3dx3d_Eq_Char(c, ':');
+/* {csegen:25} */
+const csegen_25 = __lazy(function () {
+ return {a1: $1 => $2 => (($1===$2)?1:0), a2: $6 => $7 => Prelude_Types_x2fx3d_Eq_Nat($6, $7)};
 });
 
-/* {csegen:26} */
-const csegen_26 = __lazy(function () {
- return {a1: $1 => $2 => ($1+$2), a2: $6 => $7 => ($6*$7), a3: $b => $b};
+/* {csegen:28} */
+const csegen_28 = __lazy(function () {
+ return {a1: $1 => $2 => Prelude_EqOrd_x3dx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_25(), csegen_25(), $1, $2), a2: $b => $c => Prelude_EqOrd_x2fx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_25(), csegen_25(), $b, $c)};
 });
 
-/* {csegen:42} */
-const csegen_42 = __lazy(function () {
- return {a1: {a1: b => a => func => $2 => Prelude_Types_List_mapAppend({h: 0}, func, $2), a2: a => $8 => Prelude_Types_pure_Applicative_List($8), a3: b => a => $c => $d => Prelude_Types_x3cx2ax3e_Applicative_List($c, $d)}, a2: a => ({h: 0}), a3: a => $13 => $14 => Prelude_Types_List_tailRecAppend($13, $14())};
+/* {csegen:31} */
+const csegen_31 = __lazy(function () {
+ return {a1: $1 => $2 => Math_BoxInt_boxAdd($1, $2), a2: $7 => $8 => Math_BoxInt_boxMult($7, $8), a3: $d => Math_BoxInt_intToBoxInt($d)};
+});
+
+/* {csegen:33} */
+const csegen_33 = __lazy(function () {
+ return {a1: csegen_31(), a2: $3 => Math_BoxInt_boxNegate($3), a3: $7 => $8 => Math_BoxInt_boxSub($7, $8)};
+});
+
+/* {csegen:34} */
+const csegen_34 = __lazy(function () {
+ return {a1: csegen_31(), a2: csegen_19()};
+});
+
+/* {csegen:36} */
+const csegen_36 = __lazy(function () {
+ return {a1: csegen_28(), a2: {a1: csegen_33(), a2: csegen_34()}};
+});
+
+/* {csegen:39} */
+const csegen_39 = __lazy(function () {
+ return {a1: $1 => $2 => Math_Multiset_x3dx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29(csegen_36(), $1, $2), a2: $9 => $a => Math_Multiset_x2fx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29(csegen_36(), $9, $a)};
 });
 
 /* {csegen:43} */
 const csegen_43 = __lazy(function () {
- return $0 => {
-  const $4 = Math_Chromogeometry_spreadNL(0, $0.a1, $0.a2.a1, $0.a2.a2.a1);
-  return {a1: ($4.a1*$0.a2.a2.a2), a2: $4.a2};
- };
+ return {a1: {a1: $2 => $3 => Prelude_EqOrd_x3dx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_22(), csegen_39(), $2, $3), a2: $c => $d => Prelude_EqOrd_x2fx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_22(), csegen_39(), $c, $d)}, a2: csegen_14()};
 });
 
-/* {csegen:44} */
-const csegen_44 = __lazy(function () {
- return $0 => $1 => Simplex_Twist_addRationalLocal($0, $1);
+/* {csegen:46} */
+const csegen_46 = __lazy(function () {
+ return {a1: $1 => $2 => Prelude_EqOrd_x3dx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_22(), csegen_22(), $1, $2), a2: $b => $c => Prelude_EqOrd_x2fx3d_Eq_x28x7cx28x28Builtinx2ePairx20x24ax29x20x24bx29x2cx28x28Builtinx2eMkPairx20x24ax29x20x24bx29x7cx29(csegen_22(), csegen_22(), $b, $c)};
 });
 
 /* {csegen:47} */
 const csegen_47 = __lazy(function () {
+ return {a1: csegen_46(), a2: csegen_14()};
+});
+
+/* {csegen:48} */
+const csegen_48 = __lazy(function () {
+ return c => Prelude_EqOrd_x3dx3d_Eq_Char(c, ':');
+});
+
+/* {csegen:49} */
+const csegen_49 = __lazy(function () {
+ return {a1: csegen_28(), a2: csegen_34()};
+});
+
+/* {csegen:58} */
+const csegen_58 = __lazy(function () {
+ const $a = b => a => $b => $c => $d => {
+  const $e = $b($d);
+  const $11 = $c($d);
+  return $e($11);
+ };
+ return {a1: b => a => func => $1 => $2 => Prelude_IO_map_Functor_IO(func, $1, $2), a2: a => $8 => $9 => $8, a3: $a};
+});
+
+/* {csegen:73} */
+const csegen_73 = __lazy(function () {
+ return {a1: acc => elem => func => init => input => Prelude_Types_foldr_Foldable_List(func, init, input), a2: elem => acc => func => init => input => Prelude_Types_foldl_Foldable_List(func, init, input), a3: elem => $b => Prelude_Types_null_Foldable_List($b), a4: elem => acc => m => $f => funcM => init => input => Prelude_Types_foldlM_Foldable_List($f, funcM, init, input), a5: elem => $16 => $16, a6: a => m => $18 => f => $19 => Prelude_Types_foldMap_Foldable_List($18, f, $19)};
+});
+
+/* {csegen:79} */
+const csegen_79 = __lazy(function () {
+ return {a1: $1 => $2 => Prelude_Interfaces_Bool_Semigroup_x3cx2bx3e_Semigroup_AnyBool($1, $2), a2: 0};
+});
+
+/* {csegen:82} */
+const csegen_82 = __lazy(function () {
+ return $0 => $1 => Simplex_Twist_addRationalLocal($0, $1);
+});
+
+/* {csegen:93} */
+const csegen_93 = __lazy(function () {
+ return {a1: {a1: b => a => func => $2 => Prelude_Types_List_mapAppend({h: 0}, func, $2), a2: a => $8 => Prelude_Types_pure_Applicative_List($8), a3: b => a => $c => $d => Prelude_Types_x3cx2ax3e_Applicative_List($c, $d)}, a2: a => ({h: 0}), a3: a => $13 => $14 => Prelude_Types_List_tailRecAppend($13, $14())};
+});
+
+/* {csegen:95} */
+const csegen_95 = __lazy(function () {
+ return {a1: $1 => $2 => Prelude_Types_List_tailRecAppend($1, $2), a2: {h: 0}};
+});
+
+/* {csegen:99} */
+const csegen_99 = __lazy(function () {
  return Math_SpreadPolynumber_scalarMul(2n, Math_SpreadPolynumber_sPoly());
 });
 
-/* {csegen:51} */
-const csegen_51 = __lazy(function () {
- return {a1: $1 => $2 => Prelude_Types_List_tailRecAppend($1, $2), a2: {h: 0}};
+/* {csegen:100} */
+const csegen_100 = __lazy(function () {
+ return Math_IntPolynumber_subIntPoly(Math_SpreadPolynumber_onePoly(), csegen_99());
+});
+
+/* {csegen:103} */
+const csegen_103 = __lazy(function () {
+ return {a1: csegen_8(), a2: {a1: csegen_8(), a2: $6 => Prelude_Num_abs_Abs_Integer($6)}};
 });
 
 /* prim__sub_Integer : Integer -> Integer -> Integer */
@@ -528,7 +626,7 @@ function prim__sub_Integer($0, $1) {
 }
 
 /* JSBridge.case block in parseMaxelItem */
-function JSBridge_case__parseMaxelItem_5322($0, $1) {
+function JSBridge_case__parseMaxelItem_5391($0, $1) {
  switch($1.h) {
   case undefined: /* cons */ {
    switch($1.a2.h) {
@@ -544,10 +642,10 @@ function JSBridge_case__parseMaxelItem_5322($0, $1) {
             case undefined: /* cons */ {
              switch($6.a2.a2.h) {
               case 0: /* nil */ {
-               const $d = {a1: JSBridge_parseInt($6.a1), a2: JSBridge_parseInt($6.a2.a1)};
-               const $14 = JSBridge_parseInt($1.a2.a1);
-               const $17 = JSBridge_parseAmplitude($1.a2.a2.a1);
-               return {a1: {a1: {a1: $d, a2: $17}, a2: $14}};
+               const $d = {a1: Math_BoxInt_intToBoxInt(JSBridge_parseInt($6.a1)), a2: Math_BoxInt_intToBoxInt(JSBridge_parseInt($6.a2.a1))};
+               const $18 = JSBridge_parseInt($1.a2.a1);
+               const $1b = JSBridge_parseAmplitude($1.a2.a2.a1);
+               return {a1: {a1: {a1: $d, a2: $1b}, a2: $18}};
               }
               default: return {h: 0};
              }
@@ -589,7 +687,7 @@ function JSBridge_case__parseEdge_5106($0, $1) {
              switch($5.a2.a2.a2.h) {
               case undefined: /* cons */ {
                switch($5.a2.a2.a2.a2.h) {
-                case 0: /* nil */ return {a1: {a1: {a1: {a1: JSBridge_parseInt($5.a1), a2: JSBridge_parseInt($5.a2.a1)}, a2: {a1: JSBridge_parseInt($5.a2.a2.a1), a2: JSBridge_parseInt($5.a2.a2.a2.a1)}}, a2: JSBridge_parseInt($1.a2.a1)}};
+                case 0: /* nil */ return {a1: {a1: {a1: {a1: Math_BoxInt_intToBoxInt(JSBridge_parseInt($5.a1)), a2: Math_BoxInt_intToBoxInt(JSBridge_parseInt($5.a2.a1))}, a2: {a1: Math_BoxInt_intToBoxInt(JSBridge_parseInt($5.a2.a2.a1)), a2: Math_BoxInt_intToBoxInt(JSBridge_parseInt($5.a2.a2.a2.a1))}}, a2: JSBridge_parseInt($1.a2.a1)}};
                 default: return {h: 0};
                }
               }
@@ -615,9 +713,9 @@ function JSBridge_case__parseEdge_5106($0, $1) {
  }
 }
 
-/* JSBridge.stepUniverseLocalizedBridge : String -> String -> String -> String -> String */
+/* JSBridge.stepUniverseLocalizedBridge : String -> String -> String -> String -> IO () */
 function JSBridge_stepUniverseLocalizedBridge($0, $1, $2, $3) {
- const $4 = JSBridge_parseInt($0);
+ const $4 = JSBridge_parseNat($0);
  const $7 = JSBridge_parseInt($1);
  let $a;
  switch($7) {
@@ -632,10 +730,10 @@ function JSBridge_stepUniverseLocalizedBridge($0, $1, $2, $3) {
   default: $a = 0;
  }
  const $c = JSBridge_parseSubstrate($2);
- const $f = JSBridge_parseSparseMaxel($3);
- const $12 = Evolution_SpreadPolynumber_stepUniverseLocalized($4, $a, $c, $f);
+ const $f = JSBridge_parseVexel($3);
+ const $12 = Evolution_LocalSpreadPolynumber_stepUniverseLocalized($4, $a, $c, $f);
  const $18 = {a1: $12.a1, a2: $12.a2};
- return Simplex_Core_serializeUniverseState($18);
+ return $1b => JSBridge_exportUniverseState($18, $1b);
 }
 
 /* JSBridge.splitList : (Char -> Bool) -> String -> List String */
@@ -643,9 +741,9 @@ function JSBridge_splitList($0, $1) {
  return Data_String_split($0, $1);
 }
 
-/* JSBridge.runAdaptiveCycleBridge : String -> String -> String -> String -> String -> String */
+/* JSBridge.runAdaptiveCycleBridge : String -> String -> String -> String -> String -> IO () */
 function JSBridge_runAdaptiveCycleBridge($0, $1, $2, $3, $4) {
- const $5 = JSBridge_parseInt($0);
+ const $5 = JSBridge_parseNat($0);
  const $8 = JSBridge_parseInt($1);
  let $b;
  switch($8) {
@@ -667,27 +765,49 @@ function JSBridge_runAdaptiveCycleBridge($0, $1, $2, $3, $4) {
     case undefined: /* cons */ {
      switch($e.a2.a2.h) {
       case 0: /* nil */ {
-       $d = {a1: JSBridge_parseInt($e.a1), a2: JSBridge_parseInt($e.a2.a1)};
+       $d = {a1: Math_BoxInt_intToBoxInt(JSBridge_parseInt($e.a1)), a2: Math_BoxInt_intToBoxInt(JSBridge_parseInt($e.a2.a1))};
        break;
       }
-      default: $d = {a1: 0n, a2: 0n};
+      default: $d = csegen_1();
      }
      break;
     }
-    default: $d = {a1: 0n, a2: 0n};
+    default: $d = csegen_1();
    }
    break;
   }
-  default: $d = {a1: 0n, a2: 0n};
+  default: $d = csegen_1();
  }
- const $21 = JSBridge_parseSubstrate($3);
- const $24 = JSBridge_parseSparseMaxel($4);
- const $27 = {a1: $21, a2: $24};
- const $2a = Evolution_Cycle_runAdaptiveCycle($5, $b, $d, $27);
- return Simplex_Core_serializeUniverseState($2a);
+ const $22 = JSBridge_parseSubstrate($3);
+ const $25 = JSBridge_parseVexel($4);
+ const $28 = {a1: $22, a2: $25};
+ const $2b = Evolution_Cycle_runAdaptiveCycle($5, $b, $d, $28);
+ return $31 => JSBridge_exportUniverseState($2b, $31);
 }
 
-/* JSBridge.parseTerms : List String -> List ((Nat, Nat), Integer) */
+/* JSBridge.pushMaxel : Integer -> Integer -> Nat -> Nat -> Integer -> IO () */
+function JSBridge_pushMaxel($0, $1, $2, $3, $4, $5) {
+ return JSBridge_prim_pushMaxel(Number(_truncBigInt32($0)), Number(_truncBigInt32($1)), Number(_truncBigInt32($2)), Number(_truncBigInt32($3)), Number(_truncBigInt32($4)), $5);
+}
+
+/* JSBridge.pushEdge : Integer -> Integer -> Integer -> Integer -> Integer -> IO () */
+function JSBridge_pushEdge($0, $1, $2, $3, $4, $5) {
+ return JSBridge_prim_pushEdge(Number(_truncBigInt32($0)), Number(_truncBigInt32($1)), Number(_truncBigInt32($2)), Number(_truncBigInt32($3)), Number(_truncBigInt32($4)), $5);
+}
+
+/* JSBridge.parseVexel : String -> Vexel */
+function JSBridge_parseVexel($0) {
+ switch(Prelude_EqOrd_x3dx3d_Eq_String($0, '')) {
+  case 1: return {h: 0 /* ZeroM */};
+  case 0: {
+   const $5 = JSBridge_splitList(csegen_2(), $0);
+   const $a = Prelude_Types_List_mapMaybeAppend({h: 0}, $e => JSBridge_parseMaxelItem($e), $5);
+   return Math_Multiset_fromList(csegen_43(), $a);
+  }
+ }
+}
+
+/* JSBridge.parseTerms : List String -> List ((Nat, Nat), BoxInt) */
 function JSBridge_parseTerms($0) {
  switch($0.h) {
   case 0: /* nil */ return {h: 0};
@@ -695,7 +815,7 @@ function JSBridge_parseTerms($0) {
    switch($0.a2.h) {
     case undefined: /* cons */ {
      switch($0.a2.a2.h) {
-      case undefined: /* cons */ return {a1: {a1: {a1: JSBridge_parseNat($0.a1), a2: JSBridge_parseNat($0.a2.a1)}, a2: JSBridge_parseInt($0.a2.a2.a1)}, a2: JSBridge_parseTerms($0.a2.a2.a2)};
+      case undefined: /* cons */ return {a1: {a1: {a1: JSBridge_parseNat($0.a1), a2: JSBridge_parseNat($0.a2.a1)}, a2: Math_BoxInt_intToBoxInt(JSBridge_parseInt($0.a2.a2.a1))}, a2: JSBridge_parseTerms($0.a2.a2.a2)};
       default: return {h: 0};
      }
     }
@@ -711,21 +831,9 @@ function JSBridge_parseSubstrate($0) {
  switch(Prelude_EqOrd_x3dx3d_Eq_String($0, '')) {
   case 1: return {h: 0 /* ZeroM */};
   case 0: {
-   const $5 = JSBridge_splitList(csegen_1(), $0);
+   const $5 = JSBridge_splitList(csegen_2(), $0);
    const $a = Prelude_Types_List_mapMaybeAppend({h: 0}, $e => JSBridge_parseEdge($e), $5);
-   return Math_Multiset_fromList(csegen_10(), $a);
-  }
- }
-}
-
-/* JSBridge.parseSparseMaxel : String -> SparseMaxel */
-function JSBridge_parseSparseMaxel($0) {
- switch(Prelude_EqOrd_x3dx3d_Eq_String($0, '')) {
-  case 1: return {h: 0 /* ZeroM */};
-  case 0: {
-   const $5 = JSBridge_splitList(csegen_1(), $0);
-   const $a = Prelude_Types_List_mapMaybeAppend({h: 0}, $e => JSBridge_parseMaxelItem($e), $5);
-   return Math_Multiset_fromList(csegen_22(), $a);
+   return Math_Multiset_fromList(csegen_47(), $a);
   }
  }
 }
@@ -737,12 +845,12 @@ function JSBridge_parseNat($0) {
 
 /* JSBridge.parseMaxelItem : String -> Maybe ((Geometry, Amplitude), Integer) */
 function JSBridge_parseMaxelItem($0) {
- return JSBridge_case__parseMaxelItem_5322($0, JSBridge_splitList(csegen_23(), $0));
+ return JSBridge_case__parseMaxelItem_5391($0, JSBridge_splitList(csegen_48(), $0));
 }
 
 /* JSBridge.parseInt : String -> Integer */
 function JSBridge_parseInt($0) {
- const $1 = Data_String_parseInteger(csegen_26(), {a1: csegen_26(), a2: $9 => (0n-$9), a3: $d => $e => ($d-$e)}, $0);
+ const $1 = Data_String_parseInteger(csegen_8(), csegen_10(), $0);
  switch($1.h) {
   case undefined: /* just */ return $1.a1;
   case 0: /* nothing */ return 0n;
@@ -751,22 +859,63 @@ function JSBridge_parseInt($0) {
 
 /* JSBridge.parseEdge : String -> Maybe ((Geometry, Geometry), Integer) */
 function JSBridge_parseEdge($0) {
- return JSBridge_case__parseEdge_5106($0, JSBridge_splitList(csegen_23(), $0));
+ return JSBridge_case__parseEdge_5106($0, JSBridge_splitList(csegen_48(), $0));
 }
 
 /* JSBridge.parseAmplitude : String -> Amplitude */
 function JSBridge_parseAmplitude($0) {
  switch(Prelude_EqOrd_x3dx3d_Eq_String($0, '')) {
   case 1: return {h: 0 /* ZeroM */};
-  case 0: return Math_Multiset_fromList(csegen_16(), JSBridge_parseTerms(JSBridge_splitList(csegen_0(), $0)));
+  case 0: return Math_Multiset_fromList(csegen_49(), JSBridge_parseTerms(JSBridge_splitList(csegen_0(), $0)));
  }
 }
 
 /* JSBridge.main : IO () */
 function JSBridge_main($0) {
- const $1 = JSBridge_prim_exportFunction('idris_runAdaptiveCycle', $5 => $6 => $7 => $8 => $9 => JSBridge_runAdaptiveCycleBridge($5, $6, $7, $8, $9), $0);
- const $11 = JSBridge_prim_exportFunction4('idris_stepUniverseLocalized', $15 => $16 => $17 => $18 => JSBridge_stepUniverseLocalizedBridge($15, $16, $17, $18), $0);
+ const $1 = JSBridge_prim_exportFunction('idris_runAdaptiveCycle', a => b => c => d => e => JSBridge_runAdaptiveCycleBridge(a, b, c, d, e), $0);
+ const $c = JSBridge_prim_exportFunction4('idris_stepUniverseLocalized', a => b => c => d => JSBridge_stepUniverseLocalizedBridge(a, b, c, d), $0);
  return Prelude_IO_prim__putStr('Idris physics engine JSBridge initialized successfully!\n', $0);
+}
+
+/* JSBridge.exportVexel : Vexel -> IO () */
+function JSBridge_exportVexel($0) {
+ const $7 = $8 => {
+  const $c = Math_BoxInt_boxToInt($8.a1.a1.a1);
+  const $f = Math_BoxInt_boxToInt($8.a1.a1.a2);
+  const $18 = $19 => {
+   const $1c = Math_BoxInt_boxToInt($19.a2);
+   return $1f => JSBridge_pushMaxel($c, $f, $19.a1.a1, $19.a1.a2, ($1c*$8.a2), $1f);
+  };
+  const $12 = Prelude_Interfaces_traverse_(csegen_58(), csegen_73(), $18);
+  return $12(Math_Multiset_multisetToList($8.a1.a2));
+ };
+ const $1 = Prelude_Interfaces_traverse_(csegen_58(), csegen_73(), $7);
+ return $1(Math_Multiset_multisetToList($0));
+}
+
+/* JSBridge.exportUniverseState : UniverseState -> IO () */
+function JSBridge_exportUniverseState($0, $1) {
+ const $3 = JSBridge_clearBuffers($1);
+ const $6 = JSBridge_exportSubstrate($0.a1)($1);
+ return JSBridge_exportVexel($0.a2)($1);
+}
+
+/* JSBridge.exportSubstrate : Substrate -> IO () */
+function JSBridge_exportSubstrate($0) {
+ const $7 = $8 => {
+  const $d = Math_BoxInt_boxToInt($8.a1.a1.a1);
+  const $10 = Math_BoxInt_boxToInt($8.a1.a1.a2);
+  const $13 = Math_BoxInt_boxToInt($8.a1.a2.a1);
+  const $16 = Math_BoxInt_boxToInt($8.a1.a2.a2);
+  return $19 => JSBridge_pushEdge($d, $10, $13, $16, $8.a2, $19);
+ };
+ const $1 = Prelude_Interfaces_traverse_(csegen_58(), csegen_73(), $7);
+ return $1(Math_Multiset_multisetToList($0));
+}
+
+/* JSBridge.clearBuffers : IO () */
+function JSBridge_clearBuffers($0) {
+ return JSBridge_prim_clearBuffers($0);
 }
 
 /* Data.List1.map */
@@ -779,9 +928,40 @@ function Data_List1_singleton($0) {
  return {a1: $0, a2: {h: 0}};
 }
 
+/* Prelude.Basics.flip : (a -> b -> c) -> b -> a -> c */
+function Prelude_Basics_flip($0, $1, $2) {
+ return $0($2)($1);
+}
+
+/* Builtin.snd : (a, b) -> b */
+function Builtin_snd($0) {
+ return $0.a2;
+}
+
+/* Builtin.fst : (a, b) -> a */
+function Builtin_fst($0) {
+ return $0.a1;
+}
+
 /* Prelude.Types.pure */
 function Prelude_Types_pure_Applicative_List($0) {
  return {a1: $0, a2: {h: 0}};
+}
+
+/* Prelude.Types.null */
+function Prelude_Types_null_Foldable_List($0) {
+ switch($0.h) {
+  case 0: /* nil */ return 1;
+  case undefined: /* cons */ return 0;
+ }
+}
+
+/* Prelude.Types.max */
+function Prelude_Types_max_Ord_Nat($0, $1) {
+ switch(Prelude_Types_x3e_Ord_Nat($0, $1)) {
+  case 1: return $0;
+  case 0: return $1;
+ }
 }
 
 /* Prelude.Types.map */
@@ -792,9 +972,27 @@ function Prelude_Types_map_Functor_Maybe($0, $1) {
  }
 }
 
+/* Prelude.Types.foldr */
+function Prelude_Types_foldr_Foldable_List($0, $1, $2) {
+ switch($2.h) {
+  case 0: /* nil */ return $1;
+  case undefined: /* cons */ return $0($2.a1)(Prelude_Types_foldr_Foldable_List($0, $1, $2.a2));
+ }
+}
+
+/* Prelude.Types.foldlM */
+function Prelude_Types_foldlM_Foldable_List($0, $1, $2, $3) {
+ return Prelude_Types_foldl_Foldable_List(ma => b => $0.a2(undefined)(undefined)(ma)($f => Prelude_Basics_flip($1, b, $f)), $0.a1.a2(undefined)($2), $3);
+}
+
 /* Prelude.Types.foldMap */
 function Prelude_Types_foldMap_Foldable_List($0, $1, $2) {
  return Prelude_Types_foldl_Foldable_List(acc => elem => $0.a1(acc)($1(elem)), $0.a2, $2);
+}
+
+/* Prelude.Types.> */
+function Prelude_Types_x3e_Ord_Nat($0, $1) {
+ return Prelude_EqOrd_x3dx3d_Eq_Ordering(Prelude_EqOrd_compare_Ord_Integer($0, $1), 2);
 }
 
 /* Prelude.Types.<= */
@@ -850,6 +1048,16 @@ function Prelude_Types_isSpace($0) {
   case '\u{a0}': return 1;
   default: return 0;
  }
+}
+
+/* Prelude.Types.elemBy : Foldable t => (a -> a -> Bool) -> a -> t a -> Bool */
+function Prelude_Types_elemBy($0, $1, $2) {
+ return $0.a6(undefined)(undefined)(csegen_79())($1($2));
+}
+
+/* Prelude.Types.elem : Foldable t => Eq a => a -> t a -> Bool */
+function Prelude_Types_elem($0, $1, $2) {
+ return Prelude_Types_elemBy($0, $1.a1, $2);
 }
 
 /* Prelude.Num.mod */
@@ -979,6 +1187,14 @@ function Prelude_EqOrd_x3c_Ord_Integer($0, $1) {
 }
 
 /* Prelude.EqOrd.<= */
+function Prelude_EqOrd_x3cx3d_Ord_Integer($0, $1) {
+ switch((($0<=$1)?1:0)) {
+  case 0: return 0;
+  default: return 1;
+ }
+}
+
+/* Prelude.EqOrd.<= */
 function Prelude_EqOrd_x3cx3d_Ord_Char($0, $1) {
  switch((($0<=$1)?1:0)) {
   case 0: return 0;
@@ -1015,6 +1231,19 @@ function Prelude_EqOrd_compareInteger($0, $1) {
  return Prelude_EqOrd_compare_Ord_Integer($0, $1);
 }
 
+/* Prelude.Interfaces.Bool.Semigroup.<+> */
+function Prelude_Interfaces_Bool_Semigroup_x3cx2bx3e_Semigroup_AnyBool($0, $1) {
+ switch($0) {
+  case 1: return 1;
+  case 0: return $1;
+ }
+}
+
+/* Prelude.Interfaces.traverse_ : Applicative f => Foldable t => (a -> f b) -> t a -> f () */
+function Prelude_Interfaces_traverse_($0, $1, $2) {
+ return $1.a1(undefined)(undefined)($b => $c => Prelude_Interfaces_x2ax3e($0, $2($b), $c))($0.a2(undefined)(undefined));
+}
+
 /* Prelude.Interfaces.guard : Alternative f => Bool -> f () */
 function Prelude_Interfaces_guard($0, $1) {
  switch($1) {
@@ -1023,83 +1252,20 @@ function Prelude_Interfaces_guard($0, $1) {
  }
 }
 
-/* Prelude.Show.show */
-function Prelude_Show_show_Show_Nat($0) {
- return Prelude_Show_show_Show_Integer($0);
+/* Prelude.Interfaces.(*>) : Applicative f => f a -> f b -> f b */
+function Prelude_Interfaces_x2ax3e($0, $1, $2) {
+ const $d = $0.a1;
+ const $c = $d(undefined)(undefined);
+ const $b = $c($14 => $15 => $15);
+ const $a = $b($1);
+ const $4 = $0.a3(undefined)(undefined)($a);
+ return $4($2);
 }
 
-/* Prelude.Show.show */
-function Prelude_Show_show_Show_Integer($0) {
- return Prelude_Show_showPrec_Show_Integer({h: 0 /* Open */}, $0);
-}
-
-/* Prelude.Show.showPrec */
-function Prelude_Show_showPrec_Show_Integer($0, $1) {
- return Prelude_Show_primNumShow($4 => (''+$4), $0, $1);
-}
-
-/* Prelude.Show.compare */
-function Prelude_Show_compare_Ord_Prec($0, $1) {
- switch($0.h) {
-  case 4: /* User */ {
-   switch($1.h) {
-    case 4: /* User */ return Prelude_EqOrd_compare_Ord_Integer($0.a1, $1.a1);
-    default: return Prelude_EqOrd_compare_Ord_Integer(Prelude_Show_precCon($0), Prelude_Show_precCon($1));
-   }
-  }
-  default: return Prelude_EqOrd_compare_Ord_Integer(Prelude_Show_precCon($0), Prelude_Show_precCon($1));
- }
-}
-
-/* Prelude.Show.>= */
-function Prelude_Show_x3ex3d_Ord_Prec($0, $1) {
- return Prelude_EqOrd_x2fx3d_Eq_Ordering(Prelude_Show_compare_Ord_Prec($0, $1), 0);
-}
-
-/* Prelude.Show.showParens : Bool -> String -> String */
-function Prelude_Show_showParens($0, $1) {
- switch($0) {
-  case 0: return $1;
-  case 1: return ('('+($1+')'));
- }
-}
-
-/* Prelude.Show.primNumShow : (a -> String) -> Prec -> a -> String */
-function Prelude_Show_primNumShow($0, $1, $2) {
- const $3 = $0($2);
- let $7;
- switch(Prelude_Show_x3ex3d_Ord_Prec($1, {h: 5 /* PrefixMinus */})) {
-  case 1: {
-   $7 = Prelude_Show_firstCharIs($e => Prelude_EqOrd_x3dx3d_Eq_Char($e, '-'), $3);
-   break;
-  }
-  case 0: {
-   $7 = 0;
-   break;
-  }
- }
- return Prelude_Show_showParens($7, $3);
-}
-
-/* Prelude.Show.precCon : Prec -> Integer */
-function Prelude_Show_precCon($0) {
- switch($0.h) {
-  case 0: /* Open */ return 0n;
-  case 1: /* Equal */ return 1n;
-  case 2: /* Dollar */ return 2n;
-  case 3: /* Backtick */ return 3n;
-  case 4: /* User */ return 4n;
-  case 5: /* PrefixMinus */ return 5n;
-  case 6: /* App */ return 6n;
- }
-}
-
-/* Prelude.Show.firstCharIs : (Char -> Bool) -> String -> Bool */
-function Prelude_Show_firstCharIs($0, $1) {
- switch($1) {
-  case '': return 0;
-  default: return $0(($1.charAt(0)));
- }
+/* Prelude.IO.map */
+function Prelude_IO_map_Functor_IO($0, $1, $2) {
+ const $3 = $1($2);
+ return $0($3);
 }
 
 /* PrimIO.unsafePerformIO : IO a -> a */
@@ -1151,6 +1317,16 @@ function Data_List_partition($0, $1) {
  }
 }
 
+/* Data.List.nubBy : (a -> a -> Bool) -> List a -> List a */
+function Data_List_nubBy($0, $1) {
+ return Data_List_n__4934_5733_nubByx27({h: 0}, $0, $1);
+}
+
+/* Data.List.nub : Eq a => List a -> List a */
+function Data_List_nub($0, $1) {
+ return Data_List_nubBy($0.a1, $1);
+}
+
 /* Data.List.last' : List a -> Maybe a */
 function Data_List_lastx27($0) {
  switch($0.h) {
@@ -1170,58 +1346,66 @@ function Data_List_break$($0, $1) {
  return Data_List_span($3, $1);
 }
 
-/* Math.Multiset.3804:1451:isEmpty */
-function Math_Multiset_n__3804_1451_isEmpty($0, $1, $2, $3) {
+/* Math.Multiset.3952:1854:isEmpty */
+function Math_Multiset_n__3952_1854_isEmpty($0, $1, $2, $3) {
  switch($3.h) {
   case 0: /* ZeroM */ return 1;
   default: return 0;
  }
 }
 
-/* Math.Multiset.3701:1311:go */
-function Math_Multiset_n__3701_1311_go($0, $1, $2) {
- switch($2.h) {
+/* Math.Multiset.3788:1647:go */
+function Math_Multiset_n__3788_1647_go($0, $1, $2, $3) {
+ switch($3.h) {
   case 0: /* ZeroM */ return {h: 0 /* ZeroM */};
-  case 1: /* AddM */ return {h: 1 /* AddM */, a1: $2.a1, a2: ($2.a2*$1), a3: Math_Multiset_n__3701_1311_go($0, $1, $2.a3)};
+  case 1: /* AddM */ {
+   const $7 = Builtin_fst($0);
+   const $6 = $7.a2($3.a2)($1);
+   return {h: 1 /* AddM */, a1: $3.a1, a2: $6, a3: Math_Multiset_n__3788_1647_go($0, $1, $2, $3.a3)};
+  }
  }
 }
 
 /* Math.Multiset.== */
-function Math_Multiset_x3dx3d_Eq_x28Multisetx20x24ax29($0, $1, $2) {
- const $3 = Math_Multiset_annihilateMultiset($0, Math_Multiset_addMultiset($1, Math_Multiset_negateMultiset($2)));
- return Math_Multiset_n__3804_1451_isEmpty($0, $2, $1, $3);
+function Math_Multiset_x3dx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29($0, $1, $2) {
+ const $3 = Math_Multiset_annihilateMultiset({a1: Builtin_fst($0), a2: Builtin_snd(Builtin_snd($0))}, Math_Multiset_addMultiset($1, Math_Multiset_negateMultiset(Builtin_fst(Builtin_snd($0)), $2)));
+ return Math_Multiset_n__3952_1854_isEmpty($0, $2, $1, $3);
 }
 
 /* Math.Multiset./= */
-function Math_Multiset_x2fx3d_Eq_x28Multisetx20x24ax29($0, $1, $2) {
- switch(Math_Multiset_x3dx3d_Eq_x28Multisetx20x24ax29($0, $1, $2)) {
+function Math_Multiset_x2fx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29($0, $1, $2) {
+ switch(Math_Multiset_x3dx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29($0, $1, $2)) {
   case 1: return 0;
   case 0: return 1;
  }
 }
 
-/* Math.Multiset.subMultiset : Multiset a -> Multiset a -> Multiset a */
-function Math_Multiset_subMultiset($0, $1) {
- return Math_Multiset_addMultiset($0, Math_Multiset_negateMultiset($1));
+/* Math.Multiset.subMultiset : Neg c => Multiset c a -> Multiset c a -> Multiset c a */
+function Math_Multiset_subMultiset($0, $1, $2) {
+ return Math_Multiset_addMultiset($1, Math_Multiset_negateMultiset($0, $2));
 }
 
-/* Math.Multiset.scaleMultiset : Integer -> Multiset a -> Multiset a */
-function Math_Multiset_scaleMultiset($0, $1) {
- switch(Prelude_EqOrd_x3dx3d_Eq_Integer($0, 0n)) {
+/* Math.Multiset.scaleMultiset : (Num c, Eq c) => c -> Multiset c a -> Multiset c a */
+function Math_Multiset_scaleMultiset($0, $1, $2) {
+ const $4 = Builtin_snd($0);
+ const $b = Builtin_fst($0);
+ const $a = $b.a3(0n);
+ const $3 = $4.a1($1)($a);
+ switch($3) {
   case 1: return {h: 0 /* ZeroM */};
-  case 0: return Math_Multiset_n__3701_1311_go($1, $0, $1);
+  case 0: return Math_Multiset_n__3788_1647_go($0, $1, $2, $2);
  }
 }
 
-/* Math.Multiset.negateMultiset : Multiset a -> Multiset a */
-function Math_Multiset_negateMultiset($0) {
- switch($0.h) {
+/* Math.Multiset.negateMultiset : Neg c => Multiset c a -> Multiset c a */
+function Math_Multiset_negateMultiset($0, $1) {
+ switch($1.h) {
   case 0: /* ZeroM */ return {h: 0 /* ZeroM */};
-  case 1: /* AddM */ return {h: 1 /* AddM */, a1: $0.a1, a2: (0n-$0.a2), a3: Math_Multiset_negateMultiset($0.a3)};
+  case 1: /* AddM */ return {h: 1 /* AddM */, a1: $1.a1, a2: $0.a2($1.a2), a3: Math_Multiset_negateMultiset($0, $1.a3)};
  }
 }
 
-/* Math.Multiset.multisetToList : Multiset a -> List (a, Integer) */
+/* Math.Multiset.multisetToList : Multiset c a -> List (a, c) */
 function Math_Multiset_multisetToList($0) {
  switch($0.h) {
   case 0: /* ZeroM */ return {h: 0};
@@ -1229,25 +1413,41 @@ function Math_Multiset_multisetToList($0) {
  }
 }
 
-/* Math.Multiset.multiplicityAll : Multiset a -> Integer */
-function Math_Multiset_multiplicityAll($0) {
- switch($0.h) {
-  case 0: /* ZeroM */ return 0n;
-  case 1: /* AddM */ return (Prelude_Num_abs_Abs_Integer($0.a2)+Math_Multiset_multiplicityAll($0.a3));
+/* Math.Multiset.multiplicityAll : (Num c, Abs c) => Multiset c a -> c */
+function Math_Multiset_multiplicityAll($0, $1) {
+ switch($1.h) {
+  case 0: /* ZeroM */ {
+   const $3 = Builtin_fst($0);
+   return $3.a3(0n);
+  }
+  case 1: /* AddM */ {
+   const $8 = Builtin_fst($0);
+   const $e = Builtin_snd($0);
+   const $d = $e.a2($1.a2);
+   const $b = $8.a1($d);
+   return $b(Math_Multiset_multiplicityAll($0, $1.a3));
+  }
  }
 }
 
-/* Math.Multiset.insertItem : Eq a => a -> Integer -> Multiset a -> Multiset a */
+/* Math.Multiset.insertItem : (Eq a, (Num c, Eq c)) => a -> c -> Multiset c a -> Multiset c a */
 function Math_Multiset_insertItem($0, $1, $2, $3) {
  switch($3.h) {
   case 0: /* ZeroM */ return {h: 1 /* AddM */, a1: $1, a2: $2, a3: {h: 0 /* ZeroM */}};
   case 1: /* AddM */ {
-   switch($0.a1($1)($3.a1)) {
+   const $9 = Builtin_fst($0);
+   const $8 = $9.a1($1)($3.a1);
+   switch($8) {
     case 1: {
-     const $e = ($2+$3.a2);
-     switch(Prelude_EqOrd_x3dx3d_Eq_Integer($e, 0n)) {
+     const $11 = Builtin_fst(Builtin_snd($0));
+     const $10 = $11.a1($2)($3.a2);
+     const $1b = Builtin_snd(Builtin_snd($0));
+     const $24 = Builtin_fst(Builtin_snd($0));
+     const $23 = $24.a3(0n);
+     const $1a = $1b.a1($10)($23);
+     switch($1a) {
       case 1: return $3.a3;
-      case 0: return {h: 1 /* AddM */, a1: $1, a2: $e, a3: $3.a3};
+      case 0: return {h: 1 /* AddM */, a1: $1, a2: $10, a3: $3.a3};
      }
     }
     case 0: return {h: 1 /* AddM */, a1: $3.a1, a2: $3.a2, a3: Math_Multiset_insertItem($0, $1, $2, $3.a3)};
@@ -1256,7 +1456,7 @@ function Math_Multiset_insertItem($0, $1, $2, $3) {
  }
 }
 
-/* Math.Multiset.fromList : Eq a => List (a, Integer) -> Multiset a */
+/* Math.Multiset.fromList : (Eq a, (Num c, Eq c)) => List (a, c) -> Multiset c a */
 function Math_Multiset_fromList($0, $1) {
  switch($1.h) {
   case 0: /* nil */ return {h: 0 /* ZeroM */};
@@ -1264,12 +1464,12 @@ function Math_Multiset_fromList($0, $1) {
  }
 }
 
-/* Math.Multiset.annihilateMultiset : Eq a => Multiset a -> Multiset a */
+/* Math.Multiset.annihilateMultiset : (Eq a, (Num c, Eq c)) => Multiset c a -> Multiset c a */
 function Math_Multiset_annihilateMultiset($0, $1) {
- return Math_Multiset_n__3641_1260_go($0, $1, {h: 0 /* ZeroM */}, $1);
+ return Math_Multiset_n__3702_1564_go($0, $1, {h: 0 /* ZeroM */}, $1);
 }
 
-/* Math.Multiset.addMultiset : Multiset a -> Multiset a -> Multiset a */
+/* Math.Multiset.addMultiset : Multiset c a -> Multiset c a -> Multiset c a */
 function Math_Multiset_addMultiset($0, $1) {
  switch($0.h) {
   case 0: /* ZeroM */ return $1;
@@ -1278,7 +1478,7 @@ function Math_Multiset_addMultiset($0, $1) {
 }
 
 /* Math.Pixel.== */
-function Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29($0, $1, $2) {
+function Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29($0, $1, $2) {
  switch($0.a1($1.a1)($2.a1)) {
   case 1: return $0.a1($1.a2)($2.a2);
   case 0: return 0;
@@ -1286,69 +1486,218 @@ function Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29($0, $1, $2) {
 }
 
 /* Math.Pixel./= */
-function Math_Pixel_x2fx3d_Eq_x28Pixelx20x24ax29($0, $1, $2) {
- switch(Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29($0, $1, $2)) {
+function Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29($0, $1, $2) {
+ switch(Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29($0, $1, $2)) {
   case 1: return 0;
   case 0: return 1;
  }
 }
 
-/* Math.Chromogeometry.spreadNL : Metric -> Pixel Integer -> Pixel Integer -> Pixel Integer -> (Integer, Integer) */
+/* Math.Chromogeometry.spreadNL : (metric : Metric) ->
+Pixel metric BoxInt -> Pixel metric BoxInt -> Pixel metric BoxInt -> (BoxInt,
+BoxInt) */
 function Math_Chromogeometry_spreadNL($0, $1, $2, $3) {
  const $4 = Math_Chromogeometry_quadranceNL($0, $1, $2);
  const $9 = Math_Chromogeometry_quadranceNL($0, $3, $1);
  const $e = Math_Chromogeometry_archimedesNL($0, $1, $2, $3);
- const $14 = (($4*4n)*$9);
+ const $14 = Math_BoxInt_boxMult(Math_BoxInt_boxMult(Math_BoxInt_intToBoxInt(4n), $4), $9);
  return {a1: $e, a2: $14};
 }
 
-/* Math.Chromogeometry.quadranceNL : Metric -> Pixel Integer -> Pixel Integer -> Integer */
+/* Math.Chromogeometry.quadranceNL : (metric : Metric) -> Pixel metric BoxInt -> Pixel metric BoxInt -> BoxInt */
 function Math_Chromogeometry_quadranceNL($0, $1, $2) {
- const $3 = Math_Chromogeometry_boundaryNL($1, $2);
+ const $3 = Math_Chromogeometry_boundaryNL($0, $1, $2);
  switch($0) {
-  case 0: return (($3.a1*$3.a1)+($3.a2*$3.a2));
-  case 1: return (($3.a1*$3.a1)-($3.a2*$3.a2));
-  case 2: return (($3.a1*2n)*$3.a2);
+  case 0: return Math_BoxInt_boxAdd(Math_BoxInt_boxMult($3.a1, $3.a1), Math_BoxInt_boxMult($3.a2, $3.a2));
+  case 1: return Math_BoxInt_boxSub(Math_BoxInt_boxMult($3.a1, $3.a1), Math_BoxInt_boxMult($3.a2, $3.a2));
+  case 2: return Math_BoxInt_boxMult(Math_BoxInt_boxMult(Math_BoxInt_intToBoxInt(2n), $3.a1), $3.a2);
  }
 }
 
-/* Math.Chromogeometry.boundaryNL : Pixel Integer -> Pixel Integer -> Pixel Integer */
-function Math_Chromogeometry_boundaryNL($0, $1) {
- return {a1: ($1.a1-$0.a1), a2: ($1.a2-$0.a2)};
+/* Math.Chromogeometry.boundaryNL : Pixel metric BoxInt -> Pixel metric BoxInt -> Pixel metric BoxInt */
+function Math_Chromogeometry_boundaryNL($0, $1, $2) {
+ return {a1: Math_BoxInt_boxSub($2.a1, $1.a1), a2: Math_BoxInt_boxSub($2.a2, $1.a2)};
 }
 
-/* Math.Chromogeometry.archimedesNL : Metric -> Pixel Integer -> Pixel Integer -> Pixel Integer -> Integer */
+/* Math.Chromogeometry.archimedesNL : (metric : Metric) ->
+Pixel metric BoxInt -> Pixel metric BoxInt -> Pixel metric BoxInt -> BoxInt */
 function Math_Chromogeometry_archimedesNL($0, $1, $2, $3) {
  switch($0) {
   case 0: return Math_Chromogeometry_archimedesBlueNL($1, $2, $3);
-  case 1: return (0n-Math_Chromogeometry_archimedesBlueNL($1, $2, $3));
-  case 2: return (0n-Math_Chromogeometry_archimedesBlueNL($1, $2, $3));
+  case 1: return Math_BoxInt_boxNegate(Math_Chromogeometry_archimedesBlueNL($1, $2, $3));
+  case 2: return Math_BoxInt_boxNegate(Math_Chromogeometry_archimedesBlueNL($1, $2, $3));
  }
 }
 
-/* Math.Chromogeometry.archimedesBlueNL : Pixel Integer -> Pixel Integer -> Pixel Integer -> Integer */
+/* Math.Chromogeometry.archimedesBlueNL : Pixel Blue BoxInt -> Pixel Blue BoxInt -> Pixel Blue BoxInt -> BoxInt */
 function Math_Chromogeometry_archimedesBlueNL($0, $1, $2) {
  const $3 = Math_Chromogeometry_quadranceNL(0, $0, $1);
  const $8 = Math_Chromogeometry_quadranceNL(0, $1, $2);
  const $d = Math_Chromogeometry_quadranceNL(0, $2, $0);
- const $12 = (($3+$8)+$d);
- return (($12*$12)-(((($3*$3)+($8*$8))+($d*$d))*2n));
+ const $12 = Math_BoxInt_boxAdd(Math_BoxInt_boxAdd($3, $8), $d);
+ return Math_BoxInt_boxSub(Math_BoxInt_boxMult($12, $12), Math_BoxInt_boxMult(Math_BoxInt_intToBoxInt(2n), Math_BoxInt_boxAdd(Math_BoxInt_boxAdd(Math_BoxInt_boxMult($3, $3), Math_BoxInt_boxMult($8, $8)), Math_BoxInt_boxMult($d, $d))));
 }
 
-/* Simplex.Twist.case block in case block in computeTwist */
-function Simplex_Twist_case__casex20blockx20inx20computeTwist_1621($0, $1, $2, $3, $4, $5) {
- let $7;
- switch(Prelude_EqOrd_x3dx3d_Eq_Integer($5.a2, 0n)) {
-  case 1: {
-   $7 = 0n;
-   break;
-  }
+/* Math.BoxInt.compare */
+function Math_BoxInt_compare_Ord_BoxInt($0, $1) {
+ const $2 = Math_BoxInt_boxToInt($0);
+ const $5 = Math_BoxInt_boxToInt($1);
+ return Prelude_EqOrd_compare_Ord_Integer($2, $5);
+}
+
+/* Math.BoxInt.>= */
+function Math_BoxInt_x3ex3d_Ord_BoxInt($0, $1) {
+ return Prelude_EqOrd_x2fx3d_Eq_Ordering(Math_BoxInt_compare_Ord_BoxInt($0, $1), 0);
+}
+
+/* Math.BoxInt.== */
+function Math_BoxInt_x3dx3d_Eq_SignedUnit($0, $1) {
+ switch($0) {
   case 0: {
-   $7 = Prelude_Num_div_Integral_Integer($5.a1, $5.a2);
-   break;
+   switch($1) {
+    case 0: return 1;
+    default: return 0;
+   }
+  }
+  case 1: {
+   switch($1) {
+    case 1: return 1;
+    default: return 0;
+   }
+  }
+  default: return 0;
+ }
+}
+
+/* Math.BoxInt./= */
+function Math_BoxInt_x2fx3d_Eq_SignedUnit($0, $1) {
+ switch(Math_BoxInt_x3dx3d_Eq_SignedUnit($0, $1)) {
+  case 1: return 0;
+  case 0: return 1;
+ }
+}
+
+/* Math.BoxInt.normalizeBoxInt : BoxInt -> BoxInt */
+function Math_BoxInt_normalizeBoxInt($0) {
+ const $1 = Math_Multiset_multisetToList($0);
+ const $6 = acc => $7 => {
+  switch(Math_BoxInt_x3dx3d_Eq_SignedUnit($7.a1, 0)) {
+   case 1: return (acc+$7.a2);
+   case 0: return acc;
+  }
+ };
+ const $4 = Prelude_Types_foldl_Foldable_List($6, 0n, $1);
+ const $13 = acc => $14 => {
+  switch(Math_BoxInt_x3dx3d_Eq_SignedUnit($14.a1, 1)) {
+   case 1: return (acc+$14.a2);
+   case 0: return acc;
+  }
+ };
+ const $11 = Prelude_Types_foldl_Foldable_List($13, 0n, $1);
+ const $1e = ($4-$11);
+ switch(Prelude_EqOrd_x3dx3d_Eq_Integer($1e, 0n)) {
+  case 1: return {h: 0 /* ZeroM */};
+  case 0: {
+   switch(Prelude_EqOrd_x3e_Ord_Integer($1e, 0n)) {
+    case 1: return {h: 1 /* AddM */, a1: 0, a2: $1e, a3: {h: 0 /* ZeroM */}};
+    case 0: return {h: 1 /* AddM */, a1: 1, a2: (0n-$1e), a3: {h: 0 /* ZeroM */}};
+   }
   }
  }
- return Prelude_Types_prim__integerToNat(Prelude_Num_mod_Integral_Integer(Prelude_Num_abs_Abs_Integer($7), 137n));
+}
+
+/* Math.BoxInt.intToBoxInt : Integer -> BoxInt */
+function Math_BoxInt_intToBoxInt($0) {
+ switch(Prelude_EqOrd_x3dx3d_Eq_Integer($0, 0n)) {
+  case 1: return {h: 0 /* ZeroM */};
+  case 0: {
+   switch(Prelude_EqOrd_x3e_Ord_Integer($0, 0n)) {
+    case 1: return {h: 1 /* AddM */, a1: 0, a2: $0, a3: {h: 0 /* ZeroM */}};
+    case 0: return {h: 1 /* AddM */, a1: 1, a2: (0n-$0), a3: {h: 0 /* ZeroM */}};
+   }
+  }
+ }
+}
+
+/* Math.BoxInt.boxToInt : (1 _ : BoxInt) -> Ur Integer */
+function Math_BoxInt_boxToInt($0) {
+ switch($0.h) {
+  case 0: /* ZeroM */ return 0n;
+  case 1: /* AddM */ {
+   switch($0.a1) {
+    case 0: {
+     const $3 = Math_BoxInt_boxToInt($0.a3);
+     return ($0.a2+$3);
+    }
+    case 1: {
+     const $8 = Math_BoxInt_boxToInt($0.a3);
+     return ((0n-$0.a2)+$8);
+    }
+   }
+  }
+ }
+}
+
+/* Math.BoxInt.boxSub : BoxInt -> BoxInt -> BoxInt */
+function Math_BoxInt_boxSub($0, $1) {
+ return Math_BoxInt_boxAdd($0, Math_BoxInt_boxNegate($1));
+}
+
+/* Math.BoxInt.boxNegate : BoxInt -> BoxInt */
+function Math_BoxInt_boxNegate($0) {
+ switch($0.h) {
+  case 0: /* ZeroM */ return {h: 0 /* ZeroM */};
+  case 1: /* AddM */ {
+   switch($0.a1) {
+    case 0: return {h: 1 /* AddM */, a1: 1, a2: $0.a2, a3: Math_BoxInt_boxNegate($0.a3)};
+    case 1: return {h: 1 /* AddM */, a1: 0, a2: $0.a2, a3: Math_BoxInt_boxNegate($0.a3)};
+   }
+  }
+ }
+}
+
+/* Math.BoxInt.boxMult : BoxInt -> BoxInt -> BoxInt */
+function Math_BoxInt_boxMult($0, $1) {
+ const $2 = Math_BoxInt_boxToInt($0);
+ const $5 = Math_BoxInt_boxToInt($1);
+ return Math_BoxInt_intToBoxInt(($2*$5));
+}
+
+/* Math.BoxInt.boxAdd : BoxInt -> BoxInt -> BoxInt */
+function Math_BoxInt_boxAdd($0, $1) {
+ return Math_BoxInt_normalizeBoxInt(Math_Multiset_addMultiset($0, $1));
+}
+
+/* Simplex.Twist.case block in chromogeometricHorizon,loopAtHorizon */
+function Simplex_Twist_case__chromogeometricHorizonx2cloopAtHorizon_6427($0, $1, $2, $3, $4, $5, $6, $7, $8, $9, $a, $b, $c) {
+ switch(Prelude_EqOrd_x3cx3d_Ord_Integer($c.a2, 0n)) {
+  case 1: return 0;
+  case 0: return Prelude_EqOrd_x3ex3d_Ord_Integer($c.a1, ($c.a2*2n));
+ }
+}
+
+/* Simplex.Twist.case block in recipSpreadNL */
+function Simplex_Twist_case__recipSpreadNL_6039($0, $1, $2, $3) {
+ const $5 = Math_BoxInt_boxToInt($3.a1);
+ const $8 = Math_BoxInt_boxToInt($3.a2);
+ switch(Prelude_EqOrd_x3dx3d_Eq_Integer($5, 0n)) {
+  case 1: return {a1: 0n, a2: 1n};
+  case 0: return {a1: $8, a2: $5};
+ }
+}
+
+/* Simplex.Twist.7813:6366:loopAtHorizon */
+function Simplex_Twist_n__7813_6366_loopAtHorizon($0, $1, $2, $3, $4) {
+ const $8 = Simplex_Twist_recipSpreadNL($4.a1, $4.a2.a2.a2, $4.a2.a1);
+ const $d = Simplex_Twist_recipSpreadNL($4.a2.a1, $4.a1, $4.a2.a2.a1);
+ const $12 = Simplex_Twist_recipSpreadNL($4.a2.a2.a1, $4.a2.a1, $4.a2.a2.a2);
+ const $17 = Simplex_Twist_recipSpreadNL($4.a2.a2.a2, $4.a2.a2.a1, $4.a1);
+ return Simplex_Twist_case__chromogeometricHorizonx2cloopAtHorizon_6427($0, $1, $2, $3, $4.a1, $4.a2.a1, $4.a2.a2.a1, $4.a2.a2.a2, $8, $d, $12, $17, Prelude_Types_foldl_Foldable_List(csegen_82(), {a1: 0n, a2: 1n}, {a1: $8, a2: {a1: $d, a2: {a1: $12, a2: {a1: $17, a2: {h: 0}}}}}));
+}
+
+/* Simplex.Twist.recipSpreadNL : Geometry -> Geometry -> Geometry -> (Integer, Integer) */
+function Simplex_Twist_recipSpreadNL($0, $1, $2) {
+ return Simplex_Twist_case__recipSpreadNL_6039($2, $1, $0, Math_Chromogeometry_spreadNL(0, $0, $1, $2));
 }
 
 /* Simplex.Twist.lcm : Integer -> Integer -> Integer */
@@ -1370,12 +1719,80 @@ function Simplex_Twist_lcm($0, $1) {
  }
 }
 
-/* Simplex.Twist.computeTwist : Metric -> Substrate -> Nat */
-function Simplex_Twist_computeTwist($0, $1) {
- const $2 = Math_Multiset_multisetToList($1);
- const $5 = Prelude_Types_listBind($2, $9 => Prelude_Types_listBind($2, $f => Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_42(), Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $9.a1.a2, $f.a1.a1)), $1e => Prelude_Types_pure_Applicative_List({a1: $9.a1.a1, a2: {a1: $9.a1.a2, a2: {a1: $f.a1.a2, a2: ($9.a2*$f.a2)}}}))));
- const $29 = Prelude_Types_List_mapAppend({h: 0}, csegen_43(), $5);
- return Simplex_Twist_case__casex20blockx20inx20computeTwist_1621($1, $0, $2, $5, $29, Prelude_Types_foldl_Foldable_List(csegen_44(), {a1: 0n, a2: 1n}, $29));
+/* Simplex.Twist.connected : List (Geometry, Geometry) -> Geometry -> Geometry -> Bool */
+function Simplex_Twist_connected($0, $1, $2) {
+ switch(Prelude_Types_elem(csegen_73(), csegen_46(), {a1: $1, a2: $2})($0)) {
+  case 1: return 1;
+  case 0: return Prelude_Types_elem(csegen_73(), csegen_46(), {a1: $2, a2: $1})($0);
+ }
+}
+
+/* Simplex.Twist.chromogeometricHorizon : Substrate -> Bool */
+function Simplex_Twist_chromogeometricHorizon($0) {
+ const $1 = Prelude_Types_List_mapAppend({h: 0}, $5 => Builtin_fst($5), Math_Multiset_multisetToList($0));
+ const $b = Simplex_Core_substrateNodes($0);
+ const $11 = p1 => {
+  const $14 = p2 => {
+   const $17 = p3 => {
+    const $1a = p4 => {
+     let $20;
+     switch(Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), p1, p2)) {
+      case 1: {
+       switch(Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), p2, p3)) {
+        case 1: {
+         switch(Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), p3, p4)) {
+          case 1: {
+           switch(Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), p4, p1)) {
+            case 1: {
+             switch(Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), p1, p3)) {
+              case 1: {
+               $20 = Math_Pixel_x2fx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), p2, p4);
+               break;
+              }
+              case 0: {
+               $20 = 0;
+               break;
+              }
+             }
+             break;
+            }
+            case 0: {
+             $20 = 0;
+             break;
+            }
+           }
+           break;
+          }
+          case 0: {
+           $20 = 0;
+           break;
+          }
+         }
+         break;
+        }
+        case 0: {
+         $20 = 0;
+         break;
+        }
+       }
+       break;
+      }
+      case 0: {
+       $20 = 0;
+       break;
+      }
+     }
+     const $1c = Prelude_Interfaces_guard(csegen_93(), $20);
+     return Prelude_Types_listBind($1c, $45 => Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_93(), Simplex_Twist_connected($1, p1, p2)), $51 => Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_93(), Simplex_Twist_connected($1, p2, p3)), $5d => Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_93(), Simplex_Twist_connected($1, p3, p4)), $69 => Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_93(), Simplex_Twist_connected($1, p4, p1)), $75 => Prelude_Types_pure_Applicative_List({a1: p1, a2: {a1: p2, a2: {a1: p3, a2: p4}}}))))));
+    };
+    return Prelude_Types_listBind($b, $1a);
+   };
+   return Prelude_Types_listBind($b, $17);
+  };
+  return Prelude_Types_listBind($b, $14);
+ };
+ const $e = Prelude_Types_listBind($b, $11);
+ return Prelude_Types_foldMap_Foldable_List(csegen_79(), $82 => Simplex_Twist_n__7813_6366_loopAtHorizon($0, $1, $b, $e, $82), $e);
 }
 
 /* Simplex.Twist.addRationalLocal : (Integer, Integer) -> (Integer, Integer) -> (Integer, Integer) */
@@ -1401,93 +1818,45 @@ function Simplex_Twist_addRationalLocal($0, $1) {
  }
 }
 
-/* Simplex.Core.serializeUniverseState : UniverseState -> String */
-function Simplex_Core_serializeUniverseState($0) {
- return ('{\"substrate\":'+(Simplex_Core_serializeSubstrate($0.a1)+(',\"stateVector\":'+(Simplex_Core_serializeSparseMaxel($0.a2)+'}'))));
+/* Simplex.Core.substrateNodes : Substrate -> List Geometry */
+function Simplex_Core_substrateNodes($0) {
+ return Data_List_nub(csegen_22(), Prelude_Types_foldMap_Foldable_List(csegen_95(), $9 => ({a1: $9.a1.a1, a2: {a1: $9.a1.a2, a2: {h: 0}}}), Math_Multiset_multisetToList($0)));
 }
 
-/* Simplex.Core.serializeTerm : ((Nat, Nat), Integer) -> String */
-function Simplex_Core_serializeTerm($0) {
- return ('{\"alpha\":'+(Prelude_Show_show_Show_Nat($0.a1.a1)+(',\"beta\":'+(Prelude_Show_show_Show_Nat($0.a1.a2)+(',\"count\":'+(Prelude_Show_show_Show_Integer($0.a2)+'}'))))));
-}
-
-/* Simplex.Core.serializeSubstrate : Substrate -> String */
-function Simplex_Core_serializeSubstrate($0) {
- return ('['+(Simplex_Core_join(',', Prelude_Types_List_mapAppend({h: 0}, $a => Simplex_Core_serializeEdge($a), Math_Multiset_multisetToList($0)))+']'));
-}
-
-/* Simplex.Core.serializeSparseMaxel : SparseMaxel -> String */
-function Simplex_Core_serializeSparseMaxel($0) {
- return ('['+(Simplex_Core_join(',', Prelude_Types_List_mapAppend({h: 0}, $a => Simplex_Core_serializeMaxelItem($a), Math_Multiset_multisetToList($0)))+']'));
-}
-
-/* Simplex.Core.serializeMaxelItem : ((Geometry, Amplitude), Integer) -> String */
-function Simplex_Core_serializeMaxelItem($0) {
- return ('{\"geom\":'+(Simplex_Core_serializeGeometry($0.a1.a1)+(',\"amplitude\":'+(Simplex_Core_serializeAmplitude($0.a1.a2)+(',\"count\":'+(Prelude_Show_show_Show_Integer($0.a2)+'}'))))));
-}
-
-/* Simplex.Core.serializeGeometry : Geometry -> String */
-function Simplex_Core_serializeGeometry($0) {
- return ('{\"src\":'+(Prelude_Show_show_Show_Integer($0.a1)+(',\"tgt\":'+(Prelude_Show_show_Show_Integer($0.a2)+'}'))));
-}
-
-/* Simplex.Core.serializeEdge : ((Geometry, Geometry), Integer) -> String */
-function Simplex_Core_serializeEdge($0) {
- return ('{\"parent\":'+(Simplex_Core_serializeGeometry($0.a1.a1)+(',\"child\":'+(Simplex_Core_serializeGeometry($0.a1.a2)+(',\"count\":'+(Prelude_Show_show_Show_Integer($0.a2)+'}'))))));
-}
-
-/* Simplex.Core.serializeAmplitude : Amplitude -> String */
-function Simplex_Core_serializeAmplitude($0) {
- return ('['+(Simplex_Core_join(',', Prelude_Types_List_mapAppend({h: 0}, $a => Simplex_Core_serializeTerm($a), Math_Multiset_multisetToList($0)))+']'));
-}
-
-/* Simplex.Core.join : String -> List String -> String */
-function Simplex_Core_join($0, $1) {
- switch($1.h) {
-  case 0: /* nil */ return '';
-  case undefined: /* cons */ {
-   switch($1.a2.h) {
-    case 0: /* nil */ return $1.a1;
-    default: return ($1.a1+($0+Simplex_Core_join($0, $1.a2)));
-   }
-  }
- }
-}
-
-/* Math.IntPolynumber.3518:1105:mulOuter */
-function Math_IntPolynumber_n__3518_1105_mulOuter($0, $1, $2, $3) {
+/* Math.IntPolynumber.3641:1384:mulOuter */
+function Math_IntPolynumber_n__3641_1384_mulOuter($0, $1, $2, $3) {
  switch($2.h) {
   case 0: /* ZeroM */ return {h: 0 /* ZeroM */};
-  case 1: /* AddM */ return Math_Multiset_addMultiset(Math_IntPolynumber_n__3518_1104_mulInner($0, $1, $2.a1, $2.a2, $3), Math_IntPolynumber_n__3518_1105_mulOuter($0, $1, $2.a3, $3));
+  case 1: /* AddM */ return Math_Multiset_addMultiset(Math_IntPolynumber_n__3641_1383_mulInner($0, $1, $2.a1, $2.a2, $3), Math_IntPolynumber_n__3641_1384_mulOuter($0, $1, $2.a3, $3));
  }
 }
 
-/* Math.IntPolynumber.3518:1104:mulInner */
-function Math_IntPolynumber_n__3518_1104_mulInner($0, $1, $2, $3, $4) {
+/* Math.IntPolynumber.3641:1383:mulInner */
+function Math_IntPolynumber_n__3641_1383_mulInner($0, $1, $2, $3, $4) {
  switch($4.h) {
   case 0: /* ZeroM */ return {h: 0 /* ZeroM */};
-  case 1: /* AddM */ return {h: 1 /* AddM */, a1: Math_IntPolynumber_n__3518_1103_mulBasis($0, $1, $2, $4.a1), a2: ($3*$4.a2), a3: Math_IntPolynumber_n__3518_1104_mulInner($0, $1, $2, $3, $4.a3)};
+  case 1: /* AddM */ return {h: 1 /* AddM */, a1: Math_IntPolynumber_n__3641_1382_mulBasis($0, $1, $2, $4.a1), a2: Math_BoxInt_boxMult($3, $4.a2), a3: Math_IntPolynumber_n__3641_1383_mulInner($0, $1, $2, $3, $4.a3)};
  }
 }
 
-/* Math.IntPolynumber.3518:1103:mulBasis */
-function Math_IntPolynumber_n__3518_1103_mulBasis($0, $1, $2, $3) {
+/* Math.IntPolynumber.3641:1382:mulBasis */
+function Math_IntPolynumber_n__3641_1382_mulBasis($0, $1, $2, $3) {
  return {a1: ($2.a1+$3.a1), a2: ($2.a2+$3.a2)};
 }
 
 /* Math.IntPolynumber.subIntPoly : IntPolynumber -> IntPolynumber -> IntPolynumber */
 function Math_IntPolynumber_subIntPoly($0, $1) {
- return Math_Multiset_subMultiset($0, $1);
+ return Math_Multiset_subMultiset(csegen_33(), $0, $1);
 }
 
-/* Math.IntPolynumber.posTerm : Nat -> Nat -> Integer -> IntPolynumber */
+/* Math.IntPolynumber.posTerm : Nat -> Nat -> BoxInt -> IntPolynumber */
 function Math_IntPolynumber_posTerm($0, $1, $2) {
  return {h: 1 /* AddM */, a1: {a1: $0, a2: $1}, a2: $2, a3: {h: 0 /* ZeroM */}};
 }
 
 /* Math.IntPolynumber.mulIntPoly : IntPolynumber -> IntPolynumber -> IntPolynumber */
 function Math_IntPolynumber_mulIntPoly($0, $1) {
- return Math_Multiset_annihilateMultiset(csegen_16(), Math_IntPolynumber_n__3518_1105_mulOuter($1, $0, $0, $1));
+ return Math_Multiset_annihilateMultiset(csegen_49(), Math_IntPolynumber_n__3641_1384_mulOuter($1, $0, $0, $1));
 }
 
 /* Math.IntPolynumber.emptyIntPoly : IntPolynumber */
@@ -1497,7 +1866,7 @@ const Math_IntPolynumber_emptyIntPoly = __lazy(function () {
 
 /* Math.IntPolynumber.annihilateIntPoly : IntPolynumber -> IntPolynumber */
 function Math_IntPolynumber_annihilateIntPoly($0) {
- return Math_Multiset_annihilateMultiset(csegen_16(), $0);
+ return Math_Multiset_annihilateMultiset(csegen_49(), $0);
 }
 
 /* Math.IntPolynumber.addIntPoly : IntPolynumber -> IntPolynumber -> IntPolynumber */
@@ -1518,13 +1887,32 @@ function Math_SpreadPolynumber_scalarMul($0, $1) {
 
 /* Math.SpreadPolynumber.sPoly : IntPolynumber */
 const Math_SpreadPolynumber_sPoly = __lazy(function () {
- return Math_IntPolynumber_posTerm(1n, 0n, 1n);
+ return Math_IntPolynumber_posTerm(1n, 0n, {h: 1 /* AddM */, a1: 0, a2: 1n, a3: {h: 0 /* ZeroM */}});
 });
 
 /* Math.SpreadPolynumber.onePoly : IntPolynumber */
 const Math_SpreadPolynumber_onePoly = __lazy(function () {
- return Math_IntPolynumber_posTerm(0n, 0n, 1n);
+ return Math_IntPolynumber_posTerm(0n, 0n, {h: 1 /* AddM */, a1: 0, a2: 1n, a3: {h: 0 /* ZeroM */}});
 });
+
+/* Math.SpreadPolynumber.memoSpreadPoly : Nat -> IntPolynumber */
+function Math_SpreadPolynumber_memoSpreadPoly($0) {
+ switch($0) {
+  case 0n: return Math_IntPolynumber_emptyIntPoly();
+  default: {
+   const $3 = ($0-1n);
+   switch($3) {
+    case 0n: return Math_SpreadPolynumber_sPoly();
+    default: {
+     const $8 = ($3-1n);
+     const $b = csegen_100();
+     const $d = csegen_99();
+     return Builtin_fst(Math_SpreadPolynumber_n__3613_2590_step($8, $b, $d, ($8+1n), {a1: Math_SpreadPolynumber_sPoly(), a2: Math_IntPolynumber_emptyIntPoly()}));
+    }
+   }
+  }
+ }
+}
 
 /* Math.SpreadPolynumber.makeSpreadPolyExpr : (n : Nat) -> SpreadPolyExpr n */
 function Math_SpreadPolynumber_makeSpreadPolyExpr($0) {
@@ -1551,16 +1939,16 @@ function Math_SpreadPolynumber_evalSpreadPolyExpr($0) {
   case 2: /* SRec */ {
    const $4 = Math_SpreadPolynumber_evalSpreadPolyExpr($0.a2);
    const $7 = Math_SpreadPolynumber_evalSpreadPolyExpr($0.a3);
-   const $a = Math_IntPolynumber_subIntPoly(Math_SpreadPolynumber_onePoly(), csegen_47());
-   const $10 = Math_SpreadPolynumber_scalarMul(2n, Math_IntPolynumber_mulIntPoly($a, $4));
-   const $17 = csegen_47();
-   return Math_IntPolynumber_annihilateIntPoly(Math_IntPolynumber_addIntPoly(Math_IntPolynumber_subIntPoly($10, $7), $17));
+   const $a = csegen_100();
+   const $c = Math_SpreadPolynumber_scalarMul(2n, Math_IntPolynumber_mulIntPoly($a, $4));
+   const $13 = csegen_99();
+   return Math_IntPolynumber_annihilateIntPoly(Math_IntPolynumber_addIntPoly(Math_IntPolynumber_subIntPoly($c, $7), $13));
   }
  }
 }
 
 /* Evolution.Cycle.case block in runAdaptiveCycle */
-function Evolution_Cycle_case__runAdaptiveCycle_2151($0, $1, $2, $3, $4, $5) {
+function Evolution_Cycle_case__runAdaptiveCycle_3845($0, $1, $2, $3, $4, $5) {
  let $7;
  switch(Evolution_Transform_canAscend($3, $5.a1, $5.a2)) {
   case 1: {
@@ -1581,129 +1969,67 @@ function Evolution_Cycle_case__runAdaptiveCycle_2151($0, $1, $2, $3, $4, $5) {
  }
 }
 
-/* Evolution.Cycle.sigmaGateAudit : Substrate -> SparseMaxel -> Bool */
+/* Evolution.Cycle.sigmaGateAudit : Substrate -> Vexel -> Bool */
 function Evolution_Cycle_sigmaGateAudit($0, $1) {
- const $2 = SigmaBridge_sigmaMeltChain($0);
- const $5 = Simplex_SigmaLinear_runBoundary($2);
- const $8 = SigmaBridge_sigmaFreezeGeometryMaxel($5);
- const $b = Math_Multiset_multiplicityAll($8);
- return Prelude_EqOrd_x3dx3d_Eq_Integer($b, 0n);
+ const $2 = Evolution_Cycle_computeBoundaryNL($0);
+ const $5 = Math_Multiset_multiplicityAll(csegen_103(), $2);
+ return Prelude_EqOrd_x3dx3d_Eq_Integer($5, 0n);
 }
 
-/* Evolution.Cycle.runAdaptiveCycle : Integer -> Metric -> Geometry -> UniverseState -> UniverseState */
+/* Evolution.Cycle.runAdaptiveCycle : Nat -> Metric -> Geometry -> UniverseState -> UniverseState */
 function Evolution_Cycle_runAdaptiveCycle($0, $1, $2, $3) {
- return Evolution_Cycle_case__runAdaptiveCycle_2151($3.a2, $3.a1, $2, $1, $0, Evolution_SpreadPolynumber_stepUniverseLocalized($0, $1, $3.a1, $3.a2));
+ return Evolution_Cycle_case__runAdaptiveCycle_3845($3.a2, $3.a1, $2, $1, $0, Evolution_LocalSpreadPolynumber_stepUniverseLocalized($0, $1, $3.a1, $3.a2));
 }
 
-/* SigmaBridge.sigmaMeltChain : Substrate -> DynamicSubstrate */
-function SigmaBridge_sigmaMeltChain($0) {
+/* Evolution.Cycle.computeBoundaryNL : Substrate -> Vexel */
+function Evolution_Cycle_computeBoundaryNL($0) {
  const $1 = Math_Multiset_multisetToList($0);
- return {a1: $1, a2: SigmaBridge_buildLDep($1)};
+ const $4 = Prelude_Types_foldMap_Foldable_List(csegen_95(), $9 => ({a1: {a1: {a1: $9.a1.a2, a2: {h: 0 /* ZeroM */}}, a2: $9.a2}, a2: {a1: {a1: {a1: $9.a1.a1, a2: {h: 0 /* ZeroM */}}, a2: (0n-$9.a2)}, a2: {h: 0}}}), $1);
+ return Math_Multiset_fromList(csegen_43(), $4);
 }
 
-/* SigmaBridge.sigmaFreezeGeometryMaxel : DynamicSparseMaxel -> SparseMaxel */
-function SigmaBridge_sigmaFreezeGeometryMaxel($0) {
- const $2 = SigmaBridge_freezeLDep($0.a2);
- const $5 = Prelude_Types_List_mapAppend({h: 0}, $9 => ({a1: {a1: $9.a1, a2: {h: 0 /* ZeroM */}}, a2: $9.a2}), $2);
- return Math_Multiset_fromList(csegen_22(), $5);
-}
-
-/* SigmaBridge.freezeLDep : (1 _ : LDepMultiset a c) -> List (a, Integer) */
-function SigmaBridge_freezeLDep($0) {
- return SigmaBridge_freezeLDepAcc({h: 0}, $0);
-}
-
-/* SigmaBridge.buildLDep : (c : List (a, Integer)) -> LDepMultiset a c */
-function SigmaBridge_buildLDep($0) {
- switch($0.h) {
-  case 0: /* nil */ return {h: 0 /* LEmptyM */};
-  case undefined: /* cons */ return {h: 1 /* LAddM */, a1: $0.a1.a1, a2: $0.a1.a2, a3: SigmaBridge_buildLDep($0.a2)};
- }
-}
-
-/* Simplex.SigmaLinear.runBoundary : DynamicSubstrate -> DynamicSparseMaxel */
-function Simplex_SigmaLinear_runBoundary($0) {
- return {a1: Simplex_SigmaLinear_computeBoundaryIndex($0.a1), a2: Simplex_SigmaLinear_applyBoundary($0.a2)};
-}
-
-/* Simplex.SigmaLinear.computeBoundaryIndex : List (Edge, Integer) -> List (Geometry, Integer) */
-function Simplex_SigmaLinear_computeBoundaryIndex($0) {
- switch($0.h) {
-  case 0: /* nil */ return {h: 0};
-  case undefined: /* cons */ return {a1: {a1: $0.a1.a1.a2, a2: $0.a1.a2}, a2: {a1: {a1: $0.a1.a1.a1, a2: (0n-$0.a1.a2)}, a2: Simplex_SigmaLinear_computeBoundaryIndex($0.a2)}};
- }
-}
-
-/* Simplex.SigmaLinear.applyBoundary : (1 _ : LDepSubstrate edges) -> LDepSparseMaxel (computeBoundaryIndex edges) */
-function Simplex_SigmaLinear_applyBoundary($0) {
- switch($0.h) {
-  case 0: /* LEmptyM */ return {h: 0 /* LEmptyM */};
-  case 1: /* LAddM */ return {h: 1 /* LAddM */, a1: $0.a1.a2, a2: $0.a2, a3: {h: 1 /* LAddM */, a1: $0.a1.a1, a2: (0n-$0.a2), a3: Simplex_SigmaLinear_applyBoundary($0.a3)}};
- }
-}
-
-/* Evolution.Transform.shatterTerm : Integer -> ((Nat, Nat), Integer) -> ((Nat, Nat), Integer) */
-function Evolution_Transform_shatterTerm($0, $1) {
- const $3 = Prelude_Num_mod_Integral_Integer($1.a2, $0);
- return {a1: $1.a1, a2: $3};
-}
-
-/* Evolution.Transform.partitionLogic : Integer -> Pixel Integer -> IntPolynumber -> (Multiset (Pixel Integer,
-IntPolynumber),
-Multiset (Pixel Integer, IntPolynumber)) */
-function Evolution_Transform_partitionLogic($0, $1, $2) {
- const $3 = Data_List_partition($6 => Evolution_Transform_isLatentTerm($0, $6), Math_Multiset_multisetToList($2));
- const $d = Math_Multiset_fromList(csegen_16(), $3.a1);
- const $12 = Math_Multiset_fromList(csegen_16(), $3.a2);
- const $17 = Math_Multiset_fromList(csegen_22(), {a1: {a1: {a1: $1, a2: $d}, a2: 1n}, a2: {h: 0}});
- const $22 = Math_Multiset_fromList(csegen_22(), {a1: {a1: {a1: $1, a2: $12}, a2: 1n}, a2: {h: 0}});
- return {a1: $17, a2: $22};
-}
-
-/* Evolution.Transform.isLatentTerm : Integer -> ((Nat, Nat), Integer) -> Bool */
-function Evolution_Transform_isLatentTerm($0, $1) {
- return Prelude_EqOrd_x3ex3d_Ord_Integer($1.a2, $0);
-}
-
-/* Evolution.Transform.evaluateResonance : Integer -> Integer -> Pixel Integer -> Multiset (Pixel Integer,
-IntPolynumber) -> Multiset (Pixel Integer, IntPolynumber) */
-function Evolution_Transform_evaluateResonance($0, $1, $2, $3) {
- const $4 = Math_Multiset_multiplicityAll($3);
- switch(Prelude_EqOrd_x3e_Ord_Integer($4, $0)) {
-  case 1: {
-   const $b = Prelude_Types_foldMap_Foldable_List(csegen_51(), $10 => Prelude_Types_List_mapAppend({h: 0}, $16 => ({a1: $16.a1, a2: ($16.a2*$10.a2)}), Math_Multiset_multisetToList($10.a1.a2)), Math_Multiset_multisetToList($3));
-   const $22 = Prelude_Types_List_mapAppend({h: 0}, $26 => Evolution_Transform_shatterTerm($1, $26), $b);
-   const $2b = Math_Multiset_fromList(csegen_16(), $22);
-   return Math_Multiset_fromList(csegen_22(), {a1: {a1: {a1: $2, a2: $2b}, a2: 1n}, a2: {h: 0}});
+/* Evolution.CosmicPartition.power : Nat -> Nat -> Nat */
+function Evolution_CosmicPartition_power($0, $1) {
+ switch($1) {
+  case 0n: return 1n;
+  default: {
+   const $3 = ($1-1n);
+   return ($0*Evolution_CosmicPartition_power($0, $3));
   }
-  case 0: return $3;
  }
 }
 
-/* Evolution.Transform.canAscend : Metric -> Substrate -> SparseMaxel -> Bool */
-function Evolution_Transform_canAscend($0, $1, $2) {
- const $3 = Math_Multiset_multiplicityAll($2);
- const $6 = Math_Multiset_multiplicityAll($1);
- const $9 = Simplex_Twist_computeTwist($0, $1);
- const $d = (($3+$6)+$9);
- return Prelude_EqOrd_x3ex3d_Ord_Integer($d, 137n);
+/* Evolution.CosmicPartition.extractGeometrySize : Geometry -> Nat */
+function Evolution_CosmicPartition_extractGeometrySize($0) {
+ switch($0.a2.h) {
+  case 0: /* nothing */ return Evolution_CosmicPartition_power($0.a1, $0.a1);
+  case undefined: /* just */ return $0.a2.a1;
+ }
 }
 
-/* Evolution.Transform.ascendScale : Pixel Integer -> Multiset (Pixel Integer,
-IntPolynumber) -> Multiset (Pixel Integer, IntPolynumber) */
-function Evolution_Transform_ascendScale($0, $1) {
- const $2 = Prelude_Types_foldl_Foldable_List(acc => $5 => Math_Multiset_addMultiset(acc, Math_Multiset_scaleMultiset($5.a2, $5.a1.a2)), Math_IntPolynumber_emptyIntPoly(), Math_Multiset_multisetToList($1));
- return Math_Multiset_fromList(csegen_22(), {a1: {a1: {a1: $0, a2: $2}, a2: 1n}, a2: {h: 0}});
-}
+/* Evolution.CosmicPartition.darkEnergyStates : Nat */
+const Evolution_CosmicPartition_darkEnergyStates = __lazy(function () {
+ return Evolution_CosmicPartition_extractGeometrySize({a1: 2n, a2: {a1: 128n}});
+});
 
 /* Evolution.Gate.selectGate : Nat -> FundamentalGate */
 function Evolution_Gate_selectGate($0) {
- const $1 = Prelude_Types_List_filterAppend({h: 0}, g => Prelude_Types_x3cx3d_Ord_Nat(g.a2, $0), Evolution_Gate_adaptiveCycle());
- const $b = Data_List_lastx27($1);
- switch($b.h) {
-  case undefined: /* just */ return $b.a1;
+ const $1 = Prelude_Types_List_filterAppend({h: 0}, g => Prelude_Types_x3cx3d_Ord_Nat(Evolution_Gate_degree(g), $0), Evolution_Gate_adaptiveCycle());
+ const $c = Data_List_lastx27($1);
+ switch($c.h) {
+  case undefined: /* just */ return $c.a1;
   case 0: /* nothing */ return Evolution_Gate_BackgroundGate();
  }
+}
+
+/* Evolution.Gate.mkFundamentalGate : String -> (n : Nat) -> GatePrime n -> FundamentalGate */
+function Evolution_Gate_mkFundamentalGate($0, $1, $2) {
+ return {a1: $1, a2: {a1: $0, a2: $2}};
+}
+
+/* Evolution.Gate.degree : FundamentalGate -> Nat */
+function Evolution_Gate_degree($0) {
+ return $0.a1;
 }
 
 /* Evolution.Gate.adaptiveCycle : List FundamentalGate */
@@ -1713,139 +2039,227 @@ const Evolution_Gate_adaptiveCycle = __lazy(function () {
 
 /* Evolution.Gate.WeakForceGate : FundamentalGate */
 const Evolution_Gate_WeakForceGate = __lazy(function () {
- return {a1: 'Weak Force', a2: 11n};
+ return Evolution_Gate_mkFundamentalGate('Weak Force', 11n, {h: 6 /* WeakForce */});
 });
 
 /* Evolution.Gate.TimeGate : FundamentalGate */
 const Evolution_Gate_TimeGate = __lazy(function () {
- return {a1: 'Time Dilation', a2: 7n};
+ return Evolution_Gate_mkFundamentalGate('Time Dilation', 7n, {h: 5 /* Time */});
 });
 
 /* Evolution.Gate.ResonanceGate : FundamentalGate */
 const Evolution_Gate_ResonanceGate = __lazy(function () {
- return {a1: 'Decoherence Resonance', a2: 13n};
+ return Evolution_Gate_mkFundamentalGate('Decoherence Resonance', 13n, {h: 7 /* Resonance */});
 });
 
 /* Evolution.Gate.MatterGate : FundamentalGate */
 const Evolution_Gate_MatterGate = __lazy(function () {
- return {a1: 'Matter', a2: 3n};
+ return Evolution_Gate_mkFundamentalGate('Matter', 3n, {h: 2 /* Matter */});
 });
 
 /* Evolution.Gate.ChargeGate : FundamentalGate */
 const Evolution_Gate_ChargeGate = __lazy(function () {
- return {a1: 'Fractional Charge', a2: 5n};
+ return Evolution_Gate_mkFundamentalGate('Fractional Charge', 5n, {h: 4 /* Charge */});
 });
 
 /* Evolution.Gate.BondGate : FundamentalGate */
 const Evolution_Gate_BondGate = __lazy(function () {
- return {a1: 'Molecular Bond', a2: 4n};
+ return Evolution_Gate_mkFundamentalGate('Molecular Bond', 4n, {h: 3 /* Bond */});
 });
 
 /* Evolution.Gate.BackgroundGate : FundamentalGate */
 const Evolution_Gate_BackgroundGate = __lazy(function () {
- return {a1: 'Background', a2: 2n};
+ return Evolution_Gate_mkFundamentalGate('Background', 2n, {h: 1 /* Background */});
 });
 
-/* Evolution.SpreadPolynumber.case block in case block in generateLocalSpreadPoly */
-function Evolution_SpreadPolynumber_case__casex20blockx20inx20generateLocalSpreadPoly_2920($0, $1, $2, $3, $4, $5, $6) {
- let $8;
- switch(Prelude_EqOrd_x3dx3d_Eq_Integer($6.a2, 0n)) {
+/* Evolution.Transform.shatterTerm : BoxInt -> ((Nat, Nat), BoxInt) -> ((Nat, Nat), BoxInt) */
+function Evolution_Transform_shatterTerm($0, $1) {
+ const $3 = Math_BoxInt_boxToInt($1.a2);
+ const $6 = Math_BoxInt_boxToInt($0);
+ const $9 = Prelude_Num_mod_Integral_Integer($3, $6);
+ return {a1: $1.a1, a2: Math_BoxInt_intToBoxInt($9)};
+}
+
+/* Evolution.Transform.polyDegree : IntPolynumber -> Nat */
+function Evolution_Transform_polyDegree($0) {
+ switch($0.h) {
+  case 0: /* ZeroM */ return 0n;
+  case 1: /* AddM */ return Prelude_Types_max_Ord_Nat($0.a1.a1, Evolution_Transform_polyDegree($0.a3));
+ }
+}
+
+/* Evolution.Transform.partitionLogic : Nat -> Geometry -> IntPolynumber -> (Vexel, Vexel) */
+function Evolution_Transform_partitionLogic($0, $1, $2) {
+ const $3 = Math_BoxInt_intToBoxInt($0);
+ const $6 = Data_List_partition($9 => Evolution_Transform_isLatentTerm($3, $9), Math_Multiset_multisetToList($2));
+ const $10 = Math_Multiset_fromList(csegen_49(), $6.a1);
+ const $15 = Math_Multiset_fromList(csegen_49(), $6.a2);
+ const $1a = Math_Multiset_fromList(csegen_43(), {a1: {a1: {a1: $1, a2: $10}, a2: 1n}, a2: {h: 0}});
+ const $25 = Math_Multiset_fromList(csegen_43(), {a1: {a1: {a1: $1, a2: $15}, a2: 1n}, a2: {h: 0}});
+ return {a1: $1a, a2: $25};
+}
+
+/* Evolution.Transform.isLatentTerm : BoxInt -> ((Nat, Nat), BoxInt) -> Bool */
+function Evolution_Transform_isLatentTerm($0, $1) {
+ return Math_BoxInt_x3ex3d_Ord_BoxInt($1.a2, $0);
+}
+
+/* Evolution.Transform.gohFactorisationHorizon : Vexel -> Bool */
+function Evolution_Transform_gohFactorisationHorizon($0) {
+ const $1 = Evolution_Transform_extractVexelPoly($0);
+ const $4 = Evolution_Transform_polyDegree($1);
+ switch(Prelude_Types_x3e_Ord_Nat($4, 0n)) {
+  case 1: return Math_Multiset_x3dx3d_Eq_x28x28Multisetx20x24cx29x20x24ax29(csegen_36(), $1, Math_SpreadPolynumber_memoSpreadPoly($4));
+  case 0: return 0;
+ }
+}
+
+/* Evolution.Transform.extractVexelPoly : Vexel -> IntPolynumber */
+function Evolution_Transform_extractVexelPoly($0) {
+ return Prelude_Types_foldl_Foldable_List(acc => $3 => Math_IntPolynumber_addIntPoly(acc, Math_Multiset_scaleMultiset(csegen_34(), Math_BoxInt_intToBoxInt($3.a2), $3.a1.a2)), Math_IntPolynumber_emptyIntPoly(), Math_Multiset_multisetToList($0));
+}
+
+/* Evolution.Transform.evaluateResonance : Nat -> Integer -> Geometry -> Vexel -> Vexel */
+function Evolution_Transform_evaluateResonance($0, $1, $2, $3) {
+ const $4 = Math_Multiset_multiplicityAll(csegen_103(), $3);
+ switch(Prelude_EqOrd_x3e_Ord_Integer($4, $0)) {
   case 1: {
-   $8 = 0n;
+   const $d = Prelude_Types_foldMap_Foldable_List(csegen_95(), $12 => Prelude_Types_List_mapAppend({h: 0}, $18 => ({a1: $18.a1, a2: Math_BoxInt_boxMult($18.a2, Math_BoxInt_intToBoxInt($12.a2))}), Math_Multiset_multisetToList($12.a1.a2)), Math_Multiset_multisetToList($3));
+   const $27 = Math_BoxInt_intToBoxInt($1);
+   const $2a = Prelude_Types_List_mapAppend({h: 0}, $2e => Evolution_Transform_shatterTerm($27, $2e), $d);
+   const $33 = Math_Multiset_fromList(csegen_49(), $2a);
+   return Math_Multiset_fromList(csegen_43(), {a1: {a1: {a1: $2, a2: $33}, a2: 1n}, a2: {h: 0}});
+  }
+  case 0: return $3;
+ }
+}
+
+/* Evolution.Transform.canAscend : Metric -> Substrate -> Vexel -> Bool */
+function Evolution_Transform_canAscend($0, $1, $2) {
+ switch(Simplex_Twist_chromogeometricHorizon($1)) {
+  case 1: return 1;
+  case 0: return Evolution_Transform_gohFactorisationHorizon($2);
+ }
+}
+
+/* Evolution.Transform.ascendScale : Geometry -> Vexel -> Vexel */
+function Evolution_Transform_ascendScale($0, $1) {
+ const $2 = Prelude_Types_foldl_Foldable_List(acc => $5 => Math_Multiset_addMultiset(acc, Math_Multiset_scaleMultiset(csegen_34(), Math_BoxInt_intToBoxInt($5.a2), $5.a1.a2)), Math_IntPolynumber_emptyIntPoly(), Math_Multiset_multisetToList($1));
+ return Math_Multiset_fromList(csegen_43(), {a1: {a1: {a1: $0, a2: $2}, a2: 1n}, a2: {h: 0}});
+}
+
+/* Evolution.LocalSpreadPolynumber.case block in case block in generateLocalSpreadPolyList */
+function Evolution_LocalSpreadPolynumber_case__casex20blockx20inx20generateLocalSpreadPolyList_5714($0, $1, $2, $3, $4, $5) {
+ let $7;
+ switch(Prelude_EqOrd_x3dx3d_Eq_Integer($5.a2, 0n)) {
+  case 1: {
+   $7 = 0n;
    break;
   }
   case 0: {
-   $8 = Prelude_Num_div_Integral_Integer($6.a1, $6.a2);
+   $7 = Prelude_Num_div_Integral_Integer($5.a1, $5.a2);
    break;
   }
  }
- const $11 = Evolution_Gate_selectGate(Prelude_Types_prim__integerToNat(Prelude_Num_mod_Integral_Integer(Prelude_Num_abs_Abs_Integer($8), 137n)));
- const $10 = $11.a2;
- const $1b = Math_SpreadPolynumber_makeSpreadPolyExpr($10);
+ const $f = Evolution_Gate_degree(Evolution_Gate_selectGate(Prelude_Types_prim__integerToNat(Prelude_Num_mod_Integral_Integer(Prelude_Num_abs_Abs_Integer($7), 137n))));
+ const $1b = Math_SpreadPolynumber_makeSpreadPolyExpr($f);
  return Math_SpreadPolynumber_evalSpreadPolyExpr($1b);
 }
 
-/* Evolution.SpreadPolynumber.3887:3019:getEnergy */
-function Evolution_SpreadPolynumber_n__3887_3019_getEnergy($0, $1, $2, $3, $4) {
- const $5 = Prelude_Types_List_filterAppend({h: 0}, $9 => Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $9.a1.a1, $4), $3);
- switch($5.h) {
-  case undefined: /* cons */ return $5.a1.a2;
+/* Evolution.LocalSpreadPolynumber.case block in case block in case block in generateLocalSpreadPolyList */
+function Evolution_LocalSpreadPolynumber_case__casex20blockx20inx20casex20blockx20inx20generateLocalSpreadPolyList_5598($0, $1, $2, $3, $4, $5, $6, $7, $8, $9) {
+ const $b = Math_BoxInt_boxToInt($9.a1);
+ const $e = Math_BoxInt_boxToInt($9.a2);
+ return {a1: ($b*$7), a2: $e};
+}
+
+/* Evolution.LocalSpreadPolynumber.4691:5822:getEnergy */
+function Evolution_LocalSpreadPolynumber_n__4691_5822_getEnergy($0, $1, $2) {
+ const $3 = Prelude_Types_List_filterAppend({h: 0}, $7 => Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $7.a1.a1, $2), $0);
+ switch($3.h) {
+  case undefined: /* cons */ return $3.a1.a2;
   case 0: /* nil */ return 0n;
  }
 }
 
-/* Evolution.SpreadPolynumber.3887:3018:deformedEdges */
-function Evolution_SpreadPolynumber_n__3887_3018_deformedEdges($0, $1, $2, $3) {
- const $6 = $7 => {
-  const $a = Evolution_SpreadPolynumber_n__3887_3019_getEnergy($0, $1, $2, $3, $7.a1.a1);
-  const $11 = Evolution_SpreadPolynumber_n__3887_3019_getEnergy($0, $1, $2, $3, $7.a1.a2);
-  return {a1: {a1: $7.a1.a1, a2: $7.a1.a2}, a2: (($7.a2+$a)+$11)};
+/* Evolution.LocalSpreadPolynumber.4691:5821:deformedEdges */
+function Evolution_LocalSpreadPolynumber_n__4691_5821_deformedEdges($0, $1) {
+ const $4 = $5 => {
+  const $8 = Evolution_LocalSpreadPolynumber_n__4691_5822_getEnergy($0, $1, $5.a1.a1);
+  const $d = Evolution_LocalSpreadPolynumber_n__4691_5822_getEnergy($0, $1, $5.a1.a2);
+  return {a1: {a1: $5.a1.a1, a2: $5.a1.a2}, a2: (($5.a2+$8)+$d)};
  };
- return Prelude_Types_List_mapAppend({h: 0}, $6, $2);
+ return Prelude_Types_List_mapAppend({h: 0}, $4, $1);
 }
 
-/* Evolution.SpreadPolynumber.stepUniverseLocalized : Integer -> Metric -> Substrate -> SparseMaxel -> (Substrate, SparseMaxel) */
-function Evolution_SpreadPolynumber_stepUniverseLocalized($0, $1, $2, $3) {
+/* Evolution.LocalSpreadPolynumber.stepUniverseLocalized : Nat -> Metric -> Substrate -> Vexel -> (Substrate, Vexel) */
+function Evolution_LocalSpreadPolynumber_stepUniverseLocalized($0, $1, $2, $3) {
+ const $4 = Evolution_LocalSpreadPolynumber_stepUniverseList($0, $1, Math_Multiset_multisetToList($2), Math_Multiset_multisetToList($3));
+ const $e = Math_Multiset_fromList(csegen_47(), $4.a1);
+ const $13 = Math_Multiset_fromList(csegen_43(), $4.a2);
+ return {a1: $e, a2: $13};
+}
+
+/* Evolution.LocalSpreadPolynumber.stepUniverseList : Nat -> Metric -> List ((Geometry, Geometry), Integer) -> List ((Geometry,
+Amplitude),
+Integer) -> (List ((Geometry, Geometry), Integer),
+List ((Geometry, Amplitude), Integer)) */
+function Evolution_LocalSpreadPolynumber_stepUniverseList($0, $1, $2, $3) {
  const $7 = $8 => {
-  const $b = Evolution_SpreadPolynumber_generateLocalSpreadPoly($1, $2, $8.a1.a1);
-  const $10 = Math_Multiset_scaleMultiset($8.a2, Math_IntPolynumber_mulIntPoly($8.a1.a2, $b));
+  const $b = Evolution_LocalSpreadPolynumber_generateLocalSpreadPolyList($1, $2, $8.a1.a1);
+  const $10 = Math_Multiset_scaleMultiset(csegen_34(), Math_BoxInt_intToBoxInt($8.a2), Math_IntPolynumber_mulIntPoly($8.a1.a2, $b));
   return {a1: {a1: $8.a1.a1, a2: $10}, a2: $8.a2};
  };
- const $4 = Prelude_Types_List_mapAppend({h: 0}, $7, Math_Multiset_multisetToList($3));
- const $22 = $23 => {
-  const $26 = Evolution_Transform_partitionLogic(128n, $23.a1.a1, $23.a1.a2);
-  const $2b = Evolution_Transform_evaluateResonance($0, 13n, $23.a1.a1, $26.a2);
-  return Math_Multiset_multisetToList(Math_Multiset_addMultiset($26.a1, $2b));
+ const $4 = Prelude_Types_List_mapAppend({h: 0}, $7, $3);
+ const $24 = $25 => {
+  const $28 = Evolution_Transform_partitionLogic(Evolution_CosmicPartition_darkEnergyStates(), $25.a1.a1, $25.a1.a2);
+  const $2e = Evolution_Transform_evaluateResonance($0, Evolution_Gate_degree(Evolution_Gate_ResonanceGate()), $25.a1.a1, $28.a2);
+  return Math_Multiset_multisetToList(Math_Multiset_addMultiset($28.a1, $2e));
  };
- const $1e = Prelude_Types_foldMap_Foldable_List(csegen_51(), $22, $4);
- const $37 = Math_Multiset_fromList(csegen_22(), $1e);
- const $3c = Evolution_SpreadPolynumber_deformSubstrate($2, $37);
- return {a1: $3c, a2: $37};
+ const $20 = Prelude_Types_foldMap_Foldable_List(csegen_95(), $24, $4);
+ const $3d = Evolution_LocalSpreadPolynumber_n__4691_5821_deformedEdges($4, $2);
+ return {a1: $3d, a2: $20};
 }
 
-/* Evolution.SpreadPolynumber.generateLocalSpreadPoly : Metric -> Substrate -> Pixel Integer -> IntPolynumber */
-function Evolution_SpreadPolynumber_generateLocalSpreadPoly($0, $1, $2) {
- const $3 = Math_Multiset_multisetToList($1);
- const $9 = $a => {
-  const $f = $10 => {
-   const $1e = $1f => {
-    let $25;
-    switch(Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $a.a1.a1, $2)) {
+/* Evolution.LocalSpreadPolynumber.generateLocalSpreadPolyList : Metric -> List ((Geometry, Geometry), Integer) -> Geometry -> IntPolynumber */
+function Evolution_LocalSpreadPolynumber_generateLocalSpreadPolyList($0, $1, $2) {
+ const $6 = $7 => {
+  const $c = $d => {
+   const $1b = $1c => {
+    let $22;
+    switch(Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $7.a1.a1, $2)) {
      case 1: {
-      $25 = 1;
+      $22 = 1;
       break;
      }
      case 0: {
-      switch(Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $a.a1.a2, $2)) {
+      switch(Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $7.a1.a2, $2)) {
        case 1: {
-        $25 = 1;
+        $22 = 1;
         break;
        }
        case 0: {
-        $25 = Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $10.a1.a2, $2);
+        $22 = Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $d.a1.a2, $2);
         break;
        }
       }
       break;
      }
     }
-    const $21 = Prelude_Interfaces_guard(csegen_42(), $25);
-    return Prelude_Types_listBind($21, $38 => Prelude_Types_pure_Applicative_List({a1: $a.a1.a1, a2: {a1: $a.a1.a2, a2: {a1: $10.a1.a2, a2: ($a.a2*$10.a2)}}}));
+    const $1e = Prelude_Interfaces_guard(csegen_93(), $22);
+    return Prelude_Types_listBind($1e, $35 => Prelude_Types_pure_Applicative_List({a1: $7.a1.a1, a2: {a1: $7.a1.a2, a2: {a1: $d.a1.a2, a2: ($7.a2*$d.a2)}}}));
    };
-   return Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_42(), Math_Pixel_x3dx3d_Eq_x28Pixelx20x24ax29(csegen_4(), $a.a1.a2, $10.a1.a1)), $1e);
+   return Prelude_Types_listBind(Prelude_Interfaces_guard(csegen_93(), Math_Pixel_x3dx3d_Eq_x28x28Pixelx20x24metricx29x20x24ax29(csegen_19(), $7.a1.a2, $d.a1.a1)), $1b);
   };
-  return Prelude_Types_listBind($3, $f);
+  return Prelude_Types_listBind($1, $c);
  };
- const $6 = Prelude_Types_listBind($3, $9);
- const $43 = Prelude_Types_List_mapAppend({h: 0}, csegen_43(), $6);
- return Evolution_SpreadPolynumber_case__casex20blockx20inx20generateLocalSpreadPoly_2920($2, $1, $0, $3, $6, $43, Prelude_Types_foldl_Foldable_List(csegen_44(), {a1: 0n, a2: 1n}, $43));
-}
-
-/* Evolution.SpreadPolynumber.deformSubstrate : Substrate -> SparseMaxel -> Substrate */
-function Evolution_SpreadPolynumber_deformSubstrate($0, $1) {
- const $2 = Math_Multiset_multisetToList($0);
- const $5 = Math_Multiset_multisetToList($1);
- return Math_Multiset_fromList(csegen_10(), Evolution_SpreadPolynumber_n__3887_3018_deformedEdges($1, $0, $2, $5));
+ const $3 = Prelude_Types_listBind($1, $6);
+ const $43 = $44 => {
+  const $48 = {a1: $44.a1, a2: {a1: $44.a2.a1, a2: {a1: $44.a2.a2.a1, a2: $44.a2.a2.a2}}};
+  return Evolution_LocalSpreadPolynumber_case__casex20blockx20inx20casex20blockx20inx20generateLocalSpreadPolyList_5598($2, $1, $0, $3, $44.a1, $44.a2.a1, $44.a2.a2.a1, $44.a2.a2.a2, $48, Math_Chromogeometry_spreadNL(0, $44.a1, $44.a2.a1, $44.a2.a2.a1));
+ };
+ const $40 = Prelude_Types_List_mapAppend({h: 0}, $43, $3);
+ return Evolution_LocalSpreadPolynumber_case__casex20blockx20inx20generateLocalSpreadPolyList_5714($2, $1, $0, $3, $40, Prelude_Types_foldl_Foldable_List(csegen_82(), {a1: 0n, a2: 1n}, $40));
 }
 
 /* Data.String.with block in parseInteger,parseIntTrimmed */
