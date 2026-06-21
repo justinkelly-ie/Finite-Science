@@ -61,21 +61,21 @@ Before reviewing the results and core architecture, it is helpful to establish t
 
 The entire architecture of the universe—from digital logic up to special relativity and quantum invariants—is executed under one unified instruction set: the **`MSetFraction`** (a signed integer numerator over a strictly positive natural denominator). Every row across all repositories evaluates via this exact cross-multiplied structure.
 
-| Level & Physics | Numerator Box ($\in \mathbb{Z}$) | Denominator Box ($\in \mathbb{N}^{+}$) | Operator & Mechanism | Implementation |
-|---|---|---|---|---|
-| 🎛️ **Digital Repetition** (Algebra of Boole) | Bit-Gate Multiset | Unit Constant (1) | Modulo-2 Bit Arithmetic / Boolean Ring | `idris2-Multiset`<br>`SignedFraction.idr` |
-| 💻 **Lifted Polynombers** (Arithmetic Circuits) | Truth Table Coefficients | Unit Constant (1) | Boole-Möbius Shifts / Polynomial Mapping | `Idris2-Boole`<br>`Bridge.idr` |
-| 🧮 **Functional Probability** (Hehner) | Quantified MSet | Total Universe Sum | Hehner Normalization / Min-Max Eval | `Idris2-Boole`<br>`Hehner.idr` |
-| 📉 **Probability Bounds** (Hailperin) | Min/Max Corner MSets | Universe Constraints | Hailperin Co-Operations / Inclusion-Exclusion | `Idris2-Boole`<br>`Hailperin.idr` |
-| 🔬 **Indivisible Stochastic Mechanics** (Barandes) | Indivisible Configurations | Division Time Events | Non-Markovian Transitions | `idris2-Universe`<br>`IndivisibleHistory.idr` |
-| 📐 **Rational Trigonometry** (Wildberger) | Triangle Side MSets | Hypotenuse Field | Affine Bilinear Forms / Triple Quad | `idris2-Chromogeometry` |
-| 🔵 **Blue Geometry** (Euclidean Space) | $(\Delta x)^2 + (\Delta y)^2$ | Grid Density | Identity Convolution / Rigid Shapes | `idris2-Chromogeometry` |
-| 🔴 **Red Geometry** (Minkowski Relativity) | $(\Delta x)^2 - (\Delta y)^2$ | Grid Density | Reflection Matrix / Light Cones | `idris2-Chromogeometry` |
-| 🟢 **Green Geometry** (Diagonal Shear) | $2(\Delta x)(\Delta y)$ | Grid Density | Anti-Diagonal Transposition | `idris2-Chromogeometry` |
-| 🌌 **Universal Hyperbolic Geometry** | Homogeneous MSets | Projective Frame Field | Projective Reconstructions / Duality | `idris2-Multiset`<br>`ExtendedCosmology.idr` |
-| ⚡ **Electromagnetism** | Loop Chain Tracks | Volume Element Scale | Exterior Calculus Decay / Gauge Closure | `idris2-Universe`<br>`GaugeOperator.idr` |
-| 🕳️ **Inversive Space Relativity** | Conic Equation Vexels | Inversion Density | Circle-Reflection / Conic Edge Splitting | `idris2-Universe`<br>`Twist.idr` |
-| 🧬 **Quantum Invariants** | Spread Vexel MSet | Hypotenuse Scaling MSet | Algebraic Calculus / Goh Factorisation | `idris2-Multiset`<br>`SpreadPolynumber.idr` |
+| Level & Physics | Numerator Box ($\in \mathbb{Z}$) | Denominator Box ($\in \mathbb{N}^{+}$) | Operator & Mechanism | Implementation | Formal Verification (Wiki) |
+|---|---|---|---|---|---|
+| 🎛️ **Digital Repetition** (Algebra of Boole) | Bit-Gate Multiset | Unit Constant (1) | Modulo-2 Bit Arithmetic / Boolean Ring | `idris2-Multiset`<br>`SignedFraction.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Digital_Repetition.md) |
+| 💻 **Lifted Polynombers** (Arithmetic Circuits) | Truth Table Coefficients | Unit Constant (1) | Boole-Möbius Shifts / Polynomial Mapping | `Idris2-Boole`<br>`Bridge.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Lifted_Polynombers.md) |
+| 🧮 **Functional Probability** (Hehner) | Quantified MSet | Total Universe Sum | Hehner Normalization / Min-Max Eval | `Idris2-Boole`<br>`Hehner.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Functional_Probability.md) |
+| 📉 **Probability Bounds** (Hailperin) | Min/Max Corner MSets | Universe Constraints | Hailperin Co-Operations / Inclusion-Exclusion | `Idris2-Boole`<br>`Hailperin.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Probability_Bounds.md) |
+| 🔬 **Indivisible Stochastic Mechanics** (Barandes) | Indivisible Configurations | Division Time Events | Non-Markovian Transitions | `idris2-Universe`<br>`IndivisibleHistory.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Indivisible_Mechanics.md) |
+| 📐 **Rational Trigonometry** (Wildberger) | Triangle Side MSets | Hypotenuse Field | Affine Bilinear Forms / Triple Quad | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Rational_Trigonometry.md) |
+| 🔵 **Blue Geometry** (Euclidean Space) | $(\Delta x)^2 + (\Delta y)^2$ | Grid Density | Identity Convolution / Rigid Shapes | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Blue_Geometry.md) |
+| 🔴 **Red Geometry** (Minkowski Relativity) | $(\Delta x)^2 - (\Delta y)^2$ | Grid Density | Reflection Matrix / Light Cones | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Red_Geometry.md) |
+| 🟢 **Green Geometry** (Diagonal Shear) | $2(\Delta x)(\Delta y)$ | Grid Density | Anti-Diagonal Transposition | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Green_Geometry.md) |
+| 🌌 **Universal Hyperbolic Geometry** | Homogeneous MSets | Projective Frame Field | Projective Reconstructions / Duality | `idris2-Multiset`<br>`ExtendedCosmology.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md) |
+| ⚡ **Electromagnetism** | Loop Chain Tracks | Volume Element Scale | Exterior Calculus Decay / Gauge Closure | `idris2-Universe`<br>`GaugeOperator.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Electromagnetism.md) |
+| 🕳️ **Inversive Space Relativity** | Conic Equation Vexels | Inversion Density | Circle-Reflection / Conic Edge Splitting | `idris2-Universe`<br>`Twist.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Inversive_Space.md) |
+| 🧬 **Quantum Invariants** | Spread Vexel MSet | Hypotenuse Scaling MSet | Algebraic Calculus / Goh Factorisation | `idris2-Multiset`<br>`SpreadPolynumber.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Quantum_Invariants.md) |
 
 ### 1. The Grid and Chromogeometry
 Space is modeled as a discrete Multiset (a directed graph of integer pixel coordinates).
