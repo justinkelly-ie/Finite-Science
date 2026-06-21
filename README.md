@@ -63,19 +63,19 @@ The entire architecture of the universe—from digital logic up to special relat
 
 | Level & Physics | Numerator Box ($\in \mathbb{Z}$) | Denominator Box ($\in \mathbb{N}^{+}$) | Operator & Mechanism | Implementation | Formal Verification (Wiki) |
 |---|---|---|---|---|---|
-| 🎛️ **Digital Repetition** (Algebra of Boole) | Bit-Gate Multiset | Unit Constant (1) | Modulo-2 Bit Arithmetic / Boolean Ring | `idris2-Multiset`<br>`SignedFraction.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Digital_Repetition.md) |
-| 💻 **Lifted Polynombers** (Arithmetic Circuits) | Truth Table Coefficients | Unit Constant (1) | Boole-Möbius Shifts / Polynomial Mapping | `Idris2-Boole`<br>`Bridge.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Lifted_Polynombers.md) |
-| 🧮 **Functional Probability** (Hehner) | Quantified MSet | Total Universe Sum | Hehner Normalization / Min-Max Eval | `Idris2-Boole`<br>`Hehner.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Functional_Probability.md) |
-| 📉 **Probability Bounds** (Hailperin) | Min/Max Corner MSets | Universe Constraints | Hailperin Co-Operations / Inclusion-Exclusion | `Idris2-Boole`<br>`Hailperin.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Probability_Bounds.md) |
-| 🔬 **Indivisible Stochastic Mechanics** (Barandes) | Indivisible Configurations | Division Time Events | Non-Markovian Transitions | `idris2-Universe`<br>`IndivisibleHistory.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Indivisible_Mechanics.md) |
-| 📐 **Rational Trigonometry** (Wildberger) | Triangle Side MSets | Hypotenuse Field | Affine Bilinear Forms / Triple Quad | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Rational_Trigonometry.md) |
-| 🔵 **Blue Geometry** (Euclidean Space) | $(\Delta x)^2 + (\Delta y)^2$ | Grid Density | Identity Convolution / Rigid Shapes | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Blue_Geometry.md) |
-| 🔴 **Red Geometry** (Minkowski Relativity) | $(\Delta x)^2 - (\Delta y)^2$ | Grid Density | Reflection Matrix / Light Cones | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Red_Geometry.md) |
-| 🟢 **Green Geometry** (Diagonal Shear) | $2(\Delta x)(\Delta y)$ | Grid Density | Anti-Diagonal Transposition | `idris2-Chromogeometry` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Green_Geometry.md) |
-| 🌌 **Universal Hyperbolic Geometry** | Homogeneous MSets | Projective Frame Field | Projective Reconstructions / Duality | `idris2-Multiset`<br>`ExtendedCosmology.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md) |
-| ⚡ **Electromagnetism** | Loop Chain Tracks | Volume Element Scale | Exterior Calculus Decay / Gauge Closure | `idris2-Universe`<br>`GaugeOperator.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Electromagnetism.md) |
-| 🕳️ **Inversive Space Relativity** | Conic Equation Vexels | Inversion Density | Circle-Reflection / Conic Edge Splitting | `idris2-Universe`<br>`Twist.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Inversive_Space.md) |
-| 🧬 **Quantum Invariants** | Spread Vexel MSet | Hypotenuse Scaling MSet | Algebraic Calculus / Goh Factorisation | `idris2-Multiset`<br>`SpreadPolynumber.idr` | [Proof](../idris2-Universe-Wiki/Library/Wiki/Finite-Science/Quantum_Invariants.md) |
+| 🎛️ **Digital Repetition** (Algebra of Boole) | Bit-Gate Multiset | Unit Constant (1) | Modulo-2 Bit Arithmetic / Boolean Ring | `idris2-Multiset`<br>`SignedFraction.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Digital_Repetition.md) |
+| 💻 **Lifted Polynombers** (Arithmetic Circuits) | Truth Table Coefficients | Unit Constant (1) | Boole-Möbius Shifts / Polynomial Mapping | `Idris2-Boole`<br>`Bridge.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Lifted_Polynombers.md) |
+| 🧮 **Functional Probability** (Hehner) | Quantified MSet | Total Universe Sum | Hehner Normalization / Min-Max Eval | `Idris2-Boole`<br>`Hehner.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Functional_Probability.md) |
+| 📉 **Probability Bounds** (Hailperin) | Min/Max Corner MSets | Universe Constraints | Hailperin Co-Operations / Inclusion-Exclusion | `Idris2-Boole`<br>`Hailperin.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Probability_Bounds.md) |
+| 🔬 **Indivisible Stochastic Mechanics** (Barandes) | Indivisible Configurations | Division Time Events | Non-Markovian Transitions | `idris2-Universe`<br>`IndivisibleHistory.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Indivisible_Mechanics.md) |
+| 📐 **Rational Trigonometry** (Wildberger) | Triangle Side MSets | Hypotenuse Field | Affine Bilinear Forms / Triple Quad | `idris2-Chromogeometry` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Rational_Trigonometry.md) |
+| 🔵 **Blue Geometry** (Euclidean Space) | $(\Delta x)^2 + (\Delta y)^2$ | Grid Density | Identity Convolution / Rigid Shapes | `idris2-Chromogeometry` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Blue_Geometry.md) |
+| 🔴 **Red Geometry** (Minkowski Relativity) | $(\Delta x)^2 - (\Delta y)^2$ | Grid Density | Reflection Matrix / Light Cones | `idris2-Chromogeometry` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Red_Geometry.md) |
+| 🟢 **Green Geometry** (Diagonal Shear) | $2(\Delta x)(\Delta y)$ | Grid Density | Anti-Diagonal Transposition | `idris2-Chromogeometry` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Green_Geometry.md) |
+| 🌌 **Universal Hyperbolic Geometry** | Homogeneous MSets | Projective Frame Field | Projective Reconstructions / Duality | `idris2-Multiset`<br>`ExtendedCosmology.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md) |
+| ⚡ **Electromagnetism** | Loop Chain Tracks | Volume Element Scale | Exterior Calculus Decay / Gauge Closure | `idris2-Universe`<br>`GaugeOperator.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Electromagnetism.md) |
+| 🕳️ **Inversive Space Relativity** | Conic Equation Vexels | Inversion Density | Circle-Reflection / Conic Edge Splitting | `idris2-Universe`<br>`Twist.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md) |
+| 🧬 **Quantum Invariants** | Spread Vexel MSet | Hypotenuse Scaling MSet | Algebraic Calculus / Goh Factorisation | `idris2-Multiset`<br>`SpreadPolynumber.idr` | [Proof](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Quantum_Invariants.md) |
 
 ### 1. The Grid and Chromogeometry
 Space is modeled as a discrete Multiset (a directed graph of integer pixel coordinates).
@@ -317,12 +317,12 @@ To launch the interactive visualizer:
 ## Theoretical Foundation & Wiki
 The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
-*   📖 **[Physics Index](../idris2-Universe-Wiki/Library/Wiki/Verification_Matrix.md)** — Overview of research areas and key discoveries
-*   💻 **[Code Architecture](../idris2-Universe-Wiki/Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
-*   ✅ **[Verification Matrix](../idris2-Universe-Wiki/Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
-*   ⚛️ **[Primorial Particle Mapping](../idris2-Universe-Wiki/Library/Wiki/Symmetry/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
-*   🔄 **[Recursive Multiset Composition](../idris2-Universe-Wiki/Library/Wiki/Scale/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
-*   🧮 **[Mathematical Type Architecture](../idris2-Universe-Wiki/Library/Wiki/Simplex/Types.md)** — How every physical concept is one parameterised Multiset
+*   📖 **[Physics Index](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Verification_Matrix.md)** — Overview of research areas and key discoveries
+*   💻 **[Code Architecture](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
+*   ✅ **[Verification Matrix](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Code/Verification_Matrix.md)** — Live QuickCheck properties and Golden test results demonstrating absolute physics adherence
+*   ⚛️ **[Primorial Particle Mapping](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Symmetry/Particles.md)** — How standard model particles map to spread polynomials, plus Oxygen/Water chemistry
+*   🔄 **[Recursive Multiset Composition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Scale/Recursive_Composition.md)** — Time, scale, and the 137-scale trajectory as recursive polynomial composition
+*   🧮 **[Mathematical Type Architecture](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Simplex/Types.md)** — How every physical concept is one parameterised Multiset
 
 ---
 
