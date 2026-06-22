@@ -9,19 +9,12 @@
 ---
 
 ## Significance
-Standard physics models heavily rely on continuous infinite space, smooth wave equations, singularities, and ad-hoc parameters to describe physical, chemical, and biological interactions.
+An exploration of the mathmatical underpinnings of science based on discrete Multiset mathematics. This approach yeilds a structured model that scales from binary logic to algebraic types to physical systems.
 
-**Nat-Science** presents a discrete alternative. We model the universe as a purely discrete, combinatorial engine built on finitist mathematics, including Box Arithmetic (Multisets), Chromogeometry, and Spread Polynomials. By deriving physical properties, molecular bonds, and organic folds strictly as algebraic constraints on a discrete integer grid, this framework bypasses the need for continuous infinite fields, providing a unified and scale-invariant explanation for observed evidence across physics, chemistry, biology, and neurology.
+**Finite-Science** Models the universe as a  discrete, combinatorial engine built on finitist mathematics. On this basis we can derive physical properties, for example the structure of the periodic table, molecular bonds, and organic folds as algebraic constraints on a discrete integer grid. This framework bypasses the need for continuous infinite fields, it provides a unified and scale-invariant explanation for observed evidence across physics, chemistry, biology, and neurology.
 
-### Why "Nat-Science"?
-Originally, this project was called *Linear Physics* and heavily utilized Idris 2's Quantitative Type Theory (QTT) to structurally enforce conservation laws. However, as the universe scaled, the compiler inevitably exhausted its memory attempting to mathematically track nested linear resources. 
-
-
-We have since stripped away the heavy categorical abstractions, elevated the project beyond physics to **Natural Science**, and rebuilt it on an ultra-lean **Pure Multiset Integer Architecture**—representing the entire universe as algebraic properties over the **`Nat`** (Natural numbers) type.
-
-*   **Extreme Leanness**: The engine drops arbitrary rational fractions, topological wrappers, and linear variables in favor of raw structural algebraic arrays (`Math.Multiset`).
-*   **Exact Integer Calculations**: Using pure non-linear integer cross-multiplication, geometric spreads and quadrances never lose precision.
-*   **Automatic Conservation**: Because everything evaluates as flat additions and subtractions across a multiset (`addMultiset`, `subMultiset`), terms automatically annihilate when opposite, guaranteeing perfect conservation naturally.
+*   **Exact Integer Calculations**: Using integer cross-multiplication, geometric spreads and quadrances enables totality of types.
+*   **Automatic Conservation**: Because everything evaluates as flat operations on multisets (`addMultiset`, `subMultiset`), terms automatically annihilate when opposite, guaranteeing perfect conservation naturally.
 
 ---
 
@@ -54,13 +47,21 @@ Before reviewing the results and core architecture, it is helpful to establish t
 
 ---
 
-## Core Architecture
+## Multiset Architecture
+**`MSetFraction`** A signed integer numerator over a strictly positive natural denominator. Every row across all repositories evaluates via this exact cross-multiplied structure:
+**Cross-multiplication** acts as the core engine, enabling the entire architecture of digital logic up to special relativity and quantum invariants—under one unified instruction set, enabling:
+* **Exact integer arithmetic** by transforming fractions into integers
+* **Term annihilation** (where opposite terms cancel each other out)
+* **Eliminating division-by-zero errors** (denominator is always > 0)
+**Numerator (MSetFraction.num) and Denominator (MSetFraction.den)** 
+Multisets of input data and weights for scaling values
+**Transformation MSet** provides scaling values
+**Routing Template** defines interaction constraints
+**Output States** yield the result
 
-### The Global Finite Science Table
+### The Finite Science Table
 
-The entire architecture of the universe—from digital logic up to special relativity and quantum invariants—is executed under one unified instruction set: the **`MSetFraction`** (a signed integer numerator over a strictly positive natural denominator). Every row across all repositories evaluates via this exact cross-multiplied structure.
-
-| Level & Physics | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Transformation MSet | Routing Template MSet | Repos & Source Files |
+| Logic / Physics | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Transformation MSet | Routing Template MSet | Repos & Source Files |
 |---|---|---|---|---|---|
 | 🎛️ **[Digital Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Digital_Repetition.md)** (Algebra of Boole) | Bit-gate multiset $\{b \cdot [\text{state}]\}$ | The unit constant $\{1 \cdot [\text{Base}]\}$ | Modulo-2 logic field — modulo-2 bit arithmetic | Boolean ring evaluation (Exclusive OR / linear bit flipping where $1+1=0$) | `idris2-Boole` 📄 `BF2.idr` 📄 `BitGate.idr` 📄 `BooleFraction.idr` |
 | 💻 **[Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Lifted_Polynumbers.md)** (Arithmetic Circuits) | Truth table coefficients $\{w \cdot [\text{Monomial}]\}$ | The unit constant $\{1 \cdot [\text{Base}]\}$ | Boole-Möbius shifts — upper-triangular matrix | Polynomial mapping (algebraic normal form lift / idempotent $x^2=x$ collapse) | `idris2-Boole` 📄 `Bridge.idr` 📄 `LiftedPolynumber.idr` |
