@@ -49,7 +49,7 @@ Before reviewing the results and core architecture, it is helpful to establish t
 
 ## Multiset Architecture
 **`MSetFraction`** A signed integer numerator over a strictly positive natural denominator. Every row across all repositories evaluates via this exact cross-multiplied structure:
-**Cross-multiplication** acts as the core engine, enabling the entire architecture of digital logic up to special relativity and quantum invariants—under one unified instruction set, enabling:
+**Cross-multiplication** supports the entire architecture of digital logic up to special relativity and quantum invariants—under one unified instruction set, enabling:
 * **Exact integer arithmetic** by transforming fractions into integers
 * **Term annihilation** (where opposite terms cancel each other out)
 * **Eliminating division-by-zero errors** (denominator is always > 0)
