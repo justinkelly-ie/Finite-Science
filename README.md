@@ -48,18 +48,45 @@ Before reviewing the results and core architecture, it is helpful to establish t
 ---
 
 ## Multiset Architecture
-**`MSetFraction`** A signed integer numerator over a strictly positive natural denominator. Every row across all repositories evaluates via this exact cross-multiplied structure:
-**Cross-multiplication** supports the entire architecture of digital logic up to special relativity and quantum invariants—under one unified instruction set, enabling:
-* **Exact integer arithmetic** by transforming fractions into integers
-* **Term annihilation** (where opposite terms cancel each other out)
-* **Eliminating division-by-zero errors** (denominator is always > 0)
-**Numerator (MSetFraction.num) and Denominator (MSetFraction.den)** 
-Multisets of input data and weights for scaling values
-**Transformation MSet** provides scaling values
-**Routing Template** defines interaction constraints
-**Output States** yield the result
+
+At the core of the Natural Science model is the **`MSetFraction`**: a signed integer numerator over a strictly positive natural denominator. Every row of the Finite Science Table evaluates via this exact cross-multiplied structure.
+
+### Side-by-Side Architectural Contrast
+
+| Feature | Transformation MSet (Operator) | Routing Template MSet (Mechanism) |
+| :--- | :--- | :--- |
+| **Primary Role** | Provides the values of the change. | Provides the geometry/logic of the change. |
+| **Analogy** | The new paint colors. | The structural architectural blueprint. |
+| **Action** | Scales, flips, or adds to the state. | Organizes, maps, and drives annihilations. |
+| **Top-Row Example** | The inversion bit pattern (e.g., 1). | The XOR multi-index pairing logic template. |
+| **Bottom-Row Example**| The spatial displacement coordinates. | The `quadranceNL` metric tensor index path. |
+
+> **Summary**: The Transformation MSet is the substance of the operation, while the Routing Template MSet is the scaffolding. Both must be multisets so that Idris 2 can smash them together into a unified algebraic pipeline, but they govern two entirely separate dimensions of the calculation.
+
+---
+
+### The Algebraic Engine: Cross-Multiplication
+
+Cross-multiplication is the most critical mechanical step in the entire framework. When two inputs are piped into a row, cross-multiplication is not just a calculation shortcut; it is the exact engine that enables exact arithmetic without rounding errors, division-by-zero protection, and universal geometric transitions.
+
+1. **Eliminating Division and Floating-Point Errors**
+   Computers struggle with fractions because dividing numbers (like $1 \div 3$) creates infinite decimals ($0.3333...$) that must be rounded, causing compounding mathematical errors. By keeping every state as an `MSetFraction` ($\frac{\text{Numerator}}{\text{Denominator}}$), the system never performs actual division. When two fractions are piped in to be compared or combined, the Routing Template forces a cross-multiplication:
+   $$\frac{N_1}{D_1} \times \frac{N_2}{D_2} \implies (N_1 \cdot D_2) \text{ paired against } (N_2 \cdot D_1)$$
+   Because it only multiplies integers inside multisets, the math remains 100% exact and discrete at all scales.
+
+2. **Driving the Symmetric Annihilation**
+   Cross-multiplication physically flips the denominators of the incoming inputs so they face the numerators. This is the exact mechanism that triggers the structural gating: when $D_2$ is cross-multiplied up next to $N_1$, any prime factors they share are forced into the same evaluation slot. They instantly collide and undergo symmetric annihilation (cancelling out to $\emptyset$). The logic gates (top rows) and the spatial distances (bottom rows) cannot calculate outputs without this cross-multiplication driving the term-annihilation.
+
+3. **Powering the Universal Quadrance Matrix (`quadranceNL`)**
+   At the bottom of the table, Wildberger’s Chromogeometry relies entirely on cross-multiplication to calculate distances (quadrance) without using angles, square roots, or trigonometry. To find if lines intersect or if points are orthogonal across the Red, Blue, or Green zones, the system cross-multiplies their coordinate components. The Routing Template uses the cross-multiplied terms to evaluate the specific zone metric. Because the cross-multiplication handles the signs and ratios automatically, a single tensor function can process Euclidean space and relativistic spacetime simultaneously.
+
+> **Summary of Relevance**: Cross-multiplication is the mathematical "handshake" of the table. It transforms fractional ratios into flat, linear multiset structures where the Operator and Routing Template can instantly execute logic and physics via pure term-cancellation.
+
+---
 
 ## The Finite Science Table
+
+<sub>
 
 | Logic / Physics | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Transformation MSet | Routing Template MSet | Repos & Source Files |
 |---|---|---|---|---|---|
@@ -76,6 +103,8 @@ Multisets of input data and weights for scaling values
 | ⚡ **[Electromagnetism](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Electromagnetism.md)** | Loop chain tracks $\{q \cdot [\text{Edge Loops}]\}$ | Volume element scale $\{\text{Cell}_\text{Volume}\}$ | Exterior calculus decay — discrete boundary maps | Gauge invariant closure (discrete curl $\Delta_\text{matrix} \to 0$ via Hodge splits / charge conservation) | `idris2-Universe` 📄 `DiscreteCalculus.idr` 📄 `GaugeOperator.idr` |
 | 🕳️ **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md)** | Conic equation vexels $\{c \cdot [\text{Conic Coeffs}]\}$ | Inversion density $\{1 \cdot [Q_\text{Circle}^n]\}$ | Inversive chromogeometry — circle-reflection transforms | Conic edge splitting (Euler line & omega intersections / bending path bounds) | `idris2-Universe` 📄 `Twist.idr` |
 | 🧬 **[Quantum Invariants](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Quantum_Invariants.md)** | Spread vexel mset $\{c_n \cdot [s^n]\}$ | Hypotenuse scaling mset $\{1 \cdot [Q_\text{Hyp}^n]\}$ | Algebraic calculus — transition difference operators | Goh factorisation (decomposition of spread polynumbers into Fibonacci parts) | `idris2-Multiset` 📄 `SpreadPolynumber.idr` |
+
+</sub>
 
 
 ### 1. The Grid and Chromogeometry
