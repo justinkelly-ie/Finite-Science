@@ -51,19 +51,6 @@ Before reviewing the results and core architecture, it is helpful to establish t
 
 At the core of the Natural Science model is the **`MSetFraction`**: a signed integer numerator over a strictly positive natural denominator. Every row of the Finite Science Table evaluates via this exact cross-multiplied structure.
 
-### Side-by-Side Architectural Contrast
-
-| Feature | Transformation MSet (Operator) | Routing Template MSet (Mechanism) |
-| :--- | :--- | :--- |
-| **Primary Role** | Substance/values of the change. | Scaffolding/geometry/logic of the change. |
-| **Action** | Scales, flips, or adds to the state. | Organizes, maps, and drives annihilations. |
-| **Top-Row Example** | Inversion bit pattern (e.g., 1). | XOR multi-index pairing logic template. |
-| **Bottom-Row Example**| Spatial displacement coordinates. | `quadranceNL` metric tensor index path. |
-
-Both must be multisets so that Idris 2 can compose them into a unified algebraic pipeline, but they govern entirely separate dimensions of the calculation.
-
----
-
 ### The Algebraic Engine: Cross-Multiplication
 
 Cross-multiplication is the critical mechanical step that enables exact arithmetic, division-by-zero protection, and universal geometric transitions:
@@ -75,7 +62,18 @@ Cross-multiplication is the critical mechanical step that enables exact arithmet
 
 It acts as the mathematical "handshake" of the table, transforming fractional ratios into flat, linear multiset structures for instant term-cancellation.
 
+
 ---
+### Side-by-Side Architectural Contrast
+
+| Feature | Transformation MSet (Operator) | Routing Template MSet (Mechanism) |
+| :--- | :--- | :--- |
+| **Primary Role** | Substance/values of the change. | Scaffolding/geometry/logic of the change. |
+| **Action** | Scales, flips, or adds to the state. | Organizes, maps, and drives annihilations. |
+| **Top-Row Example** | Inversion bit pattern (e.g., 1). | XOR multi-index pairing logic template. |
+| **Bottom-Row Example**| Spatial displacement coordinates. | `quadranceNL` metric tensor index path. |
+
+Both must be multisets so that Idris 2 can compose them into a unified algebraic pipeline, but they govern entirely separate dimensions of the calculation.
 
 ## The Finite Science Table
 
