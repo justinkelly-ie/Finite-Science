@@ -59,7 +59,7 @@ Multisets of input data and weights for scaling values
 **Routing Template** defines interaction constraints
 **Output States** yield the result
 
-### The Finite Science Table
+## The Finite Science Table
 
 | Logic / Physics | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Transformation MSet | Routing Template MSet | Repos & Source Files |
 |---|---|---|---|---|---|
