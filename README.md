@@ -61,7 +61,7 @@ Before reviewing the results and core architecture, it is helpful to establish t
 
 The entire architecture of the universe—from digital logic up to special relativity and quantum invariants—is executed under one unified instruction set: the **`MSetFraction`** (a signed integer numerator over a strictly positive natural denominator). Every row across all repositories evaluates via this exact cross-multiplied structure.
 
-| Level & Physics | Numerator Box ($\in \mathbb{Z}$) | Denominator Box ($\in \mathbb{N}^{+}$) | Operator Field | Combinatorial Mechanism | Repos & Source Files |
+| Level & Physics | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Operator | Combinatorial Mechanism | Repos & Source Files |
 |---|---|---|---|---|---|
 | 🎛️ **[Digital Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Digital_Repetition.md)** (Algebra of Boole) | Bit-gate multiset $\{b \cdot [\text{state}]\}$ | The unit constant $\{1 \cdot [\text{Base}]\}$ | Modulo-2 logic field — modulo-2 bit arithmetic | Boolean ring evaluation (Exclusive OR / linear bit flipping where $1+1=0$) | `idris2-Boole` 📄 `BF2.idr` 📄 `BitGate.idr` 📄 `BooleFraction.idr` |
 | 💻 **[Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Lifted_Polynumbers.md)** (Arithmetic Circuits) | Truth table coefficients $\{w \cdot [\text{Monomial}]\}$ | The unit constant $\{1 \cdot [\text{Base}]\}$ | Boole-Möbius shifts — upper-triangular matrix | Polynomial mapping (algebraic normal form lift / idempotent $x^2=x$ collapse) | `idris2-Boole` 📄 `Bridge.idr` 📄 `LiftedPolynumber.idr` |
