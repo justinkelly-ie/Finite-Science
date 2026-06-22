@@ -1,5 +1,7 @@
 build/
 **/*.ibc
+**/*.ttc
+**/*.ttm
 idris2-LUniverse/build/
 idris2-Multiset/build/
 idris2-chromogeometry/build/
