@@ -53,7 +53,7 @@ At the core of the Natural Science model is the **`MSetFraction`**: a signed int
 
 ### The Algebraic Engine: Cross-Multiplication
 
-Cross-multiplication is the critical mechanical step that enables exact arithmetic, division-by-zero protection, and universal geometric transitions:
+Cross-multiplication enables exact arithmetic, division-by-zero protection, and geometric transitions:
 
 1. **Exact Integer Arithmetic**: Prevents floating-point errors. The system never performs division; instead, fractions are compared or combined by cross-multiplying:
    $$\frac{N_1}{D_1} \times \frac{N_2}{D_2} \implies (N_1 \cdot D_2) \text{ paired against } (N_2 \cdot D_1)$$
