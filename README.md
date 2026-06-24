@@ -74,7 +74,18 @@ It acts as the mathematical "handshake" of the table, transforming fractional ra
 | **Top-Row Example** | Inversion bit pattern (e.g., 1). | XOR multi-index pairing logic template. |
 | **Bottom-Row Example**| Spatial displacement coordinates. | `quadranceNL` metric tensor index path. |
 
-Both must be multisets so that Idris 2 can compose them into a unified algebraic pipeline, but they govern entirely separate dimensions of the## The Finite Science Table
+Both must be multisets so that Idris 2 can compose them into a unified algebraic pipeline, but they govern entirely separate dimensions of the calculation.
+
+## The Finite Science Table
+
+### Dimensional & Scale Progression
+
+The table scales dynamically from logic circuits to spatial geometries by lifting container invariants:
+*   **Row 1 (Singleton Logic)**: Checks if one bit collides with another bit (`Sing`).
+*   **Row 2 (Positional Arithmetic)**: Chains those bits into place values (Arrays/Chains of `Sing`).
+*   **Row 3 (Rational Scales)**: Turns those place values into exact rational fractions (`MSetFraction`).
+*   **Row 4 (Vector Fields)**: Bundles those fractions into directional arrows (Vectors).
+*   **Row 7–9 (Spatial Geometry)**: Extends those vectors into entire projective planes (Homogeneous Coordinates).
 
 The Global Finite Science Table is split into three separate tables detailing **Vexels (States)**, **Maxels (Operators)**, and **Fraction Multisets (Invariants & Denominators)**, incorporating the recently upgraded singleton types:
 
@@ -84,10 +95,6 @@ Holds the state vectors, coordinate systems, and weight types:
 | Domain / Layer | Vexel (Input/Output State Vector) | Coordinate Type | Coefficient / Weight Type | Actual Type Implementation |
 | :--- | :--- | :--- | :--- | :--- |
 | 🎛️ **[Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Repition.md)** | Logic wire state vector | `state` (Logical wire variables) | `BF2` (Modulo-2 parity bit) | `LogicVexel state` / `Vexel BF2 state` (List of singletons) |
-| 💻 **[Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Lifted.md)** | Binary register state vector | `state` (Positional registers) | `BoxInt` (Integer weight) | `ArithmeticState state` / `Sing BoxInt state` |
-| 🧮 **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Functional_Probability.md)** | Normalized probability distribution | `v` (Logical variables) | `MSetFraction` (Exact fraction) | `HehnerFraction v` (with sum denominator) |
-| 📉 **[Probability Bounds](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Probability_Bounds.md)** | Probability intervals / bounds | `ChallengeCoord` | `MSetFraction` interval | `ProbBounds` (lo/hi `MSetFraction` pair) |
-| 🔬 **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Indivisible_Mechanics.md)** | Trajectory configurations | `Trajectory` | `IntPolynumber` | `IndivisibleHistory` state vectors |
 | 📐 **[Rational Trigonometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Rational_Trigonometry.md)** | Side lengths / projections | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
 | 🔵 **[Blue Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Blue_Geometry.md)** | Homogeneous Euclidean points/lines | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
 | 🔴 **[Red Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Red_Geometry.md)** | Homogeneous Minkowski spacetime points | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
@@ -97,24 +104,15 @@ Holds the state vectors, coordinate systems, and weight types:
 | 🕳️ **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md)** | Conic equation coordinates | `Conic` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
 | 🧬 **[Quantum Invariants](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Quantum_Invariants.md)** | Spread polynomials | `Spread` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
 
+
 ### 2. Maxels (Operators & SBFs)
 Holds the transformation operators and routing templates guiding state collison:
 
 | Domain / Layer | Transformation Column (Maxel) | Symmetric Bilinear Form (SBFMset Maxel) | Actual Type Implementation |
 | :--- | :--- | :--- | :--- |
-| 🎛️ **[Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Repition.md)** | Boole Maxel (logical gate transitions) | Parity Junction SBF (local collision template) | `TransformationMSet state` & `row1SBF` |
-| 💻 **[Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Lifted.md)** | Shift Maxel (positional place value shifting) | Diagonal Base Scale SBF (positional scaling) | `Multiset BoxInt (SingRelation (LogicState state))` & `row2SBF` |
 | 🧮 **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Functional_Probability.md)** | Probability Maxel (normalized transition weights) | Normalizing Inner Product SBF (state overlaps) | `ProbabilityMaxel v` & `normSBF` |
-| 📉 **[Probability Bounds](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Probability_Bounds.md)** | Hailperin Maxel (inclusion-exclusion bounds) | Boundary Inequality SBF Maxels (polyhedral vertex limits) | `l1SBF`, `l4SBF`, `u2SBF` |
 | 🔬 **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Indivisible_Mechanics.md)** | Non-Markovian transition amplitudes | Stochastic correspondence rules | `StochasticTransition` Maxels |
-| 📐 **[Rational Trigonometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Rational_Trigonometry.md)** | Affine bilinear forms | Triple quad / spread laws SBF | `Math.Chromogeometry` |
-| 🔵 **[Blue Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Blue_Geometry.md)** | Spatial displacement/Euclidean matrices | Blue SBF Maxel (flat Euclidean distance metric) | `blueSBF` / `quadranceNL` (Identity metric) |
-| 🔴 **[Red Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Red_Geometry.md)** | Lorentz boosts / Relativistic velocity matrices | Red SBF Maxel (Minkowski spacetime metric) | `redSBF` / `quadranceNL` (Minkowski metric) |
-| 🟢 **[Green Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Green_Geometry.md)** | Galilean acceleration / shear matrices | Green SBF Maxel (Galilean shear metric) | `greenSBF` / `quadranceNL` (Shear metric) |
-| 🌌 **[Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md)** | Projective transformations | Duality matrix switches (point-to-line polarity) | `ExtendedCosmology.idr` |
-| ⚡ **[Electromagnetism](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Electromagnetism.md)** | Exterior calculus boundary maps | Hodge star SBF | `DiscreteCalculus.idr` & `GaugeOperator.idr` |
-| 🕳️ **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md)** | Circle-reflection transforms | Inversive circle-reflection bilinear form | `Twist.idr` |
-| 🧬 **[Quantum Invariants](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Quantum_Invariants.md)** | Algebraic calculus difference operators | Goh factorization algebraic spread form | `SpreadPolynumber.idr` |
+
 
 ### 3. Fraction Multisets (Scale Invariants)
 Holds the rational fraction layers (Numerator over Denominator) and conservation bounds:
@@ -126,14 +124,9 @@ Holds the rational fraction layers (Numerator over Denominator) and conservation
 | 🧮 **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Functional_Probability.md)** | Active probability numerator `Sing BoxInt v` | Total unnormalized sum `Sing1 BoxInt TrivialBase` | Conservation of Prime Factors / Normalization |
 | 📉 **[Probability Bounds](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Probability_Bounds.md)** | Bound numerator `BoxInt` | Bounded scale `PosNat` | Polyhedral boundary limits |
 | 🔬 **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Indivisible_Mechanics.md)** | Trajectory count | Total breaks sum | Trajectory sequence limits |
-| 📐 **[Rational Trigonometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Rational_Trigonometry.md)** | Triangle side msets $\{\Delta x^2, \Delta y^2\}$ | Hypotenuse field $\{1 \cdot [Q_\text{Hyp}]\}$ | Triple quad / spread laws |
-| 🔵 **[Blue Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Blue_Geometry.md)** | Sum of squares $x^2 + y^2$ | Euclidean grid density | Euclidean Quadrance conservation |
-| 🔴 **[Red Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Red_Geometry.md)** | Relativistic metric difference $x^2 - y^2$ | Relativistic grid density | Light-Cone collapse / Mass conservation |
-| 🟢 **[Green Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Green_Geometry.md)** | Coordinate product $2xy$ | Shear grid density | Shear Quadrance conservation |
 | 🌌 **[Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md)** | Projective cross-ratios | Projective frame field | Projective incidence invariants |
-| ⚡ **[Electromagnetism](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Electromagnetism.md)** | Loop chain tracks | Volume element scale | Gauge invariant closure |
 | 🕳️ **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md)** | Conic equation coefficients | Inversion density | Inversive circle-reflection invariance |
-| 🧬 **[Quantum Invariants](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Quantum_Invariants.md)** | Spread polynomials | Hypotenuse scaling | Goh factorization algebraic spread form |
+
 
 </div>
 
