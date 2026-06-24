@@ -9,3 +9,6 @@
 **/output linguist-generated
 **/expected linguist-generated
 **/compileChez linguist-generated
+
+# Ignore visualizer in language statistics so it shows as Idris
+visualizer/** linguist-vendored
