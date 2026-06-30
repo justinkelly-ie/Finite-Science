@@ -82,7 +82,7 @@ Both must be multisets so that Idris 2 can compose them into a unified algebraic
 
 The table scales dynamically from logic circuits to spatial geometries by lifting container invariants:
 *   **Row 1 (Singleton Logic)**: Checks if one bit collides with another bit (`Sing`).
-*   **Row 2 (Positional Arithmetic)**: Chains those bits into place values (Arrays/Chains of `Sing`).
+*   **Row 2 (Positional Arithmetic)**: Chains those bits into place values (Vexels of `Sing`).
 *   **Row 3 (Rational Scales)**: Turns those place values into exact rational fractions (`MSetFraction`).
 *   **Row 4 (Vector Fields)**: Bundles those fractions into directional arrows (Vectors).
 *   **Row 7–9 (Spatial Geometry)**: Extends those vectors into entire projective planes (Homogeneous Coordinates).
@@ -94,15 +94,16 @@ Holds the state vectors, coordinate systems, and weight types:
 
 | Domain / Layer | Vexel (Input/Output State Vector) | Coordinate Type | Coefficient / Weight Type | Actual Type Implementation |
 | :--- | :--- | :--- | :--- | :--- |
-| 🎛️ **[Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Repition.md)** | Logic wire state vector | `state` (Logical wire variables) | `BF2` (Modulo-2 parity bit) | `LogicVexel state` / `Vexel BF2 state` (List of singletons) |
-| 📐 **[Rational Trigonometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Rational_Trigonometry.md)** | Side lengths / projections | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
-| 🔵 **[Blue Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Blue_Geometry.md)** | Homogeneous Euclidean points/lines | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
-| 🔴 **[Red Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Red_Geometry.md)** | Homogeneous Minkowski spacetime points | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
-| 🟢 **[Green Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Green_Geometry.md)** | Homogeneous Galilean shear coordinates | `Coord2D` / `Geometry` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
-| 🌌 **[Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md)** | Homogeneous points/lines | `Coord3D` | `MSetFraction` | Homogeneous coordinate Vexels |
-| ⚡ **[Electromagnetism](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Electromagnetism.md)** | Loop chain tracks | `Edge` / `Face` | `Integer` / `Amplitude` | `Vexel` (Multiset of pixel-amplitude pairs) |
-| 🕳️ **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md)** | Conic equation coordinates | `Conic` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
-| 🧬 **[Quantum Invariants](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Quantum_Invariants.md)** | Spread polynomials | `Spread` | `BoxInt` | `Vexel` (Multiset of pixel-amplitude pairs) |
+| **[Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Repition.md)** | Logic wire state vector | `state` (Logical wire variables) | `BF2` (Modulo-2 parity bit) | `LogicVexel state` / `Vexel BF2 state` / `DepLogicVexel state xs` |
+| **[Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Lifted.md)** | Arithmetic register state vector | `state` (Logic variables / base anchor) | `BoxInt` (Positional carry weights) | `ArithmeticState state` / `Vexel BoxInt state` / `DepArithmeticState state xs` |
+| **[Rational Trigonometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Rational_Trigonometry.md)** | Side lengths / projections | `Coord2D` / `Geometry` | `BoxInt` | `Vexel BoxInt Geometry` |
+| **[Blue Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Blue_Geometry.md)** | Homogeneous Euclidean points/lines | `PixelNL Blue` | `BoxInt` | `Vexel BoxInt (PixelNL Blue)` |
+| **[Red Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Red_Geometry.md)** | Homogeneous Minkowski spacetime points | `PixelNL Red` | `BoxInt` | `Vexel BoxInt (PixelNL Red)` |
+| **[Green Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Green_Geometry.md)** | Homogeneous Galilean shear coordinates | `PixelNL Green` | `BoxInt` | `Vexel BoxInt (PixelNL Green)` |
+| **[Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Universal_Hyperbolic_Geometry.md)** | Homogeneous points/lines | `Coord3D` | `MSetFraction` | `Vexel MSetFraction Coord3D` |
+| **[Electromagnetism](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Electromagnetism.md)** | Loop chain tracks | `Edge` / `Face` | `Integer` / `Amplitude` | `Vexel Integer Edge` / `Vexel Integer Face` |
+| **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Inversive_Space.md)** | Conic equation coordinates | `Conic` | `BoxInt` | `Vexel BoxInt Conic` |
+| **[Quantum Invariants](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Quantum_Invariants.md)** | Spread polynomials | `Spread` | `BoxInt` | `Vexel BoxInt Spread` |
 
 
 ### 2. Maxels (Operators & SBFs)
@@ -110,8 +111,8 @@ Holds the transformation operators and routing templates guiding state collison:
 
 | Domain / Layer | Transformation Column (Maxel) | Symmetric Bilinear Form (SBFMset Maxel) | Actual Type Implementation |
 | :--- | :--- | :--- | :--- |
-| 🧮 **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Functional_Probability.md)** | Probability Maxel (normalized transition weights) | Normalizing Inner Product SBF (state overlaps) | `ProbabilityMaxel v` & `normSBF` |
-| 🔬 **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Indivisible_Mechanics.md)** | Non-Markovian transition amplitudes | Stochastic correspondence rules | `StochasticTransition` Maxels |
+| **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Functional_Probability.md)** | Probability Maxel (normalized transition weights) | Normalizing Inner Product SBF (state overlaps) | `ProbabilityMaxel v` & `normSBF` |
+| **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Indivisible_Mechanics.md)** | Non-Markovian transition amplitudes | Stochastic correspondence rules | `StochasticTransition` Maxels |
 
 
 ### 3. Fraction Multisets (Scale Invariants)
@@ -119,14 +120,13 @@ Holds the rational fraction layers (Numerator over Denominator) and conservation
 
 | Domain / Layer | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Invariant / Annihilation Rule |
 | :--- | :--- | :--- | :--- |
-| 🎛️ **[Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Repition.md)** | Active singleton bit `Sing BF2 state` | unit constant `Sing1 BF2 TrivialBase` | Modulo-2 collapse: `[[]] + [[]] ≡ []` |
-| 💻 **[Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Singleton_Lifted.md)** | Positional singleton `Sing BoxInt state` | unit constant `Sing1 BoxInt TrivialBase` | Positional Carry-Over: shift overflow to higher register |
-| 🧮 **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Functional_Probability.md)** | Active probability numerator `Sing BoxInt v` | Total unnormalized sum `Sing1 BoxInt TrivialBase` | Conservation of Prime Factors / Normalization |
-| 📉 **[Probability Bounds](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Probability_Bounds.md)** | Bound numerator `BoxInt` | Bounded scale `PosNat` | Polyhedral boundary limits |
-| 🔬 **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Indivisible_Mechanics.md)** | Trajectory count | Total breaks sum | Trajectory sequence limits |
-| 🌌 **[Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Universal_Hyperbolic_Geometry.md)** | Projective cross-ratios | Projective frame field | Projective incidence invariants |
-| 🕳️ **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite-Science/Inversive_Space.md)** | Conic equation coefficients | Inversion density | Inversive circle-reflection invariance |
-
+| **[Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Repition.md)** | Active singleton bit `Sing BF2 state` | unit constant `Sing1 BF2 TrivialBase` | Modulo-2 collapse: `[[]] + [[]] ≡ []` |
+| **[Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Lifted.md)** | Positional singleton `Sing BoxInt state` | unit constant `Sing1 BoxInt TrivialBase` | Positional Carry-Over: shift overflow to higher register |
+| **[Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Functional_Probability.md)** | Active probability numerator `Sing BoxInt v` | Total unnormalized sum `Sing1 BoxInt TrivialBase` | Conservation of Prime Factors / Normalization |
+| **[Probability Bounds](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Probability_Bounds.md)** | Bound numerator `BoxInt` | Bounded scale `PosNat` | Polyhedral boundary limits |
+| **[Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Indivisible_Mechanics.md)** | Trajectory count | Total breaks sum | Trajectory sequence limits |
+| **[Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Universal_Hyperbolic_Geometry.md)** | Projective cross-ratios | Projective frame field | Projective incidence invariants |
+| **[Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Inversive_Space.md)** | Conic equation coefficients | Inversion density | Inversive circle-reflection invariance |
 
 </div>
 
@@ -369,7 +369,6 @@ To launch the interactive visualizer:
 ---
 
 ## Theoretical Foundation & Wiki
-The physics mapping and derivation in this project are massive. If you are a physicist or mathematician looking to audit the transition from orthodox QCD to Deterministic Finitist Arithmetic, please read the Wiki:
 
 *   📖 **[Physics Index](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Verification_Matrix.md)** — Overview of research areas and key discoveries
 *   💻 **[Code Architecture](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Code/Index.md)** — Detailed breakdown of the $O(1)$ Sigma-Linear execution engine
