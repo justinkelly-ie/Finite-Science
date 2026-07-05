@@ -25,6 +25,11 @@ echo "▶ Running Unified Linear-Physics Test Harness (Wiki output)..."
 (cd ../idris2-Universe-Wiki && pack build idris2-Universe-Wiki.ipkg 2>&1 && ./build/exec/luniverse 2>&1)
 echo ""
 
+# Step 3: Run Boole Library Tests
+echo "▶ Running idris2-Boole QuickCheck Test Suite..."
+(cd ../Idris2-Boole && pack build idris2-Boole-test.ipkg 2>&1 && ./build/exec/boole-test 2>&1)
+echo ""
+
 echo "╔══════════════════════════════════════════╗"
 echo "║   All tests complete                     ║"
 echo "╚══════════════════════════════════════════╝"
