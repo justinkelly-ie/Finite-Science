@@ -36,6 +36,11 @@ type = "local"
 path = "../Idris2-Singleton"
 ipkg = "idris2-Singleton.ipkg"
 
+[custom.all.idris2-Boole]
+type = "local"
+path = "../Idris2-Boole"
+ipkg = "idris2-Boole.ipkg"
+
 [custom.all.idris2-Vexel]
 type = "local"
 path = "../Idris2-Vexel"

@@ -1,4 +1,4 @@
-# Nat-Science
+# Finite-Science
 
 **A deterministic, discrete-geometry natural science model where the laws of nature are enforced at compile-time over natural numbers.**
 
@@ -96,8 +96,8 @@ Holds the state vectors, coordinate systems, and weight types:
 
 | Domain / Layer | Vexel (Input/Output State Vector) | Coordinate Type | Coefficient / Weight Type | Actual Type Implementation |
 | :--- | :--- | :--- | :--- | :--- |
-| **Row 1: [Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Repition.md) & [Bit Vexels](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Bit_vexel.md)** | Logic wire state vector | `state` (Logical wire variables) | `BF2` (Modulo-2 parity bit) | `Byte state` / `Vexel BF2 state` / `DepByte state xs` |
-| **Row 2: [Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Lifted.md)** | Arithmetic register state vector | `state` (Logic variables / base anchor) | `BoxInt` (Positional carry weights) | `ArithmeticState state` / `Vexel BoxInt state` / `DepArithmeticState state xs` |
+| **Row 1: [Singleton Repetition](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Repetition.md) & [Bit Vexels](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Bit_vexel.md)** | Logic wire state vector | `state` (Logical wire variables) | `BF2` (Modulo-2 parity bit) | `Byte state` / `Vexel BF2 state` / `DepByte state xs` |
+| **Row 2: [Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Lifted.md)** | Arithmetic register state vector | `state` (Logic variables / base anchor) | `BoxInt` (Positional carry weights) | `ArithmeticState state` / `Vexel BoxInt state` / `DepArithmeticState state xs` |
 | **Row 5: [Rational Trigonometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Rational_Trigonometry.md)** | Side lengths / projections | `Coord2D` / `Geometry` | `BoxInt` | `Vexel BoxInt Geometry` |
 | **Row 6: [Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Universal_Hyperbolic_Geometry.md)** | Homogeneous points/lines | `Coord3D` | `MSetFraction` | `Vexel MSetFraction Coord3D` |
 | **Row 7: [Blue Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Blue_Geometry.md)** | Homogeneous Euclidean points/lines | `PixelNL Blue` | `BoxInt` | `Vexel BoxInt (PixelNL Blue)` |
@@ -113,7 +113,7 @@ Holds the transformation operators and routing templates guiding state collison:
 
 | Domain / Layer | Transformation Column (Maxel) | Symmetric Bilinear Form (SBFMset Maxel) | Actual Type Implementation |
 | :--- | :--- | :--- | :--- |
-| **Row 3: [Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Functional_Probability.md)** | Probability Maxel (normalized transition weights) | Normalizing Inner Product SBF (state overlaps) | `ProbabilityMaxel v` & `normSBF` |
+| **Row 3: [Functional Probability](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Functional_Probability.md)** | Probability Maxel (normalized transition weights) | Normalizing Inner Product SBF (state overlaps) | `ProbabilityMaxel v` & `normSBF` |
 | **Row 4: [Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Indivisible_Mechanics.md)** | Non-Markovian transition amplitudes | Stochastic correspondence rules | `StochasticTransition` Maxels |
 
 
@@ -122,10 +122,10 @@ Holds the rational fraction layers (Numerator over Denominator) and conservation
 
 | Domain / Layer | Numerator (MSetFraction.num) | Denominator (MSetFraction.den) | Invariant / Annihilation Rule |
 | :--- | :--- | :--- | :--- |
-| **Row 1: [Singleton Repetition](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Repition.md)** | Active singleton bit `Sing BF2 state` | unit constant `Sing1 BF2 TrivialBase` | Modulo-2 collapse: `[[]] + [[]] ≡ []` |
-| **Row 2: [Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Lifted.md)** | Positional singleton `Sing BoxInt state` | unit constant `Sing1 BoxInt TrivialBase` | Positional Carry-Over: shift overflow to higher register |
-| **Row 3: [Functional Probability](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Functional_Probability.md)** | Active probability numerator `Sing BoxInt v` | Total unnormalized sum `Sing1 BoxInt TrivialBase` | Conservation of Prime Factors / Normalization |
-| **Row 4: [Probability Bounds](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Probability_Bounds.md)** | Bound numerator `BoxInt` | Bounded scale `PosNat` | Polyhedral boundary limits |
+| **Row 1: [Singleton Repetition](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Repetition.md)** | Active singleton bit `Sing BF2 state` | unit constant `Sing1 BF2 TrivialBase` | Modulo-2 collapse: `[[]] + [[]] ≡ []` |
+| **Row 2: [Singleton Lifted Polynumbers](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Singleton_Lifted.md)** | Positional singleton `Sing BoxInt state` | unit constant `Sing1 BoxInt TrivialBase` | Positional Carry-Over: shift overflow to higher register |
+| **Row 3: [Functional Probability](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Functional_Probability.md)** | Active probability numerator `Sing BoxInt v` | Total unnormalized sum `Sing1 BoxInt TrivialBase` | Conservation of Prime Factors / Normalization |
+| **Row 4: [Probability Bounds](https://github.com/justinkelly-ie/Idris2-Boole-Wiki/blob/main/Library/Wiki/Finite_Science/Probability_Bounds.md)** | Bound numerator `BoxInt` | Bounded scale `PosNat` | Polyhedral boundary limits |
 | **Row 4: [Indivisible Stochastic Mechanics](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Indivisible_Mechanics.md)** | Trajectory count | Total breaks sum | Trajectory sequence limits |
 | **Row 6: [Universal Hyperbolic Geometry](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Universal_Hyperbolic_Geometry.md)** | Projective cross-ratios | Projective frame field | Projective incidence invariants |
 | **Row 11: [Inversive Space Relativity](https://github.com/justinkelly-ie/idris2-Universe-Wiki/blob/main/Library/Wiki/Finite_Science/Inversive_Space.md)** | Conic equation coefficients | Inversion density | Inversive circle-reflection invariance |
@@ -268,11 +268,11 @@ Life is formalized as a linear wrapper that preserves geometric integrity. Biolo
 
 ## Project Topology
 
-The project is structured as a decentralized network of standalone libraries. `Nat-Science` functions as the main simulation coordinator, pulling algebra and geometry modules from independent sibling repositories:
+The project is structured as a decentralized network of standalone libraries. `Finite-Science` functions as the main simulation coordinator, pulling algebra and geometry modules from independent sibling repositories:
 
 ```
 Projects/
-├── Nat-Science/                 ← The main natural science engine (this repository)
+├── Finite-Science/                 ← The main natural science engine (this repository)
 │   ├── visualizer/             ← The 3D Science Laboratory (Vite + Three.js + React-Three-Fiber)
 │   └── Scripts/                ← Orchestration and validation scripts
 │
@@ -295,7 +295,7 @@ Projects/
 ## Getting Started
 
 ### Prerequisites
-`Nat-Science` requires [Idris 2](https://github.com/idris-lang/Idris2). We use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to manage dependencies and trigger test builds.
+`Finite-Science` requires [Idris 2](https://github.com/idris-lang/Idris2). We use **[pack](https://github.com/stefan-hoeck/idris2-pack)** to manage dependencies and trigger test builds.
 
 ### Sibling Package Development
 The sibling packages (`idris2-Multiset` and `idris2-Chromogeometry`) are resolved locally during development via `pack.toml`:
@@ -338,7 +338,7 @@ To launch the interactive visualizer:
    # Using host:
    cd ../idris2-Universe
    pack --cg javascript build idris2-LUniverse-js.ipkg
-   cp build/exec/luniverse_js ../Nat-Science/visualizer/public/luniverse_js.js
+   cp build/exec/luniverse_js ../Finite-Science/visualizer/public/luniverse_js.js
    
    # Or using the Fedora Toolbox environment:
    toolbox run -c fedora-toolbox-44 bash -c "cd ../idris2-Universe && pack --cg javascript build idris2-LUniverse-js.ipkg"

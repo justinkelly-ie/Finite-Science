@@ -1260,7 +1260,7 @@ export default function App() {
         {/* LEFT SIDE CONTROL OVERLAY */}
         <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, color: 'white', fontFamily: 'monospace', width: '340px' }}>
           <h1 style={{ fontSize: '18px', margin: '0 0 5px 0', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold', textShadow: '0 0 10px rgba(0,170,255,0.3)' }}>
-            Nat-Science Lab
+            Finite-Science Lab
           </h1>
           <h2 style={{ fontSize: '10px', margin: '0 0 15px 0', color: '#888', letterSpacing: '1px' }}>
             Multi-Metric Geometry Sandbox
