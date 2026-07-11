@@ -25,9 +25,9 @@ echo "▶ Running Unified Linear-Physics Test Harness (Wiki output)..."
 (cd ../idris2-Universe-Wiki && pack build idris2-Universe-Wiki.ipkg 2>&1 && ./build/exec/luniverse 2>&1)
 echo ""
 
-# Step 3: Run Singleton Library Tests
-echo "▶ Running idris2-Singleton QuickCheck Test Suite..."
-(cd ../Idris2-Singleton && pack build idris2-Singleton-test.ipkg 2>&1 && ./build/exec/singleton-test 2>&1)
+# Step 3: Run Logic Library Tests
+echo "▶ Running idris2-Logic QuickCheck Test Suite..."
+(cd ../Idris2-Logic && pack build idris2-Logic-test.ipkg 2>&1 && ./build/exec/logic-test 2>&1)
 echo ""
 
 echo "╔══════════════════════════════════════════╗"

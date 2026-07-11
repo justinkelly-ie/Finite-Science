@@ -31,13 +31,13 @@ type = "local"
 path = "../idris2-QuickCheck"
 ipkg = "idris2-QuickCheck.ipkg"
 
-[custom.all.idris2-Singleton]
+[custom.all.idris2-Logic]
 type = "local"
-path = "../Idris2-Singleton"
-ipkg = "idris2-Singleton.ipkg"
+path = "../Idris2-Logic"
+ipkg = "idris2-Logic.ipkg"
 
 [custom.all.idris2-Boole]
 type = "local"
-path = "../Idris2-Boole"
+path = "../Idris2-Logic"
 ipkg = "idris2-Boole.ipkg"
 
