@@ -2,11 +2,11 @@ module Main
 
 import Control.App
 import Control.App.Console
-import Core.BoxInt
-import Core.Multiset
-import Core.VexelMaxel
-import Core.Polynumber
-import Core.UnixelFraction
+import Stage0.BoxInt
+import Stage0.Multiset
+import Stage1.VexelMaxel
+import Stage1.Polynumber
+import Stage1.UnixelFraction
 import Evolution.State
 import Evolution.LinearPipeline
 import Evolution.Expansion
@@ -23,7 +23,9 @@ import Geometry.GaloisCurvature
 import Observation.HolographicStream
 import Compound.Biomolecules
 import Compound.StandardModel
-import Math.OnSeq.FusedStream
+import Stage0.OnSeq.FusedStream
+import Stage1.TypeTheory.Staging
+import Stage1.TypeTheory.TwoLevel
 import Data.Fuel
 import Data.List
 import Data.Vect
@@ -77,6 +79,27 @@ fusedPipelineStepStream f items =
     (\val, acc => val + acc)
     0
     items
+
+------------------------------------------------------------------------
+-- 2LTT STAGED UNIVERSE SCALE PIPELINE FUSION
+------------------------------------------------------------------------
+
+||| Evaluates total multiset particle mass-energy across micro-to-macro scale jumps
+public export
+universeMultisetSum : Multiset BoxInt String -> BoxInt
+universeMultisetSum ZeroM = intToBoxInt 0
+universeMultisetSum (AddM _ c rest) = addBox c (universeMultisetSum rest)
+
+||| 2LTT Staged Universe Scale Pipeline: Fuses multi-domain scale evaluation (hadron/physics through cosmology)
+||| at compile-time Stage 1 (U_1) and splices out the unboxed scalar BoxInt constant to Stage 0 (U_0).
+%inline public export
+stagedUniverseScalePipeline : Lift (Multiset BoxInt String) -> BoxInt
+stagedUniverseScalePipeline liftedUniverseStream = universeMultisetSum (splice liftedUniverseStream)
+
+||| QTT 0 Erased Proof Witness: Staged Universe Scale Pipeline Fusion Invariant
+public export
+0 prfStagedUniversePipeline : (m : Multiset BoxInt String) -> splice (quote m) = m
+prfStagedUniversePipeline m = inverseSpliceQuote m
 
 ||| Target Quantum Particle subsystem channel A at Genesis (vm=1, de=128, dm=1).
 public export
@@ -170,8 +193,12 @@ universeApp = do
   _ <- runMultiSystemPipeline seedChannelA seedChannelB (intToBoxInt 2)
   putStrLn "  [Pillar 3] Automated Galois Scale Router (autoScaleUniverseApp)..."
   _ <- runGaloisScaleJumpPipeline seedChannelA [intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0] (intToBoxInt 1)
+  putStrLn "  [Pillar 3.5] 2LTT Staged Universe Scale Pipeline Fusion..."
+  let universeStream = AddM "Baryon" (intToBoxInt 137) (AddM "Lepton" (intToBoxInt 137) ZeroM)
+  let stagedMass = stagedUniverseScalePipeline (quote universeStream)
+  putStrLn $ "  [Pillar 3.5] Deforested Staged Universe Mass Output = " ++ show stagedMass
   putStrLn "  [Pillar 4] Quantum Density Matrix & Deterministic Born Rule..."
-  let dm = fromPolynumber Core.Polynumber.cyclotomic137Polynumber
+  let dm = fromPolynumber Stage1.Polynumber.cyclotomic137Polynumber
   let p0 = bornRuleProjection dm 0
   putStrLn $ "  [Pillar 4] Born Rule P(0) = " ++ show p0
   putStrLn "  [Pillar 5] Thermodynamic Causal Arrow & Jarzynski Fluctuation Equality..."

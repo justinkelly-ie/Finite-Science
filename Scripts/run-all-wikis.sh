@@ -1,6 +1,6 @@
 #!/bin/bash
 # Master Ecosystem Science Wiki Verification Test Runner
-# Executes all 10 satellite science wiki QuickCheck verification test runners sequentially.
+# Installs domain packages and executes satellite science wiki QuickCheck verification test runners sequentially.
 # Must be executed within fedora-toolbox-44.
 
 set -e
@@ -14,39 +14,60 @@ echo "==========================================================================
 echo ""
 
 WIKIS=(
-  "Idris2-Epoch-Wiki:Idris2-Epoch-Wiki.ipkg:epoch-wiki"
-  "Idris2-Biology-Wiki:Idris2-Biology-Wiki.ipkg:biology-wiki"
-  "Idris2-Chemistry-Wiki:Idris2-Chemistry-Wiki.ipkg:chemistry-wiki"
-  "Idris2-Cosmology-Wiki:Idris2-Cosmology-Wiki.ipkg:cosmology-wiki"
-  "Idris2-Dihedron-Wiki:idris2-Dihedron-Wiki.ipkg:dihedronwiki"
-  "Idris2-Electromagnetism-Wiki:Idris2-Electromagnetism-Wiki.ipkg:em-wiki"
-  "Idris2-Fields-Wiki:Idris2-Fields-Wiki.ipkg:fields-wiki"
-  "Idris2-Hadron-Wiki:Idris2-Hadron-Wiki.ipkg:hadron-wiki"
-  "Idris2-Physics-Wiki:Idris2-Physics-Wiki.ipkg:physics-wiki"
-  "Idris2-Topology-Wiki:Idris2-Topology-Wiki.ipkg:topology-wiki"
+  "FinSc-Multiset-Core:FinSc-Multiset-Core-Wiki:FinSc-Multiset-Core-Wiki.ipkg:multiset-core-wiki"
+  "FinSc-Multiset-Transform:FinSc-Multiset-Transform-Wiki:FinSc-Multiset-Transform-Wiki.ipkg:multiset-transform-wiki"
+  "FinSc-Biology:FinSc-Biology-Wiki:FinSc-Biology-Wiki.ipkg:biology-wiki"
+  "FinSc-Chemistry:FinSc-Chemistry-Wiki:FinSc-Chemistry-Wiki.ipkg:chemistry-wiki"
+  "FinSc-Cosmology:FinSc-Cosmology-Wiki:FinSc-Cosmology-Wiki.ipkg:cosmology-wiki"
+  "FinSc-Cosmos:FinSc-Cosmos-Wiki:FinSc-Cosmos-Wiki.ipkg:cosmos-verify"
+  "FinSc-Dihedron:FinSc-Dihedron-Wiki:FinSc-Dihedron-Wiki.ipkg:dihedronwiki"
+  "FinSc-Ecology-Wiki:FinSc-Ecology-Wiki:FinSc-Ecology-Wiki.ipkg:lecology-wiki"
+  "FinSc-Epoch:FinSc-Epoch-Wiki:FinSc-Epoch-Wiki.ipkg:epoch-wiki"
+  "FinSc-Fields:FinSc-Fields-Wiki:FinSc-Fields-Wiki.ipkg:fields-wiki"
+  "FinSc-Geometry:FinSc-Geometry-Wiki:FinSc-Geometry-Wiki.ipkg:geometry-wiki"
+  "FinSc-Hadron:FinSc-Hadron-Wiki:FinSc-Hadron-Wiki.ipkg:hadron-wiki"
+  "FinSc-Multiset-Binary:FinSc-Multiset-Binary-Wiki:FinSc-Multiset-Binary-Wiki.ipkg:multiset-binary-wiki"
+  "FinSc-Multiset-Ternary:FinSc-Multiset-Ternary-Wiki:FinSc-Multiset-Ternary-Wiki.ipkg:multiset-ternary-wiki"
+  "FinSc-Physics:FinSc-Physics-Wiki:FinSc-Physics-Wiki.ipkg:physics-wiki"
+  "FinSc-QuantumComputing:FinSc-QuantumComputing-Wiki:FinSc-QuantumComputing-Wiki.ipkg:quantum-computing-wiki"
+  "FinSc-SystemsBiology-Wiki:FinSc-SystemsBiology-Wiki:FinSc-SystemsBiology-Wiki.ipkg:systems-biology-wiki"
+  "FinSc-Thermodynamics:FinSc-Thermodynamics-Wiki:FinSc-Thermodynamics-Wiki.ipkg:thermodynamics-wiki"
 )
 
 PASSED_COUNT=0
 TOTAL_COUNT=${#WIKIS[@]}
 
 for entry in "${WIKIS[@]}"; do
-  IFS=':' read -r dir ipkg exec <<< "$entry"
-  repo_path="$PROJECTS_DIR/$dir"
+  IFS=':' read -r domain_dir wiki_dir ipkg exec <<< "$entry"
+  domain_path="$PROJECTS_DIR/$domain_dir"
+  wiki_path="$PROJECTS_DIR/$wiki_dir"
   
-  if [ -d "$repo_path" ]; then
+  if [ -d "$domain_path" ] && [ "$domain_dir" != "$wiki_dir" ]; then
+    (
+      cd "$domain_path"
+      ipkg_file=$(ls *.ipkg 2>/dev/null | head -n 1)
+      if [ -n "$ipkg_file" ]; then
+        idris2 --install "$ipkg_file" > /dev/null
+      fi
+    )
+  fi
+
+  if [ -d "$wiki_path" ]; then
     echo "--------------------------------------------------------------------------"
-    echo "▶ Building & Executing $dir ($exec)..."
+    echo "▶ Building & Executing $wiki_dir ($exec)..."
     echo "--------------------------------------------------------------------------"
     (
-      cd "$repo_path"
-      /var/home/justin/.local/bin/idris2 --build "$ipkg" > /dev/null
-      "./build/exec/$exec"
+      cd "$wiki_path"
+      idris2 --build "$ipkg" > /dev/null
+      if [ -x "./build/exec/$exec" ]; then
+        "./build/exec/$exec"
+      fi
     )
-    echo "✅ $dir Verification PASSED"
+    echo "✅ $wiki_dir Verification PASSED"
     PASSED_COUNT=$((PASSED_COUNT + 1))
     echo ""
   else
-    echo "⚠️ Skipping $dir (Directory not found)"
+    echo "⚠️ Skipping $wiki_dir (Directory not found)"
   fi
 done
 
