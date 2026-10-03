@@ -15,14 +15,14 @@ echo "╚═══════════════════════�
 echo ""
 
 # Step 1: Build the main library
-echo "▶ Building FinSc-Cosmology..."
-(cd ../FinSc-Cosmology && idris2 --build FinSc-Cosmology.ipkg 2>&1)
-echo "  ✅ FinSc-Cosmology module"
+echo "▶ Building FinSc-Cosmic-Horizon..."
+(cd ../FinSc-Cosmic-Horizon && idris2 --build FinSc-Cosmic-Horizon.ipkg 2>&1)
+echo "  ✅ FinSc-Cosmic-Horizon module"
 echo ""
 
 # Step 2: Run Unified Tests
 echo "▶ Running Unified Cosmology Test Harness (Wiki output)..."
-(cd ../FinSc-Cosmology-Wiki && idris2 --build FinSc-Cosmology-Wiki.ipkg 2>&1 && ./build/exec/cosmology-wiki 2>&1)
+(cd ../FinSc-Cosmic-Horizon-Wiki && idris2 --build FinSc-Cosmic-Horizon-Wiki.ipkg 2>&1 && ./build/exec/cosmology-wiki 2>&1)
 echo ""
 
 # Step 3: All tests complete
