@@ -7,6 +7,7 @@ import Stage0.Interfaces
 import Stage0.HereditaryMSet
 import Stage1.Basis.SpaceStream
 import Stage1.Basis.Time
+import Stage1.Lenses
 import Stage1.MultisetCodec
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -138,24 +139,94 @@ probeFrozenCycles act =
                  pure (cyc, "CAUGHT " ++ show (HorizonFrozenError tm rsn cyc))
                other => pure (0, "OTHER:" ++ show other))
 
+public export
+closeOutcomeText : CloseOutcome -> String
+closeOutcomeText CleanVacuumCollapse          = "[]"
+closeOutcomeText (FrozenAtHorizon _ txt _ _)  = txt
+
+export
+driveUnobservedTest : Nat -> Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e String
+driveUnobservedTest Z Z u = App1.do
+  c <- closeHereditary0D u
+  App1.pure (closeOutcomeText c)
+driveUnobservedTest Z (S urem) u = App1.do
+  u1 <- stepHereditaryUnified1 u
+  driveUnobservedTest Z urem u1
+driveUnobservedTest (S wrem) urem u = App1.do
+  u1 <- stepHereditaryCongestion1 u
+  driveUnobservedTest wrem urem u1
+
+export
+runHereditaryUnobservedRef : App1 {u = Any} e String
+runHereditaryUnobservedRef = App1.do
+  u0 <- bootHereditary0D
+  u1 <- splitHereditaryFromVacuum (9, 10, 0) (30, 30, 0) heavyMassMSet u0
+  u2 <- driveUnobservedWarmup 5 u1
+  App1.pure u2
+  where
+    driveUnobservedWarmup : Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e String
+    driveUnobservedWarmup Z u = App1.do
+      uw <- injectHereditaryWavepacket u
+      driveUnobservedTest Z 5 uw
+    driveUnobservedWarmup (S wrem) u = App1.do
+      u1 <- stepHereditaryCongestion1 u
+      driveUnobservedWarmup wrem u1
+
+export
+driveObservedZoomedTest : Nat -> (1 u : HereditaryBlackBox) -> Bool -> App1 {u = Any} e (String, Bool)
+driveObservedZoomedTest Z u snapsOk = App1.do
+  c <- closeHereditary0D u
+  App1.pure (closeOutcomeText c, snapsOk)
+driveObservedZoomedTest (S rem) u snapsOk = App1.do
+  u1   <- stepHereditaryUnified1 u
+  obsS <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 2) zeroShift (RetroTime 2) (\m => m /= emptyPureMSet)) u1
+  let MkPureObs u2 sOk _ = obsS
+  obsT <- observeHereditaryPure (zoomedExternalLens (\m => m) zeroShift (blackShift 1) (BoundedTime 5) (\m => m /= emptyPureMSet)) u2
+  let MkPureObs u3 tOk _ = obsT
+  obsR <- observeHereditaryPure (zoomedExternalLens (\m => m) (redShift 1) (redShift 1) OpenFuture renderPureMultiset) u3
+  let MkPureObs u4 txt _ = obsR
+  driveObservedZoomedTest rem u4 (snapsOk && sOk && tOk && txt /= "" && txt /= "[]")
+
+export
+driveObservedZoomedWarmup : Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e (String, Bool)
+driveObservedZoomedWarmup Z u = App1.do
+  uw <- injectHereditaryWavepacket u
+  driveObservedZoomedTest 5 uw True
+driveObservedZoomedWarmup (S rem) u = App1.do
+  u1   <- stepHereditaryCongestion1 u
+  obsW <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 1) (redShift 1) (RetroTime 1) (\m => m /= emptyPureMSet)) u1
+  let MkPureObs u2 _ _ = obsW
+  driveObservedZoomedWarmup rem u2
+
+export
+runHereditaryZoomedObservedRef : App1 {u = Any} e (String, Bool)
+runHereditaryZoomedObservedRef = App1.do
+  u0 <- bootHereditary0D
+  u1 <- splitHereditaryFromVacuum (9, 10, 0) (30, 30, 0) heavyMassMSet u0
+  driveObservedZoomedWarmup 5 u1
+
 export
 runExperiment3 : Has [Console] e => App e (Bool, List String)
 runExperiment3 = do
   let h = "----------------------------------------------------------------"
-  let t = "[Experiment 3] Observer = Time Horizon (No roleObserver!)"
+  let t = "[Experiment 3] Observer = Time Horizon & Non-Interfering Zooms"
   (cA0, msgA0) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runFlatHorizonProbe coarseHorizonSpec))
   (cA2, msgA2) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runFlatHorizonProbe deepUVHorizonSpec))
   (cB0, msgB0) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runHereditaryHorizonProbe coarseHorizonSpec protonMSet))
   (cB2, msgB2) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runHereditaryHorizonProbe deepUVHorizonSpec protonMSet))
+  unobsTxt <- app1 runHereditaryUnobservedRef
+  (obsTxt, zoomSnapsOk) <- app1 runHereditaryZoomedObservedRef
+  let nonInterfering = (unobsTxt == obsTxt) && (unobsTxt /= "[]") && zoomSnapsOk
   let okA = cA0 > cA2 && cA2 > 0
   let okB = cB0 > cB2 && cB2 > 0
-  let pass = okA && okB
+  let pass = okA && okB && nonInterfering
   let lines = [ h
               , t
               , "  * Model A Coarse (RetroTime 0): " ++ msgA0
               , "  * Model A DeepUV (RetroTime 2): " ++ msgA2
               , "  * Model B Coarse (RetroTime 0): " ++ msgB0
               , "  * Model B DeepUV (RetroTime 2): " ++ msgB2
+              , "  * Non-interference (unobserved == space/time-zoomed observed, QTT 0 Refl): " ++ show nonInterfering
               , "  -> Experiment 3 pass=" ++ show pass
               ]
   traverse_ putStrLn lines
@@ -186,17 +257,44 @@ maybeSplitFlat Nothing         u = App1.pure1 u
 maybeSplitFlat (Just (mx, my)) u = splitFlatFromVacuum (mx, my, 0) (30, 30, 0) (intToBoxInt 50) u
 
 export
+driveFlatUnified :
+  (rem : Nat) ->
+  (1 u : FlatBlackBox) ->
+  (accSy : Integer) ->
+  (accWork : Nat) ->
+  App1 {u = Any} e (WavepacketReport, Nat, Integer)
+driveFlatUnified Z u accSy accWork = App1.do
+  obs <- observeFlatDirect (\s => measureWavepacketFlat s.snapWave accSy accWork) u
+  let MkPureObs u1 wRep _ = obs
+  closed <- closeFlat0D u1
+  App1.pure (wRep, accWork, closeNetSum closed)
+driveFlatUnified (S rem) u accSy accWork = App1.do
+  u1  <- stepFlatUnified1 u
+  obs <- observeFlatDirect (\s => (computeFlatStepSy s.snapWave, flatCongestionWorkOf s.snapLastWork + flatWaveTouchWorkOf s.snapWave)) u1
+  let MkPureObs u2 stepTel _ = obs
+  driveFlatUnified rem u2 (accSy + fst stepTel) (accWork + snd stepTel)
+
+export
+driveFlatWarmup :
+  (rem : Nat) ->
+  (1 u : FlatBlackBox) ->
+  (accWork : Nat) ->
+  App1 {u = Any} e (WavepacketReport, Nat, Integer)
+driveFlatWarmup Z u accWork = App1.do
+  u1 <- injectFlatWavepacket u
+  driveFlatUnified 30 u1 0 accWork
+driveFlatWarmup (S rem) u accWork = App1.do
+  u1  <- stepFlatCongestion1 u
+  obs <- observeFlatDirect (\s => flatCongestionWorkOf s.snapLastWork) u1
+  let MkPureObs u2 stepW _ = obs
+  driveFlatWarmup rem u2 (accWork + stepW)
+
+export
 runFlatWaveScenario : Maybe (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, Nat, Integer)
 runFlatWaveScenario mPos = App1.do
   u0 <- bootFlat0D
   u1 <- maybeSplitFlat mPos u0
-  r2 <- stepFlatCongestion 25 u1
-  let MkFlatLinRes u2 warmW = r2
-  u3 <- injectFlatWavepacket u2
-  r4 <- stepFlatUnifiedWave 30 u3
-  let MkFlatLinRes u4 (wRep, coCongW) = r4
-  closed <- closeFlat0D u4
-  App1.pure (wRep, warmW + coCongW + wRep.waveWorkSteps, closeNetSum closed)
+  driveFlatWarmup 25 u1 0
 
 export
 runFlatGravitySuite : App1 {u = Any} e ModelExperimentMetrics
@@ -213,17 +311,46 @@ maybeSplitHereditary Nothing         u = App1.pure1 u
 maybeSplitHereditary (Just (mx, my)) u = splitHereditaryFromVacuum (mx, my, 0) (30, 30, 0) heavyMassMSet u
 
 export
+driveHereditaryUnified :
+  (rem : Nat) ->
+  (1 u : HereditaryBlackBox) ->
+  (accSy : Integer) ->
+  (accWork : Nat) ->
+  App1 {u = Any} e (WavepacketReport, Nat, Integer)
+driveHereditaryUnified Z u accSy accWork = App1.do
+  obs <- observeHereditaryPure (directPureLens (\r => measureWavepacketNested r accSy accWork)) u
+  let MkPureObs u1 wRep _ = obs
+  closed <- closeHereditary0D u1
+  App1.pure (wRep, accWork, closeNetSum closed)
+driveHereditaryUnified (S rem) u accSy accWork = App1.do
+  u1  <- stepHereditaryUnified1 u
+  obs <- observeHereditaryPure
+           (directPureLens (\r => (computeNestedStepSyFromRoot r, nestedCongestionWorkOf r + nestedWavePeelWorkOf r)))
+           u1
+  let MkPureObs u2 stepTel _ = obs
+  driveHereditaryUnified rem u2 (accSy + fst stepTel) (accWork + snd stepTel)
+
+export
+driveHereditaryWarmup :
+  (rem : Nat) ->
+  (1 u : HereditaryBlackBox) ->
+  (accWork : Nat) ->
+  App1 {u = Any} e (WavepacketReport, Nat, Integer)
+driveHereditaryWarmup Z u accWork = App1.do
+  u1 <- injectHereditaryWavepacket u
+  driveHereditaryUnified 30 u1 0 accWork
+driveHereditaryWarmup (S rem) u accWork = App1.do
+  u1  <- stepHereditaryCongestion1 u
+  obs <- observeHereditaryPure (directPureLens nestedCongestionWorkOf) u1
+  let MkPureObs u2 stepW _ = obs
+  driveHereditaryWarmup rem u2 (accWork + stepW)
+
+export
 runHereditaryWaveScenario : Maybe (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, Nat, Integer)
 runHereditaryWaveScenario mPos = App1.do
   u0 <- bootHereditary0D
   u1 <- maybeSplitHereditary mPos u0
-  r2 <- stepHereditaryCongestion 25 u1
-  let MkHereditaryLinRes u2 warmW = r2
-  u3 <- injectHereditaryWavepacket u2
-  r4 <- stepHereditaryUnifiedWave 30 u3
-  let MkHereditaryLinRes u4 (wRep, coCongW) = r4
-  closed <- closeHereditary0D u4
-  App1.pure (wRep, warmW + coCongW + wRep.waveWorkSteps, closeNetSum closed)
+  driveHereditaryWarmup 25 u1 0
 
 export
 runHereditaryGravitySuite : App1 {u = Any} e ModelExperimentMetrics

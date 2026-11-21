@@ -8,6 +8,8 @@ import Stage0.Multiset
 import Stage0.Multiplicity
 import Stage0.HereditaryMSet
 import Stage1.Basis.Space
+import Stage1.Basis.Time
+import Stage1.Basis.SpaceStream
 import Stage1.Views
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -383,11 +385,11 @@ addNbFlat wf nx ny acc =
     then addAtKeyBox (mkVoxelSite nx ny 0) wf acc
     else acc
 
-||| Model A (Flat `Space 3`): single `±1` chip-firing sweep over active interior traffic sites
-||| executing arithmetic directly in `BoxInt` (`divMod4Box`, zero `Nat` middleman).
+||| Model A (Flat `Space 3`): pure single `±1` chip-firing sweep returning ONLY
+||| `(nextTraffic, nextWorkMap)` — zero embedded telemetry counters.
 public export
-stepChipFireFlat : (matter : Space 3) -> (traffic : Space 3) -> (Space 3, Space 3, Nat)
-stepChipFireFlat matter traffic0 =
+stepChipFireFlatState : (matter : Space 3) -> (traffic : Space 3) -> (Space 3, Space 3)
+stepChipFireFlatState matter traffic0 =
   let injected : Space 3
       injected =
         foldBox (\site@(ConsSite x (ConsSite y (ConsSite z PointSite))), w, acc =>
@@ -396,7 +398,7 @@ stepChipFireFlat matter traffic0 =
                      else acc)
                 traffic0
                 matter
-  in foldBox (\site@(ConsSite x (ConsSite y (ConsSite z PointSite))), w, (nxtT, workAcc, totalF) =>
+  in foldBox (\site@(ConsSite x (ConsSite y (ConsSite z PointSite))), w, (nxtT, workAcc) =>
                 if isInteriorXY x y && z == 0
                   then if w >= MkBoxInt 4
                          then let (wf, remW) = divMod4Box w
@@ -407,24 +409,21 @@ stepChipFireFlat matter traffic0 =
                                   t3         = addNbFlat wf x (S y) t2
                                   t4         = addNbFlat wf x (minus y 1) t3
                                   wNext      = addAtKeyBox site firedW workAcc
-                              in (t4, wNext, totalF + boxToNat firedW)
-                         else (addAtKeyBox site w nxtT, workAcc, totalF)
-                  else (nxtT, workAcc, totalF))
-             (emptyMSet, emptyMSet, 0)
+                              in (t4, wNext)
+                         else (addAtKeyBox site w nxtT, workAcc)
+                  else (nxtT, workAcc))
+             (emptyMSet, emptyMSet)
              injected
 
+||| External read-only work observable over Model A's `lastWork` map.
 public export
-runChipFireFlatLoop : Nat -> Space 3 -> Space 3 -> Space 3 -> Nat -> (Space 3, Space 3, Nat)
-runChipFireFlatLoop Z _ traffic lastW totalW = (traffic, lastW, totalW)
-runChipFireFlatLoop (S rem) matter traffic _ totalW =
-  let (nxtT, wMap, stepF) = stepChipFireFlat matter traffic
-  in runChipFireFlatLoop rem matter nxtT wMap (totalW + stepF)
+flatCongestionWorkOf : Space 3 -> Nat
+flatCongestionWorkOf lastW = boxToNat (totalMassBox lastW)
 
-||| Runs `sweeps` consecutive `±1` chip-firing sweeps in Model A (`Space 3`).
+||| External read-only wave work observable over Model A's `wave` lattice.
 public export
-runChipFireFlat : (sweeps : Nat) -> (matter : Space 3) -> (Space 3, Space 3, Nat)
-runChipFireFlat sweeps matter =
-  runChipFireFlatLoop sweeps matter emptyMSet emptyMSet 0
+flatWaveTouchWorkOf : Space 3 -> Nat
+flatWaveTouchWorkOf w = treeSizeNonZero w
 
 public export
 record NestedTrafficSplit where
@@ -483,7 +482,6 @@ record NestedToppleAcc where
   nxtTraffic : HereditaryMSet BoxInt
   nxtSink    : HereditaryMSet BoxInt
   nxtWork    : HereditaryMSet BoxInt
-  firedCount : Nat
 
 public export
 toppleNestedTraffic : HereditaryMSet BoxInt -> HereditaryMSet BoxInt -> NestedToppleAcc
@@ -505,46 +503,74 @@ toppleNestedTraffic (MkHMSet injBox) curSink =
                                    wKey       = mkGridEntry channelWork posM emptyPureMSet
                                    w1         = addHMSet acc.nxtWork (MkHMSet (singletonBox wKey firedW))
                                    w2         = addHMSet w1 (MkHMSet (singletonBox mirrorWorkKey (negBox firedW)))
-                               in MkNestedToppleAcc t4 s4 w2 (acc.firedCount + boxToNat firedW)
+                               in MkNestedToppleAcc t4 s4 w2
                           else MkNestedToppleAcc
                                  (addHMSet acc.nxtTraffic (MkHMSet (singletonBox entry w)))
                                  acc.nxtSink
                                  acc.nxtWork
-                                 acc.firedCount
                    else MkNestedToppleAcc
                           acc.nxtTraffic
                           (addHMSet acc.nxtSink (MkHMSet (singletonBox entry w)))
                           acc.nxtWork
-                          acc.firedCount
                Nothing => acc)
-          (MkNestedToppleAcc emptyPureMSet curSink emptyPureMSet 0)
+          (MkNestedToppleAcc emptyPureMSet curSink emptyPureMSet)
           injBox
 
-||| Model B (`HereditaryMSet BoxInt`): single `±1` chip-firing sweep directly over `root : HereditaryMSet BoxInt`!
-||| Keeps `sumHMSet root == 0` identically invariant by pairing every `+32` traffic emission / boundary exit
-||| with `channelTrafficSink` and every `+w` `channelWork` entry with `channelWorkMirror` `-w`.
+||| Model B (`HereditaryMSet BoxInt`): pure single `±1` chip-firing sweep returning ONLY `nextRoot`!
+||| Keeps `sumHMSet root == 0` identically invariant with zero embedded work/observer state.
 public export
-stepChipFireNested : (root : HereditaryMSet BoxInt) -> (HereditaryMSet BoxInt, Nat)
-stepChipFireNested root =
-  let split            = extractNestedTraffic root
-      toppled          = toppleNestedTraffic split.injectedTraffic split.curSink
-      nestedWorkReport = streamPeelWorkHMSet split.injectedTraffic
-      totalStepWork    = toppled.firedCount + nestedWorkReport.workSteps
-      nextRoot         = addHMSet split.keptMatter
-                           (addHMSet toppled.nxtTraffic (addHMSet toppled.nxtSink toppled.nxtWork))
-  in (nextRoot, totalStepWork)
+stepChipFireNestedState : (root : HereditaryMSet BoxInt) -> HereditaryMSet BoxInt
+stepChipFireNestedState root =
+  let split   = extractNestedTraffic root
+      toppled = toppleNestedTraffic split.injectedTraffic split.curSink
+  in addHMSet split.keptMatter
+       (addHMSet toppled.nxtTraffic (addHMSet toppled.nxtSink toppled.nxtWork))
 
+||| Extracts a single channel sub-multiset from `root : PureMultiset` for external observation/lensing.
 public export
-runChipFireNestedLoop : Nat -> HereditaryMSet BoxInt -> Nat -> (HereditaryMSet BoxInt, Nat)
-runChipFireNestedLoop Z root accWork = (root, accWork)
-runChipFireNestedLoop (S rem) root accWork =
-  let (nextRoot, stepWork) = stepChipFireNested root
-  in runChipFireNestedLoop rem nextRoot (accWork + stepWork)
+extractChannelMSet : PureMultiset -> PureMultiset -> PureMultiset
+extractChannelMSet targetCh (MkHMSet rootBox) =
+  MkHMSet $ foldBox (\entry, mult, acc =>
+                       case unpackGridEntry entry of
+                         Just (ch, _, _) => if ch == targetCh then addAtKeyBox entry mult acc else acc
+                         Nothing         => acc)
+                    BoxLeaf
+                    rootBox
 
-||| Runs `sweeps` consecutive `±1` chip-firing sweeps strictly inside `root : HereditaryMSet BoxInt`.
+||| Extracts a localized matter payload at coordinate `(x, y, z)` for passive `ExternalLens` focus.
 public export
-runChipFireNested : (sweeps : Nat) -> HereditaryMSet BoxInt -> (HereditaryMSet BoxInt, Nat)
-runChipFireNested sweeps root = runChipFireNestedLoop sweeps root 0
+findMatterPayloadAt : (Nat, Nat, Nat) -> PureMultiset -> PureMultiset
+findMatterPayloadAt pos (MkHMSet b) =
+  let targetPosKey = natSiteKey pos
+  in foldBox (\entry, _, acc =>
+                if acc /= emptyPureMSet
+                  then acc
+                  else case unpackGridEntry entry of
+                         Just (ch, posM, pay) =>
+                           if ch == channelMatter && posM == targetPosKey then pay else acc
+                         Nothing => acc)
+             emptyPureMSet
+             b
+
+||| External read-only congestion work observable over Model B's `root`.
+public export
+nestedCongestionWorkOf : PureMultiset -> Nat
+nestedCongestionWorkOf root =
+  let wChan = extractChannelMSet channelWork root
+      tChan = extractChannelMSet channelTraffic root
+  in boxToNat (sumHMSet wChan) + (streamPeelWorkHMSet tChan).workSteps
+
+||| Pure fuel-bounded horizon evaluator shared externally across both models.
+public export
+runBoundedHorizonLoop : (remSteps, remFuel, workPerCycle, accCycles, accWork : Nat) ->
+                        (Nat, Nat, StreamFreezeReason)
+runBoundedHorizonLoop Z _ _ accC accW = (accC, accW, StepHorizonReached)
+runBoundedHorizonLoop (S steps) remFuel workPerCycle accC accW =
+  if workPerCycle == 0
+    then runBoundedHorizonLoop steps remFuel 0 accC accW
+    else if remFuel < workPerCycle
+      then (accC, accW, YieldExhausted)
+      else runBoundedHorizonLoop steps (minus remFuel workPerCycle) workPerCycle (S accC) (accW + workPerCycle)
 
 --------------------------------------------------------------------------------
 -- 4. UNIFIED PROBE-FREE CO-EVOLVING LATTICE WAVEPACKET ENGINE
@@ -699,19 +725,17 @@ computeFlatStepSy w =
        in acc + p * (jy0 + jym))
     0
 
-||| Executes one unified symplectic `divMod4Box` wave sweep on `Space 3` gated solely by `workMap`.
+||| Executes one pure symplectic `divMod4Box` wave sweep on `Space 3`, returning ONLY the updated wave state.
 public export
-stepWavepacketFlat : (workMap : Space 3) -> (wave : Space 3) -> (Space 3, Integer, Nat)
-stepWavepacketFlat workMap wave0 =
+stepWavepacketFlatState : (workMap : Space 3) -> (wave : Space 3) -> Space 3
+stepWavepacketFlatState workMap wave0 =
   let mirrorSite    = mkVoxelSite 0 0 zPlaneWaveMirror
       clearedMirror = setBox mirrorSite (MkBoxInt 0) wave0
       afterX        = foldLinks2D xLinkXs interiorYs (applyFlatLink 1 0 zPlaneJx zPlaneCx workMap wave0)
                         (MkFlatWaveStepAcc clearedMirror 0)
       afterY        = foldLinks2D interiorXs yLinkYs (applyFlatLink 0 1 zPlaneJy zPlaneCy workMap wave0) afterX
-      sy            = computeFlatStepSy afterY.wTree
       rawSum        = multiplicitySignedSum afterY.wTree
-      balanced      = setBox mirrorSite (MkBoxInt (-rawSum)) afterY.wTree
-  in (balanced, sy, afterY.firedCnt)
+  in setBox mirrorSite (MkBoxInt (-rawSum)) afterY.wTree
 
 public export
 measureWavepacketFlat : Space 3 -> Integer -> Nat -> WavepacketReport
@@ -725,29 +749,6 @@ measureWavepacketFlat w poyntingY workSteps =
                  acc)
             (MkWaveMeasureAcc 0 0 0 0 0)
   in finalizeWaveReport m poyntingY workSteps
-
-public export
-runUnifiedFlatLoop :
-  (steps : Nat) ->
-  (matter, traffic, lastWork, wave : Space 3) ->
-  (accSy : Integer) ->
-  (accCongWork, accWaveWork : Nat) ->
-  (Space 3, Space 3, Space 3, WavepacketReport, Nat)
-runUnifiedFlatLoop Z _ traffic lastW wave accSy accCW accWW =
-  (traffic, lastW, wave, measureWavepacketFlat wave accSy accWW, accCW)
-runUnifiedFlatLoop (S rem) matter traffic _ wave accSy accCW accWW =
-  let (nxtT, nxtW, stepCW)       = stepChipFireFlat matter traffic
-      (nxtWave, stepSy, stepWW)  = stepWavepacketFlat nxtW wave
-  in runUnifiedFlatLoop rem matter nxtT nxtW nxtWave (accSy + stepSy) (accCW + stepCW) (accWW + stepWW)
-
-||| Co-evolves chip-firing congestion and the wavepacket in lockstep inside `Space 3`.
-public export
-runUnifiedFlatWave :
-  (steps : Nat) ->
-  (matter, traffic, lastWork, wave : Space 3) ->
-  (Space 3, Space 3, Space 3, WavepacketReport, Nat)
-runUnifiedFlatWave steps matter traffic lastW wave =
-  runUnifiedFlatLoop steps matter traffic lastW wave 0 0 0
 
 -- 4B. Model B (`HereditaryMSet BoxInt`) Wavepacket Helpers (Pure Multiset Axis Keys)
 
@@ -884,20 +885,17 @@ packWaveChannelBox : PureMultiset -> Box BoxInt PureMultiset -> Box BoxInt PureM
 packWaveChannelBox ch fieldBox accBox =
   foldBox (\posM, w, acc => addAtKeyBox (mkGridEntry ch posM emptyPureMSet) w acc) accBox fieldBox
 
-||| Executes one unified symplectic `divMod4Box` wave sweep directly over `root : HereditaryMSet BoxInt`,
-||| preserving `sumHMSet root' == 0` via `channelWaveMirror` and charging recursive peeling work.
+||| Executes one pure symplectic `divMod4Box` wave sweep directly over `root : HereditaryMSet BoxInt`,
+||| preserving `sumHMSet root' == 0` via `channelWaveMirror` with zero embedded telemetry.
 public export
-stepWavepacketNested : PureMultiset -> (PureMultiset, Integer, Nat)
-stepWavepacketNested root =
+stepWavepacketNestedState : PureMultiset -> PureMultiset
+stepWavepacketNestedState root =
   let sp     = splitNestedWave root
       psi0   = sp.psiMap
       afterX = foldLinks2D xKeys14 yKeys13 (applyNestedLink stepX sp.workMap psi0)
                  (MkNestedLinkPassAcc psi0 sp.jxMap sp.cxMap 0)
       afterY = foldLinks2D xKeys15 yKeys12 (applyNestedLink stepY sp.workMap psi0)
                  (MkNestedLinkPassAcc afterX.pBox sp.jyMap sp.cyMap afterX.firedCnt)
-      sy     = computeNestedStepSy afterY.pBox afterY.jBox
-      peelW  = (streamPeelWorkHMSet (MkHMSet afterY.pBox)).workSteps
-      totW   = afterY.firedCnt + peelW
       sumAll = unwrapBox (totalMassBox afterY.pBox) +
                unwrapBox (totalMassBox afterX.jBox) +
                unwrapBox (totalMassBox afterY.jBox) +
@@ -909,7 +907,21 @@ stepWavepacketNested root =
       b4     = packWaveChannelBox channelWaveCx  afterX.cBox b3
       b5     = packWaveChannelBox channelWaveCy  afterY.cBox b4
       b6     = addAtKeyBox mirrorWaveKey (MkBoxInt (-sumAll)) b5
-  in (MkHMSet b6, sy, totW)
+  in MkHMSet b6
+
+||| External read-only Poynting flux observable over Model B's `root`.
+public export
+computeNestedStepSyFromRoot : PureMultiset -> Integer
+computeNestedStepSyFromRoot root =
+  let sp = splitNestedWave root
+  in computeNestedStepSy sp.psiMap sp.jyMap
+
+||| External read-only wave peeling work observable over Model B's `root`.
+public export
+nestedWavePeelWorkOf : PureMultiset -> Nat
+nestedWavePeelWorkOf root =
+  let sp = splitNestedWave root
+  in (streamPeelWorkHMSet (MkHMSet sp.psiMap)).workSteps
 
 public export
 measureWavepacketNested : PureMultiset -> Integer -> Nat -> WavepacketReport
@@ -927,25 +939,6 @@ measureWavepacketNested root poyntingY workSteps =
                      acc)
              (MkWaveMeasureAcc 0 0 0 0 0)
   in finalizeWaveReport m poyntingY workSteps
-
-public export
-runUnifiedNestedLoop :
-  (steps : Nat) ->
-  (root : PureMultiset) ->
-  (accSy : Integer) ->
-  (accCongWork, accWaveWork : Nat) ->
-  (PureMultiset, WavepacketReport, Nat)
-runUnifiedNestedLoop Z root accSy accCW accWW =
-  (root, measureWavepacketNested root accSy accWW, accCW)
-runUnifiedNestedLoop (S rem) root accSy accCW accWW =
-  let (r1, stepCW)               = stepChipFireNested root
-      (r2, stepSy, stepWW)       = stepWavepacketNested r1
-  in runUnifiedNestedLoop rem r2 (accSy + stepSy) (accCW + stepCW) (accWW + stepWW)
-
-||| Co-evolves chip-firing congestion and the wavepacket in lockstep strictly inside `root : PureMultiset`.
-public export
-runUnifiedNestedWave : (steps : Nat) -> PureMultiset -> (PureMultiset, WavepacketReport, Nat)
-runUnifiedNestedWave steps root = runUnifiedNestedLoop steps root 0 0 0
 
 --------------------------------------------------------------------------------
 -- 5. COMPILE-TIME QTT 0 THEOREMS ON STREAMING WORK & CONGESTION PRIMITIVES

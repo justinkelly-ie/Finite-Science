@@ -7,6 +7,7 @@ import Stage0.Box
 import Stage0.HereditaryMSet
 import Stage1.Basis.SpaceStream
 import Stage1.Basis.Time
+import Stage1.Lenses
 import Stage1.MultisetCodec
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -16,46 +17,27 @@ import FiniteScience.FlatSpaceUniverse
 %default total
 
 --------------------------------------------------------------------------------
--- 1. MODEL B: OPAQUE 0D BLACK-BOX `HereditaryMSet BoxInt` (`App1`, `NoThrow`, `Usage = One`)
---    - Holds ONLY ONE `HereditaryMSet BoxInt` (no external wall clock, no separate grid fields).
---    - Supports native horizontal `zoomTime` and vertical `zoomSpace`.
+-- 1. MODEL B: CLOSED OPAQUE 0D `HereditaryMSet BoxInt` COMPUTE (`App1`, `NoThrow`)
+--    - Holds ONLY ONE `PureMultiset` (`root`).
+--    - Zero mutating zoom operations: all Space/Time zooms & observations run
+--      passively via `observeHereditaryPure` (`PureObservation`, `0 same : uOut = uIn`).
 --------------------------------------------------------------------------------
 
 export
 data HereditaryBlackBox : Type where
   MkHereditaryBox : (root : HereditaryMSet BoxInt) -> HereditaryBlackBox
 
-public export
-data HereditaryLinRes : (b : Type) -> Type where
-  MkHereditaryLinRes : (1 box : HereditaryBlackBox) -> (val : b) -> HereditaryLinRes b
-
-public export
-mapNestedMatterPayloads : (HereditaryMSet BoxInt -> HereditaryMSet BoxInt) ->
-                          HereditaryMSet BoxInt ->
-                          HereditaryMSet BoxInt
-mapNestedMatterPayloads f (MkHMSet b) =
-  foldBox (\entry, mult, acc =>
-             case unpackGridEntry entry of
-               Just (ch, posM, pay) =>
-                 if ch == channelMatter
-                   then addHMSet acc (MkHMSet (singletonBox (mkGridEntry ch posM (f pay)) mult))
-                   else addHMSet acc (MkHMSet (singletonBox entry mult))
-               Nothing => addHMSet acc (MkHMSet (singletonBox entry mult)))
-          emptyPureMSet
-          b
-
 --------------------------------------------------------------------------------
--- 2. LINEAR `App1` BLACK-BOX OPERATIONS (`Usage = One`, `NoThrow`)
+-- 2. CLOSED LINEAR `App1` COMPUTE & NON-PERTURBING `PureObservation` TAP
 --------------------------------------------------------------------------------
 
-||| Boots Model B from the 0D vacuum root `[]`.
+||| Boots Model B cleanly from the 0D vacuum root `[]`.
 export
 bootHereditary0D : App1 e HereditaryBlackBox
 bootHereditary0D = App1.pure1 (MkHereditaryBox emptyPureMSet)
 
 ||| Splits a balanced `+1` and `-1` subsystem pair carrying `payload` at `posA` and `posB`
 ||| strictly inside the single `HereditaryMSet BoxInt` `root`.
-||| When `posA == posB`, `+1 + (-1) = 0 -> BoxLeaf` (`[]`) annihilates definitionally!
 export
 splitHereditaryFromVacuum :
   (posA, posB : (Nat, Nat, Nat)) ->
@@ -68,34 +50,6 @@ splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
-||| Shifts all matter payloads horizontally in Laurent Time via Black/Red `zoomTime shift`.
-export
-zoomHereditaryTime :
-  (shift : BlackRedMSet) ->
-  (1 u   : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-zoomHereditaryTime shift (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (mapNestedMatterPayloads (zoomTime shift) root))
-
-||| Shifts all matter payloads vertically in hereditary nesting depth via Black/Red `zoomSpace shift`.
-export
-zoomHereditarySpace :
-  (shift : BlackRedMSet) ->
-  (1 u   : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-zoomHereditarySpace shift (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (mapNestedMatterPayloads (zoomSpace shift) root))
-
-||| Runs `sweeps` consecutive strictly local `±1` chip-firing sweeps entirely inside `root`!
-export
-stepHereditaryCongestion :
-  (sweeps : Nat) ->
-  (1 u    : HereditaryBlackBox) ->
-  App1 e (HereditaryLinRes Nat)
-stepHereditaryCongestion sweeps (MkHereditaryBox root) =
-  let (nxtRoot, totalWork) = runChipFireNested sweeps root
-  in App1.pure1 (MkHereditaryLinRes (MkHereditaryBox nxtRoot) totalWork)
-
 ||| Injects the balanced zero-sum wavepacket directly into `root : HereditaryMSet BoxInt`.
 export
 injectHereditaryWavepacket :
@@ -104,48 +58,35 @@ injectHereditaryWavepacket :
 injectHereditaryWavepacket (MkHereditaryBox root) =
   App1.pure1 (MkHereditaryBox (addHMSet root seedWavepacketNested))
 
-||| Co-evolves BOTH local `±1` chip-firing congestion AND the isotropic local-clock-gated wavepacket
-||| strictly inside the single `HereditaryMSet BoxInt` `root` (`sumHMSet root == 0` invariant!).
+||| Pure closed single-sweep `±1` congestion stepper (zero telemetry, zero observer arguments).
 export
-stepHereditaryUnifiedWave :
-  (steps : Nat) ->
-  (1 u   : HereditaryBlackBox) ->
-  App1 e (HereditaryLinRes (WavepacketReport, Nat))
-stepHereditaryUnifiedWave steps (MkHereditaryBox root) =
-  let (nxtRoot, wRep, congW) = runUnifiedNestedWave steps root
-  in App1.pure1 (MkHereditaryLinRes (MkHereditaryBox nxtRoot) (wRep, congW))
+stepHereditaryCongestion1 :
+  (1 u : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+stepHereditaryCongestion1 (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (stepChipFireNestedState root))
 
-public export
-findMatterPayloadAt : (Nat, Nat, Nat) -> HereditaryMSet BoxInt -> HereditaryMSet BoxInt
-findMatterPayloadAt pos (MkHMSet b) =
-  let targetPosKey = natSiteKey pos
-  in foldBox (\entry, _, acc =>
-                if acc /= emptyPureMSet
-                  then acc
-                  else case unpackGridEntry entry of
-                         Just (ch, posM, pay) =>
-                           if ch == channelMatter && posM == targetPosKey then pay else acc
-                         Nothing => acc)
-             emptyPureMSet
-             b
-
-||| Observes crossing payload at `(5, 0, 0)` through `spec : HorizonSpec` (`Observer = Time`).
-||| When `spec.retroDepth > 0`, applies real vertical `zoomSpace (blackShift spec.retroDepth)`
-||| before peeling quanta via `streamPeelWorkHMSet`.
+||| Pure closed single-sweep lockstep congestion + wavepacket stepper (zero observer arguments).
 export
-measureHereditaryAtHorizon :
-  (spec : HorizonSpec) ->
-  (1 u  : HereditaryBlackBox) ->
-  App1 e (HereditaryLinRes HorizonObservationReport)
-measureHereditaryAtHorizon spec (MkHereditaryBox root) =
-  let foundPayload = findMatterPayloadAt (5, 0, 0) root
-      zoomed = if spec.retroDepth == 0
-                 then foundPayload
-                 else zoomSpace (blackShift spec.retroDepth) foundPayload
-      workPerCycle = (streamPeelWorkHMSet zoomed).workSteps
-      (cyc, used, reason) = runBoundedHorizonLoop 20 spec.budgetCap workPerCycle 0 0
-      rep = MkHorizonObservationReport spec.boundTime spec.retroDepth cyc used reason
-  in App1.pure1 (MkHereditaryLinRes (MkHereditaryBox root) rep)
+stepHereditaryUnified1 :
+  (1 u : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+stepHereditaryUnified1 (MkHereditaryBox root) =
+  let r1 = stepChipFireNestedState root
+      r2 = stepWavepacketNestedState r1
+  in App1.pure1 (MkHereditaryBox r2)
+
+||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
+||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections
+||| without ever modifying `HereditaryBlackBox`.
+export
+observeHereditaryPure :
+  ExternalLens PureMultiset out ->
+  (1 u : HereditaryBlackBox) ->
+  App1 e (PureObservation u out)
+observeHereditaryPure lens (MkHereditaryBox root) =
+  let val = applyExternalLens lens root
+  in App1.pure1 (MkPureObs (MkHereditaryBox root) val Refl)
 
 ||| Consumes the linear `HereditaryBlackBox` once (`One -> Any`), emitting final boundary outcome.
 export
@@ -160,7 +101,7 @@ closeHereditary0D (MkHereditaryBox root) =
          in App1.pure (FrozenAtHorizon stT txt work net)
 
 --------------------------------------------------------------------------------
--- 3. OUTER `App` BOUNDARY EXCEPTION RUNNERS (`Has [Exception UniverseErr]`)
+-- 3. OUTER `App` BOUNDARY GUARDS & EXTERNAL ZOOM HORIZON PROBE
 --------------------------------------------------------------------------------
 
 ||| Boundary test runner validating serialized setting + balanced split before entering Model B.
@@ -176,20 +117,30 @@ runHereditaryGuardedSplitBoundary settingTxt wA wB = do
     u1 <- splitHereditaryFromVacuum (5, 0, 0) (5, 0, 0) payload u0
     closeHereditary0D u1
 
-||| Probes `HereditaryBlackBox` through a `HorizonSpec` and throws `HorizonFrozenError` cleanly
-||| *after* closing the linear `App1` resource when fuel/steps freeze out.
+||| Probes `HereditaryBlackBox` passively via `observeHereditaryPure` + `zoomedExternalLens`
+||| (passive `zoomSpace (blackShift spec.retroDepth)` without altering the universe!),
+||| throwing `HorizonFrozenError` cleanly after closing `App1`.
 export
 runHereditaryHorizonProbe :
   Has [Exception UniverseErr] e =>
   HorizonSpec -> HereditaryMSet BoxInt -> App e HorizonObservationReport
 runHereditaryHorizonProbe spec crossingPayload = do
-  (rep, _) <- app1 $ App1.do
+  rep <- app1 $ App1.do
     u0 <- bootHereditary0D
     u1 <- splitHereditaryFromVacuum (5, 0, 0) (30, 30, 0) crossingPayload u0
-    res <- measureHereditaryAtHorizon spec u1
-    let MkHereditaryLinRes u2 rep = res
-    closed <- closeHereditary0D u2
-    App1.pure (rep, closed)
+    let lens = zoomedExternalLens
+                 (findMatterPayloadAt (5, 0, 0))
+                 (blackShift spec.retroDepth)
+                 zeroShift
+                 spec.boundTime
+                 (\zoomed =>
+                    let workPerCycle        = (streamPeelWorkHMSet zoomed).workSteps
+                        (cyc, used, reason) = runBoundedHorizonLoop 20 spec.budgetCap workPerCycle 0 0
+                    in MkHorizonObservationReport spec.boundTime spec.retroDepth cyc used reason)
+    obs <- observeHereditaryPure lens u1
+    let MkPureObs u2 rep _ = obs
+    _ <- closeHereditary0D u2
+    App1.pure rep
   case rep.freezeReason of
     YieldExhausted =>
       throw (HorizonFrozenError rep.horizonTime rep.freezeReason rep.cyclesCompleted)
