@@ -26,7 +26,7 @@ import FiniteScience.SparseField
 
 public export
 FlatCoreBody : Type
-FlatCoreBody = (Box BoxInt Coord2, Maxel BoxInt Coord2 Coord2 AntisymForm)
+FlatCoreBody = WaveMaxel Coord2
 
 public export
 FlatField : Type
@@ -153,7 +153,7 @@ observeFlatPure lens (MkFlatBox matter field) =
 export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
-  if matter == emptyMSet && field.psiField == BoxLeaf && isEmptyMaxel field.fluxMaxel &&
+  if matter == emptyMSet && isEmptyMaxel field.waveMaxel &&
      isEmptyMaxel field.metricMaxel && null field.frozenCores
     then App1.pure CleanVacuumCollapse
     else let fWork = fieldActiveWork field
