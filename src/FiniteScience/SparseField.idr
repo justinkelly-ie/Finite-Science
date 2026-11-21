@@ -245,7 +245,7 @@ activeRhoAndSource :
   (flux : Maxel BoxInt k k AntisymForm) ->
   (Box BoxInt k, Maxel BoxInt k k SymForm)
 activeRhoAndSource linkCoup psi flux =
-  let fluxSq  = hadamardAntisymSquare flux
+  let fluxSq  = flux .*. flux
       sqRaw   = fluxSq.rawMaxelBox
       incU2   = unionBox (contractRBox sqRaw) (contractLBox sqRaw)
       actRho  = unionBox (scaleBox (MkBoxInt 2) (hadamardBox psi psi))
