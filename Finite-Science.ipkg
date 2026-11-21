@@ -6,13 +6,10 @@ brief   = "App + App1 Black-Box Experimental Engine: Flat Space 3 vs HereditaryM
 depends = base >= 0.8.0
         , linear
         , FinSc-Box
-        , FinSc-Nat
 
 sourcedir = "src"
 
 modules = FiniteScience
-        , FiniteScience.MultisetCodec
-        , FiniteScience.BlackRedZoom
         , FiniteScience.BlackBoxErrors
         , FiniteScience.StreamWork
         , FiniteScience.Settings

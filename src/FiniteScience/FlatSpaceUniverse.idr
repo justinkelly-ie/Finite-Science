@@ -10,7 +10,7 @@ import Stage0.HereditaryMSet
 import Stage1.Basis.Space
 import Stage1.Basis.SpaceStream
 import Stage1.Basis.Time
-import FiniteScience.MultisetCodec
+import Stage1.MultisetCodec
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 

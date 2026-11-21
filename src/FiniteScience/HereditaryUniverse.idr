@@ -7,8 +7,8 @@ import Stage0.Box
 import Stage0.HereditaryMSet
 import Stage1.Basis.SpaceStream
 import Stage1.Basis.Time
-import FiniteScience.MultisetCodec
-import FiniteScience.BlackRedZoom
+import Stage1.MultisetCodec
+import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 import FiniteScience.FlatSpaceUniverse

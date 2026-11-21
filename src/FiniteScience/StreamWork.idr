@@ -9,7 +9,7 @@ import Stage0.Multiplicity
 import Stage0.HereditaryMSet
 import Stage1.Basis.Space
 import Stage1.Views
-import FiniteScience.BlackRedZoom
+import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 
 %default total

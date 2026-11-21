@@ -3,8 +3,8 @@ module FiniteScience.Settings
 import Stage0.BoxInt
 import Stage0.HereditaryMSet
 import Stage1.Basis.Time
-import FiniteScience.MultisetCodec
-import FiniteScience.BlackRedZoom
+import Stage1.MultisetCodec
+import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 
@@ -58,31 +58,31 @@ deepUVHorizonSpec = MkHorizonSpec (BoundedTime 60) 2 60
 public export
 0 prfVacuumSettingParity :
   FiniteScience.Settings.vacuumSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.vacuumMSet
+  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.vacuumMSet
 prfVacuumSettingParity = Refl
 
 public export
 0 prfPhotonSettingParity :
   FiniteScience.Settings.photonSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.photonMSet
+  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.photonMSet
 prfPhotonSettingParity = Refl
 
 public export
 0 prfProtonSettingParity :
   FiniteScience.Settings.protonSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.protonMSet
+  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.protonMSet
 prfProtonSettingParity = Refl
 
 public export
 0 prfNeutronSettingParity :
   FiniteScience.Settings.neutronSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.neutronMSet
+  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.neutronMSet
 prfNeutronSettingParity = Refl
 
 public export
 0 prfHeavyMassSettingParity :
   FiniteScience.Settings.heavyMassSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.heavyMassMSet
+  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.heavyMassMSet
 prfHeavyMassSettingParity = Refl
 
 public export

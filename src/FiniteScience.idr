@@ -1,7 +1,7 @@
 module FiniteScience
 
-import public FiniteScience.MultisetCodec
-import public FiniteScience.BlackRedZoom
+import public Stage1.MultisetCodec
+import public Stage1.BlackRedZoom
 import public FiniteScience.BlackBoxErrors
 import public FiniteScience.StreamWork
 import public FiniteScience.Settings
