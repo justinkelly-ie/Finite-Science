@@ -299,7 +299,7 @@ Show CausalLightConeReport where
     ", t2: VacX=" ++ show r.clEarlyVacX ++ " vs BrX=" ++ show r.clEarlyBrX ++ ", BrSy=" ++ show r.clEarlyBrSy ++
     " -> t18: VacX=" ++ show r.clLateVacX ++ " vs BrX=" ++ show r.clLateBrX ++ ", BrY=" ++ show r.clLateBrY ++ ", BrSy=" ++ show r.clLateBrSy ++ ")"
 
-||| Telemetry for Experiment 4F: Symmetric `SquareMaxel` anisotropic directional stress
+||| Telemetry for Experiment 4F: Symmetric `Maxel` (`SymForm`) anisotropic directional stress
 ||| and quadrupole polarization (`sum_{X-links} G - sum_{Y-links} G`).
 public export
 record AnisotropicStressReport where

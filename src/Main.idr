@@ -15,7 +15,7 @@ runPureSuite : Has [Console] e => App e (Bool, List String)
 runPureSuite = do
   let banner = [ "================================================================"
                , "  FINITE-SCIENCE: App -> App1 Black-Box A/B Experiment Suite     "
-               , "  (Symmetric SquareMaxel Metric, Sealed Multi-Core & Pyth)       "
+               , "  (Half-Stored Maxel Metric, Sealed Multi-Core & Pyth)           "
                , "================================================================" ]
   traverse_ putStrLn banner
   (p1, l1) <- runExperiment1

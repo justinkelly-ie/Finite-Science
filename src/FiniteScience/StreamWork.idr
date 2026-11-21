@@ -87,11 +87,6 @@ public export
 fastPeelWorkHMSet : HereditaryMSet BoxInt -> Nat
 fastPeelWorkHMSet m = fastPeelWorkLoop (hmDepth m) m
 
-||| Fast O(nodes) external read-only hereditary peel-work observable over `root : PureMultiset`.
-public export
-fastNestedStepWorkOf : PureMultiset -> Nat
-fastNestedStepWorkOf = fastPeelWorkHMSet
-
 ||| Streams two `HereditaryMSet BoxInt` operands into superposition, recording
 ||| total peeling work steps and annihilated Black/Red pairs (`[+1, -1] = []`).
 public export
@@ -116,11 +111,9 @@ peelSpace3WorkLoop (S fuel) tree =
     Just (site, w, tailTree) =>
       case peelQuantum w of
         Nothing => peelSpace3WorkLoop fuel tailTree
-        Just (Left remW) =>
-          let nextTree = if isZero remW then tailTree else setBox site remW tailTree
-          in S (peelSpace3WorkLoop fuel nextTree)
-        Just (Right remW) =>
-          let nextTree = if isZero remW then tailTree else setBox site remW tailTree
+        Just qW =>
+          let remW     = either id id qW
+              nextTree = if isZero remW then tailTree else setBox site remW tailTree
           in S (peelSpace3WorkLoop fuel nextTree)
 
 ||| Evaluates actual streaming quantum-peeling work directly over a flat `Space 3` (`Voxel`).
@@ -131,18 +124,6 @@ streamPeelWorkSpace3 tree =
   let resL1 = integerToNat (multiplicityL1 tree)
       steps = peelSpace3WorkLoop (S resL1) tree
   in MkStreamWorkReport steps 0 resL1
-
-||| Streams two `Space 3` multisets into superposition, recording work steps and annihilations.
-public export
-streamMergeWorkSpace3 : Space 3 -> Space 3 -> (Space 3, StreamWorkReport)
-streamMergeWorkSpace3 a b =
-  let rA     = streamPeelWorkSpace3 a
-      rB     = streamPeelWorkSpace3 b
-      merged = addMSet a b
-      rM     = streamPeelWorkSpace3 merged
-      rawL1  = rA.residualL1 + rB.residualL1
-      diff   = if rawL1 >= rM.residualL1 then minus rawL1 rM.residualL1 else 0
-  in (merged, MkStreamWorkReport (rA.workSteps + rB.workSteps) (half diff) rM.residualL1)
 
 ||| Pure fuel-bounded horizon evaluator shared externally across both models.
 public export
@@ -262,6 +243,16 @@ public export
 extractWrapBox : PureMultiset -> Maybe PureMultiset
 extractWrapBox = extractSignedWrap (intToBoxInt 1)
 
+||| Extracts the unique key carrying multiplicity `expectedW` in `b`, or `Nothing` if absent/duplicated.
+public export
+extractUniqueSlot : BoxInt -> Box BoxInt PureMultiset -> Maybe PureMultiset
+extractUniqueSlot expectedW b =
+  case foldBox (\k, w, (cnt, res) =>
+                  if w == expectedW then (S cnt, Just k) else (cnt, res))
+               (0, Nothing) b of
+    (1, Just k) => Just k
+    _           => Nothing
+
 ||| Pure directed-edge key `{ wrapBox posA : +1, wrapBox posB : -1 }` inside `HereditaryMSet BoxInt`.
 public export
 mkEdgeKey : (posA, posB : PureMultiset) -> PureMultiset
@@ -269,60 +260,34 @@ mkEdgeKey posA posB =
   MkHMSet $ setBox (wrapBox posB) (intToBoxInt (-1))
           $ singletonBox (wrapBox posA) (intToBoxInt 1)
 
-public export
-record EdgeUnpackAcc where
-  constructor MkEdgeUnpackAcc
-  eValid : Bool
-  eSrc   : Maybe PureMultiset
-  eDst   : Maybe PureMultiset
-
-||| Single-pass `foldBox` decoder for pure directed-edge keys `mkEdgeKey posA posB`.
+||| Decoder for pure directed-edge keys `mkEdgeKey posA posB`.
 public export
 unpackEdgeKey : PureMultiset -> Maybe (PureMultiset, PureMultiset)
 unpackEdgeKey entry@(MkHMSet b) =
-  if isSiteKey entry
+  if isSiteKey entry || treeSizeNonZero b /= 2
     then Nothing
-    else
-      let r = foldBox (\k, w, acc =>
-                         if not acc.eValid then acc
-                         else if w == intToBoxInt 1
-                           then case acc.eSrc of
-                                  Just _  => MkEdgeUnpackAcc False Nothing Nothing
-                                  Nothing =>
-                                    case extractWrapBox k of
-                                      Just p  => if isSiteKey p then MkEdgeUnpackAcc True (Just p) acc.eDst else MkEdgeUnpackAcc False Nothing Nothing
-                                      Nothing => MkEdgeUnpackAcc False Nothing Nothing
-                         else if w == intToBoxInt (-1)
-                           then case acc.eDst of
-                                  Just _  => MkEdgeUnpackAcc False Nothing Nothing
-                                  Nothing =>
-                                    case extractWrapBox k of
-                                      Just p  => if isSiteKey p then MkEdgeUnpackAcc True acc.eSrc (Just p) else MkEdgeUnpackAcc False Nothing Nothing
-                                      Nothing => MkEdgeUnpackAcc False Nothing Nothing
-                         else MkEdgeUnpackAcc False Nothing Nothing)
-                      (MkEdgeUnpackAcc True Nothing Nothing)
-                      b
-      in case (r.eValid, r.eSrc, r.eDst) of
-           (True, Just a, Just d) => if a /= d then Just (a, d) else Nothing
-           _ => Nothing
+    else do
+      kSrc <- extractUniqueSlot (intToBoxInt 1) b
+      kDst <- extractUniqueSlot (intToBoxInt (-1)) b
+      a    <- extractWrapBox kSrc
+      d    <- extractWrapBox kDst
+      if isSiteKey a && isSiteKey d && a /= d then Just (a, d) else Nothing
 
 ||| Pure causal metric potential key `wrapBox (wrapBox phiM)` inside `HereditaryMSet BoxInt`.
 public export
 mkMetricKey : PureMultiset -> PureMultiset
 mkMetricKey phiM = wrapBox (wrapBox phiM)
 
-||| Single-pass decoder for wrapped causal metric potential keys `mkMetricKey phiM`.
+||| Decoder for wrapped causal metric potential keys `mkMetricKey phiM`.
 public export
 unpackMetricKey : PureMultiset -> Maybe PureMultiset
 unpackMetricKey entry =
   if isSiteKey entry
     then Nothing
-    else case extractWrapBox entry of
-           Nothing => Nothing
-           Just inner =>
-             case extractWrapBox inner of
-               Nothing   => Nothing
-               Just phiM => if phiM == emptyPureMSet then Nothing else Just phiM
+    else do
+      inner <- extractWrapBox entry
+      phiM  <- extractWrapBox inner
+      if phiM == emptyPureMSet then Nothing else Just phiM
 
 ||| Pure localized 3D matter entry key `{ wrapBox pos3D : +1, { payload : -2 } : +2 }`.
 public export
@@ -332,36 +297,18 @@ mkMatterKey pos3D payload =
       kPay = MkHMSet (singletonBox payload (intToBoxInt (-2)))
   in MkHMSet $ setBox kPay (intToBoxInt 2) (singletonBox kPos (intToBoxInt 1))
 
-public export
-record MatterUnpackAcc where
-  constructor MkMatterUnpackAcc
-  mValid : Bool
-  mPos   : Maybe PureMultiset
-  mPay   : Maybe PureMultiset
-
-||| Single-pass `foldBox` decoder for pure localized 3D matter keys `mkMatterKey`.
+||| Decoder for pure localized 3D matter keys `mkMatterKey`.
 public export
 unpackMatterKey : PureMultiset -> Maybe (PureMultiset, PureMultiset)
 unpackMatterKey entry@(MkHMSet b) =
-  if isSiteKey entry
+  if isSiteKey entry || treeSizeNonZero b /= 2
     then Nothing
-    else
-      let r = foldBox (\k, w, acc =>
-                         if not acc.mValid then acc
-                         else if w == intToBoxInt 1
-                           then case acc.mPos of
-                                  Just _  => MkMatterUnpackAcc False Nothing Nothing
-                                  Nothing => MkMatterUnpackAcc True (extractWrapBox k) acc.mPay
-                         else if w == intToBoxInt 2
-                           then case acc.mPay of
-                                  Just _  => MkMatterUnpackAcc False Nothing Nothing
-                                  Nothing => MkMatterUnpackAcc True acc.mPos (extractSignedWrap (intToBoxInt (-2)) k)
-                         else MkMatterUnpackAcc False Nothing Nothing)
-                      (MkMatterUnpackAcc True Nothing Nothing)
-                      b
-      in case (r.mValid, r.mPos, r.mPay) of
-           (True, Just p, Just pay) => Just (p, pay)
-           _ => Nothing
+    else do
+      kPos <- extractUniqueSlot (intToBoxInt 1) b
+      kPay <- extractUniqueSlot (intToBoxInt 2) b
+      p    <- extractWrapBox kPos
+      pay  <- extractSignedWrap (intToBoxInt (-2)) kPay
+      Just (p, pay)
 
 ||| Pure sealed frozen-core bundle key caching `(sitesM, rhoM, engM)` outside an unopened `payload`:
 ||| `{{sitesM:+1}:+1, {rhoM:+2}:+2, {engM:+3}:+3, {{payload:+1}:-4}:+4}`.
@@ -377,53 +324,26 @@ mkSealedCoreKey sitesM rhoM engM payload =
              $ setBox k2 (intToBoxInt 2)
              $ singletonBox k1 (intToBoxInt 1)
 
-public export
-record SealedCoreUnpackAcc where
-  constructor MkSealedCoreUnpackAcc
-  scValid : Bool
-  scSites : Maybe PureMultiset
-  scRho   : Maybe PureMultiset
-  scEng   : Maybe PureMultiset
-  scPay   : Maybe PureMultiset
-
-||| Zero-copy single-pass `foldBox` decoder for sealed frozen-core keys `mkSealedCoreKey`
+||| Zero-copy decoder for sealed frozen-core keys `mkSealedCoreKey`
 ||| (reads cached exterior metadata without inspecting inside `payload`).
 public export
 unpackSealedCoreKey : PureMultiset -> Maybe (PureMultiset, PureMultiset, PureMultiset, PureMultiset)
 unpackSealedCoreKey entry@(MkHMSet b) =
-  if isSiteKey entry
+  if isSiteKey entry || treeSizeNonZero b /= 4
     then Nothing
-    else
-      let r = foldBox (\k, w, acc =>
-                         if not acc.scValid then acc
-                         else if w == intToBoxInt 1
-                           then case acc.scSites of
-                                  Just _  => MkSealedCoreUnpackAcc False Nothing Nothing Nothing Nothing
-                                  Nothing => MkSealedCoreUnpackAcc True (extractSignedWrap (intToBoxInt 1) k) acc.scRho acc.scEng acc.scPay
-                         else if w == intToBoxInt 2
-                           then case acc.scRho of
-                                  Just _  => MkSealedCoreUnpackAcc False Nothing Nothing Nothing Nothing
-                                  Nothing => MkSealedCoreUnpackAcc True acc.scSites (extractSignedWrap (intToBoxInt 2) k) acc.scEng acc.scPay
-                         else if w == intToBoxInt 3
-                           then case acc.scEng of
-                                  Just _  => MkSealedCoreUnpackAcc False Nothing Nothing Nothing Nothing
-                                  Nothing => MkSealedCoreUnpackAcc True acc.scSites acc.scRho (extractSignedWrap (intToBoxInt 3) k) acc.scPay
-                         else if w == intToBoxInt 4
-                           then case acc.scPay of
-                                  Just _  => MkSealedCoreUnpackAcc False Nothing Nothing Nothing Nothing
-                                  Nothing =>
-                                    let wrappedPay = extractSignedWrap (intToBoxInt (-4)) k
-                                        payM       = wrappedPay >>= extractWrapBox
-                                    in MkSealedCoreUnpackAcc True acc.scSites acc.scRho acc.scEng payM
-                         else MkSealedCoreUnpackAcc False Nothing Nothing Nothing Nothing)
-                      (MkSealedCoreUnpackAcc True Nothing Nothing Nothing Nothing)
-                      b
-      in case (r.scValid, r.scSites, r.scRho, r.scEng, r.scPay) of
-           (True, Just s, Just rho, Just e, Just pay) =>
-             if s /= emptyPureMSet && pay /= emptyPureMSet
-               then Just (s, rho, e, pay)
-               else Nothing
-           _ => Nothing
+    else do
+      k1   <- extractUniqueSlot (intToBoxInt 1) b
+      k2   <- extractUniqueSlot (intToBoxInt 2) b
+      k3   <- extractUniqueSlot (intToBoxInt 3) b
+      k4   <- extractUniqueSlot (intToBoxInt 4) b
+      s    <- extractSignedWrap (intToBoxInt 1) k1
+      rho  <- extractSignedWrap (intToBoxInt 2) k2
+      e    <- extractSignedWrap (intToBoxInt 3) k3
+      wPay <- extractSignedWrap (intToBoxInt (-4)) k4
+      pay  <- extractWrapBox wPay
+      if s /= emptyPureMSet && pay /= emptyPureMSet
+        then Just (s, rho, e, pay)
+        else Nothing
 
 ||| Extracts a localized matter payload at coordinate `(x, y, z)` for passive `ExternalLens` focus.
 public export

@@ -51,42 +51,15 @@ splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
-||| Injects a localized balanced breather dipole (`+amp` at `(x, yPos)`, `-amp` at `(x, yNeg)`) into `root`.
+||| Superposes an arbitrary balanced zero-sum `SparseField PureMultiset PureMultiset` directly into `root : PureMultiset`.
 export
-injectHereditaryBreather :
-  (x, yPos, yNeg, amp : Integer) ->
-  (1 u                : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-injectHereditaryBreather x yPos yNeg amp (MkHereditaryBox root) =
-  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseBreather pureMSetBasis x yPos yNeg amp)
-  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
-
-||| Injects a balanced zero-sum antisymmetric directed-edge flux link `(x1,y1) -> (x2,y2)` into `root`.
-export
-injectHereditaryEdgeFlux :
-  (x1, y1, x2, y2, u : Integer) ->
-  (1 uSt             : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-injectHereditaryEdgeFlux x1 y1 x2 y2 u (MkHereditaryBox root) =
-  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseEdgeFlux {body = PureMultiset} pureMSetBasis x1 y1 x2 y2 u)
-  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
-
-||| Injects a balanced zero-sum wavepacket centered at `(x0, y0 + 0.5)` directly into `root : HereditaryMSet BoxInt`.
-export
-injectHereditaryWavepacketAt :
-  (x0, y0, amp : Integer) ->
-  (1 u         : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-injectHereditaryWavepacketAt x0 y0 amp (MkHereditaryBox root) =
-  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacketAt pureMSetBasis x0 y0 amp)
-  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
-
-||| Injects the canonical balanced zero-sum `amp=512` wavepacket at `(0, 0.5)`.
-export
-injectHereditaryWavepacket :
+injectHereditaryField :
+  SparseField PureMultiset PureMultiset ->
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
-injectHereditaryWavepacket = injectHereditaryWavepacketAt 0 0 512
+injectHereditaryField delta (MkHereditaryBox root) =
+  let sfRoot = packSparseFieldToRoot BoxLeaf delta
+  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
 
 ||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`lagDiv = 0`).
 export
@@ -96,7 +69,7 @@ stepHereditaryLinear1 :
 stepHereditaryLinear1 (MkHereditaryBox root) =
   App1.pure1 (MkHereditaryBox (stepHereditarySparse 0 canonDecayNum canonDecayDen 0 0 0 1 root))
 
-||| Pure closed causal 1-hop retarded Symmetric `SquareMaxel` metric (`7/32`) + Wildberger Pythagorean stepper
+||| Pure closed causal 1-hop retarded Symmetric `Maxel` metric (`7/32`) + Wildberger Pythagorean stepper
 ||| directly inside `root : HereditaryMSet BoxInt` (zero mirror keys, zero channel tags, zero clocks).
 export
 stepHereditaryUnified1 :
@@ -105,7 +78,7 @@ stepHereditaryUnified1 :
 stepHereditaryUnified1 (MkHereditaryBox root) =
   App1.pure1 (MkHereditaryBox (stepHereditarySparse canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 0 0 1 root))
 
-||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `SquareMaxel` metric + Wildberger Pythagorean stepper
+||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `Maxel` metric + Wildberger Pythagorean stepper
 ||| directly inside `root : HereditaryMSet BoxInt` with O(1) unopened frozen cores.
 export
 stepHereditaryAdaptive1 :

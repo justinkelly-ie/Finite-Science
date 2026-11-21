@@ -26,7 +26,7 @@ import FiniteScience.SparseField
 
 public export
 FlatCoreBody : Type
-FlatCoreBody = (Box BoxInt Coord2, Box BoxInt (Coord2, Coord2))
+FlatCoreBody = (Box BoxInt Coord2, Maxel BoxInt Coord2 Coord2 AntisymForm)
 
 public export
 FlatField : Type
@@ -65,39 +65,14 @@ splitFlatFromVacuum (x1, y1, z1) (x2, y2, z2) w (MkFlatBox matter field) =
       nxtM  = addMSet matter (addMSet pairA pairB)
   in App1.pure1 (MkFlatBox nxtM field)
 
-||| Injects a localized balanced breather dipole (`+amp` at `(x, yPos)`, `-amp` at `(x, yNeg)`).
+||| Superposes an arbitrary balanced zero-sum `FlatField` directly into Model A's sparse field.
 export
-injectFlatBreather :
-  (x, yPos, yNeg, amp : Integer) ->
-  (1 u                : FlatBlackBox) ->
-  App1 e FlatBlackBox
-injectFlatBreather x yPos yNeg amp (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseBreather coord2Basis x yPos yNeg amp)))
-
-||| Injects a balanced zero-sum antisymmetric directed-edge flux link `(x1,y1) -> (x2,y2)`.
-export
-injectFlatEdgeFlux :
-  (x1, y1, x2, y2, u : Integer) ->
-  (1 uSt             : FlatBlackBox) ->
-  App1 e FlatBlackBox
-injectFlatEdgeFlux x1 y1 x2 y2 u (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseEdgeFlux coord2Basis x1 y1 x2 y2 u)))
-
-||| Injects a balanced zero-sum wavepacket centered at `(x0, y0 + 0.5)` directly onto unbounded `Coord2`.
-export
-injectFlatWavepacketAt :
-  (x0, y0, amp : Integer) ->
-  (1 u         : FlatBlackBox) ->
-  App1 e FlatBlackBox
-injectFlatWavepacketAt x0 y0 amp (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseWavepacketAt coord2Basis x0 y0 amp)))
-
-||| Injects the canonical balanced zero-sum `amp=512` wavepacket at `(0, 0.5)`.
-export
-injectFlatWavepacket :
+injectFlatField :
+  FlatField ->
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
-injectFlatWavepacket = injectFlatWavepacketAt 0 0 512
+injectFlatField delta (MkFlatBox matter field) =
+  App1.pure1 (MkFlatBox matter (addSparseField field delta))
 
 public export
 canonLagDiv : Integer
@@ -136,7 +111,7 @@ stepFlatLinear1 (MkFlatBox matter field) =
   let res = stepSparseField coord2Basis coord2CoreCodec 0 canonDecayNum canonDecayDen 0 7 0 0 1 field
   in App1.pure1 (MkFlatBox matter (fst res))
 
-||| Pure closed causal 1-hop retarded Symmetric `SquareMaxel` metric (`7/32`) + Wildberger Pythagorean stepper (`c = 1`).
+||| Pure closed causal 1-hop retarded Symmetric `Maxel` metric (`7/32`) + Wildberger Pythagorean stepper (`c = 1`).
 export
 stepFlatUnified1 :
   (1 u : FlatBlackBox) ->
@@ -145,7 +120,7 @@ stepFlatUnified1 (MkFlatBox matter field) =
   let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 0 0 1 field
   in App1.pure1 (MkFlatBox matter (fst res))
 
-||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `SquareMaxel` metric + Wildberger Pythagorean stepper.
+||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `Maxel` metric + Wildberger Pythagorean stepper.
 export
 stepFlatAdaptive1 :
   (1 u : FlatBlackBox) ->
@@ -178,8 +153,8 @@ observeFlatPure lens (MkFlatBox matter field) =
 export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
-  if matter == emptyMSet && field.psiField == BoxLeaf && field.fluxMaxel == BoxLeaf &&
-     field.metricMaxel == BoxLeaf && null field.frozenCores
+  if matter == emptyMSet && field.psiField == BoxLeaf && isEmptyMaxel field.fluxMaxel &&
+     isEmptyMaxel field.metricMaxel && null field.frozenCores
     then App1.pure CleanVacuumCollapse
     else let fWork = fieldActiveWork field
              work  = integerToNat (multiplicityL1 matter) + fWork
