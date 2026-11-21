@@ -231,84 +231,131 @@ decodeNatSiteKey m =
    boxToNat (lookupPureKey axisY m),
    boxToNat (lookupPureKey axisZ m))
 
--- Four minimal channel keys (zero mirror keys, zero clock registers!):
-public export
-channelMatter : HereditaryMSet BoxInt
-channelMatter = scalarKeyHMSet 1
+-- Four mutually disjoint structural shapes natively inside `PureMultiset`
+-- (ZERO synthetic integer channel tags, ZERO mirror keys, ZERO clock registers!):
+--   1. Active 2D Vertex  : keys subset `{ axisX, axisY }` (`isSiteKey`)
+--   2. Active Directed Edge : `{ wrapBox posA : +1, wrapBox posB : -1 }` (`mkEdgeKey`)
+--   3. Frozen Particle Core : `{ wrapBox (wrapBox core) : +1 }` (`mkFrozenCoreKey`)
+--   4. Localized 3D Matter  : `{ wrapBox pos3D : +1, { pay : -2 } : +2 }` (`mkMatterKey`)
 
+||| True iff every key in `m` belongs to the 2D spatial basis `{ axisX, axisY }` (including `[]` at `(0,0)`).
 public export
-channelPsi : HereditaryMSet BoxInt
-channelPsi = scalarKeyHMSet 2
+isSiteKey : PureMultiset -> Bool
+isSiteKey (MkHMSet b) =
+  foldBox (\k, _, ok => ok && (k == axisX || k == axisY)) True b
 
+||| Decodes a single-entry wrapped box `{ k : expectedW }` cleanly without allocation.
 public export
-channelFlux : HereditaryMSet BoxInt
-channelFlux = scalarKeyHMSet 3
-
-public export
-channelTraffic : HereditaryMSet BoxInt
-channelTraffic = scalarKeyHMSet 4
-
-||| Local Black (+1) / Red (-1) poles pairing non-negative traffic quanta at each site (`+w - w = 0`).
-public export
-blackPoleKey : HereditaryMSet BoxInt
-blackPoleKey = scalarKeyHMSet 1
-
-public export
-redPoleKey : HereditaryMSet BoxInt
-redPoleKey = scalarKeyHMSet (-1)
-
-public export
-tagChannel : HereditaryMSet BoxInt -> HereditaryMSet BoxInt
-tagChannel c = MkHMSet (singletonBox c (intToBoxInt 1))
-
-public export
-tagGridPos : HereditaryMSet BoxInt -> HereditaryMSet BoxInt
-tagGridPos p = MkHMSet (singletonBox p (intToBoxInt 2))
-
-public export
-tagPayload : HereditaryMSet BoxInt -> HereditaryMSet BoxInt
-tagPayload pay = MkHMSet (singletonBox pay (intToBoxInt (-1)))
-
-||| Pure hereditary 3-tuple key `(channelTag, pos, payload)` inside `HereditaryMSet BoxInt`.
-public export
-mkGridEntry : (channelTag, pos, payload : HereditaryMSet BoxInt) -> HereditaryMSet BoxInt
-mkGridEntry ch pos payload =
-  MkHMSet $ setBox (tagPayload payload) (intToBoxInt 3)
-          $ setBox (tagGridPos pos)     (intToBoxInt 2)
-          $ setBox (tagChannel ch)      (intToBoxInt 1) BoxLeaf
-
-public export
-extractSingleTagKey : BoxInt -> HereditaryMSet BoxInt -> Maybe (HereditaryMSet BoxInt)
-extractSingleTagKey expectedW (MkHMSet (BoxNode _ BoxLeaf k w BoxLeaf)) =
+extractSignedWrap : BoxInt -> PureMultiset -> Maybe PureMultiset
+extractSignedWrap expectedW (MkHMSet (BoxNode _ BoxLeaf k w BoxLeaf)) =
   if w == expectedW then Just k else Nothing
-extractSingleTagKey _ _ = Nothing
+extractSignedWrap _ _ = Nothing
+
+||| Decodes `wrapBox k = { k : +1 }` back to `k`.
+public export
+extractWrapBox : PureMultiset -> Maybe PureMultiset
+extractWrapBox = extractSignedWrap (intToBoxInt 1)
+
+||| Pure directed-edge key `{ wrapBox posA : +1, wrapBox posB : -1 }` inside `HereditaryMSet BoxInt`.
+public export
+mkEdgeKey : (posA, posB : PureMultiset) -> PureMultiset
+mkEdgeKey posA posB =
+  MkHMSet $ setBox (wrapBox posB) (intToBoxInt (-1))
+          $ singletonBox (wrapBox posA) (intToBoxInt 1)
 
 public export
-record GridUnpackAcc where
-  constructor MkGridUnpackAcc
-  uValid : Bool
-  uCh    : Maybe PureMultiset
-  uPos   : Maybe PureMultiset
-  uPay   : Maybe PureMultiset
+record EdgeUnpackAcc where
+  constructor MkEdgeUnpackAcc
+  eValid : Bool
+  eSrc   : Maybe PureMultiset
+  eDst   : Maybe PureMultiset
 
-||| Zero-allocation single-pass `foldBox` decoder for `(channelTag, pos, payload)` grid entries.
+||| Single-pass `foldBox` decoder for pure directed-edge keys `mkEdgeKey posA posB`.
 public export
-unpackGridEntry : HereditaryMSet BoxInt -> Maybe (HereditaryMSet BoxInt, HereditaryMSet BoxInt, HereditaryMSet BoxInt)
-unpackGridEntry (MkHMSet b) =
-  let r = foldBox (\k, w, acc =>
-                     if not acc.uValid then acc
-                     else if w == intToBoxInt 1
-                       then MkGridUnpackAcc True (extractSingleTagKey (intToBoxInt 1) k) acc.uPos acc.uPay
-                     else if w == intToBoxInt 2
-                       then MkGridUnpackAcc True acc.uCh (extractSingleTagKey (intToBoxInt 2) k) acc.uPay
-                     else if w == intToBoxInt 3
-                       then MkGridUnpackAcc True acc.uCh acc.uPos (extractSingleTagKey (intToBoxInt (-1)) k)
-                     else MkGridUnpackAcc False Nothing Nothing Nothing)
-                  (MkGridUnpackAcc True Nothing Nothing Nothing)
-                  b
-  in case (r.uValid, r.uCh, r.uPos, r.uPay) of
-       (True, Just c, Just p, Just pay) => Just (c, p, pay)
-       _ => Nothing
+unpackEdgeKey : PureMultiset -> Maybe (PureMultiset, PureMultiset)
+unpackEdgeKey entry@(MkHMSet b) =
+  if isSiteKey entry
+    then Nothing
+    else
+      let r = foldBox (\k, w, acc =>
+                         if not acc.eValid then acc
+                         else if w == intToBoxInt 1
+                           then case acc.eSrc of
+                                  Just _  => MkEdgeUnpackAcc False Nothing Nothing
+                                  Nothing =>
+                                    case extractWrapBox k of
+                                      Just p  => if isSiteKey p then MkEdgeUnpackAcc True (Just p) acc.eDst else MkEdgeUnpackAcc False Nothing Nothing
+                                      Nothing => MkEdgeUnpackAcc False Nothing Nothing
+                         else if w == intToBoxInt (-1)
+                           then case acc.eDst of
+                                  Just _  => MkEdgeUnpackAcc False Nothing Nothing
+                                  Nothing =>
+                                    case extractWrapBox k of
+                                      Just p  => if isSiteKey p then MkEdgeUnpackAcc True acc.eSrc (Just p) else MkEdgeUnpackAcc False Nothing Nothing
+                                      Nothing => MkEdgeUnpackAcc False Nothing Nothing
+                         else MkEdgeUnpackAcc False Nothing Nothing)
+                      (MkEdgeUnpackAcc True Nothing Nothing)
+                      b
+      in case (r.eValid, r.eSrc, r.eDst) of
+           (True, Just a, Just d) => if a /= d then Just (a, d) else Nothing
+           _ => Nothing
+
+||| Pure frozen core wrapper key `wrapBox (wrapBox core)` inside `HereditaryMSet BoxInt`.
+public export
+mkFrozenCoreKey : PureMultiset -> PureMultiset
+mkFrozenCoreKey core = wrapBox (wrapBox core)
+
+||| Single-pass decoder for wrapped non-empty frozen particle cores `mkFrozenCoreKey core`.
+public export
+unpackFrozenCoreKey : PureMultiset -> Maybe PureMultiset
+unpackFrozenCoreKey entry =
+  if isSiteKey entry
+    then Nothing
+    else case extractWrapBox entry of
+           Nothing => Nothing
+           Just inner =>
+             case extractWrapBox inner of
+               Nothing => Nothing
+               Just core => if core == emptyPureMSet then Nothing else Just core
+
+||| Pure localized 3D matter entry key `{ wrapBox pos3D : +1, { payload : -2 } : +2 }`.
+public export
+mkMatterKey : (pos3D, payload : PureMultiset) -> PureMultiset
+mkMatterKey pos3D payload =
+  let kPos = wrapBox pos3D
+      kPay = MkHMSet (singletonBox payload (intToBoxInt (-2)))
+  in MkHMSet $ setBox kPay (intToBoxInt 2) (singletonBox kPos (intToBoxInt 1))
+
+public export
+record MatterUnpackAcc where
+  constructor MkMatterUnpackAcc
+  mValid : Bool
+  mPos   : Maybe PureMultiset
+  mPay   : Maybe PureMultiset
+
+||| Single-pass `foldBox` decoder for pure localized 3D matter keys `mkMatterKey`.
+public export
+unpackMatterKey : PureMultiset -> Maybe (PureMultiset, PureMultiset)
+unpackMatterKey entry@(MkHMSet b) =
+  if isSiteKey entry
+    then Nothing
+    else
+      let r = foldBox (\k, w, acc =>
+                         if not acc.mValid then acc
+                         else if w == intToBoxInt 1
+                           then case acc.mPos of
+                                  Just _  => MkMatterUnpackAcc False Nothing Nothing
+                                  Nothing => MkMatterUnpackAcc True (extractWrapBox k) acc.mPay
+                         else if w == intToBoxInt 2
+                           then case acc.mPay of
+                                  Just _  => MkMatterUnpackAcc False Nothing Nothing
+                                  Nothing => MkMatterUnpackAcc True acc.mPos (extractSignedWrap (intToBoxInt (-2)) k)
+                         else MkMatterUnpackAcc False Nothing Nothing)
+                      (MkMatterUnpackAcc True Nothing Nothing)
+                      b
+      in case (r.mValid, r.mPos, r.mPay) of
+           (True, Just p, Just pay) => Just (p, pay)
+           _ => Nothing
 
 ||| Extracts a localized matter payload at coordinate `(x, y, z)` for passive `ExternalLens` focus.
 public export
@@ -318,15 +365,15 @@ findMatterPayloadAt pos (MkHMSet b) =
   in foldBox (\entry, _, acc =>
                 if acc /= emptyPureMSet
                   then acc
-                  else case unpackGridEntry entry of
-                         Just (ch, posM, pay) =>
-                           if ch == channelMatter && posM == targetPosKey then pay else acc
+                  else case unpackMatterKey entry of
+                         Just (posM, pay) =>
+                           if posM == targetPosKey then pay else acc
                          Nothing => acc)
              emptyPureMSet
              b
 
 --------------------------------------------------------------------------------
--- 3. COMPILE-TIME QTT 0 THEOREMS ON STREAMING WORK & CODEC PRIMITIVES
+-- 3. COMPILE-TIME QTT 0 THEOREMS ON STREAMING WORK & DISJOINT SHAPES
 --------------------------------------------------------------------------------
 
 public export
@@ -350,17 +397,45 @@ public export
 prfPureStepShift = Refl
 
 public export
-0 prfGridEntryRoundTrip :
-  (let e = mkGridEntry FiniteScience.StreamWork.channelMatter
-                       (natSiteKey (8, 7, 0))
-                       FiniteScience.StreamWork.protonMSet
-   in case unpackGridEntry e of
-        Just (c, p, pay) =>
-          (c == FiniteScience.StreamWork.channelMatter) &&
-          (p == natSiteKey (8, 7, 0)) &&
-          (pay == FiniteScience.StreamWork.protonMSet)
+0 prfEdgeKeyRoundTrip :
+  (let pA = originSiteKey
+       pB = stepX
+       k  = mkEdgeKey pA pB
+   in case unpackEdgeKey k of
+        Just (a, b) => (a == pA) && (b == pB)
+        Nothing     => False) = True
+prfEdgeKeyRoundTrip = Refl
+
+public export
+0 prfFrozenCoreKeyRoundTrip :
+  (let k = mkFrozenCoreKey FiniteScience.StreamWork.photonMSet
+   in case unpackFrozenCoreKey k of
+        Just c  => c == FiniteScience.StreamWork.photonMSet
         Nothing => False) = True
-prfGridEntryRoundTrip = Refl
+prfFrozenCoreKeyRoundTrip = Refl
+
+public export
+0 prfMatterKeyRoundTrip :
+  (let k = mkMatterKey (natSiteKey (8, 7, 0)) FiniteScience.StreamWork.protonMSet
+   in case unpackMatterKey k of
+        Just (p, pay) => (p == natSiteKey (8, 7, 0)) && (pay == FiniteScience.StreamWork.protonMSet)
+        Nothing       => False) = True
+prfMatterKeyRoundTrip = Refl
+
+public export
+0 prfFourShapesDisjoint :
+  (let site = natSiteKey (1, 0, 0)
+       edge = mkEdgeKey originSiteKey stepX
+       core = mkFrozenCoreKey FiniteScience.StreamWork.photonMSet
+       mat  = mkMatterKey (natSiteKey (5, 0, 0)) FiniteScience.StreamWork.protonMSet
+       noneIs : Maybe a -> Bool
+       noneIs Nothing = True
+       noneIs _       = False
+   in isSiteKey site && noneIs (unpackEdgeKey site) && noneIs (unpackFrozenCoreKey site) && noneIs (unpackMatterKey site) &&
+      not (isSiteKey edge) && noneIs (unpackFrozenCoreKey edge) && noneIs (unpackMatterKey edge) &&
+      not (isSiteKey core) && noneIs (unpackEdgeKey core) && noneIs (unpackMatterKey core) &&
+      not (isSiteKey mat)  && noneIs (unpackEdgeKey mat)  && noneIs (unpackFrozenCoreKey mat)) = True
+prfFourShapesDisjoint = Refl
 
 public export
 0 prfStreamWorkMonotonic :

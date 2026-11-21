@@ -38,7 +38,7 @@ bootHereditary0D : App1 e HereditaryBlackBox
 bootHereditary0D = App1.pure1 (MkHereditaryBox emptyPureMSet)
 
 ||| Splits a balanced `+1` and `-1` subsystem pair carrying `payload` at `posA` and `posB`
-||| strictly inside the single `HereditaryMSet BoxInt` `root`.
+||| strictly inside the single `HereditaryMSet BoxInt` `root` via pure shape wrapping (zero synthetic tags).
 export
 splitHereditaryFromVacuum :
   (posA, posB : (Nat, Nat, Nat)) ->
@@ -46,8 +46,8 @@ splitHereditaryFromVacuum :
   (1 u        : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
-  let entryA = MkHMSet (singletonBox (mkGridEntry channelMatter (natSiteKey posA) payload) (intToBoxInt 1))
-      entryB = MkHMSet (singletonBox (mkGridEntry channelMatter (natSiteKey posB) payload) (intToBoxInt (-1)))
+  let entryA = MkHMSet (singletonBox (mkMatterKey (natSiteKey posA) payload) (intToBoxInt 1))
+      entryB = MkHMSet (singletonBox (mkMatterKey (natSiteKey posB) payload) (intToBoxInt (-1)))
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
@@ -61,31 +61,48 @@ injectHereditaryBreather x yPos yNeg amp (MkHereditaryBox root) =
   let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseBreather pureMSetBasis x yPos yNeg amp)
   in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
 
-||| Injects the balanced zero-sum wavepacket directly into `root : HereditaryMSet BoxInt`.
+||| Injects a balanced zero-sum wavepacket centered at `(x0, y0 + 0.5)` directly into `root : HereditaryMSet BoxInt`.
+export
+injectHereditaryWavepacketAt :
+  (x0, y0, amp : Integer) ->
+  (1 u         : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+injectHereditaryWavepacketAt x0 y0 amp (MkHereditaryBox root) =
+  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacketAt pureMSetBasis x0 y0 amp)
+  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
+
+||| Injects the canonical balanced zero-sum `amp=512` wavepacket at `(0, 0.5)`.
 export
 injectHereditaryWavepacket :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
-injectHereditaryWavepacket (MkHereditaryBox root) =
-  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 256)
-  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
+injectHereditaryWavepacket = injectHereditaryWavepacketAt 0 0 512
 
-||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`srcDiv = 0`, zero congestion).
+||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`lagDiv = 0`).
 export
 stepHereditaryLinear1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryLinear1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse 0 root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonHops 0 0 0 root))
 
-||| Pure closed self-sourced Laurent-stencil congestion + Wildberger Pythagorean unified stepper
-||| directly inside `root : HereditaryMSet BoxInt` (`srcDiv = 32`, zero mirror keys, zero clocks).
+||| Pure closed zero-traffic stress-energy Laurent Green's halo + Wildberger Pythagorean stepper
+||| directly inside `root : HereditaryMSet BoxInt` (zero mirror keys, zero channel tags, zero clocks).
 export
 stepHereditaryUnified1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryUnified1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse 32 root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonHops canonLagDiv 0 0 root))
+
+||| Pure closed adaptive freeze/thaw + Laurent Green's halo + Wildberger Pythagorean stepper
+||| directly inside `root : HereditaryMSet BoxInt`.
+export
+stepHereditaryAdaptive1 :
+  (1 u : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+stepHereditaryAdaptive1 (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonHops canonLagDiv canonFreezeThr canonThawThr root))
 
 ||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
 ||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections
@@ -105,7 +122,7 @@ closeHereditary0D : (1 u : HereditaryBlackBox) -> App1 {u=Any} e CloseOutcome
 closeHereditary0D (MkHereditaryBox root) =
   if root == emptyPureMSet
     then App1.pure CleanVacuumCollapse
-    else let work = fastPeelWorkHMSet root
+    else let work = rootActivePeelWork root
              net  = unwrapBox (sumHMSet root)
              txt  = renderPureMultiset root
              stT  = StaticTime 0 (cast work)

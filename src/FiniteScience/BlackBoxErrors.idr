@@ -177,3 +177,86 @@ Show SelfTrapReport where
     ", coreFrac=" ++ show r.coreFracPct ++ "%" ++
     ", net=" ++ show r.netSignedSum ++
     ", work=" ++ show r.workSteps ++ ")"
+
+||| Telemetry for adaptive hereditary core freeze/thaw wrapping under grazing pass and direct impact.
+public export
+record FreezeThawReport where
+  constructor MkFreezeThawReport
+  ftGrazingFrozenOk : Bool
+  ftGrazingWave     : WavepacketReport
+  ftLiveWorkSteps   : Nat
+  ftFrozenWorkSteps : Nat
+  ftPassivePeekOk   : Bool
+  ftImpactWasFrozen : Bool
+  ftImpactThawedOk  : Bool
+  ftImpactInitE     : Integer
+  ftImpactFinalE    : Integer
+  ftImpactMaxE      : Integer
+  ftImpactNetSum    : Integer
+
+public export
+Eq FreezeThawReport where
+  a == b =
+    a.ftGrazingFrozenOk == b.ftGrazingFrozenOk &&
+    a.ftGrazingWave == b.ftGrazingWave &&
+    a.ftLiveWorkSteps == b.ftLiveWorkSteps &&
+    a.ftFrozenWorkSteps == b.ftFrozenWorkSteps &&
+    a.ftPassivePeekOk == b.ftPassivePeekOk &&
+    a.ftImpactWasFrozen == b.ftImpactWasFrozen &&
+    a.ftImpactThawedOk == b.ftImpactThawedOk &&
+    a.ftImpactInitE == b.ftImpactInitE &&
+    a.ftImpactFinalE == b.ftImpactFinalE &&
+    a.ftImpactMaxE == b.ftImpactMaxE &&
+    a.ftImpactNetSum == b.ftImpactNetSum
+
+public export
+Show FreezeThawReport where
+  show r =
+    "FreezeThawReport(frozen=" ++ show r.ftGrazingFrozenOk ++
+    ", grazing=" ++ show r.ftGrazingWave ++
+    ", work=" ++ show r.ftLiveWorkSteps ++ "->" ++ show r.ftFrozenWorkSteps ++
+    ", peek=" ++ show r.ftPassivePeekOk ++
+    ", thaw=" ++ show r.ftImpactWasFrozen ++ "->" ++ show r.ftImpactThawedOk ++
+    ", E=" ++ show r.ftImpactInitE ++ "->" ++ show r.ftImpactFinalE ++
+    ", maxE=" ++ show r.ftImpactMaxE ++ ", net=" ++ show r.ftImpactNetSum ++ ")"
+
+||| Telemetry for equal-mass 2-body mutual gravitational attraction (zero heavy breather).
+public export
+record TwoBodyReport where
+  constructor MkTwoBodyReport
+  tbBotYMilli       : Integer
+  tbTopYMilli       : Integer
+  tbSingleBotYMilli : Integer
+  tbBotSy           : Integer
+  tbTopSy           : Integer
+  tbSingleBotSy     : Integer
+  tbLinearBotSy     : Integer
+  tbInitE           : Integer
+  tbFinalE          : Integer
+  tbMaxE            : Integer
+  tbNetSum          : Integer
+
+public export
+Eq TwoBodyReport where
+  a == b =
+    a.tbBotYMilli == b.tbBotYMilli &&
+    a.tbTopYMilli == b.tbTopYMilli &&
+    a.tbSingleBotYMilli == b.tbSingleBotYMilli &&
+    a.tbBotSy == b.tbBotSy &&
+    a.tbTopSy == b.tbTopSy &&
+    a.tbSingleBotSy == b.tbSingleBotSy &&
+    a.tbLinearBotSy == b.tbLinearBotSy &&
+    a.tbInitE == b.tbInitE &&
+    a.tbFinalE == b.tbFinalE &&
+    a.tbMaxE == b.tbMaxE &&
+    a.tbNetSum == b.tbNetSum
+
+public export
+Show TwoBodyReport where
+  show r =
+    "TwoBodyReport(dy=" ++ show (r.tbBotYMilli - r.tbSingleBotYMilli) ++
+    ", yBot=" ++ show r.tbBotYMilli ++ ", yTop=" ++ show r.tbTopYMilli ++
+    ", SyBot=" ++ show r.tbBotSy ++ ", SyTop=" ++ show r.tbTopSy ++
+    " vs 1pkt=" ++ show r.tbSingleBotSy ++ ", lin=" ++ show r.tbLinearBotSy ++
+    ", E=" ++ show r.tbInitE ++ "->" ++ show r.tbFinalE ++
+    ", maxE=" ++ show r.tbMaxE ++ ", net=" ++ show r.tbNetSum ++ ")"

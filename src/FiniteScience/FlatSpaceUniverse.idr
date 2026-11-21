@@ -66,29 +66,61 @@ injectFlatBreather :
 injectFlatBreather x yPos yNeg amp (MkFlatBox matter field) =
   App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseBreather coord2Basis x yPos yNeg amp)))
 
-||| Injects the balanced zero-sum wavepacket directly onto unbounded `Coord2`.
+||| Injects a balanced zero-sum wavepacket centered at `(x0, y0 + 0.5)` directly onto unbounded `Coord2`.
+export
+injectFlatWavepacketAt :
+  (x0, y0, amp : Integer) ->
+  (1 u         : FlatBlackBox) ->
+  App1 e FlatBlackBox
+injectFlatWavepacketAt x0 y0 amp (MkFlatBox matter field) =
+  App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseWavepacketAt coord2Basis x0 y0 amp)))
+
+||| Injects the canonical balanced zero-sum `amp=512` wavepacket at `(0, 0.5)`.
 export
 injectFlatWavepacket :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
-injectFlatWavepacket (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseWavepacket coord2Basis 0 256)))
+injectFlatWavepacket = injectFlatWavepacketAt 0 0 512
 
-||| Pure closed linear-vacuum Wildberger parametric Pythagorean stepper (`srcDiv = 0`).
+public export
+canonHops : Nat
+canonHops = 7
+
+public export
+canonLagDiv : Integer
+canonLagDiv = 8000000
+
+public export
+canonFreezeThr : Integer
+canonFreezeThr = 67108864
+
+public export
+canonThawThr : Integer
+canonThawThr = 1048576
+
+||| Pure closed linear-vacuum Wildberger parametric Pythagorean stepper (`lagDiv = 0`).
 export
 stepFlatLinear1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatLinear1 (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis 0 16 7 field))
+  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis canonHops 0 7 0 0 field))
 
-||| Pure closed self-sourced Laurent-stencil congestion + Wildberger Pythagorean stepper (`srcDiv = 32`).
+||| Pure closed zero-traffic stress-energy Laurent Green's halo + Wildberger Pythagorean stepper.
 export
 stepFlatUnified1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatUnified1 (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis 32 16 7 field))
+  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis canonHops canonLagDiv 7 0 0 field))
+
+||| Pure closed adaptive freeze/thaw + Laurent Green's halo + Wildberger Pythagorean stepper.
+export
+stepFlatAdaptive1 :
+  (1 u : FlatBlackBox) ->
+  App1 e FlatBlackBox
+stepFlatAdaptive1 (MkFlatBox matter field) =
+  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis canonHops canonLagDiv 7 canonFreezeThr canonThawThr field))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export
@@ -114,9 +146,9 @@ observeFlatPure lens (MkFlatBox matter field) =
 export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
-  if matter == emptyMSet && field.psiField == BoxLeaf && field.fluxMaxel == BoxLeaf && field.trafficField == BoxLeaf
+  if matter == emptyMSet && field.psiField == BoxLeaf && field.fluxMaxel == BoxLeaf && field.frozenPsi == BoxLeaf && field.frozenFlux == BoxLeaf
     then App1.pure CleanVacuumCollapse
-    else let fWork = fieldTouchWork field
+    else let fWork = fieldActiveWork field
              work  = integerToNat (multiplicityL1 matter) + fWork
              net   = multiplicitySignedSum matter + fieldPsiNet field + fieldFluxNet field
              stT   = StaticTime 0 (cast work)
