@@ -58,6 +58,16 @@ splitFlatFromVacuum (x1, y1, z1) (x2, y2, z2) w (MkFlatBox matter traffic lastW 
       nxtM  = addMSet matter (addMSet pairA pairB)
   in App1.pure1 (MkFlatBox nxtM traffic lastW wave)
 
+||| Injects a localized balanced breather dipole (`+amp` at `yPos`, `-amp` at `yNeg`) in `Space 3`.
+export
+injectFlatBreather :
+  (x, yPos, yNeg : Nat) ->
+  (amp           : Integer) ->
+  (1 u           : FlatBlackBox) ->
+  App1 e FlatBlackBox
+injectFlatBreather x yPos yNeg amp (MkFlatBox matter traffic lastW wave) =
+  App1.pure1 (MkFlatBox matter traffic lastW (addMSet wave (seedBreatherFlat x yPos yNeg amp)))
+
 ||| Injects the balanced zero-sum wavepacket directly into the `Space 3` lattice.
 export
 injectFlatWavepacket :
@@ -66,22 +76,23 @@ injectFlatWavepacket :
 injectFlatWavepacket (MkFlatBox matter traffic lastW wave) =
   App1.pure1 (MkFlatBox matter traffic lastW (addMSet wave seedWavepacketFlat))
 
-||| Pure closed single-sweep `±1` congestion stepper (zero telemetry, zero observer arguments).
+||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`srcDiv = 0`, zero congestion).
 export
-stepFlatCongestion1 :
+stepFlatLinear1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
-stepFlatCongestion1 (MkFlatBox matter traffic _ wave) =
-  let (nxtT, nxtW) = stepChipFireFlatState matter traffic
-  in App1.pure1 (MkFlatBox matter nxtT nxtW wave)
+stepFlatLinear1 (MkFlatBox matter _ _ wave) =
+  let nxtWave = stepWavepacketFlatState emptyMSet wave
+  in App1.pure1 (MkFlatBox matter emptyMSet emptyMSet nxtWave)
 
-||| Pure closed single-sweep lockstep congestion + wavepacket stepper (zero observer arguments).
+||| Pure closed self-sourced congestion + Wildberger Pythagorean `(24, 7, 25)` unified stepper.
+||| Replaces the old pinned `+32` battery with closed local energy activity (`srcDiv = 32`).
 export
 stepFlatUnified1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatUnified1 (MkFlatBox matter traffic _ wave) =
-  let (nxtT, nxtW) = stepChipFireFlatState matter traffic
+  let (nxtT, nxtW) = stepSelfCongestionFlatState 32 wave traffic
       nxtWave      = stepWavepacketFlatState nxtW wave
   in App1.pure1 (MkFlatBox matter nxtT nxtW nxtWave)
 
@@ -112,7 +123,7 @@ closeFlat0D (MkFlatBox matter _ _ wave) =
   if matter == emptyMSet && wave == emptyMSet
     then App1.pure CleanVacuumCollapse
     else let combined = addMSet matter wave
-             work     = (streamPeelWorkSpace3 combined).workSteps
+             work     = integerToNat (multiplicityL1 combined)
              net      = multiplicitySignedSum matter + multiplicitySignedSum wave
              stT      = StaticTime 0 (cast work)
          in App1.pure (FrozenAtHorizon stT ("FlatSpace3(" ++ show (treeSizeNonZero combined) ++ " sites)") work net)

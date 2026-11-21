@@ -50,6 +50,16 @@ splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
+||| Injects a localized balanced breather dipole (`+amp` at `yPos`, `-amp` at `yNeg`) inside `root`.
+export
+injectHereditaryBreather :
+  (x, yPos, yNeg : Nat) ->
+  (amp           : Integer) ->
+  (1 u           : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+injectHereditaryBreather x yPos yNeg amp (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (addHMSet root (seedBreatherNested x yPos yNeg amp)))
+
 ||| Injects the balanced zero-sum wavepacket directly into `root : HereditaryMSet BoxInt`.
 export
 injectHereditaryWavepacket :
@@ -58,23 +68,22 @@ injectHereditaryWavepacket :
 injectHereditaryWavepacket (MkHereditaryBox root) =
   App1.pure1 (MkHereditaryBox (addHMSet root seedWavepacketNested))
 
-||| Pure closed single-sweep `±1` congestion stepper (zero telemetry, zero observer arguments).
+||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`srcDiv = 0`, zero congestion).
 export
-stepHereditaryCongestion1 :
+stepHereditaryLinear1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
-stepHereditaryCongestion1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepChipFireNestedState root))
+stepHereditaryLinear1 (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (stepClosedEnergyNestedState 0 root))
 
-||| Pure closed single-sweep lockstep congestion + wavepacket stepper (zero observer arguments).
+||| Pure closed self-sourced congestion + Wildberger Pythagorean `(24, 7, 25)` unified stepper
+||| directly inside `root : HereditaryMSet BoxInt` (`srcDiv = 32`, zero external battery).
 export
 stepHereditaryUnified1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryUnified1 (MkHereditaryBox root) =
-  let r1 = stepChipFireNestedState root
-      r2 = stepWavepacketNestedState r1
-  in App1.pure1 (MkHereditaryBox r2)
+  App1.pure1 (MkHereditaryBox (stepClosedEnergyNestedState 32 root))
 
 ||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
 ||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections
@@ -94,7 +103,7 @@ closeHereditary0D : (1 u : HereditaryBlackBox) -> App1 {u=Any} e CloseOutcome
 closeHereditary0D (MkHereditaryBox root) =
   if root == emptyPureMSet
     then App1.pure CleanVacuumCollapse
-    else let work = (streamPeelWorkHMSet root).workSteps
+    else let work = fastPeelWorkHMSet root
              net  = unwrapBox (sumHMSet root)
              txt  = renderPureMultiset root
              stT  = StaticTime 0 (cast work)

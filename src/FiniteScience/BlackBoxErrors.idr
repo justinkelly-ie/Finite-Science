@@ -110,15 +110,17 @@ Show HorizonObservationReport where
     ", workUsed=" ++ show r.streamWorkUsed ++
     ", reason=" ++ show r.freezeReason ++ ")"
 
-||| Telemetry returned by the unified, probe-free lattice wavepacket co-evolving
-||| under strictly local `±1` link updates and `±1` congestion.
+||| Telemetry returned by the closed-energy lattice wavepacket co-evolving
+||| under Wildberger Pythagorean `(24, 7, 25)` link gates and self-sourced `±1` congestion.
 public export
 record WavepacketReport where
   constructor MkWavepacketReport
   meanXMilli     : Integer
   meanYMilli     : Integer
   poyntingYAccum : Integer
+  initEnergy     : Integer
   waveEnergy     : Integer
+  maxEnergy      : Integer
   waveNetSum     : Integer
   waveWorkSteps  : Nat
 
@@ -128,7 +130,9 @@ Eq WavepacketReport where
     a.meanXMilli == b.meanXMilli &&
     a.meanYMilli == b.meanYMilli &&
     a.poyntingYAccum == b.poyntingYAccum &&
+    a.initEnergy == b.initEnergy &&
     a.waveEnergy == b.waveEnergy &&
+    a.maxEnergy == b.maxEnergy &&
     a.waveNetSum == b.waveNetSum &&
     a.waveWorkSteps == b.waveWorkSteps
 
@@ -138,6 +142,38 @@ Show WavepacketReport where
     "WavepacketReport(meanXMilli=" ++ show w.meanXMilli ++
     ", meanYMilli=" ++ show w.meanYMilli ++
     ", poyntingYAccum=" ++ show w.poyntingYAccum ++
+    ", initE=" ++ show w.initEnergy ++
     ", waveEnergy=" ++ show w.waveEnergy ++
+    ", maxE=" ++ show w.maxEnergy ++
     ", waveNetSum=" ++ show w.waveNetSum ++
     ", waveWorkSteps=" ++ show w.waveWorkSteps ++ ")"
+
+||| Telemetry for single initial `E_0` split self-trapping vs linear vacuum dispersion.
+public export
+record SelfTrapReport where
+  constructor MkSelfTrapReport
+  initEnergy   : Integer
+  finalEnergy  : Integer
+  maxEnergy    : Integer
+  coreFracPct  : Integer
+  netSignedSum : Integer
+  workSteps    : Nat
+
+public export
+Eq SelfTrapReport where
+  a == b =
+    a.initEnergy == b.initEnergy &&
+    a.finalEnergy == b.finalEnergy &&
+    a.maxEnergy == b.maxEnergy &&
+    a.coreFracPct == b.coreFracPct &&
+    a.netSignedSum == b.netSignedSum &&
+    a.workSteps == b.workSteps
+
+public export
+Show SelfTrapReport where
+  show r =
+    "SelfTrapReport(E=" ++ show r.initEnergy ++ "->" ++ show r.finalEnergy ++
+    ", maxE=" ++ show r.maxEnergy ++
+    ", coreFrac=" ++ show r.coreFracPct ++ "%" ++
+    ", net=" ++ show r.netSignedSum ++
+    ", work=" ++ show r.workSteps ++ ")"

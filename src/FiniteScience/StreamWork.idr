@@ -73,6 +73,20 @@ streamPeelWorkHMSet m@(MkHMSet b) =
       steps = peelNestedWork (hmDepth m) m
   in MkStreamWorkReport steps 0 resL1
 
+||| Exact O(tree-size) structural peel-step counter matching `streamPeelWorkHMSet` without
+||| unary quantum-by-quantum loops (critical for high-amplitude `amp = 2048` breathers).
+public export
+fastPeelWorkLoop : Nat -> HereditaryMSet BoxInt -> Nat
+fastPeelWorkLoop Z _ = 0
+fastPeelWorkLoop _ (MkHMSet BoxLeaf) = 0
+fastPeelWorkLoop (S dFuel) (MkHMSet b) =
+  foldBox (\k, w, acc => acc + weightMagnitude w * S (fastPeelWorkLoop dFuel k)) 0 b
+
+||| Computes the exact nested peel-work step count of any `HereditaryMSet BoxInt` in O(nodes).
+public export
+fastPeelWorkHMSet : HereditaryMSet BoxInt -> Nat
+fastPeelWorkHMSet m = fastPeelWorkLoop (hmDepth m) m
+
 ||| Streams two `HereditaryMSet BoxInt` operands into superposition, recording
 ||| total peeling work steps and annihilated Black/Red pairs (`[+1, -1] = []`).
 public export
@@ -182,6 +196,14 @@ public export
 stepY : PureMultiset
 stepY = MkHMSet (singletonBox axisY (intToBoxInt 1))
 
+public export
+stepX2 : PureMultiset
+stepX2 = addHMSet stepX stepX
+
+public export
+stepY2 : PureMultiset
+stepY2 = addHMSet stepY stepY
+
 ||| Canonical origin key `[]` shared across channel sinks and mirrors.
 public export
 originSiteKey : PureMultiset
@@ -203,14 +225,14 @@ decodeNatSiteKey m =
    boxToNat (lookupPureKey axisY m),
    boxToNat (lookupPureKey axisZ m))
 
-||| Interior grid predicate evaluated directly on `PureMultiset` site coordinates.
+||| Interior grid predicate evaluated directly on `PureMultiset` site coordinates (`17 x 16`).
 public export
 isInteriorPosM : PureMultiset -> Bool
 isInteriorPosM posM =
   let x = unwrapBox (lookupPureKey axisX posM)
       y = unwrapBox (lookupPureKey axisY posM)
       z = unwrapBox (lookupPureKey axisZ posM)
-  in x > 0 && x < 16 && y > 0 && y < 14 && z == 0
+  in x > 0 && x < 16 && y > 0 && y < 15 && z == 0
 
 -- Pure channel tags (no `roleObserver`!):
 public export
@@ -350,21 +372,21 @@ unpackGridEntry (MkHMSet b) =
        _ => Nothing
 
 --------------------------------------------------------------------------------
--- 3. STRICTLY LOCAL ±1 CHIP-FIRING CONGESTION (ZERO 1/(1+Q) SHORTCUT!)
+-- 3. SELF-SOURCED ±1 CONGESTION (ZERO PINNED +32 BATTERY!)
 --------------------------------------------------------------------------------
 
-||| Local 2D spatial patch `[0..16] x [0..14]` with open boundary sinks at edges.
+||| Local 2D spatial patch `[0..16] x [0..15]` (even height `16` for exact mirror symmetry).
 public export
 gridWidth : Nat
 gridWidth = 17
 
 public export
 gridHeight : Nat
-gridHeight = 15
+gridHeight = 16
 
 public export
 isInteriorXY : Nat -> Nat -> Bool
-isInteriorXY x y = x > 0 && x < 16 && y > 0 && y < 14
+isInteriorXY x y = x > 0 && x < 16 && y > 0 && y < 15
 
 public export
 sinkTrafficKey : PureMultiset
@@ -385,37 +407,94 @@ addNbFlat wf nx ny acc =
     then addAtKeyBox (mkVoxelSite nx ny 0) wf acc
     else acc
 
-||| Model A (Flat `Space 3`): pure single `±1` chip-firing sweep returning ONLY
-||| `(nextTraffic, nextWorkMap)` — zero embedded telemetry counters.
 public export
-stepChipFireFlatState : (matter : Space 3) -> (traffic : Space 3) -> (Space 3, Space 3)
-stepChipFireFlatState matter traffic0 =
-  let injected : Space 3
-      injected =
-        foldBox (\site@(ConsSite x (ConsSite y (ConsSite z PointSite))), w, acc =>
-                   if isInteriorXY x y && z == 0 && weightMagnitude w >= 32
-                     then addAtKeyBox site (intToBoxInt 32) acc
-                     else acc)
-                traffic0
-                matter
-  in foldBox (\site@(ConsSite x (ConsSite y (ConsSite z PointSite))), w, (nxtT, workAcc) =>
-                if isInteriorXY x y && z == 0
-                  then if w >= MkBoxInt 4
-                         then let (wf, remW) = divMod4Box w
-                                  firedW     = mulBox (MkBoxInt 4) wf
-                                  tRem       = if boxIsZero remW then nxtT else addAtKeyBox site remW nxtT
-                                  t1         = addNbFlat wf (S x) y tRem
-                                  t2         = addNbFlat wf (minus x 1) y t1
-                                  t3         = addNbFlat wf x (S y) t2
-                                  t4         = addNbFlat wf x (minus y 1) t3
-                                  wNext      = addAtKeyBox site firedW workAcc
-                              in (t4, wNext)
-                         else (addAtKeyBox site w nxtT, workAcc)
-                  else (nxtT, workAcc))
-             (emptyMSet, emptyMSet)
-             injected
+natRangeAsc : (start, count : Nat) -> List Nat
+natRangeAsc _     Z         = []
+natRangeAsc start (S count) = start :: natRangeAsc (S start) count
 
-||| External read-only work observable over Model A's `lastWork` map.
+public export
+interiorXs : List Nat
+interiorXs = natRangeAsc 1 15
+
+public export
+interiorYs : List Nat
+interiorYs = natRangeAsc 1 14
+
+public export
+xLinkEven : List Nat
+xLinkEven = [2, 4, 6, 8, 10, 12, 14]
+
+public export
+xLinkOdd : List Nat
+xLinkOdd = [1, 3, 5, 7, 9, 11, 13]
+
+public export
+yLinkEven : List Nat
+yLinkEven = [2, 4, 6, 8, 10, 12]
+
+public export
+yLinkOdd : List Nat
+yLinkOdd = [1, 3, 5, 7, 9, 11, 13]
+
+public export
+bandYs4to11 : List Nat
+bandYs4to11 = natRangeAsc 4 8
+
+public export
+coreXs7to9 : List Nat
+coreXs7to9 = natRangeAsc 7 3
+
+public export
+coreYs6to9 : List Nat
+coreYs6to9 = natRangeAsc 6 4
+
+public export
+foldLinks2D : List a -> List b -> (a -> b -> acc -> acc) -> acc -> acc
+foldLinks2D xs ys step init =
+  foldl (\a1, x => foldl (\a2, y => step x y a2) a1 ys) init xs
+
+||| Model A (Flat `Space 3`): pure closed self-sourced `±1` chip-firing sweep returning
+||| `(nextTraffic, nextWorkMap)`. Traffic derives directly from mirror-symmetric local wave
+||| activity `eLoc / srcDiv` (`srcDiv <= 0` gives pure linear vacuum with zero congestion).
+public export
+stepSelfCongestionFlatState : (srcDiv : Integer) -> (wave, traffic : Space 3) -> (Space 3, Space 3)
+stepSelfCongestionFlatState srcDiv wave traffic0 =
+  if srcDiv <= 0
+    then (emptyMSet, emptyMSet)
+    else
+      let injected =
+            foldLinks2D interiorXs interiorYs
+              (\x, y, acc =>
+                 let pVal = lookupMSet (mkVoxelSite x y zPlanePsi) wave
+                     ux0  = lookupMSet (mkVoxelSite x y zPlaneJx) wave
+                     uxm  = lookupMSet (mkVoxelSite (minus x 1) y zPlaneJx) wave
+                     uy0  = lookupMSet (mkVoxelSite x y zPlaneJy) wave
+                     uym  = lookupMSet (mkVoxelSite x (minus y 1) zPlaneJy) wave
+                     absP = absBox pVal
+                     sumU = addBox (addBox (absBox ux0) (absBox uxm))
+                                   (addBox (absBox uy0) (absBox uym))
+                     eLoc = addBox absP (tdiv4Box sumU)
+                     src  = tdivPosBox eLoc srcDiv
+                 in if boxIsZero src then acc else addAtKeyBox (mkVoxelSite x y 0) src acc)
+              traffic0
+      in foldBox (\site@(ConsSite x (ConsSite y (ConsSite z PointSite))), w, (nxtT, workAcc) =>
+                    if isInteriorXY x y && z == 0
+                      then if w >= MkBoxInt 4
+                             then let (wf, remW) = divMod4Box w
+                                      firedW     = mulBox (MkBoxInt 4) wf
+                                      tRem       = if boxIsZero remW then nxtT else addAtKeyBox site remW nxtT
+                                      t1         = addNbFlat wf (S x) y tRem
+                                      t2         = addNbFlat wf (minus x 1) y t1
+                                      t3         = addNbFlat wf x (S y) t2
+                                      t4         = addNbFlat wf x (minus y 1) t3
+                                      wNext      = addAtKeyBox site firedW workAcc
+                                  in (t4, wNext)
+                             else (addAtKeyBox site w nxtT, workAcc)
+                      else (nxtT, workAcc))
+                 (emptyMSet, emptyMSet)
+                 injected
+
+||| External read-only congestion work observable over Model A's `lastWork` map.
 public export
 flatCongestionWorkOf : Space 3 -> Nat
 flatCongestionWorkOf lastW = boxToNat (totalMassBox lastW)
@@ -424,107 +503,6 @@ flatCongestionWorkOf lastW = boxToNat (totalMassBox lastW)
 public export
 flatWaveTouchWorkOf : Space 3 -> Nat
 flatWaveTouchWorkOf w = treeSizeNonZero w
-
-public export
-record NestedTrafficSplit where
-  constructor MkNestedTrafficSplit
-  keptMatter      : HereditaryMSet BoxInt
-  injectedTraffic : HereditaryMSet BoxInt
-  curSink         : HereditaryMSet BoxInt
-
-public export
-hmSetTotalMass : HereditaryMSet BoxInt -> Nat
-hmSetTotalMass (MkHMSet pb) = (collectSupportStats pb).totalMass
-
-public export
-extractNestedTraffic : HereditaryMSet BoxInt -> NestedTrafficSplit
-extractNestedTraffic (MkHMSet rootBox) =
-  foldBox (\entry, mult, st =>
-             case unpackGridEntry entry of
-               Just (ch, posM, pay) =>
-                 if ch == channelMatter
-                   then let (MkHMSet kmBox) = st.keptMatter
-                            entryBox = addAtKeyBox entry mult kmBox
-                            workPay  = hmSetTotalMass pay
-                        in if isInteriorPosM posM && workPay >= 32
-                             then let tKey = mkGridEntry channelTraffic posM emptyPureMSet
-                                  in MkNestedTrafficSplit
-                                       (MkHMSet entryBox)
-                                       (addHMSet st.injectedTraffic (MkHMSet (singletonBox tKey (intToBoxInt 32))))
-                                       (addHMSet st.curSink         (MkHMSet (singletonBox sinkTrafficKey (intToBoxInt (-32)))))
-                             else MkNestedTrafficSplit (MkHMSet entryBox) st.injectedTraffic st.curSink
-                   else if ch == channelTraffic
-                     then MkNestedTrafficSplit st.keptMatter (addHMSet st.injectedTraffic (MkHMSet (singletonBox entry mult))) st.curSink
-                     else if ch == channelTrafficSink
-                       then MkNestedTrafficSplit st.keptMatter st.injectedTraffic (addHMSet st.curSink (MkHMSet (singletonBox entry mult)))
-                       else if isWaveChannel ch
-                         then let (MkHMSet kmBox) = st.keptMatter
-                              in MkNestedTrafficSplit (MkHMSet (addAtKeyBox entry mult kmBox)) st.injectedTraffic st.curSink
-                         else st
-               Nothing => st)
-          (MkNestedTrafficSplit emptyPureMSet emptyPureMSet emptyPureMSet)
-          rootBox
-
-public export
-pushNbPosM : BoxInt ->
-             PureMultiset ->
-             (HereditaryMSet BoxInt, HereditaryMSet BoxInt) ->
-             (HereditaryMSet BoxInt, HereditaryMSet BoxInt)
-pushNbPosM wf nbPos (tA, sA) =
-  if isInteriorPosM nbPos
-    then let k = mkGridEntry channelTraffic nbPos emptyPureMSet
-         in (addHMSet tA (MkHMSet (singletonBox k wf)), sA)
-    else (tA, addHMSet sA (MkHMSet (singletonBox sinkTrafficKey wf)))
-
-public export
-record NestedToppleAcc where
-  constructor MkNestedToppleAcc
-  nxtTraffic : HereditaryMSet BoxInt
-  nxtSink    : HereditaryMSet BoxInt
-  nxtWork    : HereditaryMSet BoxInt
-
-public export
-toppleNestedTraffic : HereditaryMSet BoxInt -> HereditaryMSet BoxInt -> NestedToppleAcc
-toppleNestedTraffic (MkHMSet injBox) curSink =
-  foldBox (\entry, w, acc =>
-             case unpackGridEntry entry of
-               Just (_, posM, _) =>
-                 if isInteriorPosM posM
-                   then if w >= MkBoxInt 4
-                          then let (wf, remW) = divMod4Box w
-                                   firedW     = mulBox (MkBoxInt 4) wf
-                                   tRem       = if boxIsZero remW
-                                                  then acc.nxtTraffic
-                                                  else addHMSet acc.nxtTraffic (MkHMSet (singletonBox entry remW))
-                                   ts1        = pushNbPosM wf (addHMSet posM stepX) (tRem, acc.nxtSink)
-                                   ts2        = pushNbPosM wf (subHMSet posM stepX) ts1
-                                   ts3        = pushNbPosM wf (addHMSet posM stepY) ts2
-                                   (t4, s4)   = pushNbPosM wf (subHMSet posM stepY) ts3
-                                   wKey       = mkGridEntry channelWork posM emptyPureMSet
-                                   w1         = addHMSet acc.nxtWork (MkHMSet (singletonBox wKey firedW))
-                                   w2         = addHMSet w1 (MkHMSet (singletonBox mirrorWorkKey (negBox firedW)))
-                               in MkNestedToppleAcc t4 s4 w2
-                          else MkNestedToppleAcc
-                                 (addHMSet acc.nxtTraffic (MkHMSet (singletonBox entry w)))
-                                 acc.nxtSink
-                                 acc.nxtWork
-                   else MkNestedToppleAcc
-                          acc.nxtTraffic
-                          (addHMSet acc.nxtSink (MkHMSet (singletonBox entry w)))
-                          acc.nxtWork
-               Nothing => acc)
-          (MkNestedToppleAcc emptyPureMSet curSink emptyPureMSet)
-          injBox
-
-||| Model B (`HereditaryMSet BoxInt`): pure single `±1` chip-firing sweep returning ONLY `nextRoot`!
-||| Keeps `sumHMSet root == 0` identically invariant with zero embedded work/observer state.
-public export
-stepChipFireNestedState : (root : HereditaryMSet BoxInt) -> HereditaryMSet BoxInt
-stepChipFireNestedState root =
-  let split   = extractNestedTraffic root
-      toppled = toppleNestedTraffic split.injectedTraffic split.curSink
-  in addHMSet split.keptMatter
-       (addHMSet toppled.nxtTraffic (addHMSet toppled.nxtSink toppled.nxtWork))
 
 ||| Extracts a single channel sub-multiset from `root : PureMultiset` for external observation/lensing.
 public export
@@ -552,13 +530,10 @@ findMatterPayloadAt pos (MkHMSet b) =
              emptyPureMSet
              b
 
-||| External read-only congestion work observable over Model B's `root`.
+||| Fast O(nodes) external read-only hereditary peel-work observable over `root : PureMultiset`.
 public export
-nestedCongestionWorkOf : PureMultiset -> Nat
-nestedCongestionWorkOf root =
-  let wChan = extractChannelMSet channelWork root
-      tChan = extractChannelMSet channelTraffic root
-  in boxToNat (sumHMSet wChan) + (streamPeelWorkHMSet tChan).workSteps
+fastNestedStepWorkOf : PureMultiset -> Nat
+fastNestedStepWorkOf root = fastPeelWorkHMSet root
 
 ||| Pure fuel-bounded horizon evaluator shared externally across both models.
 public export
@@ -573,84 +548,91 @@ runBoundedHorizonLoop (S steps) remFuel workPerCycle accC accW =
       else runBoundedHorizonLoop steps (minus remFuel workPerCycle) workPerCycle (S accC) (accW + workPerCycle)
 
 --------------------------------------------------------------------------------
--- 4. UNIFIED PROBE-FREE CO-EVOLVING LATTICE WAVEPACKET ENGINE
---    (Native `BoxInt` & `PureMultiset` Links — Zero Regular <-> Multiset Bouncing)
+-- 4. CLOSED-ENERGY WILDBERGER PYTHAGOREAN (24, 7, 25) LATTICE ENGINE
 --------------------------------------------------------------------------------
 
-||| Generates ascending `Nat` sequence `[start .. start + count - 1]`.
 public export
-natRangeAsc : (start, count : Nat) -> List Nat
-natRangeAsc _     Z         = []
-natRangeAsc start (S count) = start :: natRangeAsc (S start) count
+record PythGateResult where
+  constructor MkPythGateResult
+  pANext : BoxInt
+  pBNext : BoxInt
+  uNext  : BoxInt
+
+||| Exact Wildberger Pythagorean `(24, 7, 25)` integer rotation (`24^2 + 7^2 = 25^2`).
+||| Guarantees unconditionally for all `(pA, pB, u)`:
+|||   1. `pANext + pBNext == pA + pB` (exact 0D charge conservation)
+|||   2. `2*(pANext^2 + pBNext^2) + uNext^2 <= 2*(pA^2 + pB^2) + u^2` (exact Lyapunov energy bound)
+public export
+evalPythGate : (pA, pB, u : BoxInt) -> PythGateResult
+evalPythGate pA pB u =
+  let sSum        = addBox pA pB
+      dDiff       = subBox pB pA
+      numD        = addBox (mulBox (MkBoxInt 24) dDiff) (mulBox (MkBoxInt 7) u)
+      numU        = subBox (mulBox (MkBoxInt 24) u)     (mulBox (MkBoxInt 7) dDiff)
+      dRaw        = tdivPosBox numD 25
+      uRaw        = tdivPosBox numU 25
+      oddMismatch = isOddBox dRaw /= isOddBox sSum
+  in if not oddMismatch
+       then MkPythGateResult (tdiv2Box (subBox sSum dRaw)) (tdiv2Box (addBox sSum dRaw)) uRaw
+       else if dRaw > MkBoxInt 0
+         then let dNew = subBox dRaw (MkBoxInt 1)
+              in MkPythGateResult (tdiv2Box (subBox sSum dNew)) (tdiv2Box (addBox sSum dNew)) uRaw
+         else if dRaw < MkBoxInt 0
+           then let dNew = addBox dRaw (MkBoxInt 1)
+                in MkPythGateResult (tdiv2Box (subBox sSum dNew)) (tdiv2Box (addBox sSum dNew)) uRaw
+           else -- dRaw == 0 and sSum is odd (|dDiff| >= 1); step uRaw on exact numD == 0 resonance
+             let dNew = if numD >= MkBoxInt 0 then MkBoxInt 1 else MkBoxInt (-1)
+                 uNew = if boxIsZero numD
+                          then if uRaw > MkBoxInt 0 then subBox uRaw (MkBoxInt 1)
+                               else if uRaw < MkBoxInt 0 then addBox uRaw (MkBoxInt 1)
+                               else uRaw
+                          else uRaw
+             in MkPythGateResult (tdiv2Box (subBox sSum dNew)) (tdiv2Box (addBox sSum dNew)) uNew
 
 public export
-interiorXs : List Nat
-interiorXs = natRangeAsc 1 15
+record PythLinkStep where
+  constructor MkPythLinkStep
+  fired  : Bool
+  cNext  : BoxInt
+  pANext : BoxInt
+  pBNext : BoxInt
+  uNext  : BoxInt
 
 public export
-interiorYs : List Nat
-interiorYs = natRangeAsc 1 13
-
-public export
-xLinkXs : List Nat
-xLinkXs = natRangeAsc 1 14
-
-public export
-yLinkYs : List Nat
-yLinkYs = natRangeAsc 1 12
-
-public export
-foldLinks2D : List a -> List b -> (a -> b -> acc -> acc) -> acc -> acc
-foldLinks2D xs ys step init =
-  foldl (\a1, x => foldl (\a2, y => step x y a2) a1 ys) init xs
-
-||| Shared symplectic `divMod4Box` local-clock link kernel operating natively on `BoxInt`.
-public export
-record LinkStepResult where
-  constructor MkLinkStepResult
-  fired : Bool
-  cNext : BoxInt
-  jNext : BoxInt
-  df    : BoxInt
-
-public export
-evalWaveLinkStep : (cOld, lag, pA, pB, jOld : BoxInt) -> LinkStepResult
-evalWaveLinkStep cOld lag pA pB jOld =
+evalPythLinkStep : (cOld, lag, pA, pB, uOld : BoxInt) -> PythLinkStep
+evalPythLinkStep cOld lag pA pB uOld =
   let cNew = addBox cOld (MkBoxInt 16)
       cost = addBox (MkBoxInt 16) lag
   in if cNew >= cost
        then let cRem = subBox cNew cost
-                jNew = subBox jOld (tdiv4Box (subBox pB pA))
-                df   = tdiv4Box jNew
-            in MkLinkStepResult True cRem jNew df
-       else MkLinkStepResult False cNew jOld (MkBoxInt 0)
+                g    = evalPythGate pA pB uOld
+            in MkPythLinkStep True cRem g.pANext g.pBNext g.uNext
+       else MkPythLinkStep False cNew pA pB uOld
 
 public export
 record WaveMeasureAcc where
   constructor MkWaveMeasureAcc
-  accEPsi   : Integer
-  accWX     : Integer
-  accWY     : Integer
-  accETot   : Integer
-  accNetPsi : Integer
+  accEPsi : Integer
+  accWX   : Integer
+  accWY   : Integer
+  accSy   : Integer
 
 public export
-accumWaveSite : Integer -> Integer -> BoxInt -> BoxInt -> BoxInt -> WaveMeasureAcc -> WaveMeasureAcc
-accumWaveSite x y (MkBoxInt p) (MkBoxInt vx) (MkBoxInt vy) acc =
-  let ep = p * p
+accumWaveBandSite : Integer -> Integer -> BoxInt -> BoxInt -> BoxInt -> WaveMeasureAcc -> WaveMeasureAcc
+accumWaveBandSite x y (MkBoxInt dp) (MkBoxInt duy0) (MkBoxInt duym) acc =
+  let ep = dp * dp
   in MkWaveMeasureAcc
        (acc.accEPsi + ep)
        (acc.accWX + ep * x)
        (acc.accWY + ep * y)
-       (acc.accETot + ep + vx * vx + vy * vy)
-       (acc.accNetPsi + p)
+       (acc.accSy + dp * (duy0 + duym))
 
 public export
-finalizeWaveReport : WaveMeasureAcc -> Integer -> Nat -> WavepacketReport
-finalizeWaveReport m poyntingY workSteps =
+finalizeWaveReport : WaveMeasureAcc -> Integer -> Integer -> Integer -> Integer -> Nat -> WavepacketReport
+finalizeWaveReport m psiNet initE finalE maxE workSteps =
   let mxM = if m.accEPsi == 0 then 0 else divIntegerPos (m.accWX * 1000) m.accEPsi
       myM = if m.accEPsi == 0 then 0 else divIntegerPos (m.accWY * 1000) m.accEPsi
-  in MkWavepacketReport mxM myM poyntingY m.accETot m.accNetPsi workSteps
+  in MkWavepacketReport mxM myM m.accSy initE finalE maxE psiNet workSteps
 
 -- 4A. Model A (`Space 3`) Wavepacket Helpers
 
@@ -659,96 +641,129 @@ addWavePlaneFlat : Nat -> Nat -> Nat -> BoxInt -> Space 3 -> Space 3
 addWavePlaneFlat x y z delta w =
   if boxIsZero delta then w else addAtKeyBox (mkVoxelSite x y z) delta w
 
+||| Balanced zero-sum breather dipole (`+amp` at `(x, yPos)`, `-amp` at `(x, yNeg)`).
 public export
-seedWaveColumnFlat : (y : Nat) -> (amp : Integer) -> Space 3 -> Space 3
-seedWaveColumnFlat y amp acc =
-  let aP = MkBoxInt amp
-      aN = MkBoxInt (-amp)
-  in addWavePlaneFlat 5 y zPlanePsi aP $
-     addWavePlaneFlat 3 y zPlanePsi aN $
-     addWavePlaneFlat 5 y zPlaneJx  aP $
-     addWavePlaneFlat 4 y zPlaneJx  aP $
-     addWavePlaneFlat 3 y zPlaneJx  aN $
-     addWavePlaneFlat 2 y zPlaneJx  aN acc
+seedBreatherFlat : (x, yPos, yNeg : Nat) -> (amp : Integer) -> Space 3
+seedBreatherFlat x yPos yNeg amp =
+  addWavePlaneFlat x yPos zPlanePsi (MkBoxInt amp) $
+  addWavePlaneFlat x yNeg zPlanePsi (MkBoxInt (-amp)) emptyMSet
 
-||| Balanced zero-sum wavepacket seeded at `(x=4, y=7)` with transverse profile `(1, 2, 1)`:
-||| `sum(psi) == 0`, `sum(jx) == 0`, `multiplicitySignedSum == 0`.
+public export
+seedWaveColumnFlat : (y : Nat) -> (sc : Integer) -> Space 3 -> Space 3
+seedWaveColumnFlat y sc acc =
+  let pPos = MkBoxInt sc
+      pNeg = MkBoxInt (-sc)
+      uPos = MkBoxInt (2 * sc)
+      uNeg = MkBoxInt (-(2 * sc))
+  in addWavePlaneFlat 5 y zPlanePsi pPos $
+     addWavePlaneFlat 3 y zPlanePsi pNeg $
+     addWavePlaneFlat 5 y zPlaneJx  uPos $
+     addWavePlaneFlat 4 y zPlaneJx  uPos $
+     addWavePlaneFlat 3 y zPlaneJx  uNeg $
+     addWavePlaneFlat 2 y zPlaneJx  uNeg acc
+
+||| Balanced zero-sum 4-row wavepacket centered at `(x=4, y=7.5)` (`6, 7, 8, 9` with `amp=64`):
+||| `sum(psi) == 0`, `sum(ux) == 0`, `multiplicitySignedSum == 0`.
 public export
 seedWavepacketFlat : Space 3
 seedWavepacketFlat =
-  seedWaveColumnFlat 6 64 $
-  seedWaveColumnFlat 7 128 $
-  seedWaveColumnFlat 8 64 emptyMSet
+  seedWaveColumnFlat 6 32 $
+  seedWaveColumnFlat 7 64 $
+  seedWaveColumnFlat 8 64 $
+  seedWaveColumnFlat 9 32 emptyMSet
 
+||| Unified Model A vertex-disjoint checkerboard Pythagorean `(24, 7, 25)` link update.
 public export
-record FlatWaveStepAcc where
-  constructor MkFlatWaveStepAcc
-  wTree     : Space 3
-  firedCnt  : Nat
-
-||| Unified Model A X/Y link step operating directly in `BoxInt` over `Space 3`.
-public export
-applyFlatLink :
-  (dx, dy, zJ, zC : Nat) ->
-  (workMap, psiFreeze : Space 3) ->
+applyFlatPythLink :
+  (dx, dy, zU, zC : Nat) ->
+  (workMap : Space 3) ->
   Nat ->
   Nat ->
-  FlatWaveStepAcc ->
-  FlatWaveStepAcc
-applyFlatLink dx dy zJ zC workMap psiFreeze x y acc =
+  Space 3 ->
+  Space 3
+applyFlatPythLink dx dy zU zC workMap x y wTree =
   let sA0  = mkVoxelSite x y 0
       sB0  = mkVoxelSite (x + dx) (y + dy) 0
       sA1  = mkVoxelSite x y zPlanePsi
       sB1  = mkVoxelSite (x + dx) (y + dy) zPlanePsi
-      sJ   = mkVoxelSite x y zJ
+      sU   = mkVoxelSite x y zU
       sC   = mkVoxelSite x y zC
-      lag  = addBox (lookupMSet sA0 workMap) (lookupMSet sB0 workMap)
-      cOld = lookupMSet sC acc.wTree
-      pA   = lookupMSet sA1 psiFreeze
-      pB   = lookupMSet sB1 psiFreeze
-      jOld = lookupMSet sJ acc.wTree
-      res  = evalWaveLinkStep cOld lag pA pB jOld
-      t1   = if res.cNext /= cOld then setBox sC res.cNext acc.wTree else acc.wTree
-      t2   = if res.jNext /= jOld then setBox sJ res.jNext t1 else t1
-      t3   = addWavePlaneFlat x y zPlanePsi (negBox res.df) t2
-      t4   = addWavePlaneFlat (x + dx) (y + dy) zPlanePsi res.df t3
-  in MkFlatWaveStepAcc t4 (if res.fired then S acc.firedCnt else acc.firedCnt)
+      lag  = tdiv4Box (addBox (lookupMSet sA0 workMap) (lookupMSet sB0 workMap))
+      cOld = lookupMSet sC wTree
+      pA   = lookupMSet sA1 wTree
+      pB   = lookupMSet sB1 wTree
+      uOld = lookupMSet sU wTree
+      res  = evalPythLinkStep cOld lag pA pB uOld
+      t1   = if res.cNext  /= cOld then setBox sC  res.cNext  wTree else wTree
+      t2   = if res.uNext  /= uOld then setBox sU  res.uNext  t1    else t1
+      t3   = if res.pANext /= pA   then setBox sA1 res.pANext t2    else t2
+      t4   = if res.pBNext /= pB   then setBox sB1 res.pBNext t3    else t3
+  in t4
 
-public export
-computeFlatStepSy : Space 3 -> Integer
-computeFlatStepSy w =
-  foldLinks2D interiorXs interiorYs
-    (\x, y, acc =>
-       let (MkBoxInt p)   = lookupMSet (mkVoxelSite x y zPlanePsi) w
-           (MkBoxInt jy0) = lookupMSet (mkVoxelSite x y zPlaneJy) w
-           (MkBoxInt jym) = lookupMSet (mkVoxelSite x (minus y 1) zPlaneJy) w
-       in acc + p * (jy0 + jym))
-    0
-
-||| Executes one pure symplectic `divMod4Box` wave sweep on `Space 3`, returning ONLY the updated wave state.
+||| Executes one autonomous 4-pass vertex-disjoint Pythagorean `(24, 7, 25)` wave sweep on `Space 3`.
 public export
 stepWavepacketFlatState : (workMap : Space 3) -> (wave : Space 3) -> Space 3
 stepWavepacketFlatState workMap wave0 =
   let mirrorSite    = mkVoxelSite 0 0 zPlaneWaveMirror
       clearedMirror = setBox mirrorSite (MkBoxInt 0) wave0
-      afterX        = foldLinks2D xLinkXs interiorYs (applyFlatLink 1 0 zPlaneJx zPlaneCx workMap wave0)
-                        (MkFlatWaveStepAcc clearedMirror 0)
-      afterY        = foldLinks2D interiorXs yLinkYs (applyFlatLink 0 1 zPlaneJy zPlaneCy workMap wave0) afterX
-      rawSum        = multiplicitySignedSum afterY.wTree
-  in setBox mirrorSite (MkBoxInt (-rawSum)) afterY.wTree
+      w1            = foldLinks2D xLinkEven  interiorYs (applyFlatPythLink 1 0 zPlaneJx zPlaneCx workMap) clearedMirror
+      w2            = foldLinks2D xLinkOdd   interiorYs (applyFlatPythLink 1 0 zPlaneJx zPlaneCx workMap) w1
+      w3            = foldLinks2D interiorXs yLinkEven  (applyFlatPythLink 0 1 zPlaneJy zPlaneCy workMap) w2
+      w4            = foldLinks2D interiorXs yLinkOdd   (applyFlatPythLink 0 1 zPlaneJy zPlaneCy workMap) w3
+      rawSum        = multiplicitySignedSum w4
+  in setBox mirrorSite (MkBoxInt (-rawSum)) w4
 
+||| Exact global Lyapunov quadratic field energy `sum(2*psi^2 + ux^2 + uy^2)` on `Space 3`.
 public export
-measureWavepacketFlat : Space 3 -> Integer -> Nat -> WavepacketReport
-measureWavepacketFlat w poyntingY workSteps =
-  let m = foldLinks2D interiorXs interiorYs
-            (\x, y, acc =>
-               accumWaveSite (cast x) (cast y)
-                 (lookupMSet (mkVoxelSite x y zPlanePsi) w)
-                 (lookupMSet (mkVoxelSite x y zPlaneJx) w)
-                 (lookupMSet (mkVoxelSite x y zPlaneJy) w)
-                 acc)
-            (MkWaveMeasureAcc 0 0 0 0 0)
-  in finalizeWaveReport m poyntingY workSteps
+flatFieldEnergyOf : Space 3 -> Integer
+flatFieldEnergyOf w =
+  foldLinks2D interiorXs interiorYs
+    (\x, y, acc =>
+       let (MkBoxInt p)  = lookupMSet (mkVoxelSite x y zPlanePsi) w
+           (MkBoxInt ux) = lookupMSet (mkVoxelSite x y zPlaneJx) w
+           (MkBoxInt uy) = lookupMSet (mkVoxelSite x y zPlaneJy) w
+       in acc + 2 * p * p + ux * ux + uy * uy)
+    0
+
+||| Fraction (in %) of Lyapunov energy localized in the central `3x4` core `[7..9] x [6..9]`.
+public export
+flatCoreEnergyFracOf : Space 3 -> Integer
+flatCoreEnergyFracOf w =
+  let totE = flatFieldEnergyOf w
+      coreE =
+        foldLinks2D coreXs7to9 coreYs6to9
+          (\x, y, acc =>
+             let (MkBoxInt p)  = lookupMSet (mkVoxelSite x y zPlanePsi) w
+                 (MkBoxInt ux) = lookupMSet (mkVoxelSite x y zPlaneJx) w
+                 (MkBoxInt uy) = lookupMSet (mkVoxelSite x y zPlaneJy) w
+             in acc + 2 * p * p + ux * ux + uy * uy)
+          0
+  in if totE <= 0 then 0 else divIntegerPos (coreE * 100) totE
+
+||| Band-restricted (`y = 4..11`) background-subtracted wavepacket measurement on `Space 3`.
+public export
+measureWaveBandFlat :
+  (wave, bgWave : Space 3) ->
+  (initE, finalE, maxE : Integer) ->
+  (workSteps : Nat) ->
+  WavepacketReport
+measureWaveBandFlat w bg initE finalE maxE workSteps =
+  let bandAcc =
+        foldLinks2D interiorXs bandYs4to11
+          (\x, y, acc =>
+             let dPsi = subBox (lookupMSet (mkVoxelSite x y zPlanePsi) w)
+                               (lookupMSet (mkVoxelSite x y zPlanePsi) bg)
+                 dUy0 = subBox (lookupMSet (mkVoxelSite x y zPlaneJy) w)
+                               (lookupMSet (mkVoxelSite x y zPlaneJy) bg)
+                 dUym = subBox (lookupMSet (mkVoxelSite x (minus y 1) zPlaneJy) w)
+                               (lookupMSet (mkVoxelSite x (minus y 1) zPlaneJy) bg)
+             in accumWaveBandSite (cast x) (cast y) dPsi dUy0 dUym acc)
+          (MkWaveMeasureAcc 0 0 0 0)
+      psiNet =
+        foldLinks2D interiorXs interiorYs
+          (\x, y, acc => acc + unwrapBox (lookupMSet (mkVoxelSite x y zPlanePsi) w))
+          0
+  in finalizeWaveReport bandAcc psiNet initE finalE maxE workSteps
 
 -- 4B. Model B (`HereditaryMSet BoxInt`) Wavepacket Helpers (Pure Multiset Axis Keys)
 
@@ -762,42 +777,73 @@ xKeys15 : List PureMultiset
 xKeys15 = iterateStepMSet 15 stepX stepX
 
 public export
-xKeys14 : List PureMultiset
-xKeys14 = iterateStepMSet 14 stepX stepX
+yKeys14 : List PureMultiset
+yKeys14 = iterateStepMSet 14 stepY stepY
 
 public export
-yKeys13 : List PureMultiset
-yKeys13 = iterateStepMSet 13 stepY stepY
+xKeysEven : List PureMultiset
+xKeysEven = iterateStepMSet 7 stepX2 stepX2
 
 public export
-yKeys12 : List PureMultiset
-yKeys12 = iterateStepMSet 12 stepY stepY
+xKeysOdd : List PureMultiset
+xKeysOdd = iterateStepMSet 7 stepX2 stepX
 
 public export
-seedWaveColumnNested : (y : Nat) -> (amp : Integer) -> PureMultiset -> PureMultiset
-seedWaveColumnNested y amp acc =
-  let aPos = MkBoxInt amp
-      aNeg = MkBoxInt (-amp)
-      e1   = MkHMSet (singletonBox (mkGridEntry channelWavePsi (natSiteKey (5, y, 0)) emptyPureMSet) aPos)
-      e2   = MkHMSet (singletonBox (mkGridEntry channelWavePsi (natSiteKey (3, y, 0)) emptyPureMSet) aNeg)
-      e3   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (5, y, 0)) emptyPureMSet) aPos)
-      e4   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (4, y, 0)) emptyPureMSet) aPos)
-      e5   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (3, y, 0)) emptyPureMSet) aNeg)
-      e6   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (2, y, 0)) emptyPureMSet) aNeg)
+yKeysEven : List PureMultiset
+yKeysEven = iterateStepMSet 6 stepY2 stepY2
+
+public export
+yKeysOdd : List PureMultiset
+yKeysOdd = iterateStepMSet 7 stepY2 stepY
+
+public export
+yKeysBand4to11 : List PureMultiset
+yKeysBand4to11 = iterateStepMSet 8 stepY (natSiteKey (0, 4, 0))
+
+public export
+xKeysCore7to9 : List PureMultiset
+xKeysCore7to9 = iterateStepMSet 3 stepX (natSiteKey (7, 0, 0))
+
+public export
+yKeysCore6to9 : List PureMultiset
+yKeysCore6to9 = iterateStepMSet 4 stepY (natSiteKey (0, 6, 0))
+
+||| Balanced zero-sum breather dipole (`+amp` at `(x, yPos)`, `-amp` at `(x, yNeg)`) in `PureMultiset`.
+public export
+seedBreatherNested : (x, yPos, yNeg : Nat) -> (amp : Integer) -> PureMultiset
+seedBreatherNested x yPos yNeg amp =
+  let ePos = MkHMSet (singletonBox (mkGridEntry channelWavePsi (natSiteKey (x, yPos, 0)) emptyPureMSet) (MkBoxInt amp))
+      eNeg = MkHMSet (singletonBox (mkGridEntry channelWavePsi (natSiteKey (x, yNeg, 0)) emptyPureMSet) (MkBoxInt (-amp)))
+  in addHMSet ePos eNeg
+
+public export
+seedWaveColumnNested : (y : Nat) -> (sc : Integer) -> PureMultiset -> PureMultiset
+seedWaveColumnNested y sc acc =
+  let pPos = MkBoxInt sc
+      pNeg = MkBoxInt (-sc)
+      uPos = MkBoxInt (2 * sc)
+      uNeg = MkBoxInt (-(2 * sc))
+      e1   = MkHMSet (singletonBox (mkGridEntry channelWavePsi (natSiteKey (5, y, 0)) emptyPureMSet) pPos)
+      e2   = MkHMSet (singletonBox (mkGridEntry channelWavePsi (natSiteKey (3, y, 0)) emptyPureMSet) pNeg)
+      e3   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (5, y, 0)) emptyPureMSet) uPos)
+      e4   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (4, y, 0)) emptyPureMSet) uPos)
+      e5   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (3, y, 0)) emptyPureMSet) uNeg)
+      e6   = MkHMSet (singletonBox (mkGridEntry channelWaveJx  (natSiteKey (2, y, 0)) emptyPureMSet) uNeg)
   in addHMSet acc (addHMSet e1 (addHMSet e2 (addHMSet e3 (addHMSet e4 (addHMSet e5 e6)))))
 
 public export
 seedWavepacketNested : PureMultiset
 seedWavepacketNested =
-  seedWaveColumnNested 6 64 $
-  seedWaveColumnNested 7 128 $
-  seedWaveColumnNested 8 64 emptyPureMSet
+  seedWaveColumnNested 6 32 $
+  seedWaveColumnNested 7 64 $
+  seedWaveColumnNested 8 64 $
+  seedWaveColumnNested 9 32 emptyPureMSet
 
 public export
 record NestedWaveSplit where
   constructor MkNestedWaveSplit
   keptNonWave : Box BoxInt PureMultiset
-  workMap     : Box BoxInt PureMultiset
+  trafficMap  : Box BoxInt PureMultiset
   psiMap      : Box BoxInt PureMultiset
   jxMap       : Box BoxInt PureMultiset
   jyMap       : Box BoxInt PureMultiset
@@ -811,137 +857,199 @@ splitNestedWave (MkHMSet rootBox) =
              case unpackGridEntry entry of
                Just (ch, posM, _) =>
                  if ch == channelWavePsi
-                   then MkNestedWaveSplit st.keptNonWave st.workMap (addAtKeyBox posM mult st.psiMap) st.jxMap st.jyMap st.cxMap st.cyMap
+                   then MkNestedWaveSplit st.keptNonWave st.trafficMap (addAtKeyBox posM mult st.psiMap) st.jxMap st.jyMap st.cxMap st.cyMap
                  else if ch == channelWaveJx
-                   then MkNestedWaveSplit st.keptNonWave st.workMap st.psiMap (addAtKeyBox posM mult st.jxMap) st.jyMap st.cxMap st.cyMap
+                   then MkNestedWaveSplit st.keptNonWave st.trafficMap st.psiMap (addAtKeyBox posM mult st.jxMap) st.jyMap st.cxMap st.cyMap
                  else if ch == channelWaveJy
-                   then MkNestedWaveSplit st.keptNonWave st.workMap st.psiMap st.jxMap (addAtKeyBox posM mult st.jyMap) st.cxMap st.cyMap
+                   then MkNestedWaveSplit st.keptNonWave st.trafficMap st.psiMap st.jxMap (addAtKeyBox posM mult st.jyMap) st.cxMap st.cyMap
                  else if ch == channelWaveCx
-                   then MkNestedWaveSplit st.keptNonWave st.workMap st.psiMap st.jxMap st.jyMap (addAtKeyBox posM mult st.cxMap) st.cyMap
+                   then MkNestedWaveSplit st.keptNonWave st.trafficMap st.psiMap st.jxMap st.jyMap (addAtKeyBox posM mult st.cxMap) st.cyMap
                  else if ch == channelWaveCy
-                   then MkNestedWaveSplit st.keptNonWave st.workMap st.psiMap st.jxMap st.jyMap st.cxMap (addAtKeyBox posM mult st.cyMap)
-                 else if ch == channelWaveMirror
+                   then MkNestedWaveSplit st.keptNonWave st.trafficMap st.psiMap st.jxMap st.jyMap st.cxMap (addAtKeyBox posM mult st.cyMap)
+                 else if ch == channelTraffic
+                   then MkNestedWaveSplit st.keptNonWave (addAtKeyBox posM mult st.trafficMap) st.psiMap st.jxMap st.jyMap st.cxMap st.cyMap
+                 else if ch == channelWaveMirror || ch == channelWork || ch == channelWorkMirror || ch == channelTrafficSink
                    then st
-                 else if ch == channelWork
-                   then MkNestedWaveSplit (addAtKeyBox entry mult st.keptNonWave) (addAtKeyBox posM mult st.workMap) st.psiMap st.jxMap st.jyMap st.cxMap st.cyMap
-                 else MkNestedWaveSplit (addAtKeyBox entry mult st.keptNonWave) st.workMap st.psiMap st.jxMap st.jyMap st.cxMap st.cyMap
+                 else MkNestedWaveSplit (addAtKeyBox entry mult st.keptNonWave) st.trafficMap st.psiMap st.jxMap st.jyMap st.cxMap st.cyMap
                Nothing =>
-                 MkNestedWaveSplit (addAtKeyBox entry mult st.keptNonWave) st.workMap st.psiMap st.jxMap st.jyMap st.cxMap st.cyMap)
+                 MkNestedWaveSplit (addAtKeyBox entry mult st.keptNonWave) st.trafficMap st.psiMap st.jxMap st.jyMap st.cxMap st.cyMap)
           (MkNestedWaveSplit BoxLeaf BoxLeaf BoxLeaf BoxLeaf BoxLeaf BoxLeaf BoxLeaf)
           rootBox
 
 public export
-addBoxPosM : PureMultiset -> BoxInt -> Box BoxInt PureMultiset -> Box BoxInt PureMultiset
-addBoxPosM posM delta b =
-  if boxIsZero delta then b else addAtKeyBox posM delta b
+pushNbTrafficBox : BoxInt -> PureMultiset -> Box BoxInt PureMultiset -> Box BoxInt PureMultiset
+pushNbTrafficBox wf nbPos acc =
+  if isInteriorPosM nbPos then addAtKeyBox nbPos wf acc else acc
 
 public export
-record NestedLinkPassAcc where
-  constructor MkNestedLinkPassAcc
-  pBox     : Box BoxInt PureMultiset
-  jBox     : Box BoxInt PureMultiset
-  cBox     : Box BoxInt PureMultiset
-  firedCnt : Nat
+record NestedToppleBoxAcc where
+  constructor MkNestedToppleBoxAcc
+  nxtTraffic : Box BoxInt PureMultiset
+  nxtWork    : Box BoxInt PureMultiset
 
-||| Unified Model B X/Y link step operating directly on `PureMultiset` keys (`posA`, `addHMSet posA stepDir`)
-||| and `BoxInt` multiplicities (zero `Nat`/`Integer` middleman!).
 public export
-applyNestedLink :
+toppleNestedBox : Box BoxInt PureMultiset -> NestedToppleBoxAcc
+toppleNestedBox injBox =
+  foldBox (\posM, w, acc =>
+             if isInteriorPosM posM
+               then if w >= MkBoxInt 4
+                      then let (wf, remW) = divMod4Box w
+                               firedW     = mulBox (MkBoxInt 4) wf
+                               tRem       = if boxIsZero remW then acc.nxtTraffic else addAtKeyBox posM remW acc.nxtTraffic
+                               t1         = pushNbTrafficBox wf (addHMSet posM stepX) tRem
+                               t2         = pushNbTrafficBox wf (subHMSet posM stepX) t1
+                               t3         = pushNbTrafficBox wf (addHMSet posM stepY) t2
+                               t4         = pushNbTrafficBox wf (subHMSet posM stepY) t3
+                               wNext      = addAtKeyBox posM firedW acc.nxtWork
+                           in MkNestedToppleBoxAcc t4 wNext
+                      else MkNestedToppleBoxAcc (addAtKeyBox posM w acc.nxtTraffic) acc.nxtWork
+               else acc)
+          (MkNestedToppleBoxAcc BoxLeaf BoxLeaf)
+          injBox
+
+public export
+record NestedPythAcc where
+  constructor MkNestedPythAcc
+  pBox : Box BoxInt PureMultiset
+  uBox : Box BoxInt PureMultiset
+  cBox : Box BoxInt PureMultiset
+
+||| Unified Model B vertex-disjoint checkerboard Pythagorean `(24, 7, 25)` link update
+||| operating directly on `PureMultiset` coordinate keys (`posA`, `addHMSet posA stepDir`).
+public export
+applyNestedPythLink :
   (stepDir : PureMultiset) ->
-  (workBox, psiFreeze : Box BoxInt PureMultiset) ->
+  (workBox : Box BoxInt PureMultiset) ->
   PureMultiset ->
   PureMultiset ->
-  NestedLinkPassAcc ->
-  NestedLinkPassAcc
-applyNestedLink stepDir workBox psiFreeze kx ky acc =
+  NestedPythAcc ->
+  NestedPythAcc
+applyNestedPythLink stepDir workBox kx ky acc =
   let posA = addHMSet kx ky
       posB = addHMSet posA stepDir
-      lag  = addBox (lookupBox posA workBox) (lookupBox posB workBox)
+      lag  = tdiv4Box (addBox (lookupBox posA workBox) (lookupBox posB workBox))
       cOld = lookupBox posA acc.cBox
-      pA   = lookupBox posA psiFreeze
-      pB   = lookupBox posB psiFreeze
-      jOld = lookupBox posA acc.jBox
-      res  = evalWaveLinkStep cOld lag pA pB jOld
-      c1   = if res.cNext /= cOld then setBox posA res.cNext acc.cBox else acc.cBox
-      j1   = if res.jNext /= jOld then setBox posA res.jNext acc.jBox else acc.jBox
-      p1   = addBoxPosM posA (negBox res.df) acc.pBox
-      p2   = addBoxPosM posB res.df p1
-  in MkNestedLinkPassAcc p2 j1 c1 (if res.fired then S acc.firedCnt else acc.firedCnt)
-
-public export
-computeNestedStepSy : Box BoxInt PureMultiset -> Box BoxInt PureMultiset -> Integer
-computeNestedStepSy pBox jyBox =
-  foldLinks2D xKeys15 yKeys13
-    (\kx, ky, acc =>
-       let pos            = addHMSet kx ky
-           (MkBoxInt p)   = lookupBox pos pBox
-           (MkBoxInt jy0) = lookupBox pos jyBox
-           (MkBoxInt jym) = lookupBox (subHMSet pos stepY) jyBox
-       in acc + p * (jy0 + jym))
-    0
+      pA   = lookupBox posA acc.pBox
+      pB   = lookupBox posB acc.pBox
+      uOld = lookupBox posA acc.uBox
+      res  = evalPythLinkStep cOld lag pA pB uOld
+      c1   = if res.cNext  /= cOld then setBox posA res.cNext  acc.cBox else acc.cBox
+      u1   = if res.uNext  /= uOld then setBox posA res.uNext  acc.uBox else acc.uBox
+      p1   = if res.pANext /= pA   then setBox posA res.pANext acc.pBox else acc.pBox
+      p2   = if res.pBNext /= pB   then setBox posB res.pBNext p1       else p1
+  in MkNestedPythAcc p2 u1 c1
 
 public export
 packWaveChannelBox : PureMultiset -> Box BoxInt PureMultiset -> Box BoxInt PureMultiset -> Box BoxInt PureMultiset
 packWaveChannelBox ch fieldBox accBox =
   foldBox (\posM, w, acc => addAtKeyBox (mkGridEntry ch posM emptyPureMSet) w acc) accBox fieldBox
 
-||| Executes one pure symplectic `divMod4Box` wave sweep directly over `root : HereditaryMSet BoxInt`,
-||| preserving `sumHMSet root' == 0` via `channelWaveMirror` with zero embedded telemetry.
+||| Helper executing the closed self-sourced `±1` congestion injection and `divMod4Box`
+||| toppling pass once per sweep (extracted to avoid typed-`let` thunk lifting).
 public export
-stepWavepacketNestedState : PureMultiset -> PureMultiset
-stepWavepacketNestedState root =
-  let sp     = splitNestedWave root
-      psi0   = sp.psiMap
-      afterX = foldLinks2D xKeys14 yKeys13 (applyNestedLink stepX sp.workMap psi0)
-                 (MkNestedLinkPassAcc psi0 sp.jxMap sp.cxMap 0)
-      afterY = foldLinks2D xKeys15 yKeys12 (applyNestedLink stepY sp.workMap psi0)
-                 (MkNestedLinkPassAcc afterX.pBox sp.jyMap sp.cyMap afterX.firedCnt)
-      sumAll = unwrapBox (totalMassBox afterY.pBox) +
-               unwrapBox (totalMassBox afterX.jBox) +
-               unwrapBox (totalMassBox afterY.jBox) +
-               unwrapBox (totalMassBox afterX.cBox) +
-               unwrapBox (totalMassBox afterY.cBox)
-      b1     = packWaveChannelBox channelWavePsi afterY.pBox sp.keptNonWave
-      b2     = packWaveChannelBox channelWaveJx  afterX.jBox b1
-      b3     = packWaveChannelBox channelWaveJy  afterY.jBox b2
-      b4     = packWaveChannelBox channelWaveCx  afterX.cBox b3
-      b5     = packWaveChannelBox channelWaveCy  afterY.cBox b4
-      b6     = addAtKeyBox mirrorWaveKey (MkBoxInt (-sumAll)) b5
-  in MkHMSet b6
+computeNestedSelfTraffic : Integer -> NestedWaveSplit -> NestedToppleBoxAcc
+computeNestedSelfTraffic srcDiv sp =
+  if srcDiv <= 0
+    then MkNestedToppleBoxAcc BoxLeaf BoxLeaf
+    else
+      let injTraffic =
+            foldLinks2D xKeys15 yKeys14
+              (\kx, ky, acc =>
+                 let pos   = addHMSet kx ky
+                     posXm = subHMSet pos stepX
+                     posYm = subHMSet pos stepY
+                     pVal  = lookupBox pos sp.psiMap
+                     ux0   = lookupBox pos sp.jxMap
+                     uxm   = lookupBox posXm sp.jxMap
+                     uy0   = lookupBox pos sp.jyMap
+                     uym   = lookupBox posYm sp.jyMap
+                     absP  = absBox pVal
+                     sumU  = addBox (addBox (absBox ux0) (absBox uxm))
+                                    (addBox (absBox uy0) (absBox uym))
+                     eLoc  = addBox absP (tdiv4Box sumU)
+                     src   = tdivPosBox eLoc srcDiv
+                 in if boxIsZero src then acc else addAtKeyBox pos src acc)
+              sp.trafficMap
+      in toppleNestedBox injTraffic
 
-||| External read-only Poynting flux observable over Model B's `root`.
+||| Executes one closed-energy sweep directly inside `root : HereditaryMSet BoxInt`,
+||| running self-sourced `±1` chip-firing congestion (`srcDiv`) + 4-pass vertex-disjoint
+||| Pythagorean `(24, 7, 25)` links while preserving `sumHMSet root' == 0` identically.
 public export
-computeNestedStepSyFromRoot : PureMultiset -> Integer
-computeNestedStepSyFromRoot root =
-  let sp = splitNestedWave root
-  in computeNestedStepSy sp.psiMap sp.jyMap
+stepClosedEnergyNestedState : (srcDiv : Integer) -> PureMultiset -> PureMultiset
+stepClosedEnergyNestedState srcDiv root =
+  let sp      = splitNestedWave root
+      toppled = computeNestedSelfTraffic srcDiv sp
+      workBox = toppled.nxtWork
+      afterX1 = foldLinks2D xKeysEven yKeys14 (applyNestedPythLink stepX workBox) (MkNestedPythAcc sp.psiMap sp.jxMap sp.cxMap)
+      afterX2 = foldLinks2D xKeysOdd  yKeys14 (applyNestedPythLink stepX workBox) afterX1
+      afterY1 = foldLinks2D xKeys15 yKeysEven (applyNestedPythLink stepY workBox) (MkNestedPythAcc afterX2.pBox sp.jyMap sp.cyMap)
+      afterY2 = foldLinks2D xKeys15 yKeysOdd  (applyNestedPythLink stepY workBox) afterY1
+      sumWave = totalMassBox afterY2.pBox + totalMassBox afterX2.uBox + totalMassBox afterY2.uBox +
+                totalMassBox afterX2.cBox + totalMassBox afterY2.cBox
+      sumTr   = totalMassBox toppled.nxtTraffic
+      sumWk   = totalMassBox workBox
+      b1      = packWaveChannelBox channelWavePsi afterY2.pBox sp.keptNonWave
+      b2      = packWaveChannelBox channelWaveJx  afterX2.uBox b1
+      b3      = packWaveChannelBox channelWaveJy  afterY2.uBox b2
+      b4      = packWaveChannelBox channelWaveCx  afterX2.cBox b3
+      b5      = packWaveChannelBox channelWaveCy  afterY2.cBox b4
+      b6      = addAtKeyBox mirrorWaveKey (negBox sumWave) b5
+      b7      = packWaveChannelBox channelTraffic toppled.nxtTraffic b6
+      b8      = addAtKeyBox sinkTrafficKey (negBox sumTr) b7
+      b9      = packWaveChannelBox channelWork workBox b8
+      b10     = addAtKeyBox mirrorWorkKey (negBox sumWk) b9
+  in MkHMSet b10
 
-||| External read-only wave peeling work observable over Model B's `root`.
 public export
-nestedWavePeelWorkOf : PureMultiset -> Nat
-nestedWavePeelWorkOf root =
-  let sp = splitNestedWave root
-  in (streamPeelWorkHMSet (MkHMSet sp.psiMap)).workSteps
+sumSplitEnergy : NestedWaveSplit -> PureMultiset -> PureMultiset -> Integer -> Integer
+sumSplitEnergy sp kx ky acc =
+  let pos           = addHMSet kx ky
+      (MkBoxInt p)  = lookupBox pos sp.psiMap
+      (MkBoxInt ux) = lookupBox pos sp.jxMap
+      (MkBoxInt uy) = lookupBox pos sp.jyMap
+  in acc + 2 * p * p + ux * ux + uy * uy
 
+||| Exact global Lyapunov quadratic field energy `sum(2*psi^2 + ux^2 + uy^2)` on `root : PureMultiset`.
 public export
-measureWavepacketNested : PureMultiset -> Integer -> Nat -> WavepacketReport
-measureWavepacketNested root poyntingY workSteps =
+nestedFieldEnergyOf : PureMultiset -> Integer
+nestedFieldEnergyOf root =
   let sp = splitNestedWave root
-      m  = foldLinks2D xKeys15 yKeys13
-             (\kx, ky, acc =>
-                let x   = unwrapBox (lookupPureKey axisX kx)
-                    y   = unwrapBox (lookupPureKey axisY ky)
-                    pos = addHMSet kx ky
-                in accumWaveSite x y
-                     (lookupBox pos sp.psiMap)
-                     (lookupBox pos sp.jxMap)
-                     (lookupBox pos sp.jyMap)
-                     acc)
-             (MkWaveMeasureAcc 0 0 0 0 0)
-  in finalizeWaveReport m poyntingY workSteps
+  in foldLinks2D xKeys15 yKeys14 (sumSplitEnergy sp) 0
+
+||| Fraction (in %) of Lyapunov energy localized in the central `3x4` core `[7..9] x [6..9]`.
+public export
+nestedCoreEnergyFracOf : PureMultiset -> Integer
+nestedCoreEnergyFracOf root =
+  let sp    = splitNestedWave root
+      totE  = foldLinks2D xKeys15 yKeys14 (sumSplitEnergy sp) 0
+      coreE = foldLinks2D xKeysCore7to9 yKeysCore6to9 (sumSplitEnergy sp) 0
+  in if totE <= 0 then 0 else divIntegerPos (coreE * 100) totE
+
+||| Band-restricted (`y = 4..11`) background-subtracted wavepacket measurement on `root : PureMultiset`.
+public export
+measureWaveBandNested :
+  (root, bgRoot : PureMultiset) ->
+  (initE, finalE, maxE : Integer) ->
+  (workSteps : Nat) ->
+  WavepacketReport
+measureWaveBandNested root bgRoot initE finalE maxE workSteps =
+  let sp   = splitNestedWave root
+      spBg = splitNestedWave bgRoot
+      bandAcc =
+        foldLinks2D xKeys15 yKeysBand4to11
+          (\kx, ky, acc =>
+             let pos  = addHMSet kx ky
+                 dPsi = subBox (lookupBox pos sp.psiMap) (lookupBox pos spBg.psiMap)
+                 dUy0 = subBox (lookupBox pos sp.jyMap) (lookupBox pos spBg.jyMap)
+                 dUym = subBox (lookupBox (subHMSet pos stepY) sp.jyMap) (lookupBox (subHMSet pos stepY) spBg.jyMap)
+             in accumWaveBandSite (unwrapBox (lookupPureKey axisX kx)) (unwrapBox (lookupPureKey axisY ky)) dPsi dUy0 dUym acc)
+          (MkWaveMeasureAcc 0 0 0 0)
+      psiNet = unwrapBox (totalMassBox sp.psiMap)
+  in finalizeWaveReport bandAcc psiNet initE finalE maxE workSteps
 
 --------------------------------------------------------------------------------
--- 5. COMPILE-TIME QTT 0 THEOREMS ON STREAMING WORK & CONGESTION PRIMITIVES
+-- 5. COMPILE-TIME QTT 0 THEOREMS ON WILDBERGER PYTHAGOREAN & WORK PRIMITIVES
 --------------------------------------------------------------------------------
 
 public export
@@ -1000,6 +1108,39 @@ public export
 prfSeedWaveFlatZeroSum = Refl
 
 public export
-0 prfEvalWaveLinkStepVac :
-  (FiniteScience.StreamWork.evalWaveLinkStep (MkBoxInt 0) (MkBoxInt 0) (MkBoxInt 0) (MkBoxInt 64) (MkBoxInt 0)).df = MkBoxInt (-4)
-prfEvalWaveLinkStepVac = Refl
+0 prfFastPeelMatchesProton :
+  FiniteScience.StreamWork.fastPeelWorkHMSet FiniteScience.StreamWork.protonMSet
+  = (FiniteScience.StreamWork.streamPeelWorkHMSet FiniteScience.StreamWork.protonMSet).workSteps
+prfFastPeelMatchesProton = Refl
+
+public export
+0 prfPythagoreanTriple24_7_25 : the Integer 24 * 24 + 7 * 7 = 25 * 25
+prfPythagoreanTriple24_7_25 = Refl
+
+public export
+0 prfPythGateChargeAndEnergy :
+  (let pA = MkBoxInt 100
+       pB = MkBoxInt (-43)
+       u  = MkBoxInt 80
+       r  = FiniteScience.StreamWork.evalPythGate pA pB u
+       a1 = unwrapBox r.pANext
+       b1 = unwrapBox r.pBNext
+       u1 = unwrapBox r.uNext
+       e0 = 2 * (100 * 100 + (-43) * (-43)) + 80 * 80
+       e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
+   in (a1 + b1 == 57) && (e1 <= e0)) = True
+prfPythGateChargeAndEnergy = Refl
+
+public export
+0 prfPythGateResonanceEdge :
+  (let pA = MkBoxInt 7
+       pB = MkBoxInt 0
+       u  = MkBoxInt 24
+       r  = FiniteScience.StreamWork.evalPythGate pA pB u
+       a1 = unwrapBox r.pANext
+       b1 = unwrapBox r.pBNext
+       u1 = unwrapBox r.uNext
+       e0 = 2 * (7 * 7) + 24 * 24
+       e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
+   in (a1 + b1 == 7) && (e1 <= e0)) = True
+prfPythGateResonanceEdge = Refl
