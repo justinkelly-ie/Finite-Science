@@ -12,7 +12,7 @@ import FiniteScience.StreamWork
 %default total
 
 --------------------------------------------------------------------------------
--- 1. COORDINATE-GENERIC SPARSE BASIS & ZERO-TRAFFIC FIELD CARRIER
+-- 1. COORDINATE-GENERIC SPARSE BASIS, SEALED CORE CODEC & FIELD CARRIER
 --------------------------------------------------------------------------------
 
 public export
@@ -64,79 +64,121 @@ pureMSetBasis =
     (\pos => isOddBox (lookupPureKey axisX pos))
     (\pos => isOddBox (lookupPureKey axisY pos))
 
+||| Codec sealing/unsealing frozen particle core internals only on freeze or thaw.
+public export
+record CoreCodec (k : Type) (body : Type) where
+  constructor MkCoreCodec
+  sealCore   : Box BoxInt k -> Box BoxInt (k, k) -> body
+  unsealCore : body -> (Box BoxInt k, Box BoxInt (k, k))
+
+public export
+coord2CoreCodec : CoreCodec Coord2 (Box BoxInt Coord2, Box BoxInt (Coord2, Coord2))
+coord2CoreCodec = MkCoreCodec (,) id
+
+||| Sealed quiescent particle core keeping its interior `coreBody` unopened across active steps,
+||| while exposing compact cached exterior `coreSites`, `coreRho` (`T_00`), and `coreEnergy`.
+public export
+record SealedCore (k : Type) (body : Type) where
+  constructor MkSealedCore
+  coreSites  : Box BoxInt k
+  coreRho    : Box BoxInt k
+  coreEnergy : Integer
+  coreBody   : body
+
+public export
+Eq k => Eq body => Eq (SealedCore k body) where
+  a == b =
+    a.coreSites == b.coreSites &&
+    a.coreRho == b.coreRho &&
+    a.coreEnergy == b.coreEnergy &&
+    a.coreBody == b.coreBody
+
 ||| Unified sparse discrete field over any discrete group basis `k`:
-||| - `psiField`  : active scalar wave amplitude `psi(pos)` (net sum = 0)
-||| - `fluxMaxel` : active antisymmetric directed-edge Maxel `u * ([a, b] - [b, a])` (`totalMassBox == 0`)
-||| - `frozenPsi` : wrapped quiescent self-trapped breather core amplitudes
-||| - `frozenFlux`: wrapped quiescent core edge fluxes (if any)
-||| Note: Zero auxiliary congestion fields exist anywhere!
+||| - `psiField`    : active scalar wave amplitude `psi(pos)` (net sum = 0)
+||| - `fluxMaxel`   : active antisymmetric directed-edge Maxel `u * ([a, b] - [b, a])`
+||| - `metricPhi`   : causal 1-hop retarded metric potential evolving at light-cone speed `c = 1`
+||| - `frozenCores` : independent sealed quiescent particle cores (`body` left unopened until thaw)
 public export
-record SparseField (k : Type) where
+record SparseField (k : Type) (body : Type) where
   constructor MkSparseField
-  psiField   : Box BoxInt k
-  fluxMaxel  : Box BoxInt (k, k)
-  frozenPsi  : Box BoxInt k
-  frozenFlux : Box BoxInt (k, k)
+  psiField    : Box BoxInt k
+  fluxMaxel   : Box BoxInt (k, k)
+  metricPhi   : Box BoxInt k
+  frozenCores : List (SealedCore k body)
 
 public export
-emptySparseField : SparseField k
-emptySparseField = MkSparseField BoxLeaf BoxLeaf BoxLeaf BoxLeaf
+emptySparseField : SparseField k body
+emptySparseField = MkSparseField BoxLeaf BoxLeaf BoxLeaf []
 
 public export
-hasFrozenCore : Ord k => SparseField k -> Bool
-hasFrozenCore sf = sf.frozenPsi /= BoxLeaf || sf.frozenFlux /= BoxLeaf
+coreCount : SparseField k body -> Nat
+coreCount sf = length sf.frozenCores
 
 public export
-addSparseField : Ord k => SparseField k -> SparseField k -> SparseField k
+allFrozenSites : Ord k => List (SealedCore k body) -> Box BoxInt k
+allFrozenSites [] = BoxLeaf
+allFrozenSites (c :: cs) = unionBox c.coreSites (allFrozenSites cs)
+
+public export
+addSparseField : Ord k => SparseField k body -> SparseField k body -> SparseField k body
 addSparseField a b =
   MkSparseField
     (unionBox a.psiField b.psiField)
     (unionBox a.fluxMaxel b.fluxMaxel)
-    (unionBox a.frozenPsi b.frozenPsi)
-    (unionBox a.frozenFlux b.frozenFlux)
+    (unionBox a.metricPhi b.metricPhi)
+    (a.frozenCores ++ b.frozenCores)
 
 ||| Exact global Lyapunov quadratic field energy `2 * (psi <.> psi) + (flux <.> flux) / 2`
-||| computed directly from FinSc-Box's multiset inner product `dotBox` (active + frozen cores).
+||| summed across active fields and sealed-core cached energies in O(1) without opening core internals.
 public export
-fieldEnergy : Ord k => SparseField k -> Integer
+fieldEnergy : Ord k => SparseField k body -> Integer
 fieldEnergy sf =
-  let totPsi  = unionBox sf.psiField sf.frozenPsi
-      totFlux = unionBox sf.fluxMaxel sf.frozenFlux
-      ePsi    = unwrapBox (dotBox totPsi totPsi)
-      eU2     = unwrapBox (dotBox totFlux totFlux)
-  in 2 * ePsi + divIntegerPos eU2 2
+  let ePsi    = unwrapBox (dotBox sf.psiField sf.psiField)
+      eU2     = unwrapBox (dotBox sf.fluxMaxel sf.fluxMaxel)
+      actE    = 2 * ePsi + divIntegerPos eU2 2
+  in foldl (\acc, c => acc + c.coreEnergy) actE sf.frozenCores
+
+||| Unseals all active + frozen `(psi, flux)` purely for end-of-run diagnostics and band comparisons.
+public export
+unsealAllIntoActive : Ord k => CoreCodec k body -> SparseField k body -> (Box BoxInt k, Box BoxInt (k, k))
+unsealAllIntoActive codec sf =
+  foldl (\(accP, accF), c =>
+           let (cp, cf) = codec.unsealCore c.coreBody
+           in (unionBox accP cp, unionBox accF cf))
+        (sf.psiField, sf.fluxMaxel)
+        sf.frozenCores
 
 public export
-fieldPsiNet : Ord k => SparseField k -> Integer
-fieldPsiNet sf = unwrapBox (totalMassBox (unionBox sf.psiField sf.frozenPsi))
+fieldPsiNet : Ord k => CoreCodec k body -> SparseField k body -> Integer
+fieldPsiNet codec sf = unwrapBox (totalMassBox (fst (unsealAllIntoActive codec sf)))
 
 public export
-fieldFluxNet : Ord k => SparseField k -> Integer
-fieldFluxNet sf = unwrapBox (totalMassBox (unionBox sf.fluxMaxel sf.frozenFlux))
+fieldFluxNet : Ord k => CoreCodec k body -> SparseField k body -> Integer
+fieldFluxNet codec sf = unwrapBox (totalMassBox (snd (unsealAllIntoActive codec sf)))
 
 public export
-fieldFluxAntisym : Ord k => SparseField k -> Bool
-fieldFluxAntisym sf = isAntisymBox (unionBox sf.fluxMaxel sf.frozenFlux)
+fieldFluxAntisym : Ord k => CoreCodec k body -> SparseField k body -> Bool
+fieldFluxAntisym codec sf = isAntisymBox (snd (unsealAllIntoActive codec sf))
 
 public export
-fieldActiveWork : Ord k => SparseField k -> Nat
+fieldActiveWork : SparseField k body -> Nat
 fieldActiveWork sf =
   treeSizeNonZero sf.psiField + treeSizeNonZero sf.fluxMaxel +
-  (if hasFrozenCore sf then 2 else 0)
+  treeSizeNonZero sf.metricPhi + 2 * length sf.frozenCores
 
 --------------------------------------------------------------------------------
 -- 2. GENERIC BALANCED ZERO-SUM SEEDS (ZERO PINNED MATTER!)
 --------------------------------------------------------------------------------
 
 public export
-seedSparseBreather : Ord k => AxisBasis k -> (x, yPos, yNeg, amp : Integer) -> SparseField k
+seedSparseBreather : Ord k => AxisBasis k -> (x, yPos, yNeg, amp : Integer) -> SparseField k body
 seedSparseBreather ax x yPos yNeg amp =
   let pPos = singletonBox (ax.mkCoord x yPos) (MkBoxInt amp)
       pNeg = singletonBox (ax.mkCoord x yNeg) (MkBoxInt (-amp))
-  in MkSparseField (unionBox pPos pNeg) BoxLeaf BoxLeaf BoxLeaf
+  in MkSparseField (unionBox pPos pNeg) BoxLeaf BoxLeaf []
 
 public export
-addPacketRow : Ord k => AxisBasis k -> (x0, y, sc : Integer) -> SparseField k -> SparseField k
+addPacketRow : Ord k => AxisBasis k -> (x0, y, sc : Integer) -> SparseField k body -> SparseField k body
 addPacketRow ax x0 y sc acc =
   let pA   = ax.mkCoord (x0 + 1) y
       pB   = ax.mkCoord (x0 - 1) y
@@ -152,12 +194,12 @@ addPacketRow ax x0 y sc acc =
       fl2  = setAntisymEdge e2 e3 uNeg fl1
       fl3  = setAntisymEdge e3 e4 uPos fl2
       fl4  = setAntisymEdge e4 e5 uPos fl3
-  in MkSparseField psi1 fl4 acc.frozenPsi acc.frozenFlux
+  in MkSparseField psi1 fl4 acc.metricPhi acc.frozenCores
 
 ||| Balanced zero-sum 4-row wavepacket centered at `(x0, y0 + 0.5)` (`y in {y0-1..y0+2}`):
 ||| `psiNet == 0`, `fluxNet == 0`, `fieldFluxAntisym == True`.
 public export
-seedSparseWavepacketAt : Ord k => AxisBasis k -> (x0, y0, amp : Integer) -> SparseField k
+seedSparseWavepacketAt : Ord k => AxisBasis k -> (x0, y0, amp : Integer) -> SparseField k body
 seedSparseWavepacketAt ax x0 y0 amp =
   let halfA = divIntegerPos amp 2
   in addPacketRow ax x0 (y0 - 1) halfA $
@@ -166,11 +208,11 @@ seedSparseWavepacketAt ax x0 y0 amp =
      addPacketRow ax x0 (y0 + 2) halfA emptySparseField
 
 public export
-seedSparseWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> SparseField k
+seedSparseWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> SparseField k body
 seedSparseWavepacket ax x0 amp = seedSparseWavepacketAt ax x0 0 amp
 
 --------------------------------------------------------------------------------
--- 3. STRESS-ENERGY LAURENT GREEN'S HALO, ADAPTIVE FREEZE/THAW & PYTH LINKS
+-- 3. CAUSAL 1-HOP RETARDED METRIC & CONNECTED-COMPONENT MULTI-CORE FREEZE/THAW
 --------------------------------------------------------------------------------
 
 ||| Sparse 4-direction Laurent stencil `[+dx, -dx, +dy, -dy]` over any `AxisBasis k`.
@@ -186,7 +228,7 @@ laurentStencil4By ax =
      singletonBox ax.stepX (MkBoxInt 1)
 
 ||| Exact local quadratic stress-energy density `T_00(pos) = 2 * psi(pos)^2 + (sum_inc u^2) / 2`
-||| derived strictly from current `(psi, flux)` with zero auxiliary fields.
+||| derived strictly from current `(psi, flux)`.
 public export
 localEnergyDensity : Ord k => Box BoxInt k -> Box BoxInt (k, k) -> Box BoxInt k
 localEnergyDensity psi flux =
@@ -200,21 +242,44 @@ localEnergyDensity psi flux =
                 in if boxIsZero halfW then acc else addAtKeyBox pos halfW acc)
              psi2 u2BySite
 
-||| Computes the truncated discrete 2D Poisson Green's series
-||| `G_R(T_00) = sum_{k=0}^{hops} floor((S_4 / 4)^k * T_00)` over active + frozen cores.
+||| Adds strictly entries `>= minCut` from `srcRho` into `accPhi`.
 public export
-computeLaurentHalo : Ord k => AxisBasis k -> (hops : Nat) -> (lagDiv : Integer) -> SparseField k -> Box BoxInt k
-computeLaurentHalo ax hops lagDiv sf =
+addAboveMinCut : Ord k => Integer -> Box BoxInt k -> Box BoxInt k -> Box BoxInt k
+addAboveMinCut minCut srcRho initPhi =
+  foldBox (\pos, w@(MkBoxInt v), acc =>
+             if v >= minCut then addAtKeyBox pos w acc else acc)
+          initPhi srcRho
+
+||| Causal 1-hop retarded metric potential step:
+|||   `phi_{t+1} = T_00(active) + sum_{c in cores} c.coreRho + floor((decayNum * (S_4 * phi_t)) / decayDen)`
+||| Enforces strict light-cone speed `c = 1` cell per sweep without ever opening sealed cores!
+public export
+stepCausalMetric :
+  Ord k =>
+  AxisBasis k ->
+  (lagDiv, decayNum, decayDen : Integer) ->
+  (actRho : Box BoxInt k) ->
+  List (SealedCore k body) ->
+  (oldPhi : Box BoxInt k) ->
+  Box BoxInt k
+stepCausalMetric ax lagDiv decayNum decayDen actRho cores oldPhi =
   if lagDiv <= 0
     then BoxLeaf
-    else let rawMin = divIntegerPos lagDiv 16
-             minCut = if rawMin < 1 then 1 else rawMin
-             totPsi = unionBox sf.psiField sf.frozenPsi
-             totFlx = unionBox sf.fluxMaxel sf.frozenFlux
-             rho    = localEnergyDensity totPsi totFlx
-         in laurentGreenSeries ax.shiftAdd hops 4 minCut (laurentStencil4By ax) rho
+    else
+      let rawMin   = divIntegerPos lagDiv 16
+          minCut   = if rawMin < 1 then 1 else rawMin
+          decayed  = if oldPhi == BoxLeaf || decayDen <= 0
+                       then BoxLeaf
+                       else
+                         let spread = pairBoxWith ax.shiftAdd oldPhi (laurentStencil4By ax)
+                         in foldBox (\pos, (MkBoxInt v), acc =>
+                                       let q@(MkBoxInt qv) = tdivPosBox (MkBoxInt (decayNum * v)) decayDen
+                                       in if qv >= minCut then setBox pos q acc else acc)
+                                    BoxLeaf spread
+          withAct  = addAboveMinCut minCut actRho decayed
+      in foldl (\acc, c => addAboveMinCut minCut c.coreRho acc) withAct cores
 
-||| True iff any non-core cardinal neighbor of `coreSites` has active `rho >= thawThr`.
+||| True iff non-core neighbor `nb` has active `actRho >= thawThr`.
 public export
 siteHotOutsideCore : Ord k => (thawThr : Integer) -> (nb : k) -> (coreSites, actRho : Box BoxInt k) -> Bool
 siteHotOutsideCore thawThr nb coreSites actRho =
@@ -240,6 +305,56 @@ corePerimeterHot ax thawThr coreSites actRho =
                             siteHotOutsideCore thawThr nYp coreSites actRho ||
                             siteHotOutsideCore thawThr nYm coreSites actRho)
                  False coreSites
+
+public export
+floodAddNb : Ord k => k -> (Box BoxInt k, Box BoxInt k, Box BoxInt k) -> (Box BoxInt k, Box BoxInt k, Box BoxInt k)
+floodAddNb nb (rem, comp, nFront) =
+  let w = lookupBox nb rem
+  in if boxIsZero w
+       then (rem, comp, nFront)
+       else (deleteBox nb rem, setBox nb w comp, setBox nb w nFront)
+
+public export
+floodLoop :
+  Ord k =>
+  AxisBasis k ->
+  Nat ->
+  Box BoxInt k ->
+  Box BoxInt k ->
+  Box BoxInt k ->
+  (Box BoxInt k, Box BoxInt k)
+floodLoop _ Z rem comp _ = (rem, comp)
+floodLoop _ _ rem comp BoxLeaf = (rem, comp)
+floodLoop ax (S fuel) rem comp front =
+  let stepped = foldBox (\pos, _, acc =>
+                           let s1 = floodAddNb (ax.shiftAdd pos ax.stepX) acc
+                               s2 = floodAddNb (ax.shiftSub pos ax.stepX) s1
+                               s3 = floodAddNb (ax.shiftAdd pos ax.stepY) s2
+                           in floodAddNb (ax.shiftSub pos ax.stepY) s3)
+                        (rem, comp, BoxLeaf)
+                        front
+      rem1    = fst stepped
+      comp1   = fst (snd stepped)
+      front1  = snd (snd stepped)
+  in floodLoop ax fuel rem1 comp1 front1
+
+public export
+splitComponentsLoop : Ord k => AxisBasis k -> Nat -> Box BoxInt k -> List (Box BoxInt k)
+splitComponentsLoop _ Z _ = []
+splitComponentsLoop ax (S fuel) hot =
+  case extractMinBox hot of
+    Nothing => []
+    Just (k0, w0, rest) =>
+      let initComp = singletonBox k0 w0
+          res      = floodLoop ax (S (treeSizeNonZero rest)) rest initComp initComp
+          remHot   = fst res
+          comp     = snd res
+      in comp :: splitComponentsLoop ax fuel remHot
+
+||| Total 4-neighbor connected-component decomposition over arbitrary sparse `Box BoxInt k`.
+public export
+splitComponents : Ord k => AxisBasis k -> Box BoxInt k -> List (Box BoxInt k)
+splitComponents ax hot = splitComponentsLoop ax (S (treeSizeNonZero hot)) hot
 
 ||| Collects strictly active canonical links `(a, a + stepDir)` touching non-zero `psi` or `flux`.
 public export
@@ -269,20 +384,20 @@ applySparseLinkPass :
   AxisBasis k ->
   (stepDir : k) ->
   (lagDiv, m0 : Integer) ->
-  (haloBox, frozenPsi : Box BoxInt k) ->
+  (phiBox, frozenSites : Box BoxInt k) ->
   (wantOdd : Bool) ->
   (isOddFn : k -> Bool) ->
   (linksBox : Box BoxInt k) ->
   SparseLinkState k ->
   SparseLinkState k
-applySparseLinkPass ax stepDir lagDiv m0 haloBox frozenPsi wantOdd isOddFn linksBox initSt =
+applySparseLinkPass ax stepDir lagDiv m0 phiBox frozenSites wantOdd isOddFn linksBox initSt =
   foldBox (\posA, _, st =>
              if isOddFn posA /= wantOdd
                then st
                else
                  let posB = ax.shiftAdd posA stepDir
-                     fA   = lookupBox posA frozenPsi
-                     fB   = lookupBox posB frozenPsi
+                     fA   = lookupBox posA frozenSites
+                     fB   = lookupBox posB frozenSites
                  in if not (boxIsZero fA) || not (boxIsZero fB)
                       then st
                       else
@@ -292,8 +407,8 @@ applySparseLinkPass ax stepDir lagDiv m0 haloBox frozenPsi wantOdd isOddFn links
                         in if boxIsZero pA && boxIsZero pB && boxIsZero uOld
                              then st
                              else
-                               let hA  = lookupBox posA haloBox
-                                   hB  = lookupBox posB haloBox
+                               let hA  = lookupBox posA phiBox
+                                   hB  = lookupBox posB phiBox
                                    lag = if lagDiv <= 0 then MkBoxInt 0 else tdivPosBox (addBox hA hB) lagDiv
                                    res = rotatePythParam (addBox (MkBoxInt m0) lag) pA pB uOld
                                    p1  = if res.valA /= pA then setBox posA res.valA st.stPsi else st.stPsi
@@ -302,6 +417,45 @@ applySparseLinkPass ax stepDir lagDiv m0 haloBox frozenPsi wantOdd isOddFn links
                                in MkSparseLinkState p2 fl1)
           initSt
           linksBox
+
+public export
+record ThawPassAcc (k : Type) (body : Type) where
+  constructor MkThawPassAcc
+  tpPsi         : Box BoxInt k
+  tpFlux        : Box BoxInt (k, k)
+  tpKeptCores   : List (SealedCore k body)
+  tpThawedSites : Box BoxInt k
+  tpThawedCount : Nat
+
+public export
+selectivelyThawCores :
+  Ord k =>
+  AxisBasis k ->
+  CoreCodec k body ->
+  (thawThr : Integer) ->
+  (actRho : Box BoxInt k) ->
+  (initPsi : Box BoxInt k) ->
+  (initFlux : Box BoxInt (k, k)) ->
+  List (SealedCore k body) ->
+  ThawPassAcc k body
+selectivelyThawCores ax codec thawThr actRho initPsi initFlux cores =
+  foldr (\c, acc =>
+           if thawThr > 0 && corePerimeterHot ax thawThr c.coreSites actRho
+             then let (cp, cf) = codec.unsealCore c.coreBody
+                  in MkThawPassAcc
+                       (unionBox cp acc.tpPsi)
+                       (unionBox cf acc.tpFlux)
+                       acc.tpKeptCores
+                       (unionBox c.coreSites acc.tpThawedSites)
+                       (S acc.tpThawedCount)
+             else MkThawPassAcc
+                    acc.tpPsi
+                    acc.tpFlux
+                    (c :: acc.tpKeptCores)
+                    acc.tpThawedSites
+                    acc.tpThawedCount)
+        (MkThawPassAcc initPsi initFlux [] BoxLeaf 0)
+        cores
 
 public export
 record PartitionPsiAcc (k : Type) where
@@ -316,76 +470,107 @@ record PartitionFluxAcc (k : Type) where
   partFFrz : Box BoxInt (k, k)
 
 public export
-tryFreezeQuietCore :
+tryFreezeComponent :
   Ord k =>
   AxisBasis k ->
-  (freezeThr, thawThr : Integer) ->
-  SparseField k ->
-  SparseField k
-tryFreezeQuietCore ax freezeThr thawThr sf =
-  if freezeThr <= 0 || hasFrozenCore sf
-    then sf
+  CoreCodec k body ->
+  (thawThr : Integer) ->
+  (actRho : Box BoxInt k) ->
+  (comp : Box BoxInt k) ->
+  (Box BoxInt k, Box BoxInt (k, k), List (SealedCore k body)) ->
+  (Box BoxInt k, Box BoxInt (k, k), List (SealedCore k body))
+tryFreezeComponent ax codec thawThr actRho comp (curPsi, curFlux, coresAcc) =
+  if comp == BoxLeaf || not (boxIsZero (totalMassBox comp)) || corePerimeterHot ax thawThr comp actRho
+    then (curPsi, curFlux, coresAcc)
     else
-      let actRho = localEnergyDensity sf.psiField sf.fluxMaxel
-          cand   = foldBox (\pos, w, acc =>
-                              let MkBoxInt e = lookupBox pos actRho
-                              in if e >= freezeThr then setBox pos w acc else acc)
-                           BoxLeaf sf.psiField
-      in if cand == BoxLeaf
-           then sf
-           else if not (boxIsZero (totalMassBox cand)) || corePerimeterHot ax thawThr cand actRho
-             then sf
-             else
-               let pPart = foldBox (\pos, w, acc =>
-                                      if boxIsZero (lookupBox pos cand)
-                                        then MkPartitionPsiAcc (setBox pos w acc.partAct) acc.partFrz
-                                        else MkPartitionPsiAcc acc.partAct (setBox pos w acc.partFrz))
-                                   (MkPartitionPsiAcc BoxLeaf BoxLeaf)
-                                   sf.psiField
-                   fPart = foldBox (\(a, b), u, acc =>
-                                      let inA = lookupBox a cand
-                                          inB = lookupBox b cand
-                                      in if not (boxIsZero inA) && not (boxIsZero inB)
-                                           then MkPartitionFluxAcc acc.partFAct (setBox (a, b) u acc.partFFrz)
-                                           else MkPartitionFluxAcc (setBox (a, b) u acc.partFAct) acc.partFFrz)
-                                   (MkPartitionFluxAcc BoxLeaf BoxLeaf)
-                                   sf.fluxMaxel
-               in MkSparseField pPart.partAct fPart.partFAct pPart.partFrz fPart.partFFrz
+      let pPart = foldBox (\pos, w, acc =>
+                             if boxIsZero (lookupBox pos comp)
+                               then MkPartitionPsiAcc (setBox pos w acc.partAct) acc.partFrz
+                               else MkPartitionPsiAcc acc.partAct (setBox pos w acc.partFrz))
+                          (MkPartitionPsiAcc BoxLeaf BoxLeaf)
+                          curPsi
+          fPart = foldBox (\(a, b), u, acc =>
+                             let inA = lookupBox a comp
+                                 inB = lookupBox b comp
+                             in if not (boxIsZero inA) && not (boxIsZero inB)
+                                  then MkPartitionFluxAcc acc.partFAct (setBox (a, b) u acc.partFFrz)
+                                  else MkPartitionFluxAcc (setBox (a, b) u acc.partFAct) acc.partFFrz)
+                          (MkPartitionFluxAcc BoxLeaf BoxLeaf)
+                          curFlux
+          cPsi  = pPart.partFrz
+          cFlux = fPart.partFFrz
+          cRho  = localEnergyDensity cPsi cFlux
+          cE    = 2 * unwrapBox (dotBox cPsi cPsi) + divIntegerPos (unwrapBox (dotBox cFlux cFlux)) 2
+          cBody = codec.sealCore cPsi cFlux
+          core  = MkSealedCore comp cRho cE cBody
+      in (pPart.partAct, fPart.partFAct, core :: coresAcc)
 
-||| One autonomous zero-clock, zero-wall, zero-traffic-field closed-energy sweep over `SparseField k`:
-|||   1. Truncated sparse Poisson Green's series `G_R(T_00)` from active + frozen stress-energy
-|||   2. Adaptive thaw when a perimeter impact exceeds `thawThr`
-|||   3. Vertex-disjoint X & Y active-link Wildberger Pythagorean rotations (`m0 + lag`), skipping frozen cores
-|||   4. Adaptive freeze when quiet zero-sum breather core exceeds `freezeThr`
+public export
+freezeQuietComponents :
+  Ord k =>
+  AxisBasis k ->
+  CoreCodec k body ->
+  (freezeThr, thawThr : Integer) ->
+  (thawedSites : Box BoxInt k) ->
+  (psi : Box BoxInt k) ->
+  (flux : Box BoxInt (k, k)) ->
+  (keptCores : List (SealedCore k body)) ->
+  (Box BoxInt k, Box BoxInt (k, k), List (SealedCore k body))
+freezeQuietComponents ax codec freezeThr thawThr thawedSites psi flux keptCores =
+  if freezeThr <= 0
+    then (psi, flux, keptCores)
+    else
+      let actRho = localEnergyDensity psi flux
+          hot    = foldBox (\pos, w, acc =>
+                              if not (boxIsZero (lookupBox pos thawedSites))
+                                then acc
+                                else let MkBoxInt e = lookupBox pos actRho
+                                     in if e >= freezeThr then setBox pos w acc else acc)
+                           BoxLeaf psi
+      in if hot == BoxLeaf
+           then (psi, flux, keptCores)
+           else
+             let comps = splitComponents ax hot
+             in foldl (\st, comp => tryFreezeComponent ax codec thawThr actRho comp st)
+                      (psi, flux, keptCores)
+                      comps
+
+||| One autonomous causal 1-hop closed-energy sweep over `SparseField k body`:
+|||   1. Causal 1-hop retarded metric `metricPhi` using active `T_00` + cached `c.coreRho` (`c = 1`)
+|||   2. Selective multi-core thaw derived strictly from dimensionless `thawLagRatio * lagDiv`
+|||   3. Vertex-disjoint X & Y active-link Wildberger Pythagorean rotations (`m0 + lag`), skipping sealed cores
+|||   4. Multi-core connected-component freeze derived strictly from `freezeLagRatio * lagDiv`
 public export
 stepSparseField :
   Ord k =>
   AxisBasis k ->
-  (hops : Nat) ->
-  (lagDiv, m0, freezeThr, thawThr : Integer) ->
-  SparseField k ->
-  SparseField k
-stepSparseField ax hops lagDiv m0 freezeThr thawThr sf =
-  let halo      = computeLaurentHalo ax hops lagDiv sf
-      shouldThw = if thawThr > 0 && hasFrozenCore sf
-                    then corePerimeterHot ax thawThr sf.frozenPsi (localEnergyDensity sf.psiField sf.fluxMaxel)
-                    else False
-      psi0      = if shouldThw then unionBox sf.psiField sf.frozenPsi else sf.psiField
-      flux0     = if shouldThw then unionBox sf.fluxMaxel sf.frozenFlux else sf.fluxMaxel
-      frzPsi0   = if shouldThw then BoxLeaf else sf.frozenPsi
-      frzFlux0  = if shouldThw then BoxLeaf else sf.frozenFlux
-      xLinks    = collectAxisLinks ax ax.stepX psi0 flux0
-      st0       = MkSparseLinkState psi0 flux0
-      stX1      = applySparseLinkPass ax ax.stepX lagDiv m0 halo frzPsi0 False ax.isOddX xLinks st0
-      stX2      = applySparseLinkPass ax ax.stepX lagDiv m0 halo frzPsi0 True  ax.isOddX xLinks stX1
+  CoreCodec k body ->
+  (lagDiv, decayNum, decayDen, m0, freezeLagRatio, thawLagNum, thawLagDen : Integer) ->
+  SparseField k body ->
+  (SparseField k body, Nat)
+stepSparseField ax codec lagDiv decayNum decayDen m0 freezeLagRatio thawLagNum thawLagDen sf =
+  let freezeThr = if lagDiv > 0 && freezeLagRatio > 0 then freezeLagRatio * lagDiv else 0
+      thawThr   = if lagDiv > 0 && thawLagNum > 0 && thawLagDen > 0
+                    then divIntegerPos (thawLagNum * lagDiv) thawLagDen
+                    else 0
+      needRho0  = lagDiv > 0 || (thawThr > 0 && not (null sf.frozenCores))
+      actRho0   = if needRho0 then localEnergyDensity sf.psiField sf.fluxMaxel else BoxLeaf
+      newPhi    = stepCausalMetric ax lagDiv decayNum decayDen actRho0 sf.frozenCores sf.metricPhi
+      thawRes   = selectivelyThawCores ax codec thawThr actRho0 sf.psiField sf.fluxMaxel sf.frozenCores
+      frzSites  = allFrozenSites thawRes.tpKeptCores
+      xLinks    = collectAxisLinks ax ax.stepX thawRes.tpPsi thawRes.tpFlux
+      st0       = MkSparseLinkState thawRes.tpPsi thawRes.tpFlux
+      stX1      = applySparseLinkPass ax ax.stepX lagDiv m0 newPhi frzSites False ax.isOddX xLinks st0
+      stX2      = applySparseLinkPass ax ax.stepX lagDiv m0 newPhi frzSites True  ax.isOddX xLinks stX1
       yLinks    = collectAxisLinks ax ax.stepY stX2.stPsi stX2.stFlux
-      stY1      = applySparseLinkPass ax ax.stepY lagDiv m0 halo frzPsi0 False ax.isOddY yLinks stX2
-      stY2      = applySparseLinkPass ax ax.stepY lagDiv m0 halo frzPsi0 True  ax.isOddY yLinks stY1
-      sfNext    = MkSparseField stY2.stPsi stY2.stFlux frzPsi0 frzFlux0
-  in if shouldThw then sfNext else tryFreezeQuietCore ax freezeThr thawThr sfNext
+      stY1      = applySparseLinkPass ax ax.stepY lagDiv m0 newPhi frzSites False ax.isOddY yLinks stX2
+      stY2      = applySparseLinkPass ax ax.stepY lagDiv m0 newPhi frzSites True  ax.isOddY yLinks stY1
+      frzFin    = freezeQuietComponents ax codec freezeThr thawThr thawRes.tpThawedSites stY2.stPsi stY2.stFlux thawRes.tpKeptCores
+      sfFin     = MkSparseField (fst frzFin) (fst (snd frzFin)) newPhi (snd (snd frzFin))
+  in (sfFin, thawRes.tpThawedCount)
 
 --------------------------------------------------------------------------------
--- 4. PURE TAG-FREE HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset` ROOT)
+-- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
 --------------------------------------------------------------------------------
 
 public export
@@ -398,48 +583,53 @@ packActiveBox base psi flux =
   let b1 = foldBox (\pos, w, acc => addAtKeyBox pos w acc) base psi
   in foldBox (\(posA, posB), u, acc => addAtKeyBox (mkEdgeKey posA posB) u acc) b1 flux
 
-||| Packs `SparseField PureMultiset` cleanly into ONE zero-sum `PureMultiset` root
-||| with ZERO synthetic channel tags:
-|||   - Active `psi(pos)` lives directly at coordinate key `pos` (`isSiteKey`)
-|||   - Active antisymmetric `flux` lives at `{ wrapBox a : +1, wrapBox b : -1 }` (`mkEdgeKey`)
-|||   - Frozen particle core `C` lives as a balanced dipole `{ wrapBox (wrapBox C) : +1, wrapBox (wrapBox (-C)) : -1 }`
 public export
-packSparseFieldToRoot : Box BoxInt PureMultiset -> SparseField PureMultiset -> PureMultiset
+pureMSetCoreCodec : CoreCodec PureMultiset PureMultiset
+pureMSetCoreCodec =
+  MkCoreCodec
+    (\p, f => MkHMSet (packActiveBox BoxLeaf p f))
+    (\m => let MkHMSet b = m in unpackActiveHelper b)
+  where
+    unpackActiveHelper : Box BoxInt PureMultiset -> (Box BoxInt PureMultiset, Box BoxInt (PureMultiset, PureMultiset))
+    unpackActiveHelper =
+      foldBox (\entry, mult, (ap, af) =>
+                 if isSiteKey entry
+                   then (addAtKeyBox entry mult ap, af)
+                   else case unpackEdgeKey entry of
+                          Just pairAB => (ap, addAtKeyBox pairAB mult af)
+                          Nothing     => (ap, af))
+              (BoxLeaf, BoxLeaf)
+
+||| Packs `SparseField PureMultiset PureMultiset` cleanly into ONE zero-sum `PureMultiset` root
+||| with ZERO synthetic tags and $O(1)$ zero-copy sealing for metric & frozen cores!
+public export
+packSparseFieldToRoot : Box BoxInt PureMultiset -> SparseField PureMultiset PureMultiset -> PureMultiset
 packSparseFieldToRoot keptBox sf =
-  let bAct = packActiveBox keptBox sf.psiField sf.fluxMaxel
-      bFin = if not (hasFrozenCore sf)
-               then bAct
-               else let coreMSet = MkHMSet (packActiveBox BoxLeaf sf.frozenPsi sf.frozenFlux)
-                    in if coreMSet == emptyPureMSet
-                         then bAct
-                         else addAtKeyBox (mkFrozenCoreKey (negHMSet coreMSet)) (MkBoxInt (-1)) $
-                              addAtKeyBox (mkFrozenCoreKey coreMSet) (MkBoxInt 1) bAct
+  let bAct  = packActiveBox keptBox sf.psiField sf.fluxMaxel
+      bMet  = if sf.metricPhi == BoxLeaf
+                then bAct
+                else let phiM = MkHMSet sf.metricPhi
+                     in addAtKeyBox (mkMetricKey (negHMSet phiM)) (MkBoxInt (-1)) $
+                        addAtKeyBox (mkMetricKey phiM) (MkBoxInt 1) bAct
+      bFin  = foldl (\acc, c =>
+                       let sM = MkHMSet c.coreSites
+                           rM = MkHMSet c.coreRho
+                           eM = scalarKeyHMSet c.coreEnergy
+                           pM = c.coreBody
+                       in addAtKeyBox (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM)) (MkBoxInt (-1)) $
+                          addAtKeyBox (mkSealedCoreKey sM rM eM pM) (MkBoxInt 1) acc)
+                    bMet
+                    sf.frozenCores
   in MkHMSet bFin
-
-public export
-record ActiveUnpackAcc where
-  constructor MkActiveUnpackAcc
-  uPsi  : Box BoxInt PureMultiset
-  uFlux : Box BoxInt (PureMultiset, PureMultiset)
-
-public export
-unpackActiveBox : Box BoxInt PureMultiset -> ActiveUnpackAcc
-unpackActiveBox =
-  foldBox (\entry, mult, acc =>
-             if isSiteKey entry
-               then MkActiveUnpackAcc (addAtKeyBox entry mult acc.uPsi) acc.uFlux
-               else case unpackEdgeKey entry of
-                      Just pairAB => MkActiveUnpackAcc acc.uPsi (addAtKeyBox pairAB mult acc.uFlux)
-                      Nothing     => acc)
-          (MkActiveUnpackAcc BoxLeaf BoxLeaf)
 
 public export
 record RootUnpackAcc where
   constructor MkRootUnpackAcc
   keptNonField : Box BoxInt PureMultiset
-  fieldData    : SparseField PureMultiset
+  fieldData    : SparseField PureMultiset PureMultiset
 
-||| Single-pass tag-free decoder from `root : PureMultiset` to `SparseField PureMultiset`.
+||| Single-pass zero-copy decoder from `root : PureMultiset` to `SparseField PureMultiset PureMultiset`.
+||| Never opens `coreBody` on frozen sweeps!
 public export
 unpackRootToSparseField : PureMultiset -> RootUnpackAcc
 unpackRootToSparseField (MkHMSet rootBox) =
@@ -447,62 +637,101 @@ unpackRootToSparseField (MkHMSet rootBox) =
              let sf0 = st.fieldData
              in if isSiteKey entry
                   then let p1 = addAtKeyBox entry mult sf0.psiField
-                       in MkRootUnpackAcc st.keptNonField (MkSparseField p1 sf0.fluxMaxel sf0.frozenPsi sf0.frozenFlux)
+                       in MkRootUnpackAcc st.keptNonField ({ psiField := p1 } sf0)
                   else case unpackEdgeKey entry of
                          Just pairAB =>
                            let fl1 = addAtKeyBox pairAB mult sf0.fluxMaxel
-                           in MkRootUnpackAcc st.keptNonField (MkSparseField sf0.psiField fl1 sf0.frozenPsi sf0.frozenFlux)
+                           in MkRootUnpackAcc st.keptNonField ({ fluxMaxel := fl1 } sf0)
                          Nothing =>
-                           case unpackFrozenCoreKey entry of
-                             Just (MkHMSet coreBox) =>
+                           case unpackMetricKey entry of
+                             Just (MkHMSet phiB) =>
                                if mult == MkBoxInt 1
-                                 then let dec  = unpackActiveBox coreBox
-                                          fp1  = unionBox dec.uPsi sf0.frozenPsi
-                                          ff1  = unionBox dec.uFlux sf0.frozenFlux
-                                      in MkRootUnpackAcc st.keptNonField (MkSparseField sf0.psiField sf0.fluxMaxel fp1 ff1)
-                                 else st -- balancing -1 anti-core key; rebuilt canonically on pack
+                                 then let phi1 = unionBox phiB sf0.metricPhi
+                                      in MkRootUnpackAcc st.keptNonField ({ metricPhi := phi1 } sf0)
+                                 else st -- balancing -1 anti-metric partner
                              Nothing =>
-                               MkRootUnpackAcc (addAtKeyBox entry mult st.keptNonField) st.fieldData)
+                               case unpackSealedCoreKey entry of
+                                 Just (MkHMSet sitesB, MkHMSet rhoB, engM, payM) =>
+                                   if mult == MkBoxInt 1
+                                     then let engVal = unwrapBox (originMultiplicity engM)
+                                              core   = MkSealedCore sitesB rhoB engVal payM
+                                          in MkRootUnpackAcc st.keptNonField ({ frozenCores := core :: sf0.frozenCores } sf0)
+                                     else st -- balancing -1 anti-core partner
+                                 Nothing =>
+                                   MkRootUnpackAcc (addAtKeyBox entry mult st.keptNonField) st.fieldData)
           (MkRootUnpackAcc BoxLeaf emptySparseField)
           rootBox
 
-||| Extracts the outer frozen core wrapper `{ wrapBox (wrapBox core) : +1 }` for passive `ExternalLens` zoom inspection.
+||| Verifies explicitly that every metric dipole and sealed-core dipole inside `root`
+||| appears as a canonical `(+1, -1)` reflection pair (defending against malformed external roots).
 public export
-extractFirstFrozenCoreKey : PureMultiset -> PureMultiset
-extractFirstFrozenCoreKey (MkHMSet b) =
+verifyRootBalancedDipoles : PureMultiset -> Bool
+verifyRootBalancedDipoles (MkHMSet rootBox) =
+  foldBox (\entry, mult, ok =>
+             if not ok then False
+             else case unpackMetricKey entry of
+                    Just phiM =>
+                      let expOpp = if mult == MkBoxInt 1 then MkBoxInt (-1)
+                                   else if mult == MkBoxInt (-1) then MkBoxInt 1
+                                   else MkBoxInt 0
+                          oppW   = lookupBox (mkMetricKey (negHMSet phiM)) rootBox
+                      in not (boxIsZero expOpp) && oppW == expOpp
+                    Nothing =>
+                      case unpackSealedCoreKey entry of
+                        Just (sM, rM, eM, pM) =>
+                          let expOpp = if mult == MkBoxInt 1 then MkBoxInt (-1)
+                                       else if mult == MkBoxInt (-1) then MkBoxInt 1
+                                       else MkBoxInt 0
+                              oppK   = mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM)
+                              oppW   = lookupBox oppK rootBox
+                          in not (boxIsZero expOpp) && oppW == expOpp
+                        Nothing => True)
+          True rootBox
+
+||| Extracts `wrapBox (wrapBox payM)` from the first sealed core so passive `ExternalLens` `zoomSpace (redShift 2)`
+||| peeks directly inside the unopened `payM` without thawing or copying `root`.
+public export
+extractFirstSealedCorePayloadKey : PureMultiset -> PureMultiset
+extractFirstSealedCorePayloadKey (MkHMSet b) =
   foldBox (\k, w, acc =>
              if acc /= emptyPureMSet
                then acc
                else if w == MkBoxInt 1
-                 then case unpackFrozenCoreKey k of
-                        Just _  => k
-                        Nothing => acc
+                 then case unpackSealedCoreKey k of
+                        Just (_, _, _, payM) => wrapBox (wrapBox payM)
+                        Nothing              => acc
                  else acc)
           emptyPureMSet b
 
 ||| Counts active streaming peel work on `root : PureMultiset`:
-||| frozen cores wrapped at `mkFrozenCoreKey` charge ONLY their 1-quantum outer boundary wrapper per pole,
-||| skipping internal core peeling without losing external gravitational stress-energy!
+||| sealed cores and causal metric dipoles charge ONLY their outer boundary quanta (`1` per pole),
+||| never opening sealed core payloads!
 public export
 rootActivePeelWork : PureMultiset -> Nat
 rootActivePeelWork (MkHMSet b) =
   foldBox (\k, w, acc =>
              let mag = weightMagnitude w
-             in case unpackFrozenCoreKey k of
+             in case unpackMetricKey k of
                   Just _  => acc + mag
-                  Nothing => acc + mag * S (fastPeelWorkHMSet k))
+                  Nothing =>
+                    case unpackSealedCoreKey k of
+                      Just _  => acc + mag
+                      Nothing => acc + mag * S (fastPeelWorkHMSet k))
           0 b
 
-||| Model B closed-energy sweep reusing the exact generic `stepSparseField pureMSetBasis`.
+||| Model B closed-energy sweep reusing `stepSparseField pureMSetBasis pureMSetCoreCodec`.
 public export
-stepHereditarySparse : (hops : Nat) -> (lagDiv, freezeThr, thawThr : Integer) -> PureMultiset -> PureMultiset
-stepHereditarySparse hops lagDiv freezeThr thawThr root =
-  let unp = unpackRootToSparseField root
-      sf1 = stepSparseField pureMSetBasis hops lagDiv 7 freezeThr thawThr unp.fieldData
+stepHereditarySparse :
+  (lagDiv, decayNum, decayDen, freezeLagRatio, thawLagNum, thawLagDen : Integer) ->
+  PureMultiset ->
+  PureMultiset
+stepHereditarySparse lagDiv decayNum decayDen freezeLagRatio thawLagNum thawLagDen root =
+  let unp    = unpackRootToSparseField root
+      (sf1, _) = stepSparseField pureMSetBasis pureMSetCoreCodec lagDiv decayNum decayDen 7 freezeLagRatio thawLagNum thawLagDen unp.fieldData
   in packSparseFieldToRoot unp.keptNonField sf1
 
 --------------------------------------------------------------------------------
--- 5. GENERIC EXTERNAL OBSERVABLES (`dotBox`, CORE FRACTION & BAND REPORT)
+-- 5. GENERIC EXTERNAL OBSERVABLES (`dotBox`, CORE FRACTION, BAND & LIGHT-CONE)
 --------------------------------------------------------------------------------
 
 public export
@@ -511,11 +740,12 @@ isCoreSiteXY x y = x >= (-1) && x <= 1 && y >= (-1) && y <= 2
 
 ||| Fraction (in %) of Lyapunov energy localized in the central core `[-1..1] x [-1..2]`.
 public export
-fieldCoreEnergyFrac : Ord k => AxisBasis k -> SparseField k -> Integer
-fieldCoreEnergyFrac ax sf =
+fieldCoreEnergyFrac : Ord k => AxisBasis k -> CoreCodec k body -> SparseField k body -> Integer
+fieldCoreEnergyFrac ax codec sf =
   let totE    = fieldEnergy sf
-      totPsi  = unionBox sf.psiField sf.frozenPsi
-      totFlux = unionBox sf.fluxMaxel sf.frozenFlux
+      pairAF  = unsealAllIntoActive codec sf
+      totPsi  = fst pairAF
+      totFlux = snd pairAF
       cPsi    = foldBox (\pos, (MkBoxInt p), acc =>
                            if isCoreSiteXY (ax.coordX pos) (ax.coordY pos)
                              then acc + 2 * p * p
@@ -544,18 +774,17 @@ public export
 measureSparseBandRange :
   Ord k =>
   AxisBasis k ->
+  CoreCodec k body ->
   (yLo, yHi : Integer) ->
-  (sf, bgSf : SparseField k) ->
+  (sf, bgSf : SparseField k body) ->
   (initE, finalE, maxE : Integer) ->
   (workSteps : Nat) ->
   WavepacketReport
-measureSparseBandRange ax yLo yHi sf bgSf initE finalE maxE workSteps =
-  let sfPsi  = unionBox sf.psiField sf.frozenPsi
-      bgPsi  = unionBox bgSf.psiField bgSf.frozenPsi
-      sfFlx  = unionBox sf.fluxMaxel sf.frozenFlux
-      bgFlx  = unionBox bgSf.fluxMaxel bgSf.frozenFlux
-      dPsi   = subBox sfPsi bgPsi
-      dFlux  = subBox sfFlx bgFlx
+measureSparseBandRange ax codec yLo yHi sf bgSf initE finalE maxE workSteps =
+  let sfAF   = unsealAllIntoActive codec sf
+      bgAF   = unsealAllIntoActive codec bgSf
+      dPsi   = subBox (fst sfAF) (fst bgAF)
+      dFlux  = subBox (snd sfAF) (snd bgAF)
       acc    =
         foldBox (\pos, (MkBoxInt dp), a =>
                    let y = ax.coordY pos
@@ -577,7 +806,7 @@ measureSparseBandRange ax yLo yHi sf bgSf initE finalE maxE workSteps =
                 dPsi
       mxM = if acc.accEPsi == 0 then 0 else unwrapBox (tdivPosBox (MkBoxInt (acc.accWX * 1000)) acc.accEPsi)
       myM = if acc.accEPsi == 0 then 0 else unwrapBox (tdivPosBox (MkBoxInt (acc.accWY * 1000)) acc.accEPsi)
-      net = fieldPsiNet sf + fieldFluxNet sf
+      net = fieldPsiNet codec sf + fieldFluxNet codec sf
   in MkWavepacketReport mxM myM acc.accSy initE finalE maxE net workSteps
 
 ||| Sparse band-restricted (`-3 <= y <= 4`) background-subtracted wavepacket observable.
@@ -585,11 +814,37 @@ public export
 measureSparseBand :
   Ord k =>
   AxisBasis k ->
-  (sf, bgSf : SparseField k) ->
+  CoreCodec k body ->
+  (sf, bgSf : SparseField k body) ->
   (initE, finalE, maxE : Integer) ->
   (workSteps : Nat) ->
   WavepacketReport
-measureSparseBand ax = measureSparseBandRange ax (-3) 4
+measureSparseBand ax codec = measureSparseBandRange ax codec (-3) 4
+
+public export
+inBoxRange : (xLo, xHi, yLo, yHi, x, y : Integer) -> Bool
+inBoxRange xLo xHi yLo yHi x y = x >= xLo && x <= xHi && y >= yLo && y <= yHi
+
+||| Bit-for-bit check that `(sf - bgSf)` matches `vacSf` identically on every `(psi, flux)` entry
+||| inside `[xLo..xHi] x [yLo..yHi]` (proving zero action-at-a-distance outside the causal cone).
+public export
+bandsEqualInBox :
+  Ord k =>
+  AxisBasis k ->
+  CoreCodec k body ->
+  (xLo, xHi, yLo, yHi : Integer) ->
+  (sf, bgSf, vacSf : SparseField k body) ->
+  Bool
+bandsEqualInBox ax codec xLo xHi yLo yHi sf bgSf vacSf =
+  let sfAF  = unsealAllIntoActive codec sf
+      bgAF  = unsealAllIntoActive codec bgSf
+      vacAF = unsealAllIntoActive codec vacSf
+      dPsi  = subBox (fst sfAF) (fst bgAF)
+      dFlux = subBox (snd sfAF) (snd bgAF)
+      fltP  = filterBox (\p => inBoxRange xLo xHi yLo yHi (ax.coordX p) (ax.coordY p))
+      fltF  = filterBox (\(a, b) => inBoxRange xLo xHi yLo yHi (ax.coordX a) (ax.coordY a) &&
+                                    inBoxRange xLo xHi yLo yHi (ax.coordX b) (ax.coordY b))
+  in fltP dPsi == fltP (fst vacAF) && fltF dFlux == fltF (snd vacAF)
 
 --------------------------------------------------------------------------------
 -- 6. COMPILE-TIME QTT 0 ALGEBRAIC INVARIANTS
@@ -604,6 +859,7 @@ prfAntisymSingleEdge = Refl
 public export
 0 prfBreatherZeroNet :
   FiniteScience.SparseField.fieldPsiNet
+    FiniteScience.SparseField.coord2CoreCodec
     (FiniteScience.SparseField.seedSparseBreather FiniteScience.SparseField.coord2Basis 0 0 1 10) = 0
 prfBreatherZeroNet = Refl
 
@@ -642,17 +898,28 @@ public export
 prfSparseStencil4Convolve = Refl
 
 public export
-0 prfTagFreePackUnpackRoundTrip :
-  (let actBr = seedSparseBreather pureMSetBasis 2 0 1 3
-       br    = seedSparseBreather pureMSetBasis 0 0 1 10
-       edgeF = setAntisymEdge (pureMSetBasis.mkCoord 0 0) (pureMSetBasis.mkCoord 1 0) (MkBoxInt 5) BoxLeaf
-       sf0   = MkSparseField actBr.psiField edgeF br.psiField BoxLeaf
-       root0 = packSparseFieldToRoot BoxLeaf sf0
-       unp   = unpackRootToSparseField root0
-       sf1   = unp.fieldData
-   in (unwrapBox (sumHMSet root0) == 0) &&
-      (sf1.psiField == sf0.psiField) &&
-      (sf1.fluxMaxel == sf0.fluxMaxel) &&
-      (sf1.frozenPsi == sf0.frozenPsi) &&
-      (zoomSpace (redShift 2) (extractFirstFrozenCoreKey root0) == MkHMSet (packActiveBox BoxLeaf br.psiField BoxLeaf))) = True
-prfTagFreePackUnpackRoundTrip = Refl
+checkTagFreePackUnpackRoundTrip : Bool
+checkTagFreePackUnpackRoundTrip =
+  let actBr  = seedSparseBreather {body = PureMultiset} pureMSetBasis 2 0 1 3
+      br     = seedSparseBreather {body = PureMultiset} pureMSetBasis 0 0 1 10
+      edgeF  = setAntisymEdge (pureMSetBasis.mkCoord 0 0) (pureMSetBasis.mkCoord 1 0) (MkBoxInt 5) BoxLeaf
+      phiB   = singletonBox (pureMSetBasis.mkCoord 0 0) (MkBoxInt 16)
+      cBody  = pureMSetCoreCodec.sealCore br.psiField BoxLeaf
+      cCore  = MkSealedCore br.psiField phiB 400 cBody
+      sf0    = MkSparseField actBr.psiField edgeF phiB [cCore]
+      root0  = packSparseFieldToRoot BoxLeaf sf0
+      unp    = unpackRootToSparseField root0
+      sf1    = unp.fieldData
+  in (unwrapBox (sumHMSet root0) == 0) &&
+     verifyRootBalancedDipoles root0 &&
+     (sf1.psiField == sf0.psiField) &&
+     (sf1.fluxMaxel == sf0.fluxMaxel) &&
+     (sf1.metricPhi == sf0.metricPhi) &&
+     (sf1.frozenCores == sf0.frozenCores) &&
+     (zoomSpace (redShift 2) (extractFirstSealedCorePayloadKey root0) == cBody)
+
+public export
+0 prfTagFreeActiveVertexZeroSum :
+  (let root0 = packSparseFieldToRoot BoxLeaf (seedSparseBreather pureMSetBasis 0 0 1 10)
+   in unwrapBox (sumHMSet root0) == 0) = True
+prfTagFreeActiveVertexZeroSum = Refl

@@ -178,32 +178,36 @@ Show SelfTrapReport where
     ", net=" ++ show r.netSignedSum ++
     ", work=" ++ show r.workSteps ++ ")"
 
-||| Telemetry for adaptive hereditary core freeze/thaw wrapping under grazing pass and direct impact.
+||| Telemetry for dimensionless multi-core freeze/thaw wrapping under grazing pass and delayed-arrival selective impact.
 public export
 record FreezeThawReport where
   constructor MkFreezeThawReport
-  ftGrazingFrozenOk : Bool
-  ftGrazingWave     : WavepacketReport
-  ftLiveWorkSteps   : Nat
-  ftFrozenWorkSteps : Nat
-  ftPassivePeekOk   : Bool
-  ftImpactWasFrozen : Bool
-  ftImpactThawedOk  : Bool
-  ftImpactInitE     : Integer
-  ftImpactFinalE    : Integer
-  ftImpactMaxE      : Integer
-  ftImpactNetSum    : Integer
+  ftGrazingCoreCount : Nat
+  ftGrazingWave      : WavepacketReport
+  ftLiveWorkSteps    : Nat
+  ftFrozenWorkSteps  : Nat
+  ftPassivePeekOk    : Bool
+  ftInitCoreCount    : Nat
+  ftMidCoreCount     : Nat
+  ftFinalCoreCount   : Nat
+  ftFirstThawStep    : Integer
+  ftImpactInitE      : Integer
+  ftImpactFinalE     : Integer
+  ftImpactMaxE       : Integer
+  ftImpactNetSum     : Integer
 
 public export
 Eq FreezeThawReport where
   a == b =
-    a.ftGrazingFrozenOk == b.ftGrazingFrozenOk &&
+    a.ftGrazingCoreCount == b.ftGrazingCoreCount &&
     a.ftGrazingWave == b.ftGrazingWave &&
     a.ftLiveWorkSteps == b.ftLiveWorkSteps &&
     a.ftFrozenWorkSteps == b.ftFrozenWorkSteps &&
     a.ftPassivePeekOk == b.ftPassivePeekOk &&
-    a.ftImpactWasFrozen == b.ftImpactWasFrozen &&
-    a.ftImpactThawedOk == b.ftImpactThawedOk &&
+    a.ftInitCoreCount == b.ftInitCoreCount &&
+    a.ftMidCoreCount == b.ftMidCoreCount &&
+    a.ftFinalCoreCount == b.ftFinalCoreCount &&
+    a.ftFirstThawStep == b.ftFirstThawStep &&
     a.ftImpactInitE == b.ftImpactInitE &&
     a.ftImpactFinalE == b.ftImpactFinalE &&
     a.ftImpactMaxE == b.ftImpactMaxE &&
@@ -212,11 +216,12 @@ Eq FreezeThawReport where
 public export
 Show FreezeThawReport where
   show r =
-    "FreezeThawReport(frozen=" ++ show r.ftGrazingFrozenOk ++
+    "FreezeThawReport(grazCores=" ++ show r.ftGrazingCoreCount ++
     ", grazing=" ++ show r.ftGrazingWave ++
     ", work=" ++ show r.ftLiveWorkSteps ++ "->" ++ show r.ftFrozenWorkSteps ++
     ", peek=" ++ show r.ftPassivePeekOk ++
-    ", thaw=" ++ show r.ftImpactWasFrozen ++ "->" ++ show r.ftImpactThawedOk ++
+    ", multiCore=" ++ show r.ftInitCoreCount ++ "->mid=" ++ show r.ftMidCoreCount ++ "->end=" ++ show r.ftFinalCoreCount ++
+    ", thawStep=" ++ show r.ftFirstThawStep ++
     ", E=" ++ show r.ftImpactInitE ++ "->" ++ show r.ftImpactFinalE ++
     ", maxE=" ++ show r.ftImpactMaxE ++ ", net=" ++ show r.ftImpactNetSum ++ ")"
 
@@ -260,3 +265,36 @@ Show TwoBodyReport where
     " vs 1pkt=" ++ show r.tbSingleBotSy ++ ", lin=" ++ show r.tbLinearBotSy ++
     ", E=" ++ show r.tbInitE ++ "->" ++ show r.tbFinalE ++
     ", maxE=" ++ show r.tbMaxE ++ ", net=" ++ show r.tbNetSum ++ ")"
+
+||| Telemetry proving finite-speed `c = 1` causal light-cone propagation:
+||| exact zero difference at spacelike separation (`t = 2`) followed by gravitational deflection at `t = 18`.
+public export
+record CausalLightConeReport where
+  constructor MkCausalLightConeReport
+  clSpacelikeExact : Bool
+  clEarlyVacX      : Integer
+  clEarlyBrX       : Integer
+  clEarlyBrSy      : Integer
+  clLateVacX       : Integer
+  clLateBrX        : Integer
+  clLateBrY        : Integer
+  clLateBrSy       : Integer
+
+public export
+Eq CausalLightConeReport where
+  a == b =
+    a.clSpacelikeExact == b.clSpacelikeExact &&
+    a.clEarlyVacX == b.clEarlyVacX &&
+    a.clEarlyBrX == b.clEarlyBrX &&
+    a.clEarlyBrSy == b.clEarlyBrSy &&
+    a.clLateVacX == b.clLateVacX &&
+    a.clLateBrX == b.clLateBrX &&
+    a.clLateBrY == b.clLateBrY &&
+    a.clLateBrSy == b.clLateBrSy
+
+public export
+Show CausalLightConeReport where
+  show r =
+    "CausalLightCone(spacelikeExact=" ++ show r.clSpacelikeExact ++
+    ", t2: VacX=" ++ show r.clEarlyVacX ++ " vs BrX=" ++ show r.clEarlyBrX ++ ", BrSy=" ++ show r.clEarlyBrSy ++
+    " -> t18: VacX=" ++ show r.clLateVacX ++ " vs BrX=" ++ show r.clLateBrX ++ ", BrY=" ++ show r.clLateBrY ++ ", BrSy=" ++ show r.clLateBrSy ++ ")"

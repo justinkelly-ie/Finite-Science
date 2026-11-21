@@ -24,16 +24,24 @@ import FiniteScience.SparseField
 --    - Zero observer parameters, zero zoom mutations, zero mirror trash-can keys.
 --------------------------------------------------------------------------------
 
+public export
+FlatCoreBody : Type
+FlatCoreBody = (Box BoxInt Coord2, Box BoxInt (Coord2, Coord2))
+
+public export
+FlatField : Type
+FlatField = SparseField Coord2 FlatCoreBody
+
 export
 data FlatBlackBox : Type where
-  MkFlatBox : (matter : Space 3) -> (field : SparseField Coord2) -> FlatBlackBox
+  MkFlatBox : (matter : Space 3) -> (field : FlatField) -> FlatBlackBox
 
 ||| Passive read-only snapshot projected by `observeFlatDirect` / `observeFlatPure`.
 public export
 record FlatSnapshot where
   constructor MkFlatSnapshot
   snapMatter : Space 3
-  snapField  : SparseField Coord2
+  snapField  : FlatField
 
 --------------------------------------------------------------------------------
 -- 2. CLOSED LINEAR `App1` COMPUTE & NON-PERTURBING `PureObservation` TAPS
@@ -83,20 +91,28 @@ injectFlatWavepacket :
 injectFlatWavepacket = injectFlatWavepacketAt 0 0 512
 
 public export
-canonHops : Nat
-canonHops = 7
-
-public export
 canonLagDiv : Integer
-canonLagDiv = 8000000
+canonLagDiv = 6000000
 
 public export
-canonFreezeThr : Integer
-canonFreezeThr = 67108864
+canonDecayNum : Integer
+canonDecayNum = 7
 
 public export
-canonThawThr : Integer
-canonThawThr = 1048576
+canonDecayDen : Integer
+canonDecayDen = 32
+
+public export
+canonFreezeLagRatio : Integer
+canonFreezeLagRatio = 8
+
+public export
+canonThawLagNum : Integer
+canonThawLagNum = 1
+
+public export
+canonThawLagDen : Integer
+canonThawLagDen = 16
 
 ||| Pure closed linear-vacuum Wildberger parametric Pythagorean stepper (`lagDiv = 0`).
 export
@@ -104,23 +120,26 @@ stepFlatLinear1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatLinear1 (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis canonHops 0 7 0 0 field))
+  let res = stepSparseField coord2Basis coord2CoreCodec 0 canonDecayNum canonDecayDen 7 0 0 1 field
+  in App1.pure1 (MkFlatBox matter (fst res))
 
-||| Pure closed zero-traffic stress-energy Laurent Green's halo + Wildberger Pythagorean stepper.
+||| Pure closed causal 1-hop retarded metric (`7/32`) + Wildberger Pythagorean stepper (`c = 1`).
 export
 stepFlatUnified1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatUnified1 (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis canonHops canonLagDiv 7 0 0 field))
+  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen 7 0 0 1 field
+  in App1.pure1 (MkFlatBox matter (fst res))
 
-||| Pure closed adaptive freeze/thaw + Laurent Green's halo + Wildberger Pythagorean stepper.
+||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop metric + Wildberger Pythagorean stepper.
 export
 stepFlatAdaptive1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatAdaptive1 (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseField coord2Basis canonHops canonLagDiv 7 canonFreezeThr canonThawThr field))
+  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen field
+  in App1.pure1 (MkFlatBox matter (fst res))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export
@@ -146,11 +165,12 @@ observeFlatPure lens (MkFlatBox matter field) =
 export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
-  if matter == emptyMSet && field.psiField == BoxLeaf && field.fluxMaxel == BoxLeaf && field.frozenPsi == BoxLeaf && field.frozenFlux == BoxLeaf
+  if matter == emptyMSet && field.psiField == BoxLeaf && field.fluxMaxel == BoxLeaf &&
+     field.metricPhi == BoxLeaf && null field.frozenCores
     then App1.pure CleanVacuumCollapse
     else let fWork = fieldActiveWork field
              work  = integerToNat (multiplicityL1 matter) + fWork
-             net   = multiplicitySignedSum matter + fieldPsiNet field + fieldFluxNet field
+             net   = multiplicitySignedSum matter + fieldPsiNet coord2CoreCodec field + fieldFluxNet coord2CoreCodec field
              stT   = StaticTime 0 (cast work)
          in App1.pure (FrozenAtHorizon stT ("FlatSparse(" ++ show fWork ++ " active)") work net)
 

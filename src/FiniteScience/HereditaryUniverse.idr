@@ -84,25 +84,25 @@ stepHereditaryLinear1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryLinear1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonHops 0 0 0 root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse 0 canonDecayNum canonDecayDen 0 0 1 root))
 
-||| Pure closed zero-traffic stress-energy Laurent Green's halo + Wildberger Pythagorean stepper
+||| Pure closed causal 1-hop retarded metric (`7/32`) + Wildberger Pythagorean stepper
 ||| directly inside `root : HereditaryMSet BoxInt` (zero mirror keys, zero channel tags, zero clocks).
 export
 stepHereditaryUnified1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryUnified1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonHops canonLagDiv 0 0 root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonLagDiv canonDecayNum canonDecayDen 0 0 1 root))
 
-||| Pure closed adaptive freeze/thaw + Laurent Green's halo + Wildberger Pythagorean stepper
-||| directly inside `root : HereditaryMSet BoxInt`.
+||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop metric + Wildberger Pythagorean stepper
+||| directly inside `root : HereditaryMSet BoxInt` with O(1) unopened frozen cores.
 export
 stepHereditaryAdaptive1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryAdaptive1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonHops canonLagDiv canonFreezeThr canonThawThr root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonLagDiv canonDecayNum canonDecayDen canonFreezeLagRatio canonThawLagNum canonThawLagDen root))
 
 ||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
 ||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections

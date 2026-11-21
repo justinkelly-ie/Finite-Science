@@ -244,16 +244,18 @@ data StepMode = ModeLinear | ModeUnified | ModeAdaptive
 public export
 record ModelExperimentMetrics where
   constructor MkModelExperimentMetrics
-  totalComputeWork : Nat
-  globalNetSum     : Integer
-  fluxAntisymOk    : Bool
-  linearDispersion : SelfTrapReport
-  selfTrappedCore  : SelfTrapReport
-  vacWave          : WavepacketReport
-  massAboveWave    : WavepacketReport
-  massBelowWave    : WavepacketReport
-  freezeThaw       : FreezeThawReport
-  twoBody          : TwoBodyReport
+  totalComputeWork  : Nat
+  globalNetSum      : Integer
+  fluxAntisymOk     : Bool
+  dipolesBalancedOk : Bool
+  linearDispersion  : SelfTrapReport
+  selfTrappedCore   : SelfTrapReport
+  vacWave           : WavepacketReport
+  massAboveWave     : WavepacketReport
+  massBelowWave     : WavepacketReport
+  freezeThaw        : FreezeThawReport
+  twoBody           : TwoBodyReport
+  causalLightCone   : CausalLightConeReport
 
 public export
 closeNetSum : CloseOutcome -> Integer
@@ -276,8 +278,9 @@ driveFlatSelfTrap :
   App1 {u = Any} e (SelfTrapReport, Bool)
 driveFlatSelfTrap _ Z u initE maxE accWork = App1.do
   obs <- observeFlatDirect
-           (\s => (fieldEnergy s.snapField, fieldCoreEnergyFrac coord2Basis s.snapField,
-                   fieldPsiNet s.snapField + fieldFluxNet s.snapField, fieldFluxAntisym s.snapField))
+           (\s => (fieldEnergy s.snapField, fieldCoreEnergyFrac coord2Basis coord2CoreCodec s.snapField,
+                   fieldPsiNet coord2CoreCodec s.snapField + fieldFluxNet coord2CoreCodec s.snapField,
+                   fieldFluxAntisym coord2CoreCodec s.snapField))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeFlat0D u1
@@ -306,7 +309,7 @@ runFlatSelfTrapScenario mode = App1.do
   driveFlatSelfTrap mode 20 u2 initE initE 0
 
 export
-driveFlatBgOnly : StepMode -> Nat -> (1 u : FlatBlackBox) -> App1 {u = Any} e (SparseField Coord2)
+driveFlatBgOnly : StepMode -> Nat -> (1 u : FlatBlackBox) -> App1 {u = Any} e FlatField
 driveFlatBgOnly _ Z u = App1.do
   obs <- observeFlatDirect (\s => s.snapField) u
   let MkPureObs u1 bgF _ = obs
@@ -317,33 +320,34 @@ driveFlatBgOnly mode (S rem) u = App1.do
   driveFlatBgOnly mode rem u1
 
 export
-runFlatBgScenario : StepMode -> (Integer, Integer, Integer) -> App1 {u = Any} e (SparseField Coord2)
-runFlatBgScenario mode (bx, yp, yn) = App1.do
+runFlatBgScenario : StepMode -> Nat -> (Integer, Integer, Integer) -> App1 {u = Any} e FlatField
+runFlatBgScenario mode steps (bx, yp, yn) = App1.do
   u0 <- bootFlat0D
   u1 <- injectFlatBreather bx yp yn 8192 u0
-  driveFlatBgOnly mode 18 u1
+  driveFlatBgOnly mode steps u1
 
 export
 driveFlatLiveWave :
   StepMode ->
-  (bgField : SparseField Coord2) ->
+  (bgField : FlatField) ->
   (rem : Nat) ->
   (1 u : FlatBlackBox) ->
   (initE, maxE : Integer) ->
   (accWork : Nat) ->
-  App1 {u = Any} e (WavepacketReport, Bool, Integer, Bool)
+  App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
 driveFlatLiveWave _ bgField Z u initE maxE accWork = App1.do
   obs <- observeFlatDirect
-           (\s => (s.snapField, fieldEnergy s.snapField, hasFrozenCore s.snapField, fieldFluxAntisym s.snapField))
+           (\s => (s.snapField, fieldEnergy s.snapField, coreCount s.snapField,
+                   fieldFluxAntisym coord2CoreCodec s.snapField))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeFlat0D u1
-  let finF     = fst stats
-      finE     = fst (snd stats)
-      frozenOk = fst (snd (snd stats))
-      antiOk   = snd (snd (snd stats))
-      wRep     = measureSparseBand coord2Basis finF bgField initE finE maxE accWork
-  App1.pure (wRep, frozenOk, closeNetSum closed, antiOk)
+  let finF   = fst stats
+      finE   = fst (snd stats)
+      nCores = fst (snd (snd stats))
+      antiOk = snd (snd (snd stats))
+      wRep   = measureSparseBand coord2Basis coord2CoreCodec finF bgField initE finE maxE accWork
+  App1.pure (wRep, nCores, closeNetSum closed, antiOk)
 driveFlatLiveWave mode bgField (S rem) u initE maxE accWork = App1.do
   u1  <- stepFlatByMode mode u
   obs <- observeFlatDirect
@@ -364,51 +368,59 @@ maybeInjectFlatWaveAt False _  _  _   u = App1.pure1 u
 maybeInjectFlatWaveAt True  x0 y0 amp u = injectFlatWavepacketAt x0 y0 amp u
 
 export
-runFlatWaveScenario : StepMode -> Maybe (Integer, Integer, Integer) -> SparseField Coord2 -> App1 {u = Any} e (WavepacketReport, Bool, Integer, Bool)
-runFlatWaveScenario mode mBr bgField = App1.do
+runFlatWaveScenario : StepMode -> Nat -> Maybe (Integer, Integer, Integer) -> FlatField -> App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
+runFlatWaveScenario mode steps mBr bgField = App1.do
   u0 <- bootFlat0D
   u1 <- maybeInjectFlatBreather mBr u0
   u2 <- injectFlatWavepacketAt 0 0 512 u1
   obs <- observeFlatDirect (\s => fieldEnergy s.snapField) u2
   let MkPureObs u3 initE _ = obs
-  driveFlatLiveWave mode bgField 18 u3 initE initE 0
+  driveFlatLiveWave mode bgField steps u3 initE initE 0
 
 export
-driveFlatAdaptiveImpact :
-  (rem : Nat) ->
+driveFlatMultiCoreImpact :
+  (stepIdx, rem : Nat) ->
   (1 u : FlatBlackBox) ->
   (initE, maxE : Integer) ->
-  App1 {u = Any} e (Bool, Integer, Integer, Integer, Bool)
-driveFlatAdaptiveImpact Z u initE maxE = App1.do
+  (prevCores, midCores : Nat) ->
+  (firstThaw : Integer) ->
+  App1 {u = Any} e (Nat, Nat, Integer, Integer, Integer, Integer, Integer, Bool)
+driveFlatMultiCoreImpact _ Z u initE maxE prevCores midCores firstThaw = App1.do
   obs <- observeFlatDirect
-           (\s => (fieldEnergy s.snapField, hasFrozenCore s.snapField, fieldFluxAntisym s.snapField))
+           (\s => (fieldEnergy s.snapField, coreCount s.snapField,
+                   fieldFluxAntisym coord2CoreCodec s.snapField))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeFlat0D u1
   let finE     = fst stats
-      thawedOk = not (fst (snd stats))
+      finCores = fst (snd stats)
       antiOk   = snd (snd stats)
-  App1.pure (thawedOk, finE, maxE, closeNetSum closed, antiOk)
-driveFlatAdaptiveImpact (S rem) u initE maxE = App1.do
+  App1.pure (midCores, finCores, firstThaw, initE, finE, maxE, closeNetSum closed, antiOk)
+driveFlatMultiCoreImpact idx (S rem) u initE maxE prevCores midCores firstThaw = App1.do
   u1  <- stepFlatAdaptive1 u
-  obs <- observeFlatDirect (\s => fieldEnergy s.snapField) u1
-  let MkPureObs u2 eCur _ = obs
-  let nextMax = if eCur > maxE then eCur else maxE
-  driveFlatAdaptiveImpact rem u2 initE nextMax
+  obs <- observeFlatDirect (\s => (fieldEnergy s.snapField, coreCount s.snapField)) u1
+  let MkPureObs u2 tel _ = obs
+  let curE      = fst tel
+      curCores  = snd tel
+      nextMax   = if curE > maxE then curE else maxE
+      nextMid   = if idx == 5 then curCores else midCores
+      nextThaw  = if firstThaw < 0 && curCores < prevCores then cast idx else firstThaw
+  driveFlatMultiCoreImpact (S idx) rem u2 initE nextMax curCores nextMid nextThaw
 
 export
-runFlatImpactThawScenario : App1 {u = Any} e (Bool, Bool, Integer, Integer, Integer, Integer, Bool)
-runFlatImpactThawScenario = App1.do
+runFlatMultiCoreImpactScenario : App1 {u = Any} e (Nat, Nat, Nat, Integer, Integer, Integer, Integer, Integer, Bool)
+runFlatMultiCoreImpactScenario = App1.do
   u0 <- bootFlat0D
   u1 <- injectFlatBreather 4 5 6 8192 u0
-  u2 <- stepFlatAdaptive1 u1
-  obsFr <- observeFlatDirect (\s => hasFrozenCore s.snapField) u2
-  let MkPureObs u3 wasFrozen _ = obsFr
-  u4 <- injectFlatWavepacketAt 1 5 2048 u3
-  obsE0 <- observeFlatDirect (\s => fieldEnergy s.snapField) u4
-  let MkPureObs u5 initE _ = obsE0
-  (thawedOk, finE, maxE, netS, antiOk) <- driveFlatAdaptiveImpact 10 u5 initE initE
-  App1.pure (wasFrozen, thawedOk, initE, finE, maxE, netS, antiOk)
+  u2 <- injectFlatBreather 4 (-4) (-5) 8192 u1
+  u3 <- stepFlatAdaptive1 u2
+  obsFr <- observeFlatDirect (\s => coreCount s.snapField) u3
+  let MkPureObs u4 initCores _ = obsFr
+  u5 <- injectFlatWavepacketAt 0 5 2048 u4
+  obsE0 <- observeFlatDirect (\s => fieldEnergy s.snapField) u5
+  let MkPureObs u6 initE _ = obsE0
+  (midC, finC, thwS, e0, eF, eM, netS, antiOk) <- driveFlatMultiCoreImpact 0 14 u6 initE initE initCores initCores (-1)
+  App1.pure (initCores, midC, finC, thwS, e0, eF, eM, netS, antiOk)
 
 export
 driveFlatBandPair :
@@ -419,15 +431,15 @@ driveFlatBandPair :
   App1 {u = Any} e (WavepacketReport, WavepacketReport, Integer, Bool)
 driveFlatBandPair _ Z u initE maxE = App1.do
   obs <- observeFlatDirect
-           (\s => (s.snapField, fieldEnergy s.snapField, fieldFluxAntisym s.snapField))
+           (\s => (s.snapField, fieldEnergy s.snapField, fieldFluxAntisym coord2CoreCodec s.snapField))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeFlat0D u1
   let sf     = fst stats
       finE   = fst (snd stats)
       antiOk = snd (snd stats)
-      botRep = measureSparseBandRange coord2Basis (-100) 0 sf emptySparseField initE finE maxE 0
-      topRep = measureSparseBandRange coord2Basis 1 100 sf emptySparseField initE finE maxE 0
+      botRep = measureSparseBandRange coord2Basis coord2CoreCodec (-100) 0 sf emptySparseField initE finE maxE 0
+      topRep = measureSparseBandRange coord2Basis coord2CoreCodec 1 100 sf emptySparseField initE finE maxE 0
   App1.pure (botRep, topRep, closeNetSum closed, antiOk)
 driveFlatBandPair mode (S rem) u initE maxE = App1.do
   u1  <- stepFlatByMode mode u
@@ -447,23 +459,56 @@ runFlatTwoBodyScenario mode bothPackets = App1.do
   driveFlatBandPair mode 16 u3 initE initE
 
 export
+runFlatFieldSteps : StepMode -> Nat -> (1 u : FlatBlackBox) -> App1 {u = Any} e FlatField
+runFlatFieldSteps _ Z u = App1.do
+  obs <- observeFlatDirect (\s => s.snapField) u
+  let MkPureObs u1 sf _ = obs
+  _ <- closeFlat0D u1
+  App1.pure sf
+runFlatFieldSteps mode (S rem) u = App1.do
+  u1 <- stepFlatByMode mode u
+  runFlatFieldSteps mode rem u1
+
+export
+runFlatLightConeScenario : (vRep18, tRep18 : WavepacketReport) -> App1 {u = Any} e CausalLightConeReport
+runFlatLightConeScenario vRep18 tRep18 = App1.do
+  uV0 <- bootFlat0D
+  uV1 <- injectFlatWavepacketAt 0 0 512 uV0
+  sfVac2 <- runFlatFieldSteps ModeUnified 2 uV1
+  sfBg2  <- runFlatBgScenario ModeUnified 2 (4, 5, 6)
+  uB0 <- bootFlat0D
+  uB1 <- injectFlatBreather 4 5 6 8192 uB0
+  uB2 <- injectFlatWavepacketAt 0 0 512 uB1
+  sfBr2 <- runFlatFieldSteps ModeUnified 2 uB2
+  let exactSl = bandsEqualInBox coord2Basis coord2CoreCodec (-4) 4 (-3) 3 sfBr2 sfBg2 sfVac2
+      eVac2   = fieldEnergy sfVac2
+      eBr2    = fieldEnergy sfBr2
+      wVac2   = measureSparseBand coord2Basis coord2CoreCodec sfVac2 emptySparseField eVac2 eVac2 eVac2 0
+      wBr2    = measureSparseBand coord2Basis coord2CoreCodec sfBr2  sfBg2            eBr2  eBr2  eBr2  0
+  App1.pure $ MkCausalLightConeReport
+    exactSl
+    wVac2.meanXMilli wBr2.meanXMilli wBr2.poyntingYAccum
+    vRep18.meanXMilli tRep18.meanXMilli tRep18.meanYMilli tRep18.poyntingYAccum
+
+export
 runFlatGravitySuite : App1 {u = Any} e ModelExperimentMetrics
 runFlatGravitySuite = App1.do
   (linRep, okLin)         <- runFlatSelfTrapScenario ModeLinear
   (trapRep, okTrap)       <- runFlatSelfTrapScenario ModeUnified
-  bgTop                   <- runFlatBgScenario ModeUnified  (4, 5, 6)
-  bgBot                   <- runFlatBgScenario ModeUnified  (4, -4, -5)
-  bgFrz                   <- runFlatBgScenario ModeAdaptive (4, 5, 6)
-  (vRep, _, netVac, okV)  <- runFlatWaveScenario ModeUnified  Nothing          emptySparseField
-  (tRep, _, netT, okT)    <- runFlatWaveScenario ModeUnified  (Just (4, 5, 6))  bgTop
-  (bRep, _, netB, okB)    <- runFlatWaveScenario ModeUnified  (Just (4, -4, -5)) bgBot
-  (fRep, fFrzOk, netF, okF) <- runFlatWaveScenario ModeAdaptive (Just (4, 5, 6)) bgFrz
-  (wasFrz, thwOk, iE0, iEF, iEM, netI, okI) <- runFlatImpactThawScenario
+  bgTop                   <- runFlatBgScenario ModeUnified  18 (4, 5, 6)
+  bgBot                   <- runFlatBgScenario ModeUnified  18 (4, -4, -5)
+  bgFrz                   <- runFlatBgScenario ModeAdaptive 18 (4, 5, 6)
+  (vRep, _, netVac, okV)  <- runFlatWaveScenario ModeUnified  18 Nothing           emptySparseField
+  (tRep, _, netT, okT)    <- runFlatWaveScenario ModeUnified  18 (Just (4, 5, 6))   bgTop
+  (bRep, _, netB, okB)    <- runFlatWaveScenario ModeUnified  18 (Just (4, -4, -5)) bgBot
+  (fRep, fCores, netF, okF) <- runFlatWaveScenario ModeAdaptive 18 (Just (4, 5, 6)) bgFrz
+  (initC, midC, finC, thwS, iE0, iEF, iEM, netI, okI) <- runFlatMultiCoreImpactScenario
   (b2Bot, b2Top, net2B, ok2B) <- runFlatTwoBodyScenario ModeUnified True
   (b1Bot, _,     net1B, ok1B) <- runFlatTwoBodyScenario ModeUnified False
   (blBot, _,     net2L, ok2L) <- runFlatTwoBodyScenario ModeLinear  True
-  let ftRep = MkFreezeThawReport fFrzOk fRep tRep.waveWorkSteps fRep.waveWorkSteps True
-                                 wasFrz thwOk iE0 iEF iEM netI
+  lcRep                       <- runFlatLightConeScenario vRep tRep
+  let ftRep = MkFreezeThawReport fCores fRep tRep.waveWorkSteps fRep.waveWorkSteps (fCores == 1)
+                                 initC midC finC thwS iE0 iEF iEM netI
   let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
                               b2Bot.poyntingYAccum b2Top.poyntingYAccum
                               b1Bot.poyntingYAccum blBot.poyntingYAccum
@@ -472,8 +517,8 @@ runFlatGravitySuite = App1.do
                     abs net2B + abs net1B + abs net2L +
                     abs linRep.netSignedSum + abs trapRep.netSignedSum
   let antiAll     = okLin && okTrap && okV && okT && okB && okF && okI && ok2B && ok1B && ok2L
-  App1.pure (MkModelExperimentMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll
-                                      linRep trapRep vRep tRep bRep ftRep tbRep)
+  App1.pure (MkModelExperimentMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll True
+                                      linRep trapRep vRep tRep bRep ftRep tbRep lcRep)
 
 export
 stepHereditaryByMode : StepMode -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
@@ -482,7 +527,7 @@ stepHereditaryByMode ModeUnified  u = stepHereditaryUnified1 u
 stepHereditaryByMode ModeAdaptive u = stepHereditaryAdaptive1 u
 
 export
-rootFieldOf : PureMultiset -> SparseField PureMultiset
+rootFieldOf : PureMultiset -> SparseField PureMultiset PureMultiset
 rootFieldOf r = (unpackRootToSparseField r).fieldData
 
 export
@@ -497,8 +542,8 @@ driveHereditarySelfTrap _ Z u initE maxE accWork = App1.do
   obs <- observeHereditaryPure
            (directPureLens
               (\r => let sf = rootFieldOf r
-                     in (fieldEnergy sf, fieldCoreEnergyFrac pureMSetBasis sf,
-                         unwrapBox (sumHMSet r), fieldFluxAntisym sf)))
+                     in (fieldEnergy sf, fieldCoreEnergyFrac pureMSetBasis pureMSetCoreCodec sf,
+                         unwrapBox (sumHMSet r), fieldFluxAntisym pureMSetCoreCodec sf)))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeHereditary0D u1
@@ -538,11 +583,11 @@ driveHereditaryBgOnly mode (S rem) u = App1.do
   driveHereditaryBgOnly mode rem u1
 
 export
-runHereditaryBgScenario : StepMode -> (Integer, Integer, Integer) -> App1 {u = Any} e PureMultiset
-runHereditaryBgScenario mode (bx, yp, yn) = App1.do
+runHereditaryBgScenario : StepMode -> Nat -> (Integer, Integer, Integer) -> App1 {u = Any} e PureMultiset
+runHereditaryBgScenario mode steps (bx, yp, yn) = App1.do
   u0 <- bootHereditary0D
   u1 <- injectHereditaryBreather bx yp yn 8192 u0
-  driveHereditaryBgOnly mode 18 u1
+  driveHereditaryBgOnly mode steps u1
 
 export
 driveHereditaryLiveWave :
@@ -552,32 +597,35 @@ driveHereditaryLiveWave :
   (1 u : HereditaryBlackBox) ->
   (initE, maxE : Integer) ->
   (accWork : Nat) ->
-  App1 {u = Any} e (WavepacketReport, Bool, Bool, Integer, Bool)
+  App1 {u = Any} e (WavepacketReport, Nat, Bool, Bool, Integer, Bool)
 driveHereditaryLiveWave mode bgRoot Z u initE maxE accWork = App1.do
   obsLens <- observeHereditaryPure
                (zoomedExternalLens id (blackShift 1) zeroShift (RetroTime 18) (\zr => zoomSpace (redShift 1) zr))
                u
   let MkPureObs u1 zoomedBack _ = obsLens
   obsPeek <- observeHereditaryPure
-               (zoomedExternalLens extractFirstFrozenCoreKey (redShift 2) zeroShift (RetroTime 2)
-                  (\core => not (core == emptyPureMSet) && unwrapBox (sumHMSet core) == 0))
+               (zoomedExternalLens extractFirstSealedCorePayloadKey (redShift 2) zeroShift (RetroTime 2)
+                  (\pay => not (pay == emptyPureMSet) && unwrapBox (sumHMSet pay) == 0))
                u1
   let MkPureObs u2 peekCoreOk _ = obsPeek
   obs <- observeHereditaryPure
-           (directPureLens (\r => let sf = rootFieldOf r in (r, fieldEnergy sf, hasFrozenCore sf, fieldFluxAntisym sf)))
+           (directPureLens (\r => let sf = rootFieldOf r in (r, fieldEnergy sf, coreCount sf,
+                                                             (fieldFluxAntisym pureMSetCoreCodec sf, verifyRootBalancedDipoles r))))
            u2
   let MkPureObs u3 finalTuple _ = obs
   let finRoot       = fst finalTuple
       finE          = fst (snd finalTuple)
-      frzOk         = fst (snd (snd finalTuple))
-      antiOk        = snd (snd (snd finalTuple))
+      nCores        = fst (snd (snd finalTuple))
+      flags         = snd (snd (snd finalTuple))
+      antiOk        = fst flags
+      balOk         = snd flags
       lensPreserved = zoomedBack == finRoot
   closed <- closeHereditary0D u3
-  let wRep0 = measureSparseBand pureMSetBasis (rootFieldOf finRoot) (rootFieldOf bgRoot) initE finE maxE accWork
+  let wRep0 = measureSparseBand pureMSetBasis pureMSetCoreCodec (rootFieldOf finRoot) (rootFieldOf bgRoot) initE finE maxE accWork
       wRep  = if lensPreserved
                 then wRep0
                 else { waveNetSum := -999 } wRep0
-  App1.pure (wRep, frzOk, peekCoreOk && frzOk, closeNetSum closed, antiOk && lensPreserved)
+  App1.pure (wRep, nCores, peekCoreOk && nCores >= 1, balOk, closeNetSum closed, antiOk && lensPreserved)
 driveHereditaryLiveWave mode bgRoot (S rem) u initE maxE accWork = App1.do
   u1  <- stepHereditaryByMode mode u
   obs <- observeHereditaryPure
@@ -598,51 +646,70 @@ maybeInjectHereditaryWaveAt False _  _  _   u = App1.pure1 u
 maybeInjectHereditaryWaveAt True  x0 y0 amp u = injectHereditaryWavepacketAt x0 y0 amp u
 
 export
-runHereditaryWaveScenario : StepMode -> Maybe (Integer, Integer, Integer) -> PureMultiset -> App1 {u = Any} e (WavepacketReport, Bool, Bool, Integer, Bool)
-runHereditaryWaveScenario mode mBr bgRoot = App1.do
+runHereditaryWaveScenario : StepMode -> Nat -> Maybe (Integer, Integer, Integer) -> PureMultiset -> App1 {u = Any} e (WavepacketReport, Nat, Bool, Bool, Integer, Bool)
+runHereditaryWaveScenario mode steps mBr bgRoot = App1.do
   u0 <- bootHereditary0D
   u1 <- maybeInjectHereditaryBreather mBr u0
   u2 <- injectHereditaryWavepacketAt 0 0 512 u1
   obs <- observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))) u2
   let MkPureObs u3 initE _ = obs
-  driveHereditaryLiveWave mode bgRoot 18 u3 initE initE 0
+  driveHereditaryLiveWave mode bgRoot steps u3 initE initE 0
 
 export
-driveHereditaryAdaptiveImpact :
-  (rem : Nat) ->
+driveHereditaryMultiCoreImpact :
+  (stepIdx, rem : Nat) ->
   (1 u : HereditaryBlackBox) ->
   (initE, maxE : Integer) ->
-  App1 {u = Any} e (Bool, Integer, Integer, Integer, Bool)
-driveHereditaryAdaptiveImpact Z u initE maxE = App1.do
+  (prevCores, midCores : Nat) ->
+  (firstThaw : Integer) ->
+  (balOk : Bool) ->
+  App1 {u = Any} e (Nat, Nat, Integer, Integer, Integer, Integer, Bool, Integer, Bool)
+driveHereditaryMultiCoreImpact _ Z u initE maxE prevCores midCores firstThaw balOk = App1.do
   obs <- observeHereditaryPure
-           (directPureLens (\r => let sf = rootFieldOf r in (fieldEnergy sf, not (hasFrozenCore sf), fieldFluxAntisym sf)))
+           (directPureLens (\r => let sf = rootFieldOf r
+                                  in (fieldEnergy sf, coreCount sf,
+                                      (fieldFluxAntisym pureMSetCoreCodec sf, verifyRootBalancedDipoles r))))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeHereditary0D u1
   let finE     = fst stats
-      thawedOk = fst (snd stats)
-      antiOk   = snd (snd stats)
-  App1.pure (thawedOk, finE, maxE, closeNetSum closed, antiOk)
-driveHereditaryAdaptiveImpact (S rem) u initE maxE = App1.do
+      finCores = fst (snd stats)
+      antiOk   = fst (snd (snd stats))
+      finBal   = snd (snd (snd stats))
+  App1.pure (midCores, finCores, firstThaw, initE, finE, maxE, balOk && finBal, closeNetSum closed, antiOk)
+driveHereditaryMultiCoreImpact idx (S rem) u initE maxE prevCores midCores firstThaw balOk = App1.do
   u1  <- stepHereditaryAdaptive1 u
-  obs <- observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))) u1
-  let MkPureObs u2 eCur _ = obs
-  let nextMax = if eCur > maxE then eCur else maxE
-  driveHereditaryAdaptiveImpact rem u2 initE nextMax
+  obs <- observeHereditaryPure
+           (directPureLens (\r => (fieldEnergy (rootFieldOf r), (coreCount (rootFieldOf r), verifyRootBalancedDipoles r))))
+           u1
+  let MkPureObs u2 tel _ = obs
+  let curE      = fst tel
+      curCores  = fst (snd tel)
+      curBal    = snd (snd tel)
+      nextMax   = if curE > maxE then curE else maxE
+      nextMid   = if idx == 5 then curCores else midCores
+      nextThaw  = if firstThaw < 0 && curCores < prevCores then cast idx else firstThaw
+  driveHereditaryMultiCoreImpact (S idx) rem u2 initE nextMax curCores nextMid nextThaw (balOk && curBal)
 
 export
-runHereditaryImpactThawScenario : App1 {u = Any} e (Bool, Bool, Integer, Integer, Integer, Integer, Bool)
-runHereditaryImpactThawScenario = App1.do
+runHereditaryMultiCoreImpactScenario : App1 {u = Any} e (Nat, Nat, Nat, Integer, Integer, Integer, Integer, Bool, Integer, Bool)
+runHereditaryMultiCoreImpactScenario = App1.do
   u0 <- bootHereditary0D
   u1 <- injectHereditaryBreather 4 5 6 8192 u0
-  u2 <- stepHereditaryAdaptive1 u1
-  obsFr <- observeHereditaryPure (directPureLens (\r => hasFrozenCore (rootFieldOf r))) u2
-  let MkPureObs u3 wasFrozen _ = obsFr
-  u4 <- injectHereditaryWavepacketAt 1 5 2048 u3
-  obsE0 <- observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))) u4
-  let MkPureObs u5 initE _ = obsE0
-  (thawedOk, finE, maxE, netS, antiOk) <- driveHereditaryAdaptiveImpact 10 u5 initE initE
-  App1.pure (wasFrozen, thawedOk, initE, finE, maxE, netS, antiOk)
+  u2 <- injectHereditaryBreather 4 (-4) (-5) 8192 u1
+  u3 <- stepHereditaryAdaptive1 u2
+  obsFr <- observeHereditaryPure
+             (directPureLens (\r => (coreCount (rootFieldOf r), verifyRootBalancedDipoles r)))
+             u3
+  let MkPureObs u4 initTel _ = obsFr
+  let initCores = fst initTel
+      initBal   = snd initTel
+  u5 <- injectHereditaryWavepacketAt 0 5 2048 u4
+  obsE0 <- observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))) u5
+  let MkPureObs u6 initE _ = obsE0
+  (midC, finC, thwS, e0, eF, eM, balOk, netS, antiOk) <-
+    driveHereditaryMultiCoreImpact 0 14 u6 initE initE initCores initCores (-1) initBal
+  App1.pure (initCores, midC, finC, thwS, e0, eF, eM, balOk, netS, antiOk)
 
 export
 driveHereditaryBandPair :
@@ -653,15 +720,15 @@ driveHereditaryBandPair :
   App1 {u = Any} e (WavepacketReport, WavepacketReport, Integer, Bool)
 driveHereditaryBandPair _ Z u initE maxE = App1.do
   obs <- observeHereditaryPure
-           (directPureLens (\r => let sf = rootFieldOf r in (sf, fieldEnergy sf, fieldFluxAntisym sf)))
+           (directPureLens (\r => let sf = rootFieldOf r in (sf, fieldEnergy sf, fieldFluxAntisym pureMSetCoreCodec sf)))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeHereditary0D u1
   let sf     = fst stats
       finE   = fst (snd stats)
       antiOk = snd (snd stats)
-      botRep = measureSparseBandRange pureMSetBasis (-100) 0 sf emptySparseField initE finE maxE 0
-      topRep = measureSparseBandRange pureMSetBasis 1 100 sf emptySparseField initE finE maxE 0
+      botRep = measureSparseBandRange pureMSetBasis pureMSetCoreCodec (-100) 0 sf emptySparseField initE finE maxE 0
+      topRep = measureSparseBandRange pureMSetBasis pureMSetCoreCodec 1 100 sf emptySparseField initE finE maxE 0
   App1.pure (botRep, topRep, closeNetSum closed, antiOk)
 driveHereditaryBandPair mode (S rem) u initE maxE = App1.do
   u1  <- stepHereditaryByMode mode u
@@ -681,23 +748,61 @@ runHereditaryTwoBodyScenario mode bothPackets = App1.do
   driveHereditaryBandPair mode 16 u3 initE initE
 
 export
+runHereditaryRootSteps : StepMode -> Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e PureMultiset
+runHereditaryRootSteps _ Z u = App1.do
+  obs <- observeHereditaryPure (directPureLens id) u
+  let MkPureObs u1 root _ = obs
+  _ <- closeHereditary0D u1
+  App1.pure root
+runHereditaryRootSteps mode (S rem) u = App1.do
+  u1 <- stepHereditaryByMode mode u
+  runHereditaryRootSteps mode rem u1
+
+export
+runHereditaryLightConeScenario : (vRep18, tRep18 : WavepacketReport) -> App1 {u = Any} e (CausalLightConeReport, Bool)
+runHereditaryLightConeScenario vRep18 tRep18 = App1.do
+  uV0 <- bootHereditary0D
+  uV1 <- injectHereditaryWavepacketAt 0 0 512 uV0
+  rVac2 <- runHereditaryRootSteps ModeUnified 2 uV1
+  rBg2  <- runHereditaryBgScenario ModeUnified 2 (4, 5, 6)
+  uB0 <- bootHereditary0D
+  uB1 <- injectHereditaryBreather 4 5 6 8192 uB0
+  uB2 <- injectHereditaryWavepacketAt 0 0 512 uB1
+  rBr2 <- runHereditaryRootSteps ModeUnified 2 uB2
+  let sfVac2  = rootFieldOf rVac2
+      sfBg2   = rootFieldOf rBg2
+      sfBr2   = rootFieldOf rBr2
+      exactSl = bandsEqualInBox pureMSetBasis pureMSetCoreCodec (-4) 4 (-3) 3 sfBr2 sfBg2 sfVac2
+      balOk   = verifyRootBalancedDipoles rVac2 && verifyRootBalancedDipoles rBg2 && verifyRootBalancedDipoles rBr2
+      eVac2   = fieldEnergy sfVac2
+      eBr2    = fieldEnergy sfBr2
+      wVac2   = measureSparseBand pureMSetBasis pureMSetCoreCodec sfVac2 emptySparseField eVac2 eVac2 eVac2 0
+      wBr2    = measureSparseBand pureMSetBasis pureMSetCoreCodec sfBr2  sfBg2            eBr2  eBr2  eBr2  0
+  App1.pure (MkCausalLightConeReport
+               exactSl
+               wVac2.meanXMilli wBr2.meanXMilli wBr2.poyntingYAccum
+               vRep18.meanXMilli tRep18.meanXMilli tRep18.meanYMilli tRep18.poyntingYAccum,
+             balOk)
+
+export
 runHereditaryGravitySuite : App1 {u = Any} e ModelExperimentMetrics
 runHereditaryGravitySuite = App1.do
   (linRep, okLin)         <- runHereditarySelfTrapScenario ModeLinear
   (trapRep, okTrap)       <- runHereditarySelfTrapScenario ModeUnified
-  bgTop                   <- runHereditaryBgScenario ModeUnified  (4, 5, 6)
-  bgBot                   <- runHereditaryBgScenario ModeUnified  (4, -4, -5)
-  bgFrz                   <- runHereditaryBgScenario ModeAdaptive (4, 5, 6)
-  (vRep, _, _, netVac, okV) <- runHereditaryWaveScenario ModeUnified  Nothing           emptyPureMSet
-  (tRep, _, _, netT,   okT) <- runHereditaryWaveScenario ModeUnified  (Just (4, 5, 6))   bgTop
-  (bRep, _, _, netB,   okB) <- runHereditaryWaveScenario ModeUnified  (Just (4, -4, -5)) bgBot
-  (fRep, fFrzOk, peekOk, netF, okF) <- runHereditaryWaveScenario ModeAdaptive (Just (4, 5, 6)) bgFrz
-  (wasFrz, thwOk, iE0, iEF, iEM, netI, okI) <- runHereditaryImpactThawScenario
+  bgTop                   <- runHereditaryBgScenario ModeUnified  18 (4, 5, 6)
+  bgBot                   <- runHereditaryBgScenario ModeUnified  18 (4, -4, -5)
+  bgFrz                   <- runHereditaryBgScenario ModeAdaptive 18 (4, 5, 6)
+  (vRep, _, _, balV, netVac, okV)     <- runHereditaryWaveScenario ModeUnified  18 Nothing           emptyPureMSet
+  (tRep, _, _, balT, netT,   okT)     <- runHereditaryWaveScenario ModeUnified  18 (Just (4, 5, 6))   bgTop
+  (bRep, _, _, balB, netB,   okB)     <- runHereditaryWaveScenario ModeUnified  18 (Just (4, -4, -5)) bgBot
+  (fRep, fCores, peekOk, balF, netF, okF) <- runHereditaryWaveScenario ModeAdaptive 18 (Just (4, 5, 6)) bgFrz
+  (initC, midC, finC, thwS, iE0, iEF, iEM, balI, netI, okI) <- runHereditaryMultiCoreImpactScenario
   (b2Bot, b2Top, net2B, ok2B) <- runHereditaryTwoBodyScenario ModeUnified True
   (b1Bot, _,     net1B, ok1B) <- runHereditaryTwoBodyScenario ModeUnified False
   (blBot, _,     net2L, ok2L) <- runHereditaryTwoBodyScenario ModeLinear  True
-  let ftRep = MkFreezeThawReport fFrzOk fRep tRep.waveWorkSteps fRep.waveWorkSteps peekOk
-                                 wasFrz thwOk iE0 iEF iEM netI
+  (lcRep, balLC)              <- runHereditaryLightConeScenario vRep tRep
+  let ftRep = MkFreezeThawReport fCores fRep tRep.waveWorkSteps fRep.waveWorkSteps peekOk
+                                 initC midC finC thwS iE0 iEF iEM netI
   let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
                               b2Bot.poyntingYAccum b2Top.poyntingYAccum
                               b1Bot.poyntingYAccum blBot.poyntingYAccum
@@ -706,8 +811,9 @@ runHereditaryGravitySuite = App1.do
                     abs net2B + abs net1B + abs net2L +
                     abs linRep.netSignedSum + abs trapRep.netSignedSum
   let antiAll     = okLin && okTrap && okV && okT && okB && okF && okI && ok2B && ok1B && ok2L
-  App1.pure (MkModelExperimentMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll
-                                      linRep trapRep vRep tRep bRep ftRep tbRep)
+  let balAll      = balV && balT && balB && balF && balI && balLC
+  App1.pure (MkModelExperimentMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll balAll
+                                      linRep trapRep vRep tRep bRep ftRep tbRep lcRep)
 
 public export
 selfTrapCriteriaOk : SelfTrapReport -> SelfTrapReport -> Bool
@@ -726,17 +832,20 @@ selfTrapCriteriaOk linRep trapRep =
 public export
 freezeThawCriteriaOk : WavepacketReport -> FreezeThawReport -> Bool
 freezeThawCriteriaOk vac ft =
-  ft.ftGrazingFrozenOk &&
+  (ft.ftGrazingCoreCount == 1) &&
   ft.ftPassivePeekOk &&
   (ft.ftGrazingWave.waveNetSum == 0) &&
-  (ft.ftGrazingWave.meanXMilli < vac.meanXMilli) &&
-  (ft.ftGrazingWave.meanYMilli > 530) &&
-  (ft.ftGrazingWave.poyntingYAccum > 100000) &&
+  (ft.ftGrazingWave.meanXMilli + 50 < vac.meanXMilli) &&
+  (ft.ftGrazingWave.meanYMilli > 520) &&
+  (ft.ftGrazingWave.poyntingYAccum > 200000) &&
   (ft.ftGrazingWave.waveEnergy <= ft.ftGrazingWave.initEnergy) &&
   (ft.ftGrazingWave.maxEnergy <= ft.ftGrazingWave.initEnergy) &&
   (ft.ftFrozenWorkSteps < ft.ftLiveWorkSteps) &&
-  ft.ftImpactWasFrozen &&
-  ft.ftImpactThawedOk &&
+  (ft.ftInitCoreCount == 2) &&
+  (ft.ftMidCoreCount == 2) &&
+  (ft.ftFinalCoreCount == 1) &&
+  (ft.ftFirstThawStep >= 5) &&
+  (ft.ftFirstThawStep <= 13) &&
   (ft.ftImpactFinalE <= ft.ftImpactInitE) &&
   (ft.ftImpactMaxE <= ft.ftImpactInitE) &&
   (ft.ftImpactNetSum == 0)
@@ -745,9 +854,9 @@ public export
 twoBodyCriteriaOk : TwoBodyReport -> Bool
 twoBodyCriteriaOk tb =
   (tb.tbNetSum == 0) &&
-  (tb.tbBotYMilli > tb.tbSingleBotYMilli) &&
+  (tb.tbBotYMilli > tb.tbSingleBotYMilli + 40) &&
   (tb.tbBotYMilli + tb.tbTopYMilli == 1000) &&
-  (tb.tbBotSy > 0) &&
+  (tb.tbBotSy > 400000) &&
   (tb.tbTopSy == -(tb.tbBotSy)) &&
   (tb.tbSingleBotSy < 0) &&
   (tb.tbLinearBotSy < 0) &&
@@ -756,10 +865,21 @@ twoBodyCriteriaOk tb =
   (tb.tbFinalE * 100 >= tb.tbInitE * 95)
 
 public export
+lightConeCriteriaOk : CausalLightConeReport -> Bool
+lightConeCriteriaOk lc =
+  lc.clSpacelikeExact &&
+  (lc.clEarlyBrX == lc.clEarlyVacX) &&
+  (lc.clEarlyBrSy == 0) &&
+  (lc.clLateBrX < lc.clLateVacX) &&
+  (lc.clLateBrY > 530) &&
+  (lc.clLateBrSy > 200000)
+
+public export
 gravityCriteriaOk : ModelExperimentMetrics -> Bool
 gravityCriteriaOk m =
   let symSum = m.massAboveWave.meanYMilli + m.massBelowWave.meanYMilli
   in m.fluxAntisymOk &&
+     m.dipolesBalancedOk &&
      (m.globalNetSum == 0) &&
      selfTrapCriteriaOk m.linearDispersion m.selfTrappedCore &&
      (m.vacWave.waveNetSum == 0) &&
@@ -772,12 +892,12 @@ gravityCriteriaOk m =
      (m.massAboveWave.maxEnergy <= m.massAboveWave.initEnergy) &&
      (m.massBelowWave.waveEnergy <= m.massBelowWave.initEnergy) &&
      (m.massBelowWave.maxEnergy <= m.massBelowWave.initEnergy) &&
-     (m.massAboveWave.waveEnergy * 100 >= m.massAboveWave.initEnergy * 96) &&
+     (m.massAboveWave.waveEnergy * 100 >= m.massAboveWave.initEnergy * 97) &&
      (m.vacWave.meanYMilli == 500) &&
      (m.vacWave.poyntingYAccum == 0) &&
-     (m.massAboveWave.meanXMilli < m.vacWave.meanXMilli) &&
-     (m.massAboveWave.meanYMilli > 540) &&
-     (m.massAboveWave.poyntingYAccum > 100000) &&
+     (m.massAboveWave.meanXMilli + 50 < m.vacWave.meanXMilli) &&
+     (m.massAboveWave.meanYMilli > 530) &&
+     (m.massAboveWave.poyntingYAccum > 200000) &&
      (m.massBelowWave.meanXMilli == m.massAboveWave.meanXMilli) &&
      (m.massBelowWave.meanYMilli < 500) &&
      (m.massBelowWave.poyntingYAccum == -(m.massAboveWave.poyntingYAccum)) &&
@@ -785,6 +905,7 @@ gravityCriteriaOk m =
      (m.massBelowWave.waveEnergy == m.massAboveWave.waveEnergy) &&
      freezeThawCriteriaOk m.vacWave m.freezeThaw &&
      twoBodyCriteriaOk m.twoBody &&
+     lightConeCriteriaOk m.causalLightCone &&
      (m.totalComputeWork > 0)
 
 public export
@@ -810,10 +931,12 @@ sameWavePhysics a b =
 public export
 sameFreezeThawPhysics : FreezeThawReport -> FreezeThawReport -> Bool
 sameFreezeThawPhysics a b =
-  (a.ftGrazingFrozenOk == b.ftGrazingFrozenOk) &&
+  (a.ftGrazingCoreCount == b.ftGrazingCoreCount) &&
   sameWavePhysics a.ftGrazingWave b.ftGrazingWave &&
-  (a.ftImpactWasFrozen == b.ftImpactWasFrozen) &&
-  (a.ftImpactThawedOk == b.ftImpactThawedOk) &&
+  (a.ftInitCoreCount == b.ftInitCoreCount) &&
+  (a.ftMidCoreCount == b.ftMidCoreCount) &&
+  (a.ftFinalCoreCount == b.ftFinalCoreCount) &&
+  (a.ftFirstThawStep == b.ftFirstThawStep) &&
   (a.ftImpactInitE == b.ftImpactInitE) &&
   (a.ftImpactFinalE == b.ftImpactFinalE) &&
   (a.ftImpactMaxE == b.ftImpactMaxE) &&
@@ -823,8 +946,8 @@ export
 runExperiment4and5 : Has [Console] e => App e (Bool, List String)
 runExperiment4and5 = do
   let h = "----------------------------------------------------------------"
-  let t4 = "[Experiment 4] Zero-Tag T00 Laurent Halo, Freeze/Thaw & 2-Body Gravity"
-  let t5 = "[Experiment 5] A/B Comparison: App1 Coord2 vs Zero-Tag HereditaryMSet"
+  let t4 = "[Experiment 4] Causal 1-Hop Metric, Sealed Multi-Core, 2-Body & Light-Cone"
+  let t5 = "[Experiment 5] A/B Comparison: App1 Coord2 vs Zero-Copy HereditaryMSet"
   resA <- app1 runFlatGravitySuite
   resB <- app1 runHereditaryGravitySuite
   let okA = gravityCriteriaOk resA
@@ -838,9 +961,12 @@ runExperiment4and5 = do
         sameWavePhysics resA.massBelowWave resB.massBelowWave &&
         sameFreezeThawPhysics resA.freezeThaw resB.freezeThaw &&
         (resA.twoBody == resB.twoBody) &&
+        (resA.causalLightCone == resB.causalLightCone) &&
+        checkTagFreePackUnpackRoundTrip &&
         (unwrapBox (sumHMSet seedRoot) == 0) &&
         (resA.globalNetSum == 0 && resB.globalNetSum == 0) &&
-        resA.fluxAntisymOk && resB.fluxAntisymOk
+        resA.fluxAntisymOk && resB.fluxAntisymOk &&
+        resA.dipolesBalancedOk && resB.dipolesBalancedOk
   let nestedHigherWork = resB.totalComputeWork > resA.totalComputeWork
   let pass = okA && okB && agreement && nestedHigherWork
   let lines = [ h
@@ -849,30 +975,34 @@ runExperiment4and5 = do
               , "    - Linear Dispersion  (A) -> " ++ show resA.linearDispersion
               , "    - Self-Trapped Core  (A) -> " ++ show resA.selfTrappedCore
               , "    - Self-Trapped Core  (B) -> " ++ show resB.selfTrappedCore
-              , "  * 4B Zero-Traffic, Zero-Warmup T00 Green Halo Gravity (18 sweeps):"
+              , "  * 4B Zero-Warmup Causal 1-Hop Gravity (18 sweeps, decay 7/32, c=1):"
               , "    - Vacuum Control     (A) -> " ++ show resA.vacWave
               , "    - Top Breather(4,5)  (A) -> " ++ show resA.massAboveWave
               , "    - Bot Breather(4,-4) (A) -> " ++ show resA.massBelowWave
               , "    - Top Breather(4,5)  (B) -> " ++ show resB.massAboveWave
-              , "  * 4C Adaptive Hereditary Freeze/Thaw Wrapping:"
-              , "    - Grazing + Impact   (A) -> " ++ show resA.freezeThaw
-              , "    - Grazing + Impact   (B) -> " ++ show resB.freezeThaw
+              , "  * 4C Dimensionless Multi-Core Sealed Freeze & Delayed Selective Thaw:"
+              , "    - Grazing + 2-Core   (A) -> " ++ show resA.freezeThaw
+              , "    - Grazing + 2-Core   (B) -> " ++ show resB.freezeThaw
               , "  * 4D Equal-Mass 2-Body Mutual Attraction (Two free amp=2048 packets, 16 sweeps):"
               , "    - Equal-Mass Pair    (A) -> " ++ show resA.twoBody
               , "    - Equal-Mass Pair    (B) -> " ++ show resB.twoBody
-              , "  * Hypothesis Check (Exact Pyth + T00 Halo + Freeze/Thaw + 2-Body + Parity): okA=" ++ show okA ++ ", okB=" ++ show okB
+              , "  * 4E Causal Light-Cone Proof (Spacelike Exact t=2 -> Deflection t=18):"
+              , "    - Light Cone Check   (A) -> " ++ show resA.causalLightCone
+              , "    - Light Cone Check   (B) -> " ++ show resB.causalLightCone
+              , "  * Hypothesis Check (Exact Pyth + Causal c=1 + MultiCore + 2-Body + LightCone + Parity): okA=" ++ show okA ++ ", okB=" ++ show okB
               , h
               , t5
-              , "  | Metric / Capability            | Model A (Sparse Coord2)| Model B (Zero-Tag HMSet) |"
-              , "  | Global 0D Net & AntisymMaxel   | net=" ++ show resA.globalNetSum ++ ", anti=" ++ show resA.fluxAntisymOk ++ " | net=" ++ show resB.globalNetSum ++ ", anti=" ++ show resB.fluxAntisymOk ++ " |"
+              , "  | Metric / Capability            | Model A (Sparse Coord2)| Model B (Zero-Copy HMSet) |"
+              , "  | Global 0D Net & BalancedDipoles| net=" ++ show resA.globalNetSum ++ ", bal=" ++ show resA.dipolesBalancedOk ++ " | net=" ++ show resB.globalNetSum ++ ", bal=" ++ show resB.dipolesBalancedOk ++ " |"
               , "  | 4A CoreTrap (Lin -> SelfTrap)  | " ++ show resA.linearDispersion.coreFracPct ++ "% -> " ++ show resA.selfTrappedCore.coreFracPct ++ "% | " ++ show resB.linearDispersion.coreFracPct ++ "% -> " ++ show resB.selfTrappedCore.coreFracPct ++ "% |"
               , "  | Vac Centroid & E retained      | (" ++ show resA.vacWave.meanXMilli ++ ", " ++ show resA.vacWave.meanYMilli ++ "), " ++ show (divIntegerPos (resA.vacWave.waveEnergy * 100) resA.vacWave.initEnergy) ++ "% | (" ++ show resB.vacWave.meanXMilli ++ ", " ++ show resB.vacWave.meanYMilli ++ "), " ++ show (divIntegerPos (resB.vacWave.waveEnergy * 100) resB.vacWave.initEnergy) ++ "% |"
               , "  | Top(4,5) Centroid & Sy         | (" ++ show resA.massAboveWave.meanXMilli ++ ", " ++ show resA.massAboveWave.meanYMilli ++ "), Sy=" ++ show resA.massAboveWave.poyntingYAccum ++ " | (" ++ show resB.massAboveWave.meanXMilli ++ ", " ++ show resB.massAboveWave.meanYMilli ++ "), Sy=" ++ show resB.massAboveWave.poyntingYAccum ++ " |"
               , "  | Bot(4,-4) Centroid & Sy        | (" ++ show resA.massBelowWave.meanXMilli ++ ", " ++ show resA.massBelowWave.meanYMilli ++ "), Sy=" ++ show resA.massBelowWave.poyntingYAccum ++ " | (" ++ show resB.massBelowWave.meanXMilli ++ ", " ++ show resB.massBelowWave.meanYMilli ++ "), Sy=" ++ show resB.massBelowWave.poyntingYAccum ++ " |"
-              , "  | 4C Freeze Work (Live -> Frz)   | " ++ show resA.freezeThaw.ftLiveWorkSteps ++ " -> " ++ show resA.freezeThaw.ftFrozenWorkSteps ++ " | " ++ show resB.freezeThaw.ftLiveWorkSteps ++ " -> " ++ show resB.freezeThaw.ftFrozenWorkSteps ++ " |"
+              , "  | 4C Freeze Work & Delayed Thaw  | " ++ show resA.freezeThaw.ftLiveWorkSteps ++ "->" ++ show resA.freezeThaw.ftFrozenWorkSteps ++ ", 2->" ++ show resA.freezeThaw.ftMidCoreCount ++ "->" ++ show resA.freezeThaw.ftFinalCoreCount ++ "@t" ++ show resA.freezeThaw.ftFirstThawStep ++ " | " ++ show resB.freezeThaw.ftLiveWorkSteps ++ "->" ++ show resB.freezeThaw.ftFrozenWorkSteps ++ ", 2->" ++ show resB.freezeThaw.ftMidCoreCount ++ "->" ++ show resB.freezeThaw.ftFinalCoreCount ++ "@t" ++ show resB.freezeThaw.ftFirstThawStep ++ " |"
               , "  | 4D 2-Body (dy, SyBot vs Lin)   | dy=+" ++ show (resA.twoBody.tbBotYMilli - resA.twoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show resA.twoBody.tbBotSy ++ " (lin=" ++ show resA.twoBody.tbLinearBotSy ++ ") | dy=+" ++ show (resB.twoBody.tbBotYMilli - resB.twoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show resB.twoBody.tbBotSy ++ " (lin=" ++ show resB.twoBody.tbLinearBotSy ++ ") |"
+              , "  | 4E Causal Light-Cone (t=2)     | exact=" ++ show resA.causalLightCone.clSpacelikeExact ++ ", BrSy=" ++ show resA.causalLightCone.clEarlyBrSy ++ " | exact=" ++ show resB.causalLightCone.clSpacelikeExact ++ ", BrSy=" ++ show resB.causalLightCone.clEarlyBrSy ++ " |"
               , "  | Total Compute Work (Co-Ev)     | " ++ show resA.totalComputeWork ++ " | " ++ show resB.totalComputeWork ++ " |"
-              , "  | Native Vertical zoomSpace      | No (flat pair coords)  | Yes (viewAsAntiBox)      |"
+              , "  | Native Vertical zoomSpace      | No (flat pair coords)  | Yes (viewAsAntiBox)       |"
               , "  -> Experiment 4 & 5 pass=" ++ show pass
               ]
   traverse_ putStrLn lines
