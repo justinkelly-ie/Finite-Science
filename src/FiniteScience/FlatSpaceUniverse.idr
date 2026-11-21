@@ -74,6 +74,15 @@ injectFlatBreather :
 injectFlatBreather x yPos yNeg amp (MkFlatBox matter field) =
   App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseBreather coord2Basis x yPos yNeg amp)))
 
+||| Injects a balanced zero-sum antisymmetric directed-edge flux link `(x1,y1) -> (x2,y2)`.
+export
+injectFlatEdgeFlux :
+  (x1, y1, x2, y2, u : Integer) ->
+  (1 uSt             : FlatBlackBox) ->
+  App1 e FlatBlackBox
+injectFlatEdgeFlux x1 y1 x2 y2 u (MkFlatBox matter field) =
+  App1.pure1 (MkFlatBox matter (addSparseField field (seedSparseEdgeFlux coord2Basis x1 y1 x2 y2 u)))
+
 ||| Injects a balanced zero-sum wavepacket centered at `(x0, y0 + 0.5)` directly onto unbounded `Coord2`.
 export
 injectFlatWavepacketAt :
@@ -103,6 +112,10 @@ canonDecayDen : Integer
 canonDecayDen = 32
 
 public export
+canonLinkCoup : Integer
+canonLinkCoup = 1
+
+public export
 canonFreezeLagRatio : Integer
 canonFreezeLagRatio = 8
 
@@ -120,25 +133,25 @@ stepFlatLinear1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatLinear1 (MkFlatBox matter field) =
-  let res = stepSparseField coord2Basis coord2CoreCodec 0 canonDecayNum canonDecayDen 7 0 0 1 field
+  let res = stepSparseField coord2Basis coord2CoreCodec 0 canonDecayNum canonDecayDen 0 7 0 0 1 field
   in App1.pure1 (MkFlatBox matter (fst res))
 
-||| Pure closed causal 1-hop retarded metric (`7/32`) + Wildberger Pythagorean stepper (`c = 1`).
+||| Pure closed causal 1-hop retarded Symmetric `SquareMaxel` metric (`7/32`) + Wildberger Pythagorean stepper (`c = 1`).
 export
 stepFlatUnified1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatUnified1 (MkFlatBox matter field) =
-  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen 7 0 0 1 field
+  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 0 0 1 field
   in App1.pure1 (MkFlatBox matter (fst res))
 
-||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop metric + Wildberger Pythagorean stepper.
+||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `SquareMaxel` metric + Wildberger Pythagorean stepper.
 export
 stepFlatAdaptive1 :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatAdaptive1 (MkFlatBox matter field) =
-  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen field
+  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen field
   in App1.pure1 (MkFlatBox matter (fst res))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
@@ -166,7 +179,7 @@ export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
   if matter == emptyMSet && field.psiField == BoxLeaf && field.fluxMaxel == BoxLeaf &&
-     field.metricPhi == BoxLeaf && null field.frozenCores
+     field.metricMaxel == BoxLeaf && null field.frozenCores
     then App1.pure CleanVacuumCollapse
     else let fWork = fieldActiveWork field
              work  = integerToNat (multiplicityL1 matter) + fWork

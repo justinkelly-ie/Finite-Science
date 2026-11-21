@@ -298,3 +298,44 @@ Show CausalLightConeReport where
     "CausalLightCone(spacelikeExact=" ++ show r.clSpacelikeExact ++
     ", t2: VacX=" ++ show r.clEarlyVacX ++ " vs BrX=" ++ show r.clEarlyBrX ++ ", BrSy=" ++ show r.clEarlyBrSy ++
     " -> t18: VacX=" ++ show r.clLateVacX ++ " vs BrX=" ++ show r.clLateBrX ++ ", BrY=" ++ show r.clLateBrY ++ ", BrSy=" ++ show r.clLateBrSy ++ ")"
+
+||| Telemetry for Experiment 4F: Symmetric `SquareMaxel` anisotropic directional stress
+||| and quadrupole polarization (`sum_{X-links} G - sum_{Y-links} G`).
+public export
+record AnisotropicStressReport where
+  constructor MkAnisotropicStressReport
+  asQuadHoriz    : Integer
+  asQuadVert     : Integer
+  asProbeHorizX  : Integer
+  asProbeHorizY  : Integer
+  asProbeHorizSy : Integer
+  asProbeVertX   : Integer
+  asProbeVertY   : Integer
+  asProbeVertSy  : Integer
+  asSymMetricOk  : Bool
+  asNetSum       : Integer
+
+public export
+Eq AnisotropicStressReport where
+  a == b =
+    a.asQuadHoriz == b.asQuadHoriz &&
+    a.asQuadVert == b.asQuadVert &&
+    a.asProbeHorizX == b.asProbeHorizX &&
+    a.asProbeHorizY == b.asProbeHorizY &&
+    a.asProbeHorizSy == b.asProbeHorizSy &&
+    a.asProbeVertX == b.asProbeVertX &&
+    a.asProbeVertY == b.asProbeVertY &&
+    a.asProbeVertSy == b.asProbeVertSy &&
+    a.asSymMetricOk == b.asSymMetricOk &&
+    a.asNetSum == b.asNetSum
+
+public export
+Show AnisotropicStressReport where
+  show r =
+    "AnisotropicStress(Q_H=" ++ show r.asQuadHoriz ++
+    ", Q_V=" ++ show r.asQuadVert ++
+    ", probeH=(" ++ show r.asProbeHorizX ++ "," ++ show r.asProbeHorizY ++ ",Sy=" ++ show r.asProbeHorizSy ++ ")" ++
+    ", probeV=(" ++ show r.asProbeVertX ++ "," ++ show r.asProbeVertY ++ ",Sy=" ++ show r.asProbeVertSy ++ ")" ++
+    ", dX=" ++ show (r.asProbeHorizX - r.asProbeVertX) ++
+    ", sym=" ++ show r.asSymMetricOk ++
+    ", net=" ++ show r.asNetSum ++ ")"
