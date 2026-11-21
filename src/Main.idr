@@ -2,232 +2,31 @@ module Main
 
 import Control.App
 import Control.App.Console
-import Stage0.BoxInt
-import Stage0.Multiset
-import Stage1.Carrier.Vexel
-import Stage1.Carrier.Maxel
-import Stage1.Carrier.Boxel
-import Stage1.Carrier.BalanceArray
-import Stage1.Basis.Coordinate
-import Stage1.Polynumber
-import Stage1.UnixelFraction
-import Evolution.State
-import Evolution.LinearPipeline
-import Evolution.Expansion
-import Evolution.Contraction
-import Evolution.ProtocolChannel
-import Evolution.UniverseApp
-import Evolution.Thermodynamics
-import Evolution.ToricSyndrome
-import Evolution.ReplEngine
-import Math.DensityMatrix
-import Math.GalacticRotationCurve
-import Math.FlavorMixing
-import Geometry.GaloisCurvature
-import Observation.HolographicStream
-import Compound.Biomolecules
-import Compound.StandardModel
-import Stage0.OnSeq.FusedStream
-import Stage1.TypeTheory.Staging
-import Stage1.TypeTheory.TwoLevel
-import Data.Fuel
-import Data.List
-import Data.Vect
+import System
+import FiniteScience
 
 %default total
 
-||| Erased compile-time proof witness verifying conservation of natural science multiset mass-energy (m1 = m2)
 public export
-0 NaturalScienceConservationWitness : (m1 : Nat) -> (m2 : Nat) -> Type
-NaturalScienceConservationWitness m1 m2 = m1 = m2
-
-||| Canonical static witness proving multiset mass-energy conservation (137 = 137)
-public export
-prfNaturalScienceConservation : NaturalScienceConservationWitness 137 137
-prfNaturalScienceConservation = Refl
-
-||| Verified natural science system state carrying erased mass-energy conservation witness
-public export
-record VerifiedScienceState where
-  constructor MkVerifiedScienceState
-  massEnergyBefore : Nat
-  massEnergyAfter  : Nat
-  0 conservationPrf : NaturalScienceConservationWitness massEnergyBefore massEnergyAfter
-
-||| Erased compile-time proof witness verifying monadic pipeline mass conservation (m1 = m2)
-public export
-0 PipelineMassConservationWitness : (m1 : Nat) -> (m2 : Nat) -> Type
-PipelineMassConservationWitness m1 m2 = m1 = m2
-
-||| Static compile-time witness proving pipeline step mass conservation (210 = 210)
-public export
-prfPipelineMassConservation : PipelineMassConservationWitness 210 210
-prfPipelineMassConservation = Refl
-
-||| Verified pipeline step carrying erased mass conservation witness
-public export
-record VerifiedPipelineStep where
-  constructor MkVerifiedPipelineStep
-  massBefore : Nat
-  massAfter  : Nat
-  0 pipelinePrf : PipelineMassConservationWitness massBefore massAfter
-
-||| $O(1)$ allocation deforested monadic pipeline stream transducer using fusedHylomorphism
-public export covering
-fusedPipelineStepStream : Fuel -> List (Nat, Nat) -> Nat
-fusedPipelineStepStream f items =
-  fusedHylomorphism f
-    (\st => case st of
-              [] => Done
-              (m1, m2) :: rest => Yield (m1 + m2) rest)
-    (\val, acc => val + acc)
-    0
-    items
-
-------------------------------------------------------------------------
--- 2LTT STAGED UNIVERSE SCALE PIPELINE FUSION
-------------------------------------------------------------------------
-
-||| Evaluates total multiset particle mass-energy across micro-to-macro scale jumps
-public export
-universeMultisetSum : Multiset BoxInt String -> BoxInt
-universeMultisetSum ZeroM = intToBoxInt 0
-universeMultisetSum (AddM _ c rest) = addBox c (universeMultisetSum rest)
-
-||| 2LTT Staged Universe Scale Pipeline: Fuses multi-domain scale evaluation (hadron/physics through cosmology)
-||| at compile-time Stage 1 (U_1) and splices out the unboxed scalar BoxInt constant to Stage 0 (U_0).
-%inline public export
-stagedUniverseScalePipeline : Lift (Multiset BoxInt String) -> BoxInt
-stagedUniverseScalePipeline liftedUniverseStream = universeMultisetSum (splice liftedUniverseStream)
-
-||| QTT 0 Erased Proof Witness: Staged Universe Scale Pipeline Fusion Invariant
-public export
-0 prfStagedUniversePipeline : (m : Multiset BoxInt String) -> splice (quote m) = m
-prfStagedUniversePipeline m = inverseSpliceQuote m
-
-||| Target Quantum Particle subsystem channel A at Genesis (vm=1, de=128, dm=1).
-public export
-seedChannelA : PhysicsChannel (monomialPolynumber (intToBoxInt 1) 1) 1 128 1
-seedChannelA = MkPhysicsChannel (MkUniverseState [intToBoxInt 1] (replicate 128 (intToBoxInt 1)) [intToBoxInt 1])
-
-||| Measuring Observer subsystem channel B at Genesis (vm=1, de=128, dm=1).
-public export
-seedChannelB : PhysicsChannel (monomialPolynumber (intToBoxInt 1) 1) 1 128 1
-seedChannelB = MkPhysicsChannel (MkUniverseState [intToBoxInt 1] (replicate 128 (intToBoxInt 1)) [intToBoxInt 1])
-
-||| Full Standard Model Particle Catalog & Multiset Lagrangian Harness.
-public export
-standardModelApp : Has [Console] e => App e ()
-standardModelApp = do
-  putStrLn "========================================================"
-  putStrLn "⚛️ Booting Full Standard Model Particle Catalog Engine"
-  putStrLn "========================================================"
-  let uQ = getQuantumNumbers (SMPFermion QuarkU)
-  let eQ = getQuantumNumbers (SMPFermion LepE)
-  putStrLn $ "  [Up Quark u] Electric Charge Q = " ++ show (charge uQ) ++ ", Spin S = " ++ show (spin uQ) ++ ", Baryon B = " ++ show (baryonNum uQ)
-  putStrLn $ "  [Electron e-] Electric Charge Q = " ++ show (charge eQ) ++ ", Spin S = " ++ show (spin eQ) ++ ", Lepton L = " ++ show (leptonNum eQ)
-  let qedOut = qedAnnihilationVertex (SMPFermion LepE) (SMPFermion AntiLepE)
-  putStrLn "  [QED Vertex] e- + e+ -> gamma + gamma verified!"
-  let weakOut = weakBetaDecayVertex (SMPFermion QuarkD)
-  putStrLn "  [Weak Beta Decay] d -> u + e- + bar_nu_e verified!"
-  let higgsOut = higgsGaugeDecayVertex (SMPBoson Higgs0)
-  putStrLn "  [Higgs Decay] H0 -> W+ + W- verified!"
-  putStrLn "========================================================"
-
-||| Constructive Anti-Matter Pair Annihilation & QTT Gauge Photon Conversion Harness.
-public export
-antiMatterAnnihilationApp : Has [Console] e => App e ()
-antiMatterAnnihilationApp = do
-  putStrLn "========================================================"
-  putStrLn "⚛️ Booting Constructive Anti-Matter Pair Annihilation Engine"
-  putStrLn "========================================================"
-  let mat  = unixelBox (intToBoxInt 1) (intToBoxInt 1)
-  let anti = unixelBox (intToBoxInt 1) (intToBoxInt (-1))
-  let deResult = annihilateMatterAntiMatterMultiset anti mat
-  putStrLn "  [Reaction] Multiset_Matter(+1) + Multiset_AntiMatter(-1) -> DE_Photons(+2)"
-  putStrLn $ "  [Result Multiset] DE Gauge Photons Output: " ++ show deResult
-  putStrLn "  [Sakharov Law 12] Baryon Asymmetry VM=27 vs DE=128 Photons Verified!"
-  putStrLn "========================================================"
-
-||| 1,000-Step Galactic Rotation Curve & Dark Matter Halo Simulation Harness.
-public export
-galacticSimulationApp : Has [Console] e => App e ()
-galacticSimulationApp = do
-  putStrLn "========================================================"
-  putStrLn "🌌 Booting 1,000-Step Galactic Rotation & Dark Matter Simulator"
-  putStrLn "========================================================"
-  let gal = MkGalacticProfile (intToBoxInt 100) (intToBoxInt 0)
-  let g = intToBoxInt 100
-  let slope = intToBoxInt 1
-  let initialProfile = simulateGalacticRadiusProfile g slope gal
-  let finalProfile   = simulateGalacticRotationTimeSeries 1000 g slope gal
-  putStrLn $ "  [Initial Step 1] Radial Velocity Profile v^2(r=1..10): " ++ show (map unwrapBox initialProfile)
-  putStrLn $ "  [Final Step 1000] Radial Velocity Profile v^2(r=1..10): " ++ show (map unwrapBox finalProfile)
-  putStrLn "  [Flatness Invariant] Asymptotic Velocity Plateau v(r) approx CONSTANT verified!"
-  putStrLn "========================================================"
-
-||| Interactive FiniteScienceREPL Engine harness using Idris 2 Control.App.
-public export
-universeReplApp : Has [Console] e => App e ()
-universeReplApp = do
-  putStrLn "========================================================"
-  putStrLn "🎛️ Booting Interactive FiniteScienceREPL Engine"
-  putStrLn "========================================================"
-  printHelp
-  printStatus (state seedChannelA)
-  putStrLn "  [REPL Test] Parsing 'step' command -> Executed StepCmd"
-  putStrLn "  [REPL Test] Parsing 'laws' command -> Executed LawsCmd"
-  printLaws
-  putStrLn "  [REPL Test] Parsing 'status' command -> Executed StatusCmd"
-  printStatus (state seedChannelA)
-  putStrLn "========================================================"
-  putStrLn "Interactive FiniteScienceREPL Monadic Harness PASSED ✅"
-  putStrLn "========================================================"
-
-||| The global Finite-Science universe simulation environment using Idris 2 Control.App (6-Pillar Architecture).
-public export
-universeApp : Has [Console] e => App e ()
-universeApp = do
-  putStrLn "========================================================"
-  putStrLn "🚀 Booting Finite-Science 6-Pillar Master Universe Engine"
-  putStrLn "========================================================"
-  putStrLn "  [Pillar 1] Control.App Monadic Linear State Pipeline..."
-  _ <- runUniverseAppPipeline seedChannelA [intToBoxInt 1, intToBoxInt 0] (intToBoxInt 1)
-  putStrLn "  [Pillar 2] Multi-System Subsystem Interaction (composeSystemApps)..."
-  _ <- runMultiSystemPipeline seedChannelA seedChannelB (intToBoxInt 2)
-  putStrLn "  [Pillar 3] Automated Galois Scale Router (autoScaleUniverseApp)..."
-  _ <- runGaloisScaleJumpPipeline seedChannelA [intToBoxInt 1, intToBoxInt 0, intToBoxInt 0, intToBoxInt 0] (intToBoxInt 1)
-  putStrLn "  [Pillar 3.5] 2LTT Staged Universe Scale Pipeline Fusion..."
-  let universeStream = AddM "Baryon" (intToBoxInt 137) (AddM "Lepton" (intToBoxInt 137) ZeroM)
-  let stagedMass = stagedUniverseScalePipeline (quote universeStream)
-  putStrLn $ "  [Pillar 3.5] Deforested Staged Universe Mass Output = " ++ show stagedMass
-  putStrLn "  [Pillar 4] Quantum Density Matrix & Deterministic Born Rule..."
-  let dm = fromPolynumber Stage1.Polynumber.cyclotomic137Polynumber
-  let p0 = bornRuleProjection dm 0
-  putStrLn $ "  [Pillar 4] Born Rule P(0) = " ++ show p0
-  putStrLn "  [Pillar 5] Thermodynamic Causal Arrow & Jarzynski Fluctuation Equality..."
-  let jarz = jarzynskiEquality (intToBoxInt 10) (intToBoxInt 5)
-  putStrLn $ "  [Pillar 5] Jarzynski Ratio = " ++ show jarz
-  putStrLn "  [Pillar 6] Galois Einstein Defect Tensor & Spacetime Curvature..."
-  let curvature = galoisEinsteinTensor (state seedChannelA)
-  putStrLn $ "  [Pillar 6] Einstein Curvature Defect G_00 = " ++ show (unwrapBox curvature)
-  putStrLn "========================================================"
-  putStrLn "  [Standard Model Engine] 37 Fundamental Particles & Lagrangian..."
-  standardModelApp
-  putStrLn "========================================================"
-  putStrLn "  [Anti-Matter Engine] Pair Annihilation & QTT Gauge Conversion..."
-  antiMatterAnnihilationApp
-  putStrLn "========================================================"
-  putStrLn "  [Simulation] 1,000-Step Galactic Rotation & Dark Matter Halo..."
-  galacticSimulationApp
-  putStrLn "========================================================"
-  putStrLn "  [Pillar 7] Interactive FiniteScienceREPL Monadic Loop..."
-  universeReplApp
-  putStrLn "========================================================"
-  putStrLn "Complete 6-Pillar + Standard Model + AntiMatter + Galactic Sim + REPL PASSED ✅"
-  putStrLn "========================================================"
+runFiniteScienceSuite : Has [Console] e => App e Bool
+runFiniteScienceSuite = do
+  putStrLn "================================================================"
+  putStrLn "  FINITE-SCIENCE: App1 + Nested PureMultiset + Compute Latency  "
+  putStrLn "================================================================"
+  p1 <- runExperiment1
+  p2 <- runExperiment2
+  p3 <- runExperiment3
+  p4 <- runExperiment4
+  putStrLn "================================================================"
+  let ok = p1 && p2 && p3 && p4
+  if ok
+    then putStrLn "ALL 4 FINITE-SCIENCE EXPERIMENTS PASSED"
+    else putStrLn "FINITE-SCIENCE EXPERIMENTS FAILED"
+  pure ok
 
 public export
 covering
 main : IO ()
-main = run universeApp
+main = do
+  ok <- run runFiniteScienceSuite
+  if ok then pure () else exitFailure

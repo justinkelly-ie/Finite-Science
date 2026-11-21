@@ -1,0 +1,23 @@
+package Finite-Science
+version = 0.2.0
+authors = "Justin"
+brief   = "App1 + Nested PureMultiset + Compute-Latency Experimental Engine"
+
+depends = base >= 0.8.0
+        , linear
+        , FinSc-Box
+        , FinSc-Nat
+
+sourcedir = "src"
+
+modules = FiniteScience
+        , FiniteScience.MultisetCodec
+        , FiniteScience.BlackRedZoom
+        , FiniteScience.ComputeKernel
+        , FiniteScience.Settings
+        , FiniteScience.LinearUniverse
+        , FiniteScience.Experiments
+        , Main
+
+main       = Main
+executable = "finite-science-experiments"
