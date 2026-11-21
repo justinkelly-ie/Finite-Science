@@ -2,17 +2,19 @@ module FiniteScience.Settings
 
 import Stage0.BoxInt
 import Stage0.HereditaryMSet
-import Stage1.Views
+import Stage1.Basis.Time
 import FiniteScience.MultisetCodec
 import FiniteScience.BlackRedZoom
-import FiniteScience.ComputeKernel
+import FiniteScience.BlackBoxErrors
+import FiniteScience.StreamWork
 
 %default total
 
 --------------------------------------------------------------------------------
 -- SERIALIZED CANONICAL MULTISET SETTINGS (`Stage0.HereditaryMSet.show` FORMAT)
--- Settings are stored purely as canonical multiset text and validated via
--- `parsePureMultiset` / `recognizePureMultisetText` rather than external structs.
+-- Physical particle states are serialized multisets verified via `Dec` recognizers.
+-- Observer resolutions are pure `Time` horizons (`BoundedTime` / `RetroTime`),
+-- eliminating any separate `roleObserver` particle!
 --------------------------------------------------------------------------------
 
 public export
@@ -35,14 +37,19 @@ public export
 heavyMassSettingText : String
 heavyMassSettingText = "{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}"
 
-public export
-lightObserverSettingText : String
-lightObserverSettingText = "{[]:[-1]}"
+--------------------------------------------------------------------------------
+-- OBSERVER TIME HORIZON PRESETS (`Observer = Stage1.Basis.Time`)
+--------------------------------------------------------------------------------
 
+||| Coarse observation horizon: inspects crossing quanta directly (`RetroTime 0`) under `BoundedTime 60`.
 public export
-heavyObserverSettingText : String
-heavyObserverSettingText =
-  "{{{{[]:[1]}:[2], {[]:[2]}:[2], {[]:[3]}:[-1]}:[1]}:[15], {[]:[1]}:[30], {[]:[2]}:[30], {[]:[3]}:[-15]}"
+coarseHorizonSpec : HorizonSpec
+coarseHorizonSpec = MkHorizonSpec (BoundedTime 60) 0 60
+
+||| Deep UV observation horizon: zooms 2 levels deeper (`RetroTime 2`) per photon under `BoundedTime 60`.
+public export
+deepUVHorizonSpec : HorizonSpec
+deepUVHorizonSpec = MkHorizonSpec (BoundedTime 60) 2 60
 
 --------------------------------------------------------------------------------
 -- COMPILE-TIME QTT 0 PARITY & DECODING PROOFS
@@ -51,44 +58,32 @@ heavyObserverSettingText =
 public export
 0 prfVacuumSettingParity :
   FiniteScience.Settings.vacuumSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.vacuumMSet
+  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.vacuumMSet
 prfVacuumSettingParity = Refl
 
 public export
 0 prfPhotonSettingParity :
   FiniteScience.Settings.photonSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.photonMSet
+  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.photonMSet
 prfPhotonSettingParity = Refl
 
 public export
 0 prfProtonSettingParity :
   FiniteScience.Settings.protonSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.protonMSet
+  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.protonMSet
 prfProtonSettingParity = Refl
 
 public export
 0 prfNeutronSettingParity :
   FiniteScience.Settings.neutronSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.neutronMSet
+  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.neutronMSet
 prfNeutronSettingParity = Refl
 
 public export
 0 prfHeavyMassSettingParity :
   FiniteScience.Settings.heavyMassSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.heavyMassMSet
+  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.heavyMassMSet
 prfHeavyMassSettingParity = Refl
-
-public export
-0 prfLightObserverSettingParity :
-  FiniteScience.Settings.lightObserverSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.lightObserverMSet
-prfLightObserverSettingParity = Refl
-
-public export
-0 prfHeavyObserverSettingParity :
-  FiniteScience.Settings.heavyObserverSettingText =
-  FiniteScience.MultisetCodec.renderPureMultiset FiniteScience.ComputeKernel.heavyObserverMSet
-prfHeavyObserverSettingParity = Refl
 
 public export
 0 prfAllSettingsRoundTripDecode :
@@ -97,11 +92,9 @@ public export
          case parsePureMultiset txt of
            Just m  => m == expected
            Nothing => False
-   in ok FiniteScience.Settings.vacuumSettingText        FiniteScience.ComputeKernel.vacuumMSet &&
-      ok FiniteScience.Settings.photonSettingText        FiniteScience.ComputeKernel.photonMSet &&
-      ok FiniteScience.Settings.protonSettingText        FiniteScience.ComputeKernel.protonMSet &&
-      ok FiniteScience.Settings.neutronSettingText       FiniteScience.ComputeKernel.neutronMSet &&
-      ok FiniteScience.Settings.heavyMassSettingText     FiniteScience.ComputeKernel.heavyMassMSet &&
-      ok FiniteScience.Settings.lightObserverSettingText FiniteScience.ComputeKernel.lightObserverMSet &&
-      ok FiniteScience.Settings.heavyObserverSettingText FiniteScience.ComputeKernel.heavyObserverMSet) = True
+   in ok FiniteScience.Settings.vacuumSettingText    FiniteScience.StreamWork.vacuumMSet &&
+      ok FiniteScience.Settings.photonSettingText    FiniteScience.StreamWork.photonMSet &&
+      ok FiniteScience.Settings.protonSettingText    FiniteScience.StreamWork.protonMSet &&
+      ok FiniteScience.Settings.neutronSettingText   FiniteScience.StreamWork.neutronMSet &&
+      ok FiniteScience.Settings.heavyMassSettingText FiniteScience.StreamWork.heavyMassMSet) = True
 prfAllSettingsRoundTripDecode = Refl

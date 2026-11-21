@@ -1,0 +1,130 @@
+module FiniteScience.BlackBoxErrors
+
+import Stage1.Basis.Time
+import Stage1.Basis.SpaceStream
+
+%default total
+
+--------------------------------------------------------------------------------
+-- 1. TIME HORIZON DISPLAY & CONFIGURATION (`Observer = Time`)
+--------------------------------------------------------------------------------
+
+||| Renders a `Stage1.Basis.Time` horizon concisely for boundary telemetry.
+public export
+showTime : Time -> String
+showTime (StaticTime l h)  = "StaticTime(" ++ show l ++ ", " ++ show h ++ ")"
+showTime (BoundedTime c)   = "BoundedTime(" ++ show c ++ ")"
+showTime (RetroTime g)     = "RetroTime(" ++ show g ++ ")"
+showTime (WindowedTime w)  = "WindowedTime(" ++ show w ++ ")"
+showTime OpenFuture        = "OpenFuture"
+showTime BilateralTime     = "BilateralTime"
+
+||| Defines an observation horizon strictly through `Stage1.Basis.Time`
+||| (no separate observer particle entity):
+||| - `boundTime`  : Bounded compute horizon (`BoundedTime cap` or `WindowedTime win`)
+||| - `retroDepth` : Retrograde UV zoom depth (`RetroTime g`)
+||| - `budgetCap`  : Total stream-work fuel budget available before freeze-out
+public export
+record HorizonSpec where
+  constructor MkHorizonSpec
+  boundTime  : Time
+  retroDepth : Nat
+  budgetCap  : Nat
+
+public export
+Eq HorizonSpec where
+  a == b = a.boundTime == b.boundTime && a.retroDepth == b.retroDepth && a.budgetCap == b.budgetCap
+
+public export
+Show HorizonSpec where
+  show h =
+    "HorizonSpec(bound=" ++ showTime h.boundTime ++
+    ", retro=" ++ show h.retroDepth ++
+    ", budget=" ++ show h.budgetCap ++ ")"
+
+--------------------------------------------------------------------------------
+-- 2. BLACK-BOX BOUNDARY EXCEPTIONS (`Control.App.Exception`)
+--------------------------------------------------------------------------------
+
+||| Typed boundary exceptions raised cleanly in the outer `App` shell (`MayThrow`)
+||| while the inner `App1` universe remains strictly `NoThrow` (`Usage = One`):
+public export
+data UniverseErr : Type where
+  ||| Raised when serialized multiset text fails `Dec` validation (`MultisetCodec`).
+  InvalidMultisetTextError   : (input : String) -> UniverseErr
+  ||| Raised when an unbalanced split (`wA + wB /= 0`) attempts to violate 0D vacuum neutrality.
+  UnbalancedVacuumSplitError : (netResidual : Integer) -> UniverseErr
+  ||| Raised after a bounded `Time` horizon exhausts compute fuel and freezes out.
+  HorizonFrozenError         : (horizonTime : Time) -> (reason : StreamFreezeReason) -> (cycles : Nat) -> UniverseErr
+
+public export
+Eq UniverseErr where
+  (InvalidMultisetTextError a)   == (InvalidMultisetTextError b)   = a == b
+  (UnbalancedVacuumSplitError a) == (UnbalancedVacuumSplitError b) = a == b
+  (HorizonFrozenError t1 r1 c1)  == (HorizonFrozenError t2 r2 c2)  = t1 == t2 && r1 == r2 && c1 == c2
+  _ == _ = False
+
+public export
+Show UniverseErr where
+  show (InvalidMultisetTextError txt) =
+    "InvalidMultisetTextError(" ++ txt ++ ")"
+  show (UnbalancedVacuumSplitError net) =
+    "UnbalancedVacuumSplitError(net=" ++ show net ++ " /= 0)"
+  show (HorizonFrozenError t r cyc) =
+    "HorizonFrozenError(time=" ++ showTime t ++ ", reason=" ++ show r ++ ", cycles=" ++ show cyc ++ ")"
+
+--------------------------------------------------------------------------------
+-- 3. BOUNDARY OUTCOMES & LOCAL PROPAGATION TELEMETRY
+--------------------------------------------------------------------------------
+
+||| Boundary report produced when closing and consuming the linear `App1` universe handle.
+public export
+data CloseOutcome : Type where
+  ||| All opposing pairs annihilated back to the 0D vacuum root `[]`.
+  CleanVacuumCollapse : CloseOutcome
+  ||| System froze at a static relic with exact global signed multiplicity sum and streaming work.
+  FrozenAtHorizon     : (staticTime : Time) -> (canonicalText : String) -> (workSteps : Nat) -> (globalNetSum : Integer) -> CloseOutcome
+
+public export
+Show CloseOutcome where
+  show CleanVacuumCollapse = "CleanVacuumCollapse([])"
+  show (FrozenAtHorizon t txt work net) =
+    "FrozenAtHorizon(time=" ++ showTime t ++ ", work=" ++ show work ++ ", net=" ++ show net ++ ", text=" ++ txt ++ ")"
+
+||| Report returned when probing a live black-box universe through a `HorizonSpec`.
+public export
+record HorizonObservationReport where
+  constructor MkHorizonObservationReport
+  horizonTime     : Time
+  retroDepth      : Nat
+  cyclesCompleted : Nat
+  streamWorkUsed  : Nat
+  freezeReason    : StreamFreezeReason
+
+public export
+Show HorizonObservationReport where
+  show r =
+    "HorizonObservationReport(time=" ++ showTime r.horizonTime ++
+    ", retro=" ++ show r.retroDepth ++
+    ", cycles=" ++ show r.cyclesCompleted ++
+    ", workUsed=" ++ show r.streamWorkUsed ++
+    ", reason=" ++ show r.freezeReason ++ ")"
+
+||| Telemetry returned by local proper-clock propagation (1-site Point vs. 2-site Dipole).
+public export
+record PropagationReport where
+  constructor MkPropagationReport
+  startPos      : (Nat, Nat)
+  endPos        : (Nat, Nat)
+  arrivalSweep  : Nat
+  deflectionY   : Integer
+  totalLocalLag : Nat
+
+public export
+Show PropagationReport where
+  show p =
+    "PropagationReport(start=" ++ show p.startPos ++
+    ", end=" ++ show p.endPos ++
+    ", arrivalSweep=" ++ show p.arrivalSweep ++
+    ", deflectionY=" ++ show p.deflectionY ++
+    ", totalLag=" ++ show p.totalLocalLag ++ ")"
