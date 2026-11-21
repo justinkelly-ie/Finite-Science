@@ -12,6 +12,7 @@ import Stage1.MultisetCodec
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
+import FiniteScience.SparseField
 import FiniteScience.FlatSpaceUniverse
 
 %default total
@@ -50,15 +51,15 @@ splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
-||| Injects a localized balanced breather dipole (`+amp` at `yPos`, `-amp` at `yNeg`) inside `root`.
+||| Injects a localized balanced breather dipole (`+amp` at `(x, yPos)`, `-amp` at `(x, yNeg)`) into `root`.
 export
 injectHereditaryBreather :
-  (x, yPos, yNeg : Nat) ->
-  (amp           : Integer) ->
-  (1 u           : HereditaryBlackBox) ->
+  (x, yPos, yNeg, amp : Integer) ->
+  (1 u                : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 injectHereditaryBreather x yPos yNeg amp (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (addHMSet root (seedBreatherNested x yPos yNeg amp)))
+  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseBreather pureMSetBasis x yPos yNeg amp)
+  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
 
 ||| Injects the balanced zero-sum wavepacket directly into `root : HereditaryMSet BoxInt`.
 export
@@ -66,7 +67,8 @@ injectHereditaryWavepacket :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 injectHereditaryWavepacket (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (addHMSet root seedWavepacketNested))
+  let sfRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 256)
+  in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
 
 ||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`srcDiv = 0`, zero congestion).
 export
@@ -74,16 +76,16 @@ stepHereditaryLinear1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryLinear1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepClosedEnergyNestedState 0 root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse 0 root))
 
-||| Pure closed self-sourced congestion + Wildberger Pythagorean `(24, 7, 25)` unified stepper
-||| directly inside `root : HereditaryMSet BoxInt` (`srcDiv = 32`, zero external battery).
+||| Pure closed self-sourced Laurent-stencil congestion + Wildberger Pythagorean unified stepper
+||| directly inside `root : HereditaryMSet BoxInt` (`srcDiv = 32`, zero mirror keys, zero clocks).
 export
 stepHereditaryUnified1 :
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 stepHereditaryUnified1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepClosedEnergyNestedState 32 root))
+  App1.pure1 (MkHereditaryBox (stepHereditarySparse 32 root))
 
 ||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
 ||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections

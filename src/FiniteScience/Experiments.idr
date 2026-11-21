@@ -14,6 +14,7 @@ import Stage1.MultisetCodec
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
+import FiniteScience.SparseField
 import FiniteScience.Settings
 import FiniteScience.FlatSpaceUniverse
 import FiniteScience.HereditaryUniverse
@@ -169,8 +170,8 @@ export
 runHereditaryUnobservedRef : App1 {u = Any} e String
 runHereditaryUnobservedRef = App1.do
   u0 <- bootHereditary0D
-  u1 <- injectHereditaryBreather 9 12 13 2048 u0
-  driveUnobservedUnified 4 4 u1
+  u1 <- injectHereditaryBreather 4 5 6 4096 u0
+  driveUnobservedUnified 3 3 u1
 
 export
 driveObservedZoomedTest : Nat -> (1 u : HereditaryBlackBox) -> Bool -> App1 {u = Any} e (String, Bool)
@@ -191,7 +192,7 @@ export
 driveObservedZoomedWarmup : Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e (String, Bool)
 driveObservedZoomedWarmup Z u = App1.do
   uw <- injectHereditaryWavepacket u
-  driveObservedZoomedTest 4 uw True
+  driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
   u1   <- stepHereditaryUnified1 u
   obsW <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 1) (redShift 1) (RetroTime 1) (\m => m /= emptyPureMSet)) u1
@@ -202,8 +203,8 @@ export
 runHereditaryZoomedObservedRef : App1 {u = Any} e (String, Bool)
 runHereditaryZoomedObservedRef = App1.do
   u0 <- bootHereditary0D
-  u1 <- injectHereditaryBreather 9 12 13 2048 u0
-  driveObservedZoomedWarmup 4 u1
+  u1 <- injectHereditaryBreather 4 5 6 4096 u0
+  driveObservedZoomedWarmup 3 u1
 
 export
 runExperiment3 : Has [Console] e => App e (Bool, List String)
@@ -233,8 +234,8 @@ runExperiment3 = do
   pure (pass, lines)
 
 --------------------------------------------------------------------------------
--- EXPERIMENT 4: CLOSED-ENERGY SELF-TRAPPING & ZERO-BATTERY GRAVITY
---   Zero pinned +32 battery! Wildberger Pythagorean (24,7,25) gate + self congestion.
+-- EXPERIMENT 4: SPARSE LAURENT STENCIL + ANTISYMMETRIC MAXEL + WILDBERGER PYTH
+--   Zero fixed box walls, zero clock registers, zero mirror trash-can keys!
 --------------------------------------------------------------------------------
 
 public export
@@ -242,6 +243,7 @@ record ModelExperimentMetrics where
   constructor MkModelExperimentMetrics
   totalComputeWork : Nat
   globalNetSum     : Integer
+  fluxAntisymOk    : Bool
   linearDispersion : SelfTrapReport
   selfTrappedCore  : SelfTrapReport
   vacWave          : WavepacketReport
@@ -259,9 +261,9 @@ stepFlatMode True  u = stepFlatUnified1 u
 stepFlatMode False u = stepFlatLinear1 u
 
 export
-maybeInjectFlatBreather : Maybe (Nat, Nat, Nat) -> (1 u : FlatBlackBox) -> App1 e FlatBlackBox
+maybeInjectFlatBreather : Maybe (Integer, Integer, Integer) -> (1 u : FlatBlackBox) -> App1 e FlatBlackBox
 maybeInjectFlatBreather Nothing              u = App1.pure1 u
-maybeInjectFlatBreather (Just (bx, yp, yn))  u = injectFlatBreather bx yp yn 2048 u
+maybeInjectFlatBreather (Just (bx, yp, yn))  u = injectFlatBreather bx yp yn 4096 u
 
 export
 driveFlatSelfTrap :
@@ -270,113 +272,122 @@ driveFlatSelfTrap :
   (1 u : FlatBlackBox) ->
   (initE, maxE : Integer) ->
   (accWork : Nat) ->
-  App1 {u = Any} e SelfTrapReport
+  App1 {u = Any} e (SelfTrapReport, Bool)
 driveFlatSelfTrap _ Z u initE maxE accWork = App1.do
   obs <- observeFlatDirect
-           (\s => (flatFieldEnergyOf s.snapWave, flatCoreEnergyFracOf s.snapWave, multiplicitySignedSum s.snapWave))
+           (\s => (fieldEnergy s.snapField, fieldCoreEnergyFrac coord2Basis s.snapField,
+                   fieldPsiNet s.snapField + fieldFluxNet s.snapField, fieldFluxAntisym s.snapField))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeFlat0D u1
   let finalE  = fst stats
       corePct = fst (snd stats)
-      netW    = abs (snd (snd stats)) + abs (closeNetSum closed)
-  App1.pure (MkSelfTrapReport initE finalE maxE corePct netW accWork)
+      fNet    = fst (snd (snd stats))
+      antiOk  = snd (snd (snd stats))
+      netW    = abs fNet + abs (closeNetSum closed)
+  App1.pure (MkSelfTrapReport initE finalE maxE corePct netW accWork, antiOk)
 driveFlatSelfTrap isUnified (S rem) u initE maxE accWork = App1.do
   u1  <- stepFlatMode isUnified u
   obs <- observeFlatDirect
-           (\s => (flatFieldEnergyOf s.snapWave, flatCongestionWorkOf s.snapLastWork + flatWaveTouchWorkOf s.snapWave))
+           (\s => (fieldEnergy s.snapField, fieldTouchWork s.snapField))
            u1
   let MkPureObs u2 tel _ = obs
   let nextMax = if fst tel > maxE then fst tel else maxE
   driveFlatSelfTrap isUnified rem u2 initE nextMax (accWork + snd tel)
 
 export
-runFlatSelfTrapScenario : Bool -> App1 {u = Any} e SelfTrapReport
+runFlatSelfTrapScenario : Bool -> App1 {u = Any} e (SelfTrapReport, Bool)
 runFlatSelfTrapScenario isUnified = App1.do
   u0 <- bootFlat0D
-  u1 <- injectFlatBreather 8 7 8 1024 u0
-  obs <- observeFlatDirect (\s => flatFieldEnergyOf s.snapWave) u1
+  u1 <- injectFlatBreather 0 0 1 2048 u0
+  obs <- observeFlatDirect (\s => fieldEnergy s.snapField) u1
   let MkPureObs u2 initE _ = obs
-  driveFlatSelfTrap isUnified 24 u2 initE initE 0
+  driveFlatSelfTrap isUnified 20 u2 initE initE 0
 
 export
-driveFlatBgOnly : Nat -> (1 u : FlatBlackBox) -> App1 {u = Any} e (Space 3)
+driveFlatBgOnly : Nat -> (1 u : FlatBlackBox) -> App1 {u = Any} e (SparseField Coord2)
 driveFlatBgOnly Z u = App1.do
-  obs <- observeFlatDirect (\s => s.snapWave) u
-  let MkPureObs u1 bgW _ = obs
+  obs <- observeFlatDirect (\s => s.snapField) u
+  let MkPureObs u1 bgF _ = obs
   _ <- closeFlat0D u1
-  App1.pure bgW
+  App1.pure bgF
 driveFlatBgOnly (S rem) u = App1.do
   u1 <- stepFlatUnified1 u
   driveFlatBgOnly rem u1
 
 export
-runFlatBgScenario : (Nat, Nat, Nat) -> App1 {u = Any} e (Space 3)
+runFlatBgScenario : (Integer, Integer, Integer) -> App1 {u = Any} e (SparseField Coord2)
 runFlatBgScenario (bx, yp, yn) = App1.do
   u0 <- bootFlat0D
-  u1 <- injectFlatBreather bx yp yn 2048 u0
-  driveFlatBgOnly 34 u1
+  u1 <- injectFlatBreather bx yp yn 4096 u0
+  driveFlatBgOnly 28 u1
 
 export
 driveFlatLiveWave :
-  (bgWave : Space 3) ->
+  (bgField : SparseField Coord2) ->
   (rem : Nat) ->
   (1 u : FlatBlackBox) ->
   (initE, maxE : Integer) ->
   (accWork : Nat) ->
-  App1 {u = Any} e (WavepacketReport, Nat, Integer)
-driveFlatLiveWave bgWave Z u initE maxE accWork = App1.do
-  obs <- observeFlatDirect (\s => (s.snapWave, flatFieldEnergyOf s.snapWave)) u
-  let MkPureObs u1 finalPair _ = obs
+  App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
+driveFlatLiveWave bgField Z u initE maxE accWork = App1.do
+  obs <- observeFlatDirect
+           (\s => (s.snapField, fieldEnergy s.snapField, fieldFluxAntisym s.snapField))
+           u
+  let MkPureObs u1 finalTriple _ = obs
   closed <- closeFlat0D u1
-  let wRep = measureWaveBandFlat (fst finalPair) bgWave initE (snd finalPair) maxE accWork
-  App1.pure (wRep, accWork, closeNetSum closed)
-driveFlatLiveWave bgWave (S rem) u initE maxE accWork = App1.do
+  let finF   = fst finalTriple
+      finE   = fst (snd finalTriple)
+      antiOk = snd (snd finalTriple)
+      wRep   = measureSparseBand coord2Basis finF bgField initE finE maxE accWork
+  App1.pure (wRep, accWork, closeNetSum closed, antiOk)
+driveFlatLiveWave bgField (S rem) u initE maxE accWork = App1.do
   u1  <- stepFlatUnified1 u
   obs <- observeFlatDirect
-           (\s => (flatFieldEnergyOf s.snapWave, flatCongestionWorkOf s.snapLastWork + flatWaveTouchWorkOf s.snapWave))
+           (\s => (fieldEnergy s.snapField, fieldTouchWork s.snapField))
            u1
   let MkPureObs u2 tel _ = obs
   let nextMax = if fst tel > maxE then fst tel else maxE
-  driveFlatLiveWave bgWave rem u2 initE nextMax (accWork + snd tel)
+  driveFlatLiveWave bgField rem u2 initE nextMax (accWork + snd tel)
 
 export
 driveFlatWarmupWave :
-  (bgWave : Space 3) ->
+  (bgField : SparseField Coord2) ->
   (rem : Nat) ->
   (1 u : FlatBlackBox) ->
   (accWork : Nat) ->
-  App1 {u = Any} e (WavepacketReport, Nat, Integer)
-driveFlatWarmupWave bgWave Z u accWork = App1.do
+  App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
+driveFlatWarmupWave bgField Z u accWork = App1.do
   u1  <- injectFlatWavepacket u
-  obs <- observeFlatDirect (\s => flatFieldEnergyOf s.snapWave) u1
+  obs <- observeFlatDirect (\s => fieldEnergy s.snapField) u1
   let MkPureObs u2 initE _ = obs
-  driveFlatLiveWave bgWave 22 u2 initE initE accWork
-driveFlatWarmupWave bgWave (S rem) u accWork = App1.do
+  driveFlatLiveWave bgField 18 u2 initE initE accWork
+driveFlatWarmupWave bgField (S rem) u accWork = App1.do
   u1  <- stepFlatUnified1 u
-  obs <- observeFlatDirect (\s => flatCongestionWorkOf s.snapLastWork + flatWaveTouchWorkOf s.snapWave) u1
+  obs <- observeFlatDirect (\s => fieldTouchWork s.snapField) u1
   let MkPureObs u2 stepW _ = obs
-  driveFlatWarmupWave bgWave rem u2 (accWork + stepW)
+  driveFlatWarmupWave bgField rem u2 (accWork + stepW)
 
 export
-runFlatWaveScenario : Maybe (Nat, Nat, Nat) -> Space 3 -> App1 {u = Any} e (WavepacketReport, Nat, Integer)
-runFlatWaveScenario mBr bgWave = App1.do
+runFlatWaveScenario : Maybe (Integer, Integer, Integer) -> SparseField Coord2 -> App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
+runFlatWaveScenario mBr bgField = App1.do
   u0 <- bootFlat0D
   u1 <- maybeInjectFlatBreather mBr u0
-  driveFlatWarmupWave bgWave 12 u1 0
+  driveFlatWarmupWave bgField 10 u1 0
 
 export
 runFlatGravitySuite : App1 {u = Any} e ModelExperimentMetrics
 runFlatGravitySuite = App1.do
-  linRep              <- runFlatSelfTrapScenario False
-  trapRep             <- runFlatSelfTrapScenario True
-  bgTop               <- runFlatBgScenario (9, 12, 13)
-  bgBot               <- runFlatBgScenario (9, 3, 2)
-  (vRep, _, netVac)   <- runFlatWaveScenario Nothing emptyMSet
-  (tRep, tWork, netT) <- runFlatWaveScenario (Just (9, 12, 13)) bgTop
-  (bRep, _, netB)     <- runFlatWaveScenario (Just (9, 3, 2)) bgBot
+  (linRep, okLin)         <- runFlatSelfTrapScenario False
+  (trapRep, okTrap)       <- runFlatSelfTrapScenario True
+  bgTop                   <- runFlatBgScenario (4, 5, 6)
+  bgBot                   <- runFlatBgScenario (4, -4, -5)
+  (vRep, _, netVac, okV)  <- runFlatWaveScenario Nothing emptySparseField
+  (tRep, tW, netT, okT)   <- runFlatWaveScenario (Just (4, 5, 6)) bgTop
+  (bRep, _, netB, okB)    <- runFlatWaveScenario (Just (4, -4, -5)) bgBot
   let totalAbsNet = abs netVac + abs netT + abs netB + abs linRep.netSignedSum + abs trapRep.netSignedSum
-  App1.pure (MkModelExperimentMetrics (tWork + trapRep.workSteps) totalAbsNet linRep trapRep vRep tRep bRep)
+  let antiAll     = okLin && okTrap && okV && okT && okB
+  App1.pure (MkModelExperimentMetrics (tW + trapRep.workSteps) totalAbsNet antiAll linRep trapRep vRep tRep bRep)
 
 export
 stepHereditaryMode : Bool -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
@@ -384,9 +395,13 @@ stepHereditaryMode True  u = stepHereditaryUnified1 u
 stepHereditaryMode False u = stepHereditaryLinear1 u
 
 export
-maybeInjectHereditaryBreather : Maybe (Nat, Nat, Nat) -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
+maybeInjectHereditaryBreather : Maybe (Integer, Integer, Integer) -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
 maybeInjectHereditaryBreather Nothing             u = App1.pure1 u
-maybeInjectHereditaryBreather (Just (bx, yp, yn)) u = injectHereditaryBreather bx yp yn 2048 u
+maybeInjectHereditaryBreather (Just (bx, yp, yn)) u = injectHereditaryBreather bx yp yn 4096 u
+
+export
+rootFieldOf : PureMultiset -> SparseField PureMultiset
+rootFieldOf r = (unpackRootToSparseField r).fieldData
 
 export
 driveHereditarySelfTrap :
@@ -395,32 +410,39 @@ driveHereditarySelfTrap :
   (1 u : HereditaryBlackBox) ->
   (initE, maxE : Integer) ->
   (accWork : Nat) ->
-  App1 {u = Any} e SelfTrapReport
+  App1 {u = Any} e (SelfTrapReport, Bool)
 driveHereditarySelfTrap _ Z u initE maxE accWork = App1.do
   obs <- observeHereditaryPure
-           (directPureLens (\r => (nestedFieldEnergyOf r, nestedCoreEnergyFracOf r, unwrapBox (sumHMSet r))))
+           (directPureLens
+              (\r => let sf = rootFieldOf r
+                     in (fieldEnergy sf, fieldCoreEnergyFrac pureMSetBasis sf,
+                         unwrapBox (sumHMSet r), fieldFluxAntisym sf)))
            u
   let MkPureObs u1 stats _ = obs
   closed <- closeHereditary0D u1
   let finalE  = fst stats
       corePct = fst (snd stats)
-      netW    = abs (snd (snd stats)) + abs (closeNetSum closed)
-  App1.pure (MkSelfTrapReport initE finalE maxE corePct netW accWork)
+      rNet    = fst (snd (snd stats))
+      antiOk  = snd (snd (snd stats))
+      netW    = abs rNet + abs (closeNetSum closed)
+  App1.pure (MkSelfTrapReport initE finalE maxE corePct netW accWork, antiOk)
 driveHereditarySelfTrap isUnified (S rem) u initE maxE accWork = App1.do
   u1  <- stepHereditaryMode isUnified u
-  obs <- observeHereditaryPure (directPureLens (\r => (nestedFieldEnergyOf r, fastNestedStepWorkOf r))) u1
+  obs <- observeHereditaryPure
+           (directPureLens (\r => (fieldEnergy (rootFieldOf r), fastNestedStepWorkOf r)))
+           u1
   let MkPureObs u2 tel _ = obs
   let nextMax = if fst tel > maxE then fst tel else maxE
   driveHereditarySelfTrap isUnified rem u2 initE nextMax (accWork + snd tel)
 
 export
-runHereditarySelfTrapScenario : Bool -> App1 {u = Any} e SelfTrapReport
+runHereditarySelfTrapScenario : Bool -> App1 {u = Any} e (SelfTrapReport, Bool)
 runHereditarySelfTrapScenario isUnified = App1.do
   u0 <- bootHereditary0D
-  u1 <- injectHereditaryBreather 8 7 8 1024 u0
-  obs <- observeHereditaryPure (directPureLens nestedFieldEnergyOf) u1
+  u1 <- injectHereditaryBreather 0 0 1 2048 u0
+  obs <- observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))) u1
   let MkPureObs u2 initE _ = obs
-  driveHereditarySelfTrap isUnified 24 u2 initE initE 0
+  driveHereditarySelfTrap isUnified 20 u2 initE initE 0
 
 export
 driveHereditaryBgOnly : Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e PureMultiset
@@ -434,11 +456,11 @@ driveHereditaryBgOnly (S rem) u = App1.do
   driveHereditaryBgOnly rem u1
 
 export
-runHereditaryBgScenario : (Nat, Nat, Nat) -> App1 {u = Any} e PureMultiset
+runHereditaryBgScenario : (Integer, Integer, Integer) -> App1 {u = Any} e PureMultiset
 runHereditaryBgScenario (bx, yp, yn) = App1.do
   u0 <- bootHereditary0D
-  u1 <- injectHereditaryBreather bx yp yn 2048 u0
-  driveHereditaryBgOnly 34 u1
+  u1 <- injectHereditaryBreather bx yp yn 4096 u0
+  driveHereditaryBgOnly 28 u1
 
 export
 driveHereditaryLiveWave :
@@ -447,24 +469,31 @@ driveHereditaryLiveWave :
   (1 u : HereditaryBlackBox) ->
   (initE, maxE : Integer) ->
   (accWork : Nat) ->
-  App1 {u = Any} e (WavepacketReport, Nat, Integer)
+  App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
 driveHereditaryLiveWave bgRoot Z u initE maxE accWork = App1.do
   obsLens <- observeHereditaryPure
-               (zoomedExternalLens id (blackShift 1) zeroShift (RetroTime 34) (\zr => zoomSpace (redShift 1) zr))
+               (zoomedExternalLens id (blackShift 1) zeroShift (RetroTime 28) (\zr => zoomSpace (redShift 1) zr))
                u
   let MkPureObs u1 zoomedBack _ = obsLens
-  obs <- observeHereditaryPure (directPureLens (\r => (r, nestedFieldEnergyOf r))) u1
-  let MkPureObs u2 finalPair _ = obs
-  let lensPreserved = zoomedBack == fst finalPair
+  obs <- observeHereditaryPure
+           (directPureLens (\r => let sf = rootFieldOf r in (r, fieldEnergy sf, fieldFluxAntisym sf)))
+           u1
+  let MkPureObs u2 finalTriple _ = obs
+  let finRoot       = fst finalTriple
+      finE          = fst (snd finalTriple)
+      antiOk        = snd (snd finalTriple)
+      lensPreserved = zoomedBack == finRoot
   closed <- closeHereditary0D u2
-  let wRep0 = measureWaveBandNested (fst finalPair) bgRoot initE (snd finalPair) maxE accWork
+  let wRep0 = measureSparseBand pureMSetBasis (rootFieldOf finRoot) (rootFieldOf bgRoot) initE finE maxE accWork
       wRep  = if lensPreserved
                 then wRep0
                 else { waveNetSum := -999 } wRep0
-  App1.pure (wRep, accWork, closeNetSum closed)
+  App1.pure (wRep, accWork, closeNetSum closed, antiOk && lensPreserved)
 driveHereditaryLiveWave bgRoot (S rem) u initE maxE accWork = App1.do
   u1  <- stepHereditaryUnified1 u
-  obs <- observeHereditaryPure (directPureLens (\r => (nestedFieldEnergyOf r, fastNestedStepWorkOf r))) u1
+  obs <- observeHereditaryPure
+           (directPureLens (\r => (fieldEnergy (rootFieldOf r), fastNestedStepWorkOf r)))
+           u1
   let MkPureObs u2 tel _ = obs
   let nextMax = if fst tel > maxE then fst tel else maxE
   driveHereditaryLiveWave bgRoot rem u2 initE nextMax (accWork + snd tel)
@@ -475,12 +504,12 @@ driveHereditaryWarmupWave :
   (rem : Nat) ->
   (1 u : HereditaryBlackBox) ->
   (accWork : Nat) ->
-  App1 {u = Any} e (WavepacketReport, Nat, Integer)
+  App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
 driveHereditaryWarmupWave bgRoot Z u accWork = App1.do
   u1  <- injectHereditaryWavepacket u
-  obs <- observeHereditaryPure (directPureLens nestedFieldEnergyOf) u1
+  obs <- observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))) u1
   let MkPureObs u2 initE _ = obs
-  driveHereditaryLiveWave bgRoot 22 u2 initE initE accWork
+  driveHereditaryLiveWave bgRoot 18 u2 initE initE accWork
 driveHereditaryWarmupWave bgRoot (S rem) u accWork = App1.do
   u1  <- stepHereditaryUnified1 u
   obs <- observeHereditaryPure (directPureLens fastNestedStepWorkOf) u1
@@ -488,24 +517,25 @@ driveHereditaryWarmupWave bgRoot (S rem) u accWork = App1.do
   driveHereditaryWarmupWave bgRoot rem u2 (accWork + stepW)
 
 export
-runHereditaryWaveScenario : Maybe (Nat, Nat, Nat) -> PureMultiset -> App1 {u = Any} e (WavepacketReport, Nat, Integer)
+runHereditaryWaveScenario : Maybe (Integer, Integer, Integer) -> PureMultiset -> App1 {u = Any} e (WavepacketReport, Nat, Integer, Bool)
 runHereditaryWaveScenario mBr bgRoot = App1.do
   u0 <- bootHereditary0D
   u1 <- maybeInjectHereditaryBreather mBr u0
-  driveHereditaryWarmupWave bgRoot 12 u1 0
+  driveHereditaryWarmupWave bgRoot 10 u1 0
 
 export
 runHereditaryGravitySuite : App1 {u = Any} e ModelExperimentMetrics
 runHereditaryGravitySuite = App1.do
-  linRep              <- runHereditarySelfTrapScenario False
-  trapRep             <- runHereditarySelfTrapScenario True
-  bgTop               <- runHereditaryBgScenario (9, 12, 13)
-  bgBot               <- runHereditaryBgScenario (9, 3, 2)
-  (vRep, _, netVac)   <- runHereditaryWaveScenario Nothing emptyPureMSet
-  (tRep, tWork, netT) <- runHereditaryWaveScenario (Just (9, 12, 13)) bgTop
-  (bRep, _, netB)     <- runHereditaryWaveScenario (Just (9, 3, 2)) bgBot
+  (linRep, okLin)        <- runHereditarySelfTrapScenario False
+  (trapRep, okTrap)      <- runHereditarySelfTrapScenario True
+  bgTop                  <- runHereditaryBgScenario (4, 5, 6)
+  bgBot                  <- runHereditaryBgScenario (4, -4, -5)
+  (vRep, _, netVac, okV) <- runHereditaryWaveScenario Nothing emptyPureMSet
+  (tRep, tW, netT, okT)  <- runHereditaryWaveScenario (Just (4, 5, 6)) bgTop
+  (bRep, _, netB, okB)   <- runHereditaryWaveScenario (Just (4, -4, -5)) bgBot
   let totalAbsNet = abs netVac + abs netT + abs netB + abs linRep.netSignedSum + abs trapRep.netSignedSum
-  App1.pure (MkModelExperimentMetrics (tWork + trapRep.workSteps) totalAbsNet linRep trapRep vRep tRep bRep)
+  let antiAll     = okLin && okTrap && okV && okT && okB
+  App1.pure (MkModelExperimentMetrics (tW + trapRep.workSteps) totalAbsNet antiAll linRep trapRep vRep tRep bRep)
 
 public export
 selfTrapCriteriaOk : SelfTrapReport -> SelfTrapReport -> Bool
@@ -523,11 +553,13 @@ public export
 gravityCriteriaOk : ModelExperimentMetrics -> Bool
 gravityCriteriaOk m =
   let symSum = m.massAboveWave.meanYMilli + m.massBelowWave.meanYMilli
-  in (m.globalNetSum == 0) &&
+  in m.fluxAntisymOk &&
+     (m.globalNetSum == 0) &&
      selfTrapCriteriaOk m.linearDispersion m.selfTrappedCore &&
      (m.vacWave.waveNetSum == 0) &&
      (m.massAboveWave.waveNetSum == 0) &&
      (m.massBelowWave.waveNetSum == 0) &&
+     (m.vacWave.waveEnergy * 100 >= m.vacWave.initEnergy * 85) &&
      (m.vacWave.waveEnergy <= m.vacWave.initEnergy) &&
      (m.vacWave.maxEnergy <= m.vacWave.initEnergy) &&
      (m.massAboveWave.waveEnergy <= m.massAboveWave.initEnergy) &&
@@ -535,15 +567,15 @@ gravityCriteriaOk m =
      (m.massBelowWave.waveEnergy <= m.massBelowWave.initEnergy) &&
      (m.massBelowWave.maxEnergy <= m.massBelowWave.initEnergy) &&
      (m.massAboveWave.waveEnergy * 100 >= m.massAboveWave.initEnergy * 95) &&
-     (m.vacWave.meanYMilli == 7500) &&
+     (m.vacWave.meanYMilli == 500) &&
      (m.vacWave.poyntingYAccum == 0) &&
      (m.massAboveWave.meanXMilli < m.vacWave.meanXMilli) &&
-     (m.massAboveWave.meanYMilli > 7500) &&
+     (m.massAboveWave.meanYMilli > 500) &&
      (m.massAboveWave.poyntingYAccum > 0) &&
      (m.massBelowWave.meanXMilli == m.massAboveWave.meanXMilli) &&
-     (m.massBelowWave.meanYMilli < 7500) &&
+     (m.massBelowWave.meanYMilli < 500) &&
      (m.massBelowWave.poyntingYAccum == -(m.massAboveWave.poyntingYAccum)) &&
-     (symSum == 14999) &&
+     (symSum == 999) &&
      (m.massBelowWave.waveEnergy == m.massAboveWave.waveEnergy) &&
      (m.totalComputeWork > 0)
 
@@ -571,45 +603,47 @@ export
 runExperiment4and5 : Has [Console] e => App e (Bool, List String)
 runExperiment4and5 = do
   let h = "----------------------------------------------------------------"
-  let t4 = "[Experiment 4] Closed-Energy Self-Trapping & Zero-Battery Gravity (Pyth 24-7-25)"
-  let t5 = "[Experiment 5] A/B Comparison: App1 Flat Space 3 vs HereditaryMSet BoxInt"
+  let t4 = "[Experiment 4] Sparse Laurent Stencil + Antisym Maxel + Wildberger Pyth"
+  let t5 = "[Experiment 5] A/B Comparison: App1 Coord2 vs HereditaryMSet BoxInt"
   resA <- app1 runFlatGravitySuite
   resB <- app1 runHereditaryGravitySuite
   let okA = gravityCriteriaOk resA
   let okB = gravityCriteriaOk resB
+  let seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 256)
   let agreement =
         sameSelfTrapPhysics resA.linearDispersion resB.linearDispersion &&
         sameSelfTrapPhysics resA.selfTrappedCore resB.selfTrappedCore &&
         sameWavePhysics resA.vacWave resB.vacWave &&
         sameWavePhysics resA.massAboveWave resB.massAboveWave &&
         sameWavePhysics resA.massBelowWave resB.massBelowWave &&
-        (unwrapBox (sumHMSet seedWavepacketNested) == 0) &&
-        (resA.globalNetSum == 0 && resB.globalNetSum == 0)
+        (unwrapBox (sumHMSet seedRoot) == 0) &&
+        (resA.globalNetSum == 0 && resB.globalNetSum == 0) &&
+        resA.fluxAntisymOk && resB.fluxAntisymOk
   let nestedHigherWork = resB.totalComputeWork > resA.totalComputeWork
   let pass = okA && okB && agreement && nestedHigherWork
   let lines = [ h
               , t4
-              , "  * 4A Single E0 Split (+1024/-1024) Self-Trapping vs Linear Dispersion (24 sweeps):"
+              , "  * 4A Unbounded Sparse Self-Trapping (+2048/-2048 at (0,0)/(0,1), 20 sweeps):"
               , "    - Linear Dispersion  (A) -> " ++ show resA.linearDispersion
               , "    - Self-Trapped Core  (A) -> " ++ show resA.selfTrappedCore
               , "    - Self-Trapped Core  (B) -> " ++ show resB.selfTrappedCore
-              , "  * 4B Zero-Battery Multi-Particle Gravity (Self-Trapped Breather + Wavepacket):"
+              , "  * 4B Zero-Clock, Zero-Wall, Zero-Mirror-Key Gravity (Breather + Wavepacket):"
               , "    - Vacuum Control     (A) -> " ++ show resA.vacWave
-              , "    - Top Breather(9,12) (A) -> " ++ show resA.massAboveWave
-              , "    - Bot Breather(9,3)  (A) -> " ++ show resA.massBelowWave
-              , "    - Top Breather(9,12) (B) -> " ++ show resB.massAboveWave
-              , "  * Hypothesis Check (Lyapunov E<=E0 + SelfTrap + Shapiro + Drift + Sy): okA=" ++ show okA ++ ", okB=" ++ show okB
+              , "    - Top Breather(4,5)  (A) -> " ++ show resA.massAboveWave
+              , "    - Bot Breather(4,-4) (A) -> " ++ show resA.massBelowWave
+              , "    - Top Breather(4,5)  (B) -> " ++ show resB.massAboveWave
+              , "  * Hypothesis Check (Stencil + AntisymMaxel + Lyapunov + SelfTrap + Drift + Sy): okA=" ++ show okA ++ ", okB=" ++ show okB
               , h
               , t5
-              , "  | Metric / Capability            | Model A (Flat Space 3) | Model B (HereditaryMSet) |"
-              , "  | Global 0D Zero-Sum Net         | " ++ show resA.globalNetSum ++ " | " ++ show resB.globalNetSum ++ " |"
+              , "  | Metric / Capability            | Model A (Sparse Coord2)| Model B (HereditaryMSet) |"
+              , "  | Global 0D Net & AntisymMaxel   | net=" ++ show resA.globalNetSum ++ ", anti=" ++ show resA.fluxAntisymOk ++ " | net=" ++ show resB.globalNetSum ++ ", anti=" ++ show resB.fluxAntisymOk ++ " |"
               , "  | 4A CoreTrap (Lin -> SelfTrap)  | " ++ show resA.linearDispersion.coreFracPct ++ "% -> " ++ show resA.selfTrappedCore.coreFracPct ++ "% | " ++ show resB.linearDispersion.coreFracPct ++ "% -> " ++ show resB.selfTrappedCore.coreFracPct ++ "% |"
-              , "  | Vac Centroid (x*1e3, y*1e3)    | (" ++ show resA.vacWave.meanXMilli ++ ", " ++ show resA.vacWave.meanYMilli ++ ") | (" ++ show resB.vacWave.meanXMilli ++ ", " ++ show resB.vacWave.meanYMilli ++ ") |"
-              , "  | Top(9,12) Centroid & Sy        | (" ++ show resA.massAboveWave.meanXMilli ++ ", " ++ show resA.massAboveWave.meanYMilli ++ "), Sy=" ++ show resA.massAboveWave.poyntingYAccum ++ " | (" ++ show resB.massAboveWave.meanXMilli ++ ", " ++ show resB.massAboveWave.meanYMilli ++ "), Sy=" ++ show resB.massAboveWave.poyntingYAccum ++ " |"
-              , "  | Bot(9,3)  Centroid & Sy        | (" ++ show resA.massBelowWave.meanXMilli ++ ", " ++ show resA.massBelowWave.meanYMilli ++ "), Sy=" ++ show resA.massBelowWave.poyntingYAccum ++ " | (" ++ show resB.massBelowWave.meanXMilli ++ ", " ++ show resB.massBelowWave.meanYMilli ++ "), Sy=" ++ show resB.massBelowWave.poyntingYAccum ++ " |"
+              , "  | Vac Centroid & E retained      | (" ++ show resA.vacWave.meanXMilli ++ ", " ++ show resA.vacWave.meanYMilli ++ "), " ++ show (divIntegerPos (resA.vacWave.waveEnergy * 100) resA.vacWave.initEnergy) ++ "% | (" ++ show resB.vacWave.meanXMilli ++ ", " ++ show resB.vacWave.meanYMilli ++ "), " ++ show (divIntegerPos (resB.vacWave.waveEnergy * 100) resB.vacWave.initEnergy) ++ "% |"
+              , "  | Top(4,5) Centroid & Sy         | (" ++ show resA.massAboveWave.meanXMilli ++ ", " ++ show resA.massAboveWave.meanYMilli ++ "), Sy=" ++ show resA.massAboveWave.poyntingYAccum ++ " | (" ++ show resB.massAboveWave.meanXMilli ++ ", " ++ show resB.massAboveWave.meanYMilli ++ "), Sy=" ++ show resB.massAboveWave.poyntingYAccum ++ " |"
+              , "  | Bot(4,-4) Centroid & Sy        | (" ++ show resA.massBelowWave.meanXMilli ++ ", " ++ show resA.massBelowWave.meanYMilli ++ "), Sy=" ++ show resA.massBelowWave.poyntingYAccum ++ " | (" ++ show resB.massBelowWave.meanXMilli ++ ", " ++ show resB.massBelowWave.meanYMilli ++ "), Sy=" ++ show resB.massBelowWave.poyntingYAccum ++ " |"
               , "  | Lyapunov Bound (Top E0 -> Fin) | " ++ show resA.massAboveWave.initEnergy ++ " -> " ++ show resA.massAboveWave.waveEnergy ++ " | " ++ show resB.massAboveWave.initEnergy ++ " -> " ++ show resB.massAboveWave.waveEnergy ++ " |"
               , "  | Total Compute Work (Co-Ev)     | " ++ show resA.totalComputeWork ++ " | " ++ show resB.totalComputeWork ++ " |"
-              , "  | Native Vertical zoomSpace      | No (fixed 3D grid)     | Yes (viewAsAntiBox)      |"
+              , "  | Native Vertical zoomSpace      | No (flat pair coords)  | Yes (viewAsAntiBox)      |"
               , "  -> Experiment 4 & 5 pass=" ++ show pass
               ]
   traverse_ putStrLn lines
