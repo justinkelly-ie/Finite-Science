@@ -96,18 +96,24 @@ stepHereditaryCongestion sweeps (MkHereditaryBox root) =
   let (nxtRoot, totalWork) = runChipFireNested sweeps root
   in App1.pure1 (MkHereditaryLinRes (MkHereditaryBox nxtRoot) totalWork)
 
-||| Propagates a 1-site Point probe and a 2-site Extended Dipole strictly through the
-||| nested `channelWork` entries stored inside `root` (`(4,5)->(12,5)` and `(4,5)/(4,3)->x=12`).
+||| Injects the balanced zero-sum wavepacket directly into `root : HereditaryMSet BoxInt`.
 export
-probeHereditaryLocalPropagation :
-  (sweeps : Nat) ->
-  (1 u    : HereditaryBlackBox) ->
-  App1 e (HereditaryLinRes (PropagationReport, PropagationReport))
-probeHereditaryLocalPropagation sweeps (MkHereditaryBox root) =
-  let lagFn  = lookupNestedWorkXY root
-      repPt  = runPointProbe sweeps 4 5 12 lagFn
-      repDip = runDipoleProbe sweeps 4 5 3 12 lagFn
-  in App1.pure1 (MkHereditaryLinRes (MkHereditaryBox root) (repPt, repDip))
+injectHereditaryWavepacket :
+  (1 u : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+injectHereditaryWavepacket (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (addHMSet root seedWavepacketNested))
+
+||| Co-evolves BOTH local `±1` chip-firing congestion AND the isotropic local-clock-gated wavepacket
+||| strictly inside the single `HereditaryMSet BoxInt` `root` (`sumHMSet root == 0` invariant!).
+export
+stepHereditaryUnifiedWave :
+  (steps : Nat) ->
+  (1 u   : HereditaryBlackBox) ->
+  App1 e (HereditaryLinRes (WavepacketReport, Nat))
+stepHereditaryUnifiedWave steps (MkHereditaryBox root) =
+  let (nxtRoot, wRep, congW) = runUnifiedNestedWave steps root
+  in App1.pure1 (MkHereditaryLinRes (MkHereditaryBox nxtRoot) (wRep, congW))
 
 public export
 findMatterPayloadAt : (Nat, Nat, Nat) -> HereditaryMSet BoxInt -> HereditaryMSet BoxInt

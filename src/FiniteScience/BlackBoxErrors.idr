@@ -110,21 +110,34 @@ Show HorizonObservationReport where
     ", workUsed=" ++ show r.streamWorkUsed ++
     ", reason=" ++ show r.freezeReason ++ ")"
 
-||| Telemetry returned by local proper-clock propagation (1-site Point vs. 2-site Dipole).
+||| Telemetry returned by the unified, probe-free lattice wavepacket co-evolving
+||| under strictly local `±1` link updates and `±1` congestion.
 public export
-record PropagationReport where
-  constructor MkPropagationReport
-  startPos      : (Nat, Nat)
-  endPos        : (Nat, Nat)
-  arrivalSweep  : Nat
-  deflectionY   : Integer
-  totalLocalLag : Nat
+record WavepacketReport where
+  constructor MkWavepacketReport
+  meanXMilli     : Integer
+  meanYMilli     : Integer
+  poyntingYAccum : Integer
+  waveEnergy     : Integer
+  waveNetSum     : Integer
+  waveWorkSteps  : Nat
 
 public export
-Show PropagationReport where
-  show p =
-    "PropagationReport(start=" ++ show p.startPos ++
-    ", end=" ++ show p.endPos ++
-    ", arrivalSweep=" ++ show p.arrivalSweep ++
-    ", deflectionY=" ++ show p.deflectionY ++
-    ", totalLag=" ++ show p.totalLocalLag ++ ")"
+Eq WavepacketReport where
+  a == b =
+    a.meanXMilli == b.meanXMilli &&
+    a.meanYMilli == b.meanYMilli &&
+    a.poyntingYAccum == b.poyntingYAccum &&
+    a.waveEnergy == b.waveEnergy &&
+    a.waveNetSum == b.waveNetSum &&
+    a.waveWorkSteps == b.waveWorkSteps
+
+public export
+Show WavepacketReport where
+  show w =
+    "WavepacketReport(meanXMilli=" ++ show w.meanXMilli ++
+    ", meanYMilli=" ++ show w.meanYMilli ++
+    ", poyntingYAccum=" ++ show w.poyntingYAccum ++
+    ", waveEnergy=" ++ show w.waveEnergy ++
+    ", waveNetSum=" ++ show w.waveNetSum ++
+    ", waveWorkSteps=" ++ show w.waveWorkSteps ++ ")"

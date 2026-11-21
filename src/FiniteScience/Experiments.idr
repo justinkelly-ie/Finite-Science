@@ -162,108 +162,144 @@ runExperiment3 = do
   pure (pass, lines)
 
 --------------------------------------------------------------------------------
--- EXPERIMENT 4: STRICTLY LOCAL ±1 CONGESTION (1-SITE POINT VS. 2-SITE DIPOLE)
+-- EXPERIMENT 4: UNIFIED PROBE-FREE LATTICE WAVEPACKET IN CO-EVOLVING ±1 TRAFFIC
+--   Zero PointState / DipoleState structs, zero Huygens pivot heuristics!
 --------------------------------------------------------------------------------
 
 public export
 record ModelExperimentMetrics where
   constructor MkModelExperimentMetrics
-  congestionWork : Nat
-  globalNetSum   : Integer
-  vacPoint       : PropagationReport
-  vacDipole      : PropagationReport
-  massPoint      : PropagationReport
-  massDipole     : PropagationReport
+  totalComputeWork : Nat
+  globalNetSum     : Integer
+  vacWave          : WavepacketReport
+  massAboveWave    : WavepacketReport
+  massBelowWave    : WavepacketReport
+
+public export
+closeNetSum : CloseOutcome -> Integer
+closeNetSum CleanVacuumCollapse       = 0
+closeNetSum (FrozenAtHorizon _ _ _ g) = g
+
+export
+maybeSplitFlat : Maybe (Nat, Nat) -> (1 u : FlatBlackBox) -> App1 e FlatBlackBox
+maybeSplitFlat Nothing         u = App1.pure1 u
+maybeSplitFlat (Just (mx, my)) u = splitFlatFromVacuum (mx, my, 0) (30, 30, 0) (intToBoxInt 50) u
+
+export
+runFlatWaveScenario : Maybe (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, Nat, Integer)
+runFlatWaveScenario mPos = App1.do
+  u0 <- bootFlat0D
+  u1 <- maybeSplitFlat mPos u0
+  r2 <- stepFlatCongestion 25 u1
+  let MkFlatLinRes u2 warmW = r2
+  u3 <- injectFlatWavepacket u2
+  r4 <- stepFlatUnifiedWave 30 u3
+  let MkFlatLinRes u4 (wRep, coCongW) = r4
+  closed <- closeFlat0D u4
+  App1.pure (wRep, warmW + coCongW + wRep.waveWorkSteps, closeNetSum closed)
 
 export
 runFlatGravitySuite : App1 {u = Any} e ModelExperimentMetrics
 runFlatGravitySuite = App1.do
-  -- Vacuum control (0 interior mass)
-  v0 <- bootFlat0D
-  rv1 <- stepFlatCongestion 25 v0
-  let MkFlatLinRes v1 _ = rv1
-  rv2 <- probeFlatLocalPropagation 30 v1
-  let MkFlatLinRes v2 (vPt, vDip) = rv2
-  _ <- closeFlat0D v2
+  (vRep, _, netVac)   <- runFlatWaveScenario Nothing
+  (tRep, tWork, netT) <- runFlatWaveScenario (Just (9, 10))
+  (bRep, _, netB)     <- runFlatWaveScenario (Just (9, 4))
+  let totalAbsNet = abs netVac + abs netT + abs netB
+  App1.pure (MkModelExperimentMetrics tWork totalAbsNet vRep tRep bRep)
 
-  -- Balanced Heavy Mass split: +50 at (8,7,0) and -50 at far boundary (30,30,0) -> global net == 0!
-  m0 <- bootFlat0D
-  m1 <- splitFlatFromVacuum (8, 7, 0) (30, 30, 0) (intToBoxInt 50) m0
-  rm2 <- stepFlatCongestion 25 m1
-  let MkFlatLinRes m2 workSteps = rm2
-  rm3 <- probeFlatLocalPropagation 30 m2
-  let MkFlatLinRes m3 (mPt, mDip) = rm3
-  closed <- closeFlat0D m3
-  let net = case closed of
-              CleanVacuumCollapse    => 0
-              FrozenAtHorizon _ _ _ g => g
-  App1.pure (MkModelExperimentMetrics workSteps net vPt vDip mPt mDip)
+export
+maybeSplitHereditary : Maybe (Nat, Nat) -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
+maybeSplitHereditary Nothing         u = App1.pure1 u
+maybeSplitHereditary (Just (mx, my)) u = splitHereditaryFromVacuum (mx, my, 0) (30, 30, 0) heavyMassMSet u
+
+export
+runHereditaryWaveScenario : Maybe (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, Nat, Integer)
+runHereditaryWaveScenario mPos = App1.do
+  u0 <- bootHereditary0D
+  u1 <- maybeSplitHereditary mPos u0
+  r2 <- stepHereditaryCongestion 25 u1
+  let MkHereditaryLinRes u2 warmW = r2
+  u3 <- injectHereditaryWavepacket u2
+  r4 <- stepHereditaryUnifiedWave 30 u3
+  let MkHereditaryLinRes u4 (wRep, coCongW) = r4
+  closed <- closeHereditary0D u4
+  App1.pure (wRep, warmW + coCongW + wRep.waveWorkSteps, closeNetSum closed)
 
 export
 runHereditaryGravitySuite : App1 {u = Any} e ModelExperimentMetrics
 runHereditaryGravitySuite = App1.do
-  -- Vacuum control (0 interior mass)
-  v0 <- bootHereditary0D
-  rv1 <- stepHereditaryCongestion 25 v0
-  let MkHereditaryLinRes v1 _ = rv1
-  rv2 <- probeHereditaryLocalPropagation 30 v1
-  let MkHereditaryLinRes v2 (vPt, vDip) = rv2
-  _ <- closeHereditary0D v2
-
-  -- Balanced Heavy Mass split inside single HereditaryMSet BoxInt (global net == 0!)
-  m0 <- bootHereditary0D
-  m1 <- splitHereditaryFromVacuum (8, 7, 0) (30, 30, 0) heavyMassMSet m0
-  rm2 <- stepHereditaryCongestion 25 m1
-  let MkHereditaryLinRes m2 workSteps = rm2
-  rm3 <- probeHereditaryLocalPropagation 30 m2
-  let MkHereditaryLinRes m3 (mPt, mDip) = rm3
-  closed <- closeHereditary0D m3
-  let net = case closed of
-              CleanVacuumCollapse    => 0
-              FrozenAtHorizon _ _ _ g => g
-  App1.pure (MkModelExperimentMetrics workSteps net vPt vDip mPt mDip)
+  (vRep, _, netVac)   <- runHereditaryWaveScenario Nothing
+  (tRep, tWork, netT) <- runHereditaryWaveScenario (Just (9, 10))
+  (bRep, _, netB)     <- runHereditaryWaveScenario (Just (9, 4))
+  let totalAbsNet = abs netVac + abs netT + abs netB
+  App1.pure (MkModelExperimentMetrics tWork totalAbsNet vRep tRep bRep)
 
 public export
 gravityCriteriaOk : ModelExperimentMetrics -> Bool
 gravityCriteriaOk m =
-  (m.globalNetSum == 0) &&
-  (m.vacPoint.deflectionY == 0) &&
-  (m.vacDipole.deflectionY == 0) &&
-  (m.massPoint.arrivalSweep > m.vacPoint.arrivalSweep) &&
-  (m.massPoint.deflectionY == 0) &&
-  (m.massDipole.deflectionY > 0) &&
-  (m.congestionWork > 0)
+  let symSum = m.massAboveWave.meanYMilli + m.massBelowWave.meanYMilli
+  in (m.globalNetSum == 0) &&
+     (m.vacWave.waveNetSum == 0) &&
+     (m.massAboveWave.waveNetSum == 0) &&
+     (m.massBelowWave.waveNetSum == 0) &&
+     (m.vacWave.meanYMilli == 7000) &&
+     (m.vacWave.poyntingYAccum == 0) &&
+     (m.massAboveWave.meanXMilli < m.vacWave.meanXMilli) &&
+     (m.massAboveWave.meanYMilli > 7000) &&
+     (m.massAboveWave.poyntingYAccum > 0) &&
+     (m.massBelowWave.meanXMilli == m.massAboveWave.meanXMilli) &&
+     (m.massBelowWave.meanYMilli < 7000) &&
+     (m.massBelowWave.poyntingYAccum == -(m.massAboveWave.poyntingYAccum)) &&
+     (symSum >= 13999 && symSum <= 14001) &&
+     (m.massAboveWave.waveEnergy <= 2 * m.vacWave.waveEnergy) &&
+     (m.massBelowWave.waveEnergy == m.massAboveWave.waveEnergy) &&
+     (m.totalComputeWork > 0)
+
+public export
+sameWavePhysics : WavepacketReport -> WavepacketReport -> Bool
+sameWavePhysics a b =
+  (a.meanXMilli == b.meanXMilli) &&
+  (a.meanYMilli == b.meanYMilli) &&
+  (a.poyntingYAccum == b.poyntingYAccum) &&
+  (a.waveEnergy == b.waveEnergy) &&
+  (a.waveNetSum == b.waveNetSum)
 
 export
 runExperiment4and5 : Has [Console] e => App e (Bool, List String)
 runExperiment4and5 = do
   let h = "----------------------------------------------------------------"
-  let t4 = "[Experiment 4] Strictly Local +-1 Congestion: Point vs. Extended Dipole"
+  let t4 = "[Experiment 4] Unified Probe-Free ±1 Lattice Wavepacket (Co-Evolving)"
   let t5 = "[Experiment 5] A/B Comparison: App1 Flat Space 3 vs HereditaryMSet BoxInt"
   resA <- app1 runFlatGravitySuite
   resB <- app1 runHereditaryGravitySuite
   let okA = gravityCriteriaOk resA
   let okB = gravityCriteriaOk resB
   let agreement =
-        (resA.massPoint.arrivalSweep == resB.massPoint.arrivalSweep) &&
-        (resA.massDipole.deflectionY == resB.massDipole.deflectionY) &&
+        sameWavePhysics resA.vacWave resB.vacWave &&
+        sameWavePhysics resA.massAboveWave resB.massAboveWave &&
+        sameWavePhysics resA.massBelowWave resB.massBelowWave &&
+        (unwrapBox (sumHMSet seedWavepacketNested) == 0) &&
         (resA.globalNetSum == 0 && resB.globalNetSum == 0)
-  let nestedHigherWork = resB.congestionWork > resA.congestionWork
+  let nestedHigherWork = resB.totalComputeWork > resA.totalComputeWork
   let pass = okA && okB && agreement && nestedHigherWork
   let lines = [ h
               , t4
-              , "  * Vacuum Control (Model A) -> Point: " ++ show resA.vacPoint ++ " | Dipole: " ++ show resA.vacDipole
-              , "  * Near Mass(8,7) (Model A) -> Point: " ++ show resA.massPoint ++ " | Dipole: " ++ show resA.massDipole
-              , "  * Near Mass(8,7) (Model B) -> Point: " ++ show resB.massPoint ++ " | Dipole: " ++ show resB.massDipole
-              , "  * Hypothesis Check (Point Shapiro delay & dY=0, Extended Dipole dY>0): okA=" ++ show okA ++ ", okB=" ++ show okB
+              , "  * Zero probe structs / zero pivot heuristics (30 live co-evolving sweeps)"
+              , "  * Vacuum Control (Model A)    -> " ++ show resA.vacWave
+              , "  * Mass Above(9,10) (Model A)  -> " ++ show resA.massAboveWave
+              , "  * Mass Below(9,4)  (Model A)  -> " ++ show resA.massBelowWave
+              , "  * Mass Above(9,10) (Model B)  -> " ++ show resB.massAboveWave
+              , "  * Hypothesis Check (Shapiro delay + CoM drift + Sy symmetry): okA=" ++ show okA ++ ", okB=" ++ show okB
               , h
               , t5
-              , "  | Metric / Capability        | Model A (Flat Space 3) | Model B (HereditaryMSet) |"
-              , "  | Global Zero-Sum Net        | " ++ show resA.globalNetSum ++ " | " ++ show resB.globalNetSum ++ " |"
-              , "  | Point Arrival (Vac -> Mass)| " ++ show resA.vacPoint.arrivalSweep ++ " -> " ++ show resA.massPoint.arrivalSweep ++ " | " ++ show resB.vacPoint.arrivalSweep ++ " -> " ++ show resB.massPoint.arrivalSweep ++ " |"
-              , "  | Extended Dipole DeflY      | " ++ show resA.massDipole.deflectionY ++ " | " ++ show resB.massDipole.deflectionY ++ " |"
-              , "  | Measured Congestion Work   | " ++ show resA.congestionWork ++ " | " ++ show resB.congestionWork ++ " |"
-              , "  | Native Vertical zoomSpace  | No (fixed 3D grid)     | Yes (viewAsAntiBox)      |"
+              , "  | Metric / Capability          | Model A (Flat Space 3) | Model B (HereditaryMSet) |"
+              , "  | Global 0D Zero-Sum Net       | " ++ show resA.globalNetSum ++ " | " ++ show resB.globalNetSum ++ " |"
+              , "  | Vac Centroid (x*1e3, y*1e3)  | (" ++ show resA.vacWave.meanXMilli ++ ", " ++ show resA.vacWave.meanYMilli ++ ") | (" ++ show resB.vacWave.meanXMilli ++ ", " ++ show resB.vacWave.meanYMilli ++ ") |"
+              , "  | Top(9,10) Centroid & Sy      | (" ++ show resA.massAboveWave.meanXMilli ++ ", " ++ show resA.massAboveWave.meanYMilli ++ "), Sy=" ++ show resA.massAboveWave.poyntingYAccum ++ " | (" ++ show resB.massAboveWave.meanXMilli ++ ", " ++ show resB.massAboveWave.meanYMilli ++ "), Sy=" ++ show resB.massAboveWave.poyntingYAccum ++ " |"
+              , "  | Bot(9,4)  Centroid & Sy      | (" ++ show resA.massBelowWave.meanXMilli ++ ", " ++ show resA.massBelowWave.meanYMilli ++ "), Sy=" ++ show resA.massBelowWave.poyntingYAccum ++ " | (" ++ show resB.massBelowWave.meanXMilli ++ ", " ++ show resB.massBelowWave.meanYMilli ++ "), Sy=" ++ show resB.massBelowWave.poyntingYAccum ++ " |"
+              , "  | Bounded Wave Energy (V -> M) | " ++ show resA.vacWave.waveEnergy ++ " -> " ++ show resA.massAboveWave.waveEnergy ++ " | " ++ show resB.vacWave.waveEnergy ++ " -> " ++ show resB.massAboveWave.waveEnergy ++ " |"
+              , "  | Total Compute Work (Co-Ev)   | " ++ show resA.totalComputeWork ++ " | " ++ show resB.totalComputeWork ++ " |"
+              , "  | Native Vertical zoomSpace    | No (fixed 3D grid)     | Yes (viewAsAntiBox)      |"
               , "  -> Experiment 4 & 5 pass=" ++ show pass
               ]
   traverse_ putStrLn lines
