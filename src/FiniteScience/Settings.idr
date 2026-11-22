@@ -1,5 +1,7 @@
 module FiniteScience.Settings
 
+import Control.App
+import Data.DPair
 import Stage0.BoxInt
 import Stage0.HereditaryMSet
 import Stage1.Basis.Time
@@ -9,6 +11,30 @@ import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 
 %default total
+
+--------------------------------------------------------------------------------
+-- BOUNDARY RECOGNIZERS & VALIDATORS (`Dec` / `Control.App.Exception`)
+--------------------------------------------------------------------------------
+
+||| Validates serialized multiset settings text via total `Dec` recognizer before entering `App1`.
+export
+validateAndDecodeSetting : Has [Exception UniverseErr] e => String -> App e (HereditaryMSet BoxInt)
+validateAndDecodeSetting txt =
+  case recognizePureMultisetText txt of
+    No _ => throw (InvalidMultisetTextError txt)
+    Yes _ =>
+      case decodeCanonicalMultiset txt of
+        Just (Element m _) => pure m
+        Nothing            => throw (InvalidMultisetTextError txt)
+
+||| Enforces global 0D zero-sum neutrality (`wA + wB == 0`) at the black-box boundary.
+export
+requireBalancedSplit : Has [Exception UniverseErr] e => Integer -> Integer -> App e ()
+requireBalancedSplit wA wB =
+  let net = wA + wB
+  in if net == 0
+       then pure ()
+       else throw (UnbalancedVacuumSplitError net)
 
 --------------------------------------------------------------------------------
 -- SERIALIZED CANONICAL MULTISET SETTINGS (`Stage0.HereditaryMSet.show` FORMAT)

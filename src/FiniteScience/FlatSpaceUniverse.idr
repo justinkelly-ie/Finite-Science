@@ -1,7 +1,6 @@
 module FiniteScience.FlatSpaceUniverse
 
 import Control.App
-import Data.DPair
 import Stage0.BoxInt
 import Stage0.Interfaces
 import Stage0.Box
@@ -15,6 +14,7 @@ import Stage1.MultisetCodec
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 import FiniteScience.SparseField
+import FiniteScience.Settings
 
 %default total
 
@@ -74,70 +74,14 @@ injectFlatField :
 injectFlatField delta (MkFlatBox matter field) =
   App1.pure1 (MkFlatBox matter (addSparseField field delta))
 
-public export
-canonLagDiv : Integer
-canonLagDiv = 6000000
-
-public export
-canonDecayNum : Integer
-canonDecayNum = 7
-
-public export
-canonDecayDen : Integer
-canonDecayDen = 32
-
-public export
-canonLinkCoup : Integer
-canonLinkCoup = 1
-
-public export
-canonFreezeLagRatio : Integer
-canonFreezeLagRatio = 8
-
-public export
-canonThawLagNum : Integer
-canonThawLagNum = 1
-
-public export
-canonThawLagDen : Integer
-canonThawLagDen = 16
-
-||| Pure closed linear-vacuum Wildberger parametric Pythagorean stepper (`lagDiv = 0`).
+||| Pure closed single-pass `StepMode` dispatcher on `FlatBlackBox`.
 export
-stepFlatLinear1 :
+stepFlatByMode :
+  StepMode ->
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
-stepFlatLinear1 (MkFlatBox matter field) =
-  let res = stepSparseField coord2Basis coord2CoreCodec 0 canonDecayNum canonDecayDen 0 7 0 0 1 field
-  in App1.pure1 (MkFlatBox matter (fst res))
-
-||| Pure closed causal 1-hop retarded Symmetric `Maxel` metric (`7/32`) + Wildberger Pythagorean stepper (`c = 1`).
-export
-stepFlatUnified1 :
-  (1 u : FlatBlackBox) ->
-  App1 e FlatBlackBox
-stepFlatUnified1 (MkFlatBox matter field) =
-  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 0 0 1 field
-  in App1.pure1 (MkFlatBox matter (fst res))
-
-||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `Maxel` metric + Wildberger Pythagorean stepper.
-export
-stepFlatAdaptive1 :
-  (1 u : FlatBlackBox) ->
-  App1 e FlatBlackBox
-stepFlatAdaptive1 (MkFlatBox matter field) =
-  let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen field
-  in App1.pure1 (MkFlatBox matter (fst res))
-
-||| Pure closed endogenous `StreamSkip`/`StreamYield` paced fixed-angle `(24, 7, 25)` stepper
-||| (no variable-angle `m0 + lag` slowdown and no manual `SealedCore` freeze-thaw).
-export
-stepFlatPaced1 :
-  (1 u : FlatBlackBox) ->
-  App1 e FlatBlackBox
-stepFlatPaced1 (MkFlatBox matter field) =
-  let res = stepSparseFieldPaced coord2Basis canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 field
-  in App1.pure1 (MkFlatBox matter (fst res))
+stepFlatByMode mode (MkFlatBox matter field) =
+  App1.pure1 (MkFlatBox matter (stepSparseByMode coord2Basis coord2CoreCodec mode field))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export
@@ -175,26 +119,6 @@ closeFlat0D (MkFlatBox matter field) =
 --------------------------------------------------------------------------------
 -- 3. OUTER `App` BOUNDARY GUARDS & EXTERNAL HORIZON PROBE (`Has [Exception UniverseErr]`)
 --------------------------------------------------------------------------------
-
-||| Validates serialized multiset settings text via total `Dec` recognizer before entering `App1`.
-export
-validateAndDecodeSetting : Has [Exception UniverseErr] e => String -> App e (HereditaryMSet BoxInt)
-validateAndDecodeSetting txt =
-  case recognizePureMultisetText txt of
-    No _ => throw (InvalidMultisetTextError txt)
-    Yes _ =>
-      case decodeCanonicalMultiset txt of
-        Just (Element m _) => pure m
-        Nothing            => throw (InvalidMultisetTextError txt)
-
-||| Enforces global 0D zero-sum neutrality (`wA + wB == 0`) at the black-box boundary.
-export
-requireBalancedSplit : Has [Exception UniverseErr] e => Integer -> Integer -> App e ()
-requireBalancedSplit wA wB =
-  let net = wA + wB
-  in if net == 0
-       then pure ()
-       else throw (UnbalancedVacuumSplitError net)
 
 ||| Boundary test runner validating setting text and balanced split before booting `FlatBlackBox`.
 export

@@ -154,17 +154,17 @@ driveUnobservedUnified Z Z u = App1.do
   c <- closeHereditary0D u
   App1.pure (closeOutcomeText c)
 driveUnobservedUnified Z (S urem) u = App1.do
-  u1 <- stepHereditaryUnified1 u
+  u1 <- stepHereditaryByMode ModeUnified u
   driveUnobservedUnified Z urem u1
 driveUnobservedUnified (S wrem) Z u = App1.do
-  u1 <- stepHereditaryUnified1 u
+  u1 <- stepHereditaryByMode ModeUnified u
   driveUnobservedUnified wrem Z u1
 driveUnobservedUnified (S Z) live@(S _) u = App1.do
-  u1 <- stepHereditaryUnified1 u
+  u1 <- stepHereditaryByMode ModeUnified u
   uw <- injectHereditaryField (seedSparseWavepacket pureMSetBasis 0 512) u1
   driveUnobservedUnified Z live uw
 driveUnobservedUnified (S wrem@(S _)) live@(S _) u = App1.do
-  u1 <- stepHereditaryUnified1 u
+  u1 <- stepHereditaryByMode ModeUnified u
   driveUnobservedUnified wrem live u1
 
 export
@@ -180,7 +180,7 @@ driveObservedZoomedTest Z u snapsOk = App1.do
   c <- closeHereditary0D u
   App1.pure (closeOutcomeText c, snapsOk)
 driveObservedZoomedTest (S rem) u snapsOk = App1.do
-  u1   <- stepHereditaryUnified1 u
+  u1   <- stepHereditaryByMode ModeUnified u
   obsS <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 2) zeroShift (RetroTime 2) (\m => m /= emptyPureMSet)) u1
   let MkPureObs u2 sOk _ = obsS
   obsT <- observeHereditaryPure (zoomedExternalLens (\m => m) zeroShift (blackShift 1) (BoundedTime 5) (\m => m /= emptyPureMSet)) u2
@@ -195,7 +195,7 @@ driveObservedZoomedWarmup Z u = App1.do
   uw <- injectHereditaryField (seedSparseWavepacket pureMSetBasis 0 512) u
   driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
-  u1   <- stepHereditaryUnified1 u
+  u1   <- stepHereditaryByMode ModeUnified u
   obsW <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 1) (redShift 1) (RetroTime 1) (\m => m /= emptyPureMSet)) u1
   let MkPureObs u2 _ _ = obsW
   driveObservedZoomedWarmup rem u2
@@ -240,9 +240,6 @@ runExperiment3 = do
 --------------------------------------------------------------------------------
 
 public export
-data StepMode = ModeLinear | ModeUnified | ModeAdaptive | ModePaced
-
-public export
 record StepTel where
   constructor MkStepTel
   stEnergy : Integer
@@ -276,41 +273,9 @@ record BlackBoxLab (e : List Error) (box : Type) (k : Type) (body : Type) where
   labEndAudit : (1 u : box) -> App1 {u = Any} e (EndAudit k body)
 
 public export
-record ModelExperimentMetrics where
-  constructor MkModelExperimentMetrics
-  totalComputeWork  : Nat
-  globalNetSum      : Integer
-  fluxAntisymOk     : Bool
-  metricSymOk       : Bool
-  dipolesBalancedOk : Bool
-  linearDispersion  : SelfTrapReport
-  selfTrappedCore   : SelfTrapReport
-  vacWave           : WavepacketReport
-  massAboveWave     : WavepacketReport
-  massBelowWave     : WavepacketReport
-  freezeThaw        : FreezeThawReport
-  twoBody           : TwoBodyReport
-  causalLightCone   : CausalLightConeReport
-  anisotropicStress : AnisotropicStressReport
-
-public export
 closeNetSum : CloseOutcome -> Integer
 closeNetSum CleanVacuumCollapse       = 0
 closeNetSum (FrozenAtHorizon _ _ _ g) = g
-
-export
-stepFlatByMode : StepMode -> (1 u : FlatBlackBox) -> App1 e FlatBlackBox
-stepFlatByMode ModeLinear   u = stepFlatLinear1 u
-stepFlatByMode ModeUnified  u = stepFlatUnified1 u
-stepFlatByMode ModeAdaptive u = stepFlatAdaptive1 u
-stepFlatByMode ModePaced    u = stepFlatPaced1 u
-
-export
-stepHereditaryByMode : StepMode -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
-stepHereditaryByMode ModeLinear   u = stepHereditaryLinear1 u
-stepHereditaryByMode ModeUnified  u = stepHereditaryUnified1 u
-stepHereditaryByMode ModeAdaptive u = stepHereditaryAdaptive1 u
-stepHereditaryByMode ModePaced    u = stepHereditaryPaced1 u
 
 export
 rootFieldOf : PureMultiset -> SparseField PureMultiset PureMultiset
@@ -574,47 +539,89 @@ runLabAnisotropicStress lab mode = App1.do
                symOk netTot,
              balOk)
 
+public export
+record GravityCoreMetrics where
+  constructor MkGravityCoreMetrics
+  gcWork      : Nat
+  gcNetSum    : Integer
+  gcAntiOk    : Bool
+  gcSymOk     : Bool
+  gcBalOk     : Bool
+  gcLin       : SelfTrapReport
+  gcTrap      : SelfTrapReport
+  gcVac       : WavepacketReport
+  gcTop       : WavepacketReport
+  gcBot       : WavepacketReport
+  gcTwoBody   : TwoBodyReport
+  gcLightCone : CausalLightConeReport
+  gcAniso     : AnisotropicStressReport
+
+public export
+record ModelExperimentMetrics where
+  constructor MkModelExperimentMetrics
+  core       : GravityCoreMetrics
+  freezeThaw : FreezeThawReport
+
+export
+runLabCoreSuite :
+  Ord k =>
+  BlackBoxLab e box k body ->
+  StepMode ->
+  App1 {u = Any} e GravityCoreMetrics
+runLabCoreSuite lab mode = App1.do
+  let ax        = lab.labBasis
+      brTopSeed = seedSparseBreather ax 4 5 6 8192
+      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
+  (linRep, (antiLin, symLin, balLin))   <- runLabSelfTrap lab ModeLinear
+  (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab mode
+  eaBgTop <- bootInjectAndRun lab mode 18 brTopSeed
+  eaBgBot <- bootInjectAndRun lab mode 18 brBotSeed
+  (vRep, _, _, balV, antiV, symV) <- runLabWave lab mode 18 neutral   neutral
+  (tRep, _, _, balT, antiT, symT) <- runLabWave lab mode 18 brTopSeed eaBgTop.eaField
+  (bRep, _, _, balB, antiB, symB) <- runLabWave lab mode 18 brBotSeed eaBgBot.eaField
+  (b2Bot, b2Top, net2B, (anti2B, sym2B, bal2B)) <- runLabTwoBody lab mode       True
+  (b1Bot, _,     net1B, (anti1B, sym1B, bal1B)) <- runLabTwoBody lab mode       False
+  (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear True
+  (lcRep, balLC, symLC) <- runLabLightCone lab mode vRep tRep
+  (asRep, balAS)        <- runLabAnisotropicStress lab mode
+  let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
+                              b2Bot.poyntingYAccum b2Top.poyntingYAccum
+                              b1Bot.poyntingYAccum blBot.poyntingYAccum
+                              b2Bot.initEnergy b2Bot.waveEnergy b2Bot.maxEnergy net2B
+  let totalAbsNet = abs vRep.waveNetSum + abs tRep.waveNetSum + abs bRep.waveNetSum +
+                    abs net2B + abs net1B + abs net2L +
+                    abs linRep.netSignedSum + abs trapRep.netSignedSum + abs asRep.asNetSum
+  let antiAll     = antiLin && antiTrap && antiV && antiT && antiB && anti2B && anti1B && anti2L
+  let symAll      = symLin && symTrap && symV && symT && symB && sym2B && sym1B && sym2L &&
+                    symLC && asRep.asSymMetricOk
+  let balAll      = balLin && balTrap && balV && balT && balB &&
+                    bal2B && bal1B && bal2L && balLC && balAS &&
+                    eaBgTop.eaBalOk && eaBgBot.eaBalOk
+  App1.pure (MkGravityCoreMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll symAll balAll
+                                  linRep trapRep vRep tRep bRep tbRep lcRep asRep)
+
 export
 runLabGravitySuite :
   Ord k =>
   BlackBoxLab e box k body ->
   App1 {u = Any} e ModelExperimentMetrics
 runLabGravitySuite lab = App1.do
-  let ax        = lab.labBasis
-      brTopSeed = seedSparseBreather ax 4 5 6 8192
-      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
-  (linRep, (antiLin, symLin, balLin))   <- runLabSelfTrap lab ModeLinear
-  (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab ModeUnified
-  eaBgTop <- bootInjectAndRun lab ModeUnified  18 brTopSeed
-  eaBgBot <- bootInjectAndRun lab ModeUnified  18 brBotSeed
+  let brTopSeed = seedSparseBreather lab.labBasis 4 5 6 8192
+  core <- runLabCoreSuite lab ModeUnified
   eaBgFrz <- bootInjectAndRun lab ModeAdaptive 18 brTopSeed
-  (vRep, _,      _,      balV, antiV, symV) <- runLabWave lab ModeUnified  18 neutral   neutral
-  (tRep, _,      _,      balT, antiT, symT) <- runLabWave lab ModeUnified  18 brTopSeed eaBgTop.eaField
-  (bRep, _,      _,      balB, antiB, symB) <- runLabWave lab ModeUnified  18 brBotSeed eaBgBot.eaField
   (fRep, fCores, peekOk, balF, antiF, symF) <- runLabWave lab ModeAdaptive 18 brTopSeed eaBgFrz.eaField
   (initC, midC, finC, thwS, iE0, iEF, iEM, balI, netI, (antiI, symI)) <- runLabMultiCoreImpact lab
-  (b2Bot, b2Top, net2B, (anti2B, sym2B, bal2B)) <- runLabTwoBody lab ModeUnified True
-  (b1Bot, _,     net1B, (anti1B, sym1B, bal1B)) <- runLabTwoBody lab ModeUnified False
-  (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear  True
-  (lcRep, balLC, symLC) <- runLabLightCone lab ModeUnified vRep tRep
-  (asRep, balAS)        <- runLabAnisotropicStress lab ModeUnified
-  let ftRep = MkFreezeThawReport fCores fRep tRep.waveWorkSteps fRep.waveWorkSteps (fCores == 1 && peekOk)
-                                 initC midC finC thwS iE0 iEF iEM netI
-  let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
-                              b2Bot.poyntingYAccum b2Top.poyntingYAccum
-                              b1Bot.poyntingYAccum blBot.poyntingYAccum
-                              b2Bot.initEnergy b2Bot.waveEnergy b2Bot.maxEnergy net2B
-  let totalAbsNet = vRep.waveNetSum + tRep.waveNetSum + bRep.waveNetSum + fRep.waveNetSum + netI +
-                    net2B + net1B + net2L +
-                    linRep.netSignedSum + trapRep.netSignedSum + asRep.asNetSum
-  let antiAll     = antiLin && antiTrap && antiV && antiT && antiB && antiF && antiI && anti2B && anti1B && anti2L
-  let symAll      = symLin && symTrap && symV && symT && symB && symF && symI && sym2B && sym1B && sym2L &&
-                    symLC && asRep.asSymMetricOk
-  let balAll      = balLin && balTrap && balV && balT && balB && balF && balI &&
-                    bal2B && bal1B && bal2L && balLC && balAS &&
-                    eaBgTop.eaBalOk && eaBgBot.eaBalOk && eaBgFrz.eaBalOk
-  App1.pure (MkModelExperimentMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll symAll balAll
-                                      linRep trapRep vRep tRep bRep ftRep tbRep lcRep asRep)
+  let ftRep  = MkFreezeThawReport fCores fRep core.gcTop.waveWorkSteps fRep.waveWorkSteps (fCores == 1 && peekOk)
+                                  initC midC finC thwS iE0 iEF iEM netI
+      core1  = MkGravityCoreMetrics
+                 core.gcWork
+                 (core.gcNetSum + abs fRep.waveNetSum + abs netI)
+                 (core.gcAntiOk && antiF && antiI)
+                 (core.gcSymOk && symF && symI)
+                 (core.gcBalOk && balF && balI && eaBgFrz.eaBalOk)
+                 core.gcLin core.gcTrap core.gcVac core.gcTop core.gcBot
+                 core.gcTwoBody core.gcLightCone core.gcAniso
+  App1.pure (MkModelExperimentMetrics core1 ftRep)
 
 public export
 selfTrapCriteriaOk : SelfTrapReport -> SelfTrapReport -> Bool
@@ -687,40 +694,46 @@ anisotropicStressCriteriaOk a =
   (a.asProbeHorizSy > a.asProbeVertSy + 100000)
 
 public export
+gravity4BCriteriaOk : GravityCoreMetrics -> Bool
+gravity4BCriteriaOk m =
+  let symSum = m.gcTop.meanYMilli + m.gcBot.meanYMilli
+  in (m.gcVac.waveNetSum == 0) &&
+     (m.gcTop.waveNetSum == 0) &&
+     (m.gcBot.waveNetSum == 0) &&
+     (m.gcVac.waveEnergy * 100 >= m.gcVac.initEnergy * 92) &&
+     (m.gcVac.waveEnergy <= m.gcVac.initEnergy) &&
+     (m.gcVac.maxEnergy <= m.gcVac.initEnergy) &&
+     (m.gcTop.waveEnergy <= m.gcTop.initEnergy) &&
+     (m.gcTop.maxEnergy <= m.gcTop.initEnergy) &&
+     (m.gcBot.waveEnergy <= m.gcBot.initEnergy) &&
+     (m.gcBot.maxEnergy <= m.gcBot.initEnergy) &&
+     (m.gcTop.waveEnergy * 100 >= m.gcTop.initEnergy * 97) &&
+     (m.gcVac.meanYMilli == 500) &&
+     (m.gcVac.poyntingYAccum == 0) &&
+     (m.gcTop.meanXMilli + 50 < m.gcVac.meanXMilli) &&
+     (m.gcTop.meanYMilli > 530) &&
+     (m.gcTop.poyntingYAccum > 200000) &&
+     (m.gcBot.meanXMilli == m.gcTop.meanXMilli) &&
+     (m.gcBot.meanYMilli < 500) &&
+     (m.gcBot.poyntingYAccum == -(m.gcTop.poyntingYAccum)) &&
+     (symSum == 999) &&
+     (m.gcBot.waveEnergy == m.gcTop.waveEnergy)
+
+public export
 gravityCriteriaOk : ModelExperimentMetrics -> Bool
 gravityCriteriaOk m =
-  let symSum = m.massAboveWave.meanYMilli + m.massBelowWave.meanYMilli
-  in m.fluxAntisymOk &&
-     m.metricSymOk &&
-     m.dipolesBalancedOk &&
-     (m.globalNetSum == 0) &&
-     selfTrapCriteriaOk m.linearDispersion m.selfTrappedCore &&
-     (m.vacWave.waveNetSum == 0) &&
-     (m.massAboveWave.waveNetSum == 0) &&
-     (m.massBelowWave.waveNetSum == 0) &&
-     (m.vacWave.waveEnergy * 100 >= m.vacWave.initEnergy * 92) &&
-     (m.vacWave.waveEnergy <= m.vacWave.initEnergy) &&
-     (m.vacWave.maxEnergy <= m.vacWave.initEnergy) &&
-     (m.massAboveWave.waveEnergy <= m.massAboveWave.initEnergy) &&
-     (m.massAboveWave.maxEnergy <= m.massAboveWave.initEnergy) &&
-     (m.massBelowWave.waveEnergy <= m.massBelowWave.initEnergy) &&
-     (m.massBelowWave.maxEnergy <= m.massBelowWave.initEnergy) &&
-     (m.massAboveWave.waveEnergy * 100 >= m.massAboveWave.initEnergy * 97) &&
-     (m.vacWave.meanYMilli == 500) &&
-     (m.vacWave.poyntingYAccum == 0) &&
-     (m.massAboveWave.meanXMilli + 50 < m.vacWave.meanXMilli) &&
-     (m.massAboveWave.meanYMilli > 530) &&
-     (m.massAboveWave.poyntingYAccum > 200000) &&
-     (m.massBelowWave.meanXMilli == m.massAboveWave.meanXMilli) &&
-     (m.massBelowWave.meanYMilli < 500) &&
-     (m.massBelowWave.poyntingYAccum == -(m.massAboveWave.poyntingYAccum)) &&
-     (symSum == 999) &&
-     (m.massBelowWave.waveEnergy == m.massAboveWave.waveEnergy) &&
-     freezeThawCriteriaOk m.vacWave m.freezeThaw &&
-     twoBodyCriteriaOk m.twoBody &&
-     lightConeCriteriaOk m.causalLightCone &&
-     anisotropicStressCriteriaOk m.anisotropicStress &&
-     (m.totalComputeWork > 0)
+  let c = m.core
+  in c.gcAntiOk &&
+     c.gcSymOk &&
+     c.gcBalOk &&
+     (c.gcNetSum == 0) &&
+     selfTrapCriteriaOk c.gcLin c.gcTrap &&
+     gravity4BCriteriaOk c &&
+     freezeThawCriteriaOk c.gcVac m.freezeThaw &&
+     twoBodyCriteriaOk c.gcTwoBody &&
+     lightConeCriteriaOk c.gcLightCone &&
+     anisotropicStressCriteriaOk c.gcAniso &&
+     (c.gcWork > 0)
 
 public export
 sameSelfTrapPhysics : SelfTrapReport -> SelfTrapReport -> Bool
@@ -756,6 +769,28 @@ sameFreezeThawPhysics a b =
   (a.ftImpactMaxE == b.ftImpactMaxE) &&
   (a.ftImpactNetSum == b.ftImpactNetSum)
 
+public export
+sameCorePhysics : GravityCoreMetrics -> GravityCoreMetrics -> Bool
+sameCorePhysics a b =
+  sameSelfTrapPhysics a.gcLin b.gcLin &&
+  sameSelfTrapPhysics a.gcTrap b.gcTrap &&
+  sameWavePhysics a.gcVac b.gcVac &&
+  sameWavePhysics a.gcTop b.gcTop &&
+  sameWavePhysics a.gcBot b.gcBot &&
+  (a.gcTwoBody == b.gcTwoBody) &&
+  (a.gcLightCone == b.gcLightCone) &&
+  (a.gcAniso == b.gcAniso)
+
+public export
+coreEnergyMonoOk : GravityCoreMetrics -> Bool
+coreEnergyMonoOk c =
+  c.gcLin.finalEnergy <= c.gcLin.initEnergy && c.gcLin.maxEnergy <= c.gcLin.initEnergy &&
+  c.gcTrap.finalEnergy <= c.gcTrap.initEnergy && c.gcTrap.maxEnergy <= c.gcTrap.initEnergy &&
+  c.gcVac.waveEnergy <= c.gcVac.initEnergy && c.gcVac.maxEnergy <= c.gcVac.initEnergy &&
+  c.gcTop.waveEnergy <= c.gcTop.initEnergy && c.gcTop.maxEnergy <= c.gcTop.initEnergy &&
+  c.gcBot.waveEnergy <= c.gcBot.initEnergy && c.gcBot.maxEnergy <= c.gcBot.initEnergy &&
+  c.gcTwoBody.tbFinalE <= c.gcTwoBody.tbInitE && c.gcTwoBody.tbMaxE <= c.gcTwoBody.tbInitE
+
 export
 runExperiment4and5 : Has [Console] e => App e (Bool, List String)
 runExperiment4and5 = do
@@ -764,64 +799,59 @@ runExperiment4and5 = do
   let t5 = "[Experiment 5] A/B Comparison: App1 Coord2 vs Zero-Copy HereditaryMSet"
   resA <- app1 (runLabGravitySuite flatLab)
   resB <- app1 (runLabGravitySuite hereditaryLab)
-  let okA = gravityCriteriaOk resA
-  let okB = gravityCriteriaOk resB
-  let seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
-  let agreement =
-        sameSelfTrapPhysics resA.linearDispersion resB.linearDispersion &&
-        sameSelfTrapPhysics resA.selfTrappedCore resB.selfTrappedCore &&
-        sameWavePhysics resA.vacWave resB.vacWave &&
-        sameWavePhysics resA.massAboveWave resB.massAboveWave &&
-        sameWavePhysics resA.massBelowWave resB.massBelowWave &&
+  let cA       = resA.core
+      cB       = resB.core
+      okA      = gravityCriteriaOk resA
+      okB      = gravityCriteriaOk resB
+      seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
+      agreement =
+        sameCorePhysics cA cB &&
         sameFreezeThawPhysics resA.freezeThaw resB.freezeThaw &&
-        (resA.twoBody == resB.twoBody) &&
-        (resA.causalLightCone == resB.causalLightCone) &&
-        (resA.anisotropicStress == resB.anisotropicStress) &&
         checkTagFreePackUnpackRoundTrip &&
         (unwrapBox (sumHMSet seedRoot) == 0) &&
-        (resA.globalNetSum == 0 && resB.globalNetSum == 0) &&
-        resA.fluxAntisymOk && resB.fluxAntisymOk &&
-        resA.metricSymOk && resB.metricSymOk &&
-        resA.dipolesBalancedOk && resB.dipolesBalancedOk
-  let nestedHigherWork = resB.totalComputeWork > resA.totalComputeWork
-  let pass = okA && okB && agreement && nestedHigherWork
+        (cA.gcNetSum == 0 && cB.gcNetSum == 0) &&
+        cA.gcAntiOk && cB.gcAntiOk &&
+        cA.gcSymOk && cB.gcSymOk &&
+        cA.gcBalOk && cB.gcBalOk
+      nestedHigherWork = cB.gcWork > cA.gcWork
+      pass = okA && okB && agreement && nestedHigherWork
   let lines = [ h
               , t4
               , "  * 4A Self-Trapping (+4096/-4096 at (0,0)/(0,1), 20 sweeps):"
-              , "    - Linear Dispersion  (A) -> " ++ show resA.linearDispersion
-              , "    - Self-Trapped Core  (A) -> " ++ show resA.selfTrappedCore
-              , "    - Self-Trapped Core  (B) -> " ++ show resB.selfTrappedCore
+              , "    - Linear Dispersion  (A) -> " ++ show cA.gcLin
+              , "    - Self-Trapped Core  (A) -> " ++ show cA.gcTrap
+              , "    - Self-Trapped Core  (B) -> " ++ show cB.gcTrap
               , "  * 4B Zero-Warmup Causal 1-Hop Gravity (18 sweeps, decay 7/32, c=1):"
-              , "    - Vacuum Control     (A) -> " ++ show resA.vacWave
-              , "    - Top Breather(4,5)  (A) -> " ++ show resA.massAboveWave
-              , "    - Bot Breather(4,-4) (A) -> " ++ show resA.massBelowWave
-              , "    - Top Breather(4,5)  (B) -> " ++ show resB.massAboveWave
+              , "    - Vacuum Control     (A) -> " ++ show cA.gcVac
+              , "    - Top Breather(4,5)  (A) -> " ++ show cA.gcTop
+              , "    - Bot Breather(4,-4) (A) -> " ++ show cA.gcBot
+              , "    - Top Breather(4,5)  (B) -> " ++ show cB.gcTop
               , "  * 4C Dimensionless Multi-Core Sealed Freeze & Delayed Selective Thaw:"
               , "    - Grazing + 2-Core   (A) -> " ++ show resA.freezeThaw
               , "    - Grazing + 2-Core   (B) -> " ++ show resB.freezeThaw
               , "  * 4D Equal-Mass 2-Body Mutual Attraction (Two free amp=2048 packets, 16 sweeps):"
-              , "    - Equal-Mass Pair    (A) -> " ++ show resA.twoBody
-              , "    - Equal-Mass Pair    (B) -> " ++ show resB.twoBody
+              , "    - Equal-Mass Pair    (A) -> " ++ show cA.gcTwoBody
+              , "    - Equal-Mass Pair    (B) -> " ++ show cB.gcTwoBody
               , "  * 4E Causal Light-Cone Proof (Spacelike Exact t=2 -> Deflection t=18):"
-              , "    - Light Cone Check   (A) -> " ++ show resA.causalLightCone
-              , "    - Light Cone Check   (B) -> " ++ show resB.causalLightCone
+              , "    - Light Cone Check   (A) -> " ++ show cA.gcLightCone
+              , "    - Light Cone Check   (B) -> " ++ show cB.gcLightCone
               , "  * 4F Half-Stored Maxel Anisotropic Stress & Quadrupole Polarization:"
-              , "    - Anisotropic Stress (A) -> " ++ show resA.anisotropicStress
-              , "    - Anisotropic Stress (B) -> " ++ show resB.anisotropicStress
+              , "    - Anisotropic Stress (A) -> " ++ show cA.gcAniso
+              , "    - Anisotropic Stress (B) -> " ++ show cB.gcAniso
               , "  * Hypothesis Check (Exact Pyth + SymMaxel + MultiCore + 2-Body + LightCone + 4F): okA=" ++ show okA ++ ", okB=" ++ show okB
               , h
               , t5
               , "  | Metric / Capability            | Model A (Sparse Coord2)| Model B (Zero-Copy HMSet) |"
-              , "  | Global 0D Net, Sym & Dipoles   | net=" ++ show resA.globalNetSum ++ ", sym=" ++ show resA.metricSymOk ++ ", bal=" ++ show resA.dipolesBalancedOk ++ " | net=" ++ show resB.globalNetSum ++ ", sym=" ++ show resB.metricSymOk ++ ", bal=" ++ show resB.dipolesBalancedOk ++ " |"
-              , "  | 4A CoreTrap (Lin -> SelfTrap)  | " ++ show resA.linearDispersion.coreFracPct ++ "% -> " ++ show resA.selfTrappedCore.coreFracPct ++ "% | " ++ show resB.linearDispersion.coreFracPct ++ "% -> " ++ show resB.selfTrappedCore.coreFracPct ++ "% |"
-              , "  | Vac Centroid & E retained      | (" ++ show resA.vacWave.meanXMilli ++ ", " ++ show resA.vacWave.meanYMilli ++ "), " ++ show (divIntegerPos (resA.vacWave.waveEnergy * 100) resA.vacWave.initEnergy) ++ "% | (" ++ show resB.vacWave.meanXMilli ++ ", " ++ show resB.vacWave.meanYMilli ++ "), " ++ show (divIntegerPos (resB.vacWave.waveEnergy * 100) resB.vacWave.initEnergy) ++ "% |"
-              , "  | Top(4,5) Centroid & Sy         | (" ++ show resA.massAboveWave.meanXMilli ++ ", " ++ show resA.massAboveWave.meanYMilli ++ "), Sy=" ++ show resA.massAboveWave.poyntingYAccum ++ " | (" ++ show resB.massAboveWave.meanXMilli ++ ", " ++ show resB.massAboveWave.meanYMilli ++ "), Sy=" ++ show resB.massAboveWave.poyntingYAccum ++ " |"
-              , "  | Bot(4,-4) Centroid & Sy        | (" ++ show resA.massBelowWave.meanXMilli ++ ", " ++ show resA.massBelowWave.meanYMilli ++ "), Sy=" ++ show resA.massBelowWave.poyntingYAccum ++ " | (" ++ show resB.massBelowWave.meanXMilli ++ ", " ++ show resB.massBelowWave.meanYMilli ++ "), Sy=" ++ show resB.massBelowWave.poyntingYAccum ++ " |"
+              , "  | Global 0D Net, Sym & Dipoles   | net=" ++ show cA.gcNetSum ++ ", sym=" ++ show cA.gcSymOk ++ ", bal=" ++ show cA.gcBalOk ++ " | net=" ++ show cB.gcNetSum ++ ", sym=" ++ show cB.gcSymOk ++ ", bal=" ++ show cB.gcBalOk ++ " |"
+              , "  | 4A CoreTrap (Lin -> SelfTrap)  | " ++ show cA.gcLin.coreFracPct ++ "% -> " ++ show cA.gcTrap.coreFracPct ++ "% | " ++ show cB.gcLin.coreFracPct ++ "% -> " ++ show cB.gcTrap.coreFracPct ++ "% |"
+              , "  | Vac Centroid & E retained      | (" ++ show cA.gcVac.meanXMilli ++ ", " ++ show cA.gcVac.meanYMilli ++ "), " ++ show (divIntegerPos (cA.gcVac.waveEnergy * 100) cA.gcVac.initEnergy) ++ "% | (" ++ show cB.gcVac.meanXMilli ++ ", " ++ show cB.gcVac.meanYMilli ++ "), " ++ show (divIntegerPos (cB.gcVac.waveEnergy * 100) cB.gcVac.initEnergy) ++ "% |"
+              , "  | Top(4,5) Centroid & Sy         | (" ++ show cA.gcTop.meanXMilli ++ ", " ++ show cA.gcTop.meanYMilli ++ "), Sy=" ++ show cA.gcTop.poyntingYAccum ++ " | (" ++ show cB.gcTop.meanXMilli ++ ", " ++ show cB.gcTop.meanYMilli ++ "), Sy=" ++ show cB.gcTop.poyntingYAccum ++ " |"
+              , "  | Bot(4,-4) Centroid & Sy        | (" ++ show cA.gcBot.meanXMilli ++ ", " ++ show cA.gcBot.meanYMilli ++ "), Sy=" ++ show cA.gcBot.poyntingYAccum ++ " | (" ++ show cB.gcBot.meanXMilli ++ ", " ++ show cB.gcBot.meanYMilli ++ "), Sy=" ++ show cB.gcBot.poyntingYAccum ++ " |"
               , "  | 4C Freeze Work & Delayed Thaw  | " ++ show resA.freezeThaw.ftLiveWorkSteps ++ "->" ++ show resA.freezeThaw.ftFrozenWorkSteps ++ ", 2->" ++ show resA.freezeThaw.ftMidCoreCount ++ "->" ++ show resA.freezeThaw.ftFinalCoreCount ++ "@t" ++ show resA.freezeThaw.ftFirstThawStep ++ " | " ++ show resB.freezeThaw.ftLiveWorkSteps ++ "->" ++ show resB.freezeThaw.ftFrozenWorkSteps ++ ", 2->" ++ show resB.freezeThaw.ftMidCoreCount ++ "->" ++ show resB.freezeThaw.ftFinalCoreCount ++ "@t" ++ show resB.freezeThaw.ftFirstThawStep ++ " |"
-              , "  | 4D 2-Body (dy, SyBot vs Lin)   | dy=+" ++ show (resA.twoBody.tbBotYMilli - resA.twoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show resA.twoBody.tbBotSy ++ " (lin=" ++ show resA.twoBody.tbLinearBotSy ++ ") | dy=+" ++ show (resB.twoBody.tbBotYMilli - resB.twoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show resB.twoBody.tbBotSy ++ " (lin=" ++ show resB.twoBody.tbLinearBotSy ++ ") |"
-              , "  | 4E Causal Light-Cone (t=2)     | exact=" ++ show resA.causalLightCone.clSpacelikeExact ++ ", BrSy=" ++ show resA.causalLightCone.clEarlyBrSy ++ " | exact=" ++ show resB.causalLightCone.clSpacelikeExact ++ ", BrSy=" ++ show resB.causalLightCone.clEarlyBrSy ++ " |"
-              , "  | 4F SymMaxel Anisotropy (dX)    | dX=" ++ show (resA.anisotropicStress.asProbeHorizX - resA.anisotropicStress.asProbeVertX) ++ ", Q_H=" ++ show resA.anisotropicStress.asQuadHoriz ++ ", Q_V=" ++ show resA.anisotropicStress.asQuadVert ++ " | dX=" ++ show (resB.anisotropicStress.asProbeHorizX - resB.anisotropicStress.asProbeVertX) ++ ", Q_H=" ++ show resB.anisotropicStress.asQuadHoriz ++ ", Q_V=" ++ show resB.anisotropicStress.asQuadVert ++ " |"
-              , "  | Total Compute Work (Co-Ev)     | " ++ show resA.totalComputeWork ++ " | " ++ show resB.totalComputeWork ++ " |"
+              , "  | 4D 2-Body (dy, SyBot vs Lin)   | dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show cA.gcTwoBody.tbBotSy ++ " (lin=" ++ show cA.gcTwoBody.tbLinearBotSy ++ ") | dy=+" ++ show (cB.gcTwoBody.tbBotYMilli - cB.gcTwoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show cB.gcTwoBody.tbBotSy ++ " (lin=" ++ show cB.gcTwoBody.tbLinearBotSy ++ ") |"
+              , "  | 4E Causal Light-Cone (t=2)     | exact=" ++ show cA.gcLightCone.clSpacelikeExact ++ ", BrSy=" ++ show cA.gcLightCone.clEarlyBrSy ++ " | exact=" ++ show cB.gcLightCone.clSpacelikeExact ++ ", BrSy=" ++ show cB.gcLightCone.clEarlyBrSy ++ " |"
+              , "  | 4F SymMaxel Anisotropy (dX)    | dX=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++ ", Q_H=" ++ show cA.gcAniso.asQuadHoriz ++ ", Q_V=" ++ show cA.gcAniso.asQuadVert ++ " | dX=" ++ show (cB.gcAniso.asProbeHorizX - cB.gcAniso.asProbeVertX) ++ ", Q_H=" ++ show cB.gcAniso.asQuadHoriz ++ ", Q_V=" ++ show cB.gcAniso.asQuadVert ++ " |"
+              , "  | Total Compute Work (Co-Ev)     | " ++ show cA.gcWork ++ " | " ++ show cB.gcWork ++ " |"
               , "  | Native Vertical zoomSpace      | No (flat pair coords)  | Yes (viewAsAntiBox)       |"
               , "  -> Experiment 4 & 5 pass=" ++ show pass
               ]
@@ -832,23 +862,6 @@ runExperiment4and5 = do
 -- EXPERIMENT 6: ENDOGENOUS `StreamSkip`/`StreamYield` LOCAL COMPUTE PACING
 --   Fixed elementary rotation `m0 = 7` (NO `m0 + lag`, NO `SealedCore` BFS)
 --------------------------------------------------------------------------------
-
-public export
-record PacedSuiteMetrics where
-  constructor MkPacedSuiteMetrics
-  pWork      : Nat
-  pNetSum    : Integer
-  pAntiOk    : Bool
-  pSymOk     : Bool
-  pBalOk     : Bool
-  pLin       : SelfTrapReport
-  pTrap      : SelfTrapReport
-  pVac       : WavepacketReport
-  pTop       : WavepacketReport
-  pBot       : WavepacketReport
-  pTwoBody   : TwoBodyReport
-  pLightCone : CausalLightConeReport
-  pAniso     : AnisotropicStressReport
 
 export
 collectPacedWorkLoop :
@@ -862,69 +875,6 @@ collectPacedWorkLoop (S rem) sf accY accS =
   let (sf1, (y, s)) = stepSparseFieldPaced coord2Basis canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
   in collectPacedWorkLoop rem sf1 (accY + y) (accS + s)
 
-export
-runLabPacedSuite :
-  Ord k =>
-  BlackBoxLab e box k body ->
-  App1 {u = Any} e PacedSuiteMetrics
-runLabPacedSuite lab = App1.do
-  let ax        = lab.labBasis
-      brTopSeed = seedSparseBreather ax 4 5 6 8192
-      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
-  (linRep, (antiLin, symLin, balLin))   <- runLabSelfTrap lab ModeLinear
-  (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab ModePaced
-  eaBgTop <- bootInjectAndRun lab ModePaced 18 brTopSeed
-  eaBgBot <- bootInjectAndRun lab ModePaced 18 brBotSeed
-  (vRep, _, _, balV, antiV, symV) <- runLabWave lab ModePaced 18 neutral   neutral
-  (tRep, _, _, balT, antiT, symT) <- runLabWave lab ModePaced 18 brTopSeed eaBgTop.eaField
-  (bRep, _, _, balB, antiB, symB) <- runLabWave lab ModePaced 18 brBotSeed eaBgBot.eaField
-  (b2Bot, b2Top, net2B, (anti2B, sym2B, bal2B)) <- runLabTwoBody lab ModePaced  True
-  (b1Bot, _,     net1B, (anti1B, sym1B, bal1B)) <- runLabTwoBody lab ModePaced  False
-  (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear True
-  (lcRep, balLC, symLC) <- runLabLightCone lab ModePaced vRep tRep
-  (asRep, balAS)        <- runLabAnisotropicStress lab ModePaced
-  let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
-                              b2Bot.poyntingYAccum b2Top.poyntingYAccum
-                              b1Bot.poyntingYAccum blBot.poyntingYAccum
-                              b2Bot.initEnergy b2Bot.waveEnergy b2Bot.maxEnergy net2B
-  let totalAbsNet = abs vRep.waveNetSum + abs tRep.waveNetSum + abs bRep.waveNetSum +
-                    abs net2B + abs net1B + abs net2L +
-                    abs linRep.netSignedSum + abs trapRep.netSignedSum + abs asRep.asNetSum
-  let antiAll     = antiLin && antiTrap && antiV && antiT && antiB && anti2B && anti1B && anti2L
-  let symAll      = symLin && symTrap && symV && symT && symB && sym2B && sym1B && sym2L &&
-                    symLC && asRep.asSymMetricOk
-  let balAll      = balLin && balTrap && balV && balT && balB &&
-                    bal2B && bal1B && bal2L && balLC && balAS &&
-                    eaBgTop.eaBalOk && eaBgBot.eaBalOk
-  App1.pure (MkPacedSuiteMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll symAll balAll
-                                 linRep trapRep vRep tRep bRep tbRep lcRep asRep)
-
-public export
-paced4BCriteriaOk : PacedSuiteMetrics -> Bool
-paced4BCriteriaOk m =
-  let symSum = m.pTop.meanYMilli + m.pBot.meanYMilli
-  in (m.pVac.waveNetSum == 0) &&
-     (m.pTop.waveNetSum == 0) &&
-     (m.pBot.waveNetSum == 0) &&
-     (m.pVac.waveEnergy * 100 >= m.pVac.initEnergy * 92) &&
-     (m.pVac.waveEnergy <= m.pVac.initEnergy) &&
-     (m.pVac.maxEnergy <= m.pVac.initEnergy) &&
-     (m.pTop.waveEnergy <= m.pTop.initEnergy) &&
-     (m.pTop.maxEnergy <= m.pTop.initEnergy) &&
-     (m.pBot.waveEnergy <= m.pBot.initEnergy) &&
-     (m.pBot.maxEnergy <= m.pBot.initEnergy) &&
-     (m.pTop.waveEnergy * 100 >= m.pTop.initEnergy * 97) &&
-     (m.pVac.meanYMilli == 500) &&
-     (m.pVac.poyntingYAccum == 0) &&
-     (m.pTop.meanXMilli + 50 < m.pVac.meanXMilli) &&
-     (m.pTop.meanYMilli > 530) &&
-     (m.pTop.poyntingYAccum > 200000) &&
-     (m.pBot.meanXMilli == m.pTop.meanXMilli) &&
-     (m.pBot.meanYMilli < 500) &&
-     (m.pBot.poyntingYAccum == -(m.pTop.poyntingYAccum)) &&
-     (symSum == 999) &&
-     (m.pBot.waveEnergy == m.pTop.waveEnergy)
-
 public export
 pacedSkipPct : Nat -> Nat -> Integer
 pacedSkipPct y s =
@@ -935,8 +885,8 @@ runExperiment6Paced : Has [Console] e => App e (Bool, List String)
 runExperiment6Paced = do
   let h = "----------------------------------------------------------------"
   let t = "[Experiment 6] Prototype ModePaced (StreamSkip/StreamYield, fixed m0=7)"
-  pA <- app1 (runLabPacedSuite flatLab)
-  pB <- app1 (runLabPacedSuite hereditaryLab)
+  pA <- app1 (runLabCoreSuite flatLab ModePaced)
+  pB <- app1 (runLabCoreSuite hereditaryLab ModePaced)
   let seed4A     = seedSparseBreather {body = FlatCoreBody} coord2Basis 0 0 1 4096
       seed4B     = addSparseField (seedSparseBreather coord2Basis 4 5 6 8192)
                                   (seedSparseWavepacketAt coord2Basis 0 0 512)
@@ -945,51 +895,37 @@ runExperiment6Paced = do
       (y4A, s4A, n4A) = collectPacedWorkLoop 20 seed4A 0 0
       (y4B, s4B, n4B) = collectPacedWorkLoop 18 seed4B 0 0
       (y4D, s4D, n4D) = collectPacedWorkLoop 16 seed4D 0 0
-      ok4A       = selfTrapCriteriaOk pA.pLin pA.pTrap
-      ok4B       = paced4BCriteriaOk pA
-      ok4D       = twoBodyCriteriaOk pA.pTwoBody
-      ok4E       = lightConeCriteriaOk pA.pLightCone
-      ok4F       = anisotropicStressCriteriaOk pA.pAniso
-      energyMonoOk =
-        pA.pLin.finalEnergy <= pA.pLin.initEnergy && pA.pLin.maxEnergy <= pA.pLin.initEnergy &&
-        pA.pTrap.finalEnergy <= pA.pTrap.initEnergy && pA.pTrap.maxEnergy <= pA.pTrap.initEnergy &&
-        pA.pVac.waveEnergy <= pA.pVac.initEnergy && pA.pVac.maxEnergy <= pA.pVac.initEnergy &&
-        pA.pTop.waveEnergy <= pA.pTop.initEnergy && pA.pTop.maxEnergy <= pA.pTop.initEnergy &&
-        pA.pBot.waveEnergy <= pA.pBot.initEnergy && pA.pBot.maxEnergy <= pA.pBot.initEnergy &&
-        pA.pTwoBody.tbFinalE <= pA.pTwoBody.tbInitE && pA.pTwoBody.tbMaxE <= pA.pTwoBody.tbInitE
-      abParity   =
-        sameSelfTrapPhysics pA.pLin pB.pLin &&
-        sameSelfTrapPhysics pA.pTrap pB.pTrap &&
-        sameWavePhysics pA.pVac pB.pVac &&
-        sameWavePhysics pA.pTop pB.pTop &&
-        sameWavePhysics pA.pBot pB.pBot &&
-        (pA.pTwoBody == pB.pTwoBody) &&
-        (pA.pLightCone == pB.pLightCone) &&
-        (pA.pAniso == pB.pAniso)
+      ok4A       = selfTrapCriteriaOk pA.gcLin pA.gcTrap
+      ok4B       = gravity4BCriteriaOk pA
+      ok4D       = twoBodyCriteriaOk pA.gcTwoBody
+      ok4E       = lightConeCriteriaOk pA.gcLightCone
+      ok4F       = anisotropicStressCriteriaOk pA.gcAniso
+      energyMonoOk = coreEnergyMonoOk pA
+      abParity     = sameCorePhysics pA pB
       structOk   =
         abParity &&
-        (pA.pNetSum == 0 && pB.pNetSum == 0) &&
-        pA.pAntiOk && pB.pAntiOk && pA.pSymOk && pB.pSymOk && pA.pBalOk && pB.pBalOk &&
-        (pB.pWork > pA.pWork) &&
+        (pA.gcNetSum == 0 && pB.gcNetSum == 0) &&
+        pA.gcAntiOk && pB.gcAntiOk && pA.gcSymOk && pB.gcSymOk && pA.gcBalOk && pB.gcBalOk &&
+        (pB.gcWork > pA.gcWork) &&
         (s4A > 0 && s4B > 0 && s4D > 0) &&
         energyMonoOk
   let lines = [ h
               , t
               , "  * 6-4A Self-Trapping (" ++ show ok4A ++ "):"
-              , "    - Linear             -> " ++ show pA.pLin
-              , "    - Paced (A)          -> " ++ show pA.pTrap
+              , "    - Linear             -> " ++ show pA.gcLin
+              , "    - Paced (A)          -> " ++ show pA.gcTrap
               , "    - Paced Work         -> yields=" ++ show y4A ++ ", skips=" ++ show s4A ++ " (" ++ show (pacedSkipPct y4A s4A) ++ "%), paceNodes=" ++ show n4A
               , "  * 6-4B Causal 1-Hop Gravity (" ++ show ok4B ++ "):"
-              , "    - Vacuum Control (A) -> " ++ show pA.pVac
-              , "    - Top(4,5)       (A) -> " ++ show pA.pTop
-              , "    - Bot(4,-4)      (A) -> " ++ show pA.pBot
+              , "    - Vacuum Control (A) -> " ++ show pA.gcVac
+              , "    - Top(4,5)       (A) -> " ++ show pA.gcTop
+              , "    - Bot(4,-4)      (A) -> " ++ show pA.gcBot
               , "    - Paced Work (4B)    -> yields=" ++ show y4B ++ ", skips=" ++ show s4B ++ " (" ++ show (pacedSkipPct y4B s4B) ++ "%), paceNodes=" ++ show n4B
               , "  * 6-4D Equal-Mass 2-Body (" ++ show ok4D ++ "):"
-              , "    - Equal-Mass     (A) -> " ++ show pA.pTwoBody
+              , "    - Equal-Mass     (A) -> " ++ show pA.gcTwoBody
               , "    - Paced Work (4D)    -> yields=" ++ show y4D ++ ", skips=" ++ show s4D ++ " (" ++ show (pacedSkipPct y4D s4D) ++ "%), paceNodes=" ++ show n4D
-              , "  * 6-4E Causal Light-Cone (" ++ show ok4E ++ ") -> " ++ show pA.pLightCone
-              , "  * 6-4F Anisotropic Stress (" ++ show ok4F ++ ") -> " ++ show pA.pAniso
-              , "  * A/B Work & Structural Audit: workA=" ++ show pA.pWork ++ ", workB=" ++ show pB.pWork ++
+              , "  * 6-4E Causal Light-Cone (" ++ show ok4E ++ ") -> " ++ show pA.gcLightCone
+              , "  * 6-4F Anisotropic Stress (" ++ show ok4F ++ ") -> " ++ show pA.gcAniso
+              , "  * A/B Work & Structural Audit: workA=" ++ show pA.gcWork ++ ", workB=" ++ show pB.gcWork ++
                 ", abParity=" ++ show abParity ++ ", energyMono=" ++ show energyMonoOk ++
                 ", physics=[4A=" ++ show ok4A ++ ",4B=" ++ show ok4B ++ ",4D=" ++ show ok4D ++ ",4E=" ++ show ok4E ++ ",4F=" ++ show ok4F ++ "]"
               , "  -> Experiment 6 structural pass=" ++ show structOk

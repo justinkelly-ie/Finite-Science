@@ -33,6 +33,7 @@ record AxisBasis (k : Type) where
   mkCoord  : Integer -> Integer -> k
   isOddX   : k -> Bool
   isOddY   : k -> Bool
+  unitAxes : Box BoxInt k
 
 public export
 coord2Basis : AxisBasis Coord2
@@ -47,6 +48,7 @@ coord2Basis =
     (\x, y => (intToSigned x, intToSigned y))
     (\(x, _) => isOddSigned x)
     (\(_, y) => isOddSigned y)
+    (unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0))
 
 public export
 pureMSetBasis : AxisBasis PureMultiset
@@ -63,6 +65,38 @@ pureMSetBasis =
                 (MkHMSet (singletonBox axisY (MkBoxInt y))))
     (\pos => isOddBox (lookupPureKey axisX pos))
     (\pos => isOddBox (lookupPureKey axisY pos))
+    (unitAxes2DWith negHMSet FiniteScience.StreamWork.stepX FiniteScience.StreamWork.stepY)
+
+public export
+data StepMode = ModeLinear | ModeUnified | ModeAdaptive | ModePaced
+
+public export
+canonLagDiv : Integer
+canonLagDiv = 6000000
+
+public export
+canonDecayNum : Integer
+canonDecayNum = 7
+
+public export
+canonDecayDen : Integer
+canonDecayDen = 32
+
+public export
+canonLinkCoup : Integer
+canonLinkCoup = 1
+
+public export
+canonFreezeLagRatio : Integer
+canonFreezeLagRatio = 8
+
+public export
+canonThawLagNum : Integer
+canonThawLagNum = 1
+
+public export
+canonThawLagDen : Integer
+canonThawLagDen = 16
 
 ||| Active coupled field carrier: diagonal `(a, a)` holds scalar amplitude `psi(a)`
 ||| and off-diagonal `(a, b)` holds antisymmetric flux `u_{ab} = -u_{ba}` (`DiagAntisymForm`).
@@ -219,7 +253,7 @@ seedSparseWavepacketAt ax x0 y0 amp =
                 setMaxelEdge e2 e3 (MkBoxInt (-2)) $
                 setMaxelEdge e3 e4 (MkBoxInt 2)    $
                 singletonMaxelEdge e4 e5 (MkBoxInt 2)
-  in MkSparseField (convolveMaxelStencil ax.shiftAdd rowWave yEnv) emptyMaxel emptyMaxel []
+  in MkSparseField (shiftConvolveMaxel ax.shiftAdd rowWave yEnv) emptyMaxel emptyMaxel []
 
 public export
 seedSparseWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> SparseField k body
@@ -235,15 +269,10 @@ seedSparseEdgeFlux ax x1 y1 x2 y2 u =
 -- 3. CAUSAL 1-HOP RETARDED MAXEL METRIC & MULTI-CORE FREEZE/THAW
 --------------------------------------------------------------------------------
 
-||| Sparse 4-direction Laurent stencil `[+dx, -dx, +dy, -dy]` over any `AxisBasis k`.
+||| Sparse 1-hop 4-neighbor expansion of active sites along `ax.unitAxes`.
 public export
-laurentStencil4By : Ord k => AxisBasis k -> Box BoxInt k
-laurentStencil4By ax =
-  let orig = ax.mkCoord 0 0
-  in addAtKeyBox (ax.shiftSub orig ax.stepY) (MkBoxInt 1) $
-     addAtKeyBox ax.stepY                    (MkBoxInt 1) $
-     addAtKeyBox (ax.shiftSub orig ax.stepX) (MkBoxInt 1) $
-     singletonBox ax.stepX                   (MkBoxInt 1)
+neighbors4 : Ord k => AxisBasis k -> Box BoxInt k -> Box BoxInt k
+neighbors4 ax box = pairBoxWith ax.shiftAdd (supportBox box) ax.unitAxes
 
 ||| Exact local quadratic density `T_00 = 2 * (psi .*. psi) + floor((contractR + contractL)(F .*. F) / 2)`
 ||| paired with the full symmetric Maxel source `diagEmbedMaxel T_00 + linkCoup * (F .*. F)`,
@@ -280,7 +309,7 @@ activeRhoAndSourceIf True  linkCoup wave = activeRhoAndSource linkCoup wave
 
 ||| Causal 1-hop retarded Symmetric `Maxel` metric step:
 |||   `G_{t+1} = prune(actSrcM) + sum_{c in cores} prune(c.coreSourceMaxel)
-|||            + floor((decayNum * convolveMaxelStencil shiftAdd G_t S_4) / decayDen)`
+|||            + floor((decayNum * shiftConvolveMaxel shiftAdd G_t unitAxes) / decayDen)`
 ||| Half-stores `a <= b`, enforces strict light-cone speed `c = 1`, and preserves `SymForm` by construction.
 public export
 stepCausalMetricMaxel :
@@ -301,7 +330,7 @@ stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrcM cores oldM =
                       then emptyMaxel
                       else scaleDivPruneMaxel decayDen minCut
                              (scaleMaxel (MkBoxInt decayNum)
-                                (convolveMaxelStencil ax.shiftAdd oldM (laurentStencil4By ax)))
+                                (shiftConvolveMaxel ax.shiftAdd oldM ax.unitAxes))
           withAct = addMaxel decayed (pruneMinMaxel minCut actSrcM)
       in foldl (\acc, c => addMaxel acc (pruneMinMaxel minCut c.coreSourceMaxel)) withAct cores
 
@@ -312,8 +341,7 @@ corePerimeterHot ax thawThr coreSites actRho =
   if thawThr <= 0 || coreSites == BoxLeaf
     then False
     else
-      let halo   = pairBoxWith ax.shiftAdd (supportBox coreSites) (laurentStencil4By ax)
-          perim  = maskOutBox coreSites halo
+      let perim  = maskOutBox coreSites (neighbors4 ax coreSites)
           hotAct = pruneMinBox thawThr actRho
       in hadamardBox perim hotAct /= BoxLeaf
 
@@ -329,8 +357,7 @@ floodLoop :
 floodLoop _ Z rem comp _ = (rem, comp)
 floodLoop _ _ rem comp BoxLeaf = (rem, comp)
 floodLoop ax (S fuel) rem comp front =
-  let nbrs      = pairBoxWith ax.shiftAdd (supportBox front) (laurentStencil4By ax)
-      nextFront = maskByBox rem nbrs
+  let nextFront = maskByBox rem (neighbors4 ax front)
   in floodLoop ax fuel (subBox rem nextFront) (unionBox comp nextFront) nextFront
 
 public export
@@ -379,41 +406,54 @@ applyLinkRotation posA posB m pA pB uOld wave =
   in if res.valU /= uOld then setMaxelEdge posA posB res.valU w2 else w2
 
 public export
-applySparseLinkPass :
+linkMetricSum : Ord k => Maxel BoxInt k k SymForm -> k -> k -> BoxInt
+linkMetricSum metricM posA posB =
+  addBox (addBox (lookupMaxel posA posA metricM) (lookupMaxel posB posB metricM))
+         (lookupMaxel posA posB metricM)
+
+public export
+sweepAxisPass :
   Ord k =>
   AxisBasis k ->
   (stepDir : k) ->
-  (lagDiv, m0 : Integer) ->
-  (metricM : Maxel BoxInt k k SymForm) ->
-  (frozenSites : Box BoxInt k) ->
   (wantOdd : Bool) ->
   (isOddFn : k -> Bool) ->
   (linksBox : Box BoxInt k) ->
-  WaveMaxel k ->
-  WaveMaxel k
-applySparseLinkPass ax stepDir lagDiv m0 metricM frozenSites wantOdd isOddFn linksBox initWave =
-  foldBox (\posA, _, wave =>
+  (getWave : acc -> WaveMaxel k) ->
+  (onLink : k -> k -> BoxInt -> BoxInt -> BoxInt -> acc -> acc) ->
+  acc ->
+  acc
+sweepAxisPass ax stepDir wantOdd isOddFn linksBox getWave onLink initAcc =
+  foldBox (\posA, _, acc =>
              if isOddFn posA /= wantOdd
-               then wave
+               then acc
                else
                  let posB = ax.shiftAdd posA stepDir
-                 in if not (boxIsZero (lookupBox posA frozenSites)) ||
-                       not (boxIsZero (lookupBox posB frozenSites))
-                      then wave
-                      else
-                        let pA   = lookupMaxel posA posA wave
-                            pB   = lookupMaxel posB posB wave
-                            uOld = lookupMaxel posA posB wave
-                        in if boxIsZero pA && boxIsZero pB && boxIsZero uOld
-                             then wave
-                             else
-                               let gA  = lookupMaxel posA posA metricM
-                                   gB  = lookupMaxel posB posB metricM
-                                   gAB = lookupMaxel posA posB metricM
-                                   lag = if lagDiv <= 0 then MkBoxInt 0 else tdivPosBox (addBox (addBox gA gB) gAB) lagDiv
-                               in applyLinkRotation posA posB (addBox (MkBoxInt m0) lag) pA pB uOld wave)
-          initWave
+                     wave = getWave acc
+                     pA   = lookupMaxel posA posA wave
+                     pB   = lookupMaxel posB posB wave
+                     uOld = lookupMaxel posA posB wave
+                 in if boxIsZero pA && boxIsZero pB && boxIsZero uOld
+                      then acc
+                      else onLink posA posB pA pB uOld acc)
+          initAcc
           linksBox
+
+public export
+sweepCheckerboard :
+  Ord k =>
+  AxisBasis k ->
+  (getWave : acc -> WaveMaxel k) ->
+  (onLink : k -> k -> BoxInt -> BoxInt -> BoxInt -> acc -> acc) ->
+  acc ->
+  acc
+sweepCheckerboard ax getWave onLink acc0 =
+  let xLinks = collectAxisLinks ax ax.stepX (getWave acc0)
+      accX1  = sweepAxisPass ax ax.stepX False ax.isOddX xLinks getWave onLink acc0
+      accX2  = sweepAxisPass ax ax.stepX True  ax.isOddX xLinks getWave onLink accX1
+      yLinks = collectAxisLinks ax ax.stepY (getWave accX2)
+      accY1  = sweepAxisPass ax ax.stepY False ax.isOddY yLinks getWave onLink accX2
+  in sweepAxisPass ax ax.stepY True ax.isOddY yLinks getWave onLink accY1
 
 public export
 record PacedPassAcc (k : Type) where
@@ -422,52 +462,6 @@ record PacedPassAcc (k : Type) where
   ppPace   : Maxel BoxInt k k SymForm
   ppYields : Nat
   ppSkips  : Nat
-
-public export
-applyPacedLinkPass :
-  Ord k =>
-  AxisBasis k ->
-  (stepDir : k) ->
-  (paceBudget, m0 : Integer) ->
-  (metricM : Maxel BoxInt k k SymForm) ->
-  (wantOdd : Bool) ->
-  (isOddFn : k -> Bool) ->
-  (linksBox : Box BoxInt k) ->
-  PacedPassAcc k ->
-  PacedPassAcc k
-applyPacedLinkPass ax stepDir paceBudget m0 metricM wantOdd isOddFn linksBox initAcc =
-  foldBox (\posA, _, acc =>
-             if isOddFn posA /= wantOdd
-               then acc
-               else
-                 let posB = ax.shiftAdd posA stepDir
-                     pA   = lookupMaxel posA posA acc.ppWave
-                     pB   = lookupMaxel posB posB acc.ppWave
-                     uOld = lookupMaxel posA posB acc.ppWave
-                 in if boxIsZero pA && boxIsZero pB && boxIsZero uOld
-                      then acc
-                      else
-                        let gA   = lookupMaxel posA posA metricM
-                            gB   = lookupMaxel posB posB metricM
-                            gAB  = lookupMaxel posA posB metricM
-                            cost = unwrapBox (addBox (addBox gA gB) gAB)
-                            bal  = lookupMaxel posA posB acc.ppPace
-                        in case paceStreamStep paceBudget cost bal of
-                             (step, newBal) =>
-                               let pace1 = if newBal /= bal then setMaxelEdge posA posB newBal acc.ppPace else acc.ppPace
-                               in case step of
-                                    StreamSkip =>
-                                      MkPacedPassAcc acc.ppWave pace1 acc.ppYields (S acc.ppSkips)
-                                    StreamDone =>
-                                      MkPacedPassAcc acc.ppWave pace1 acc.ppYields acc.ppSkips
-                                    StreamYield () =>
-                                      MkPacedPassAcc
-                                        (applyLinkRotation posA posB (MkBoxInt m0) pA pB uOld acc.ppWave)
-                                        pace1
-                                        (S acc.ppYields)
-                                        acc.ppSkips)
-          initAcc
-          linksBox
 
 public export
 record ThawPassAcc (k : Type) (body : Type) where
@@ -570,14 +564,19 @@ stepSparseField ax codec lagDiv decayNum decayDen linkCoup m0 freezeLagRatio tha
       newMet             = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 sf.frozenCores sf.metricMaxel
       thawRes            = selectivelyThawCores ax codec thawThr actRho0 sf.waveMaxel sf.frozenCores
       frzSites           = allFrozenSites thawRes.tpKeptCores
-      xLinks             = collectAxisLinks ax ax.stepX thawRes.tpWave
-      wX1                = applySparseLinkPass ax ax.stepX lagDiv m0 newMet frzSites False ax.isOddX xLinks thawRes.tpWave
-      wX2                = applySparseLinkPass ax ax.stepX lagDiv m0 newMet frzSites True  ax.isOddX xLinks wX1
-      yLinks             = collectAxisLinks ax ax.stepY wX2
-      wY1                = applySparseLinkPass ax ax.stepY lagDiv m0 newMet frzSites False ax.isOddY yLinks wX2
-      wY2                = applySparseLinkPass ax ax.stepY lagDiv m0 newMet frzSites True  ax.isOddY yLinks wY1
+      wFin               = sweepCheckerboard ax id
+                             (\posA, posB, pA, pB, uOld, wave =>
+                                if not (boxIsZero (lookupBox posA frzSites)) ||
+                                   not (boxIsZero (lookupBox posB frzSites))
+                                  then wave
+                                  else
+                                    let lag = if lagDiv <= 0
+                                                then MkBoxInt 0
+                                                else tdivPosBox (linkMetricSum newMet posA posB) lagDiv
+                                    in applyLinkRotation posA posB (addBox (MkBoxInt m0) lag) pA pB uOld wave)
+                             thawRes.tpWave
       (finWave, finCores) =
-        freezeQuietComponents ax codec linkCoup freezeThr thawThr thawRes.tpThawedSites wY2 thawRes.tpKeptCores
+        freezeQuietComponents ax codec linkCoup freezeThr thawThr thawRes.tpThawedSites wFin thawRes.tpKeptCores
   in (MkSparseField finWave newMet emptyMaxel finCores, thawRes.tpThawedCount)
 
 ||| One endogenous `StreamSkip`/`StreamYield` paced sweep over `SparseField k body`
@@ -594,13 +593,42 @@ stepSparseFieldPaced ax lagDiv decayNum decayDen linkCoup m0 sf =
   let paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
       (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
       newMet       = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 (the (List (SealedCore k body)) []) sf.metricMaxel
-      xLinks       = collectAxisLinks ax ax.stepX sf.waveMaxel
-      pX1          = applyPacedLinkPass ax ax.stepX paceBudget m0 newMet False ax.isOddX xLinks (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
-      pX2          = applyPacedLinkPass ax ax.stepX paceBudget m0 newMet True  ax.isOddX xLinks pX1
-      yLinks       = collectAxisLinks ax ax.stepY pX2.ppWave
-      pY1          = applyPacedLinkPass ax ax.stepY paceBudget m0 newMet False ax.isOddY yLinks pX2
-      pY2          = applyPacedLinkPass ax ax.stepY paceBudget m0 newMet True  ax.isOddY yLinks pY1
-  in (MkSparseField pY2.ppWave newMet pY2.ppPace [], (pY2.ppYields, pY2.ppSkips))
+      pFin         = sweepCheckerboard ax (.ppWave)
+                       (\posA, posB, pA, pB, uOld, acc =>
+                          let cost = unwrapBox (linkMetricSum newMet posA posB)
+                              bal  = lookupMaxel posA posB acc.ppPace
+                          in case paceStreamStep paceBudget cost bal of
+                               (step, newBal) =>
+                                 let pace1 = if newBal /= bal then setMaxelEdge posA posB newBal acc.ppPace else acc.ppPace
+                                 in case step of
+                                      StreamSkip => MkPacedPassAcc acc.ppWave pace1 acc.ppYields (S acc.ppSkips)
+                                      StreamDone => MkPacedPassAcc acc.ppWave pace1 acc.ppYields acc.ppSkips
+                                      StreamYield () =>
+                                        MkPacedPassAcc
+                                          (applyLinkRotation posA posB (MkBoxInt m0) pA pB uOld acc.ppWave)
+                                          pace1
+                                          (S acc.ppYields)
+                                          acc.ppSkips)
+                       (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
+  in (MkSparseField pFin.ppWave newMet pFin.ppPace [], (pFin.ppYields, pFin.ppSkips))
+
+||| Single shared `StepMode` dispatcher over any coordinate basis `AxisBasis k`.
+public export
+stepSparseByMode :
+  Ord k =>
+  AxisBasis k ->
+  CoreCodec k body ->
+  StepMode ->
+  SparseField k body ->
+  SparseField k body
+stepSparseByMode ax codec ModeLinear sf =
+  fst (stepSparseField ax codec 0 canonDecayNum canonDecayDen 0 7 0 0 1 sf)
+stepSparseByMode ax codec ModeUnified sf =
+  fst (stepSparseField ax codec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 0 0 1 sf)
+stepSparseByMode ax codec ModeAdaptive sf =
+  fst (stepSparseField ax codec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen sf)
+stepSparseByMode ax _ ModePaced sf =
+  fst (stepSparseFieldPaced ax canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
@@ -634,20 +662,30 @@ packWaveBox base (MkMaxel m) =
                     addAtKeyBox (mkEdgeKey posA posB) w acc)
           base m
 
-||| Decodes active site weights and canonical half-stored (`a < b`) antisymmetric link weights into one `WaveMaxel`.
+||| Decodes active sites and directed edge keys from a packed `Box BoxInt PureMultiset` into any half-stored `Maxel`.
+||| When `onlyLower` is `True`, off-diagonal `mkEdgeKey a b` entries are inserted only for `compare a b == LT`.
 public export
-unpackWaveHMSetBox : Box BoxInt PureMultiset -> WaveMaxel PureMultiset
-unpackWaveHMSetBox =
+unpackHalfMaxelBox :
+  {form : MaxelForm PureMultiset PureMultiset} ->
+  (onlyLower : Bool) ->
+  Box BoxInt PureMultiset ->
+  Maxel BoxInt PureMultiset PureMultiset form
+unpackHalfMaxelBox onlyLower =
   foldBox (\entry, mult, acc =>
              if isSiteKey entry
                then addAtMaxelEdge entry entry mult acc
                else case unpackEdgeKey entry of
                       Just (a, b) =>
-                        if compare a b == LT
+                        if not onlyLower || compare a b == LT
                           then addAtMaxelEdge a b mult acc
                           else acc
                       Nothing => acc)
           emptyMaxel
+
+||| Decodes active site weights and canonical half-stored (`a < b`) antisymmetric link weights into one `WaveMaxel`.
+public export
+unpackWaveHMSetBox : Box BoxInt PureMultiset -> WaveMaxel PureMultiset
+unpackWaveHMSetBox = unpackHalfMaxelBox {form = DiagAntisymForm} True
 
 public export
 pureMSetCoreCodec : CoreCodec PureMultiset PureMultiset
@@ -670,14 +708,25 @@ packSymMaxelToHMSet (MkMaxel m) =
 ||| Decodes a `PureMultiset` produced by `packSymMaxelToHMSet` back into a `Maxel BoxInt PureMultiset PureMultiset SymForm`.
 public export
 unpackHMSetToSymMaxel : PureMultiset -> Maxel BoxInt PureMultiset PureMultiset SymForm
-unpackHMSetToSymMaxel (MkHMSet b) =
-  foldBox (\entry, mult, acc =>
-             if isSiteKey entry
-               then addAtMaxelEdge entry entry mult acc
-               else case unpackEdgeKey entry of
-                      Just (a, b) => addAtMaxelEdge a b mult acc
-                      Nothing     => acc)
-          emptyMaxel b
+unpackHMSetToSymMaxel (MkHMSet b) = unpackHalfMaxelBox {form = SymForm} False b
+
+public export
+packSymDipole :
+  (PureMultiset -> PureMultiset) ->
+  Maxel BoxInt PureMultiset PureMultiset SymForm ->
+  Box BoxInt PureMultiset ->
+  Box BoxInt PureMultiset
+packSymDipole mkKey maxel acc =
+  let m = packSymMaxelToHMSet maxel
+  in if m == emptyPureMSet
+       then acc
+       else addBalancedUnitDipole (mkKey m) (mkKey (negHMSet m)) acc
+
+public export
+hasSignedUnitPartner : (oppK : PureMultiset) -> (mult : BoxInt) -> Box BoxInt PureMultiset -> Bool
+hasSignedUnitPartner oppK mult rootBox =
+  (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
+  hasBalancedPartner oppK mult rootBox
 
 ||| Packs `SparseField PureMultiset PureMultiset` cleanly into ONE zero-sum `PureMultiset` root
 ||| with ZERO synthetic tags and $O(1)$ zero-copy sealing for metric, pacing & frozen cores!
@@ -685,14 +734,8 @@ public export
 packSparseFieldToRoot : Box BoxInt PureMultiset -> SparseField PureMultiset PureMultiset -> PureMultiset
 packSparseFieldToRoot keptBox sf =
   let bAct  = packWaveBox keptBox sf.waveMaxel
-      metM  = packSymMaxelToHMSet sf.metricMaxel
-      bMet  = if metM == emptyPureMSet
-                then bAct
-                else addBalancedUnitDipole (mkMetricKey metM) (mkMetricKey (negHMSet metM)) bAct
-      paceM = packSymMaxelToHMSet sf.paceMaxel
-      bPace = if paceM == emptyPureMSet
-                then bMet
-                else addBalancedUnitDipole (mkPaceKey paceM) (mkPaceKey (negHMSet paceM)) bMet
+      bMet  = packSymDipole mkMetricKey sf.metricMaxel bAct
+      bPace = packSymDipole mkPaceKey sf.paceMaxel bMet
       bFin  = foldl (\acc, c =>
                        let sM = MkHMSet c.coreSites
                            rM = packSymMaxelToHMSet c.coreSourceMaxel
@@ -761,19 +804,14 @@ verifyRootBalancedDipoles (MkHMSet rootBox) =
                     Just (a, b) => hasBalancedPartner (mkEdgeKey b a) mult rootBox
                     Nothing =>
                       case unpackMetricKey entry of
-                        Just phiM =>
-                          (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
-                          hasBalancedPartner (mkMetricKey (negHMSet phiM)) mult rootBox
+                        Just phiM => hasSignedUnitPartner (mkMetricKey (negHMSet phiM)) mult rootBox
                         Nothing =>
                           case unpackPaceKey entry of
-                            Just paceM =>
-                              (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
-                              hasBalancedPartner (mkPaceKey (negHMSet paceM)) mult rootBox
+                            Just paceM => hasSignedUnitPartner (mkPaceKey (negHMSet paceM)) mult rootBox
                             Nothing =>
                               case unpackSealedCoreKey entry of
                                 Just (sM, rM, eM, pM) =>
-                                  (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
-                                  hasBalancedPartner (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM)) mult rootBox
+                                  hasSignedUnitPartner (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM)) mult rootBox
                                 Nothing => True)
           True rootBox
 
@@ -809,26 +847,12 @@ rootActivePeelWork (MkHMSet b) =
                           Nothing => acc + mag * S (fastPeelWorkHMSet k))
           0 b
 
-||| Model B closed-energy sweep reusing `stepSparseField pureMSetBasis pureMSetCoreCodec`.
+||| Model B closed-energy sweep dispatcher over `StepMode` reusing `stepSparseByMode pureMSetBasis pureMSetCoreCodec`.
 public export
-stepHereditarySparse :
-  (lagDiv, decayNum, decayDen, linkCoup, freezeLagRatio, thawLagNum, thawLagDen : Integer) ->
-  PureMultiset ->
-  PureMultiset
-stepHereditarySparse lagDiv decayNum decayDen linkCoup freezeLagRatio thawLagNum thawLagDen root =
-  let unp      = unpackRootToSparseField root
-      (sf1, _) = stepSparseField pureMSetBasis pureMSetCoreCodec lagDiv decayNum decayDen linkCoup 7 freezeLagRatio thawLagNum thawLagDen unp.fieldData
-  in packSparseFieldToRoot unp.keptNonField sf1
-
-||| Model B endogenous `StreamSkip`/`StreamYield` paced sweep reusing `stepSparseFieldPaced pureMSetBasis`.
-public export
-stepHereditaryPaced :
-  (lagDiv, decayNum, decayDen, linkCoup : Integer) ->
-  PureMultiset ->
-  PureMultiset
-stepHereditaryPaced lagDiv decayNum decayDen linkCoup root =
-  let unp      = unpackRootToSparseField root
-      (sf1, _) = stepSparseFieldPaced pureMSetBasis lagDiv decayNum decayDen linkCoup 7 unp.fieldData
+stepHereditaryByModeRoot : StepMode -> PureMultiset -> PureMultiset
+stepHereditaryByModeRoot mode root =
+  let unp = unpackRootToSparseField root
+      sf1 = stepSparseByMode pureMSetBasis pureMSetCoreCodec mode unp.fieldData
   in packSparseFieldToRoot unp.keptNonField sf1
 
 --------------------------------------------------------------------------------
@@ -1000,16 +1024,16 @@ public export
 prfWildbergerPythResonance = Refl
 
 public export
-0 prfSparseStencil4Convolve :
-  (let st = Stage0.Box.laurentStencil4 (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+0 prfSparseUnitAxes2DConvolve :
+  (let st = Stage0.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
        pt = Stage0.Box.singletonBox (ZeroZ, ZeroZ) (MkBoxInt 3)
-       c  = Stage0.Box.convolveStencil pt st
+       c  = Stage0.Box.mulBoxWith pt st
    in (Stage0.Box.lookupBox (PosZ 0, ZeroZ) c == MkBoxInt 3) &&
       (Stage0.Box.lookupBox (NegZ 0, ZeroZ) c == MkBoxInt 3) &&
       (Stage0.Box.lookupBox (ZeroZ, PosZ 0) c == MkBoxInt 3) &&
       (Stage0.Box.lookupBox (ZeroZ, NegZ 0) c == MkBoxInt 3) &&
       (Stage0.Box.totalMassBox c == MkBoxInt 12)) = True
-prfSparseStencil4Convolve = Refl
+prfSparseUnitAxes2DConvolve = Refl
 
 public export
 checkTagFreePackUnpackRoundTrip : Bool

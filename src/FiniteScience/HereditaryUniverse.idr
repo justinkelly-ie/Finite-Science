@@ -13,7 +13,7 @@ import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 import FiniteScience.SparseField
-import FiniteScience.FlatSpaceUniverse
+import FiniteScience.Settings
 
 %default total
 
@@ -61,40 +61,14 @@ injectHereditaryField delta (MkHereditaryBox root) =
   let sfRoot = packSparseFieldToRoot BoxLeaf delta
   in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
 
-||| Pure closed linear-vacuum Wildberger Pythagorean stepper (`lagDiv = 0`).
+||| Pure closed single-pass `StepMode` dispatcher directly inside `root : HereditaryMSet BoxInt`.
 export
-stepHereditaryLinear1 :
+stepHereditaryByMode :
+  StepMode ->
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
-stepHereditaryLinear1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse 0 canonDecayNum canonDecayDen 0 0 0 1 root))
-
-||| Pure closed causal 1-hop retarded Symmetric `Maxel` metric (`7/32`) + Wildberger Pythagorean stepper
-||| directly inside `root : HereditaryMSet BoxInt` (zero mirror keys, zero channel tags, zero clocks).
-export
-stepHereditaryUnified1 :
-  (1 u : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-stepHereditaryUnified1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 0 0 1 root))
-
-||| Pure closed dimensionless multi-core freeze/thaw + causal 1-hop Symmetric `Maxel` metric + Wildberger Pythagorean stepper
-||| directly inside `root : HereditaryMSet BoxInt` with O(1) unopened frozen cores.
-export
-stepHereditaryAdaptive1 :
-  (1 u : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-stepHereditaryAdaptive1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditarySparse canonLagDiv canonDecayNum canonDecayDen canonLinkCoup canonFreezeLagRatio canonThawLagNum canonThawLagDen root))
-
-||| Pure closed endogenous `StreamSkip`/`StreamYield` paced fixed-angle `(24, 7, 25)` stepper
-||| directly inside `root : HereditaryMSet BoxInt`.
-export
-stepHereditaryPaced1 :
-  (1 u : HereditaryBlackBox) ->
-  App1 e HereditaryBlackBox
-stepHereditaryPaced1 (MkHereditaryBox root) =
-  App1.pure1 (MkHereditaryBox (stepHereditaryPaced canonLagDiv canonDecayNum canonDecayDen canonLinkCoup root))
+stepHereditaryByMode mode (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (stepHereditaryByModeRoot mode root))
 
 ||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
 ||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections
