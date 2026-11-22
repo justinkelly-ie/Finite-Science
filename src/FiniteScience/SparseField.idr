@@ -98,6 +98,10 @@ public export
 canonThawLagDen : Integer
 canonThawLagDen = 16
 
+public export
+canonPacedSubTicks : Nat
+canonPacedSubTicks = 4
+
 ||| Active coupled field carrier: diagonal `(a, a)` holds scalar amplitude `psi(a)`
 ||| and off-diagonal `(a, b)` holds antisymmetric flux `u_{ab} = -u_{ba}` (`DiagAntisymForm`).
 public export
@@ -433,7 +437,7 @@ sweepAxisPass ax stepDir wantOdd isOddFn linksBox getWave onLink initAcc =
                      pA   = lookupMaxel posA posA wave
                      pB   = lookupMaxel posB posB wave
                      uOld = lookupMaxel posA posB wave
-                 in if boxIsZero pA && boxIsZero pB && boxIsZero uOld
+                 in if pA == pB && boxIsZero uOld
                       then acc
                       else onLink posA posB pA pB uOld acc)
           initAcc
@@ -580,37 +584,49 @@ stepSparseField ax codec lagDiv decayNum decayDen linkCoup m0 freezeLagRatio tha
   in (MkSparseField finWave newMet emptyMaxel finCores, thawRes.tpThawedCount)
 
 ||| One endogenous `StreamSkip`/`StreamYield` paced sweep over `SparseField k body`
-||| with fixed elementary rotation parameter `m0` and Bresenham tick budget `m0 * lagDiv`
-||| (no variable-angle `m0 + lag` slowdown and no manual `SealedCore` freeze-thaw).
+||| with `subTicks` fixed-angle elementary passes (`mSub = subTicks * m0`) and Bresenham tick budget
+||| `m0 * lagDiv` (no variable-angle `m0 + lag` slowdown and no manual `SealedCore` freeze-thaw).
 public export
 stepSparseFieldPaced :
   Ord k =>
   AxisBasis k ->
+  (subTicks : Nat) ->
   (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
   SparseField k body ->
   (SparseField k body, (Nat, Nat))
-stepSparseFieldPaced ax lagDiv decayNum decayDen linkCoup m0 sf =
-  let paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
-      (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
-      newMet       = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 (the (List (SealedCore k body)) []) sf.metricMaxel
-      pFin         = sweepCheckerboard ax (.ppWave)
-                       (\posA, posB, pA, pB, uOld, acc =>
-                          let cost = unwrapBox (linkMetricSum newMet posA posB)
-                              bal  = lookupMaxel posA posB acc.ppPace
-                          in case paceStreamStep paceBudget cost bal of
-                               (step, newBal) =>
-                                 let pace1 = if newBal /= bal then setMaxelEdge posA posB newBal acc.ppPace else acc.ppPace
-                                 in case step of
-                                      StreamSkip => MkPacedPassAcc acc.ppWave pace1 acc.ppYields (S acc.ppSkips)
-                                      StreamDone => MkPacedPassAcc acc.ppWave pace1 acc.ppYields acc.ppSkips
-                                      StreamYield () =>
-                                        MkPacedPassAcc
-                                          (applyLinkRotation posA posB (MkBoxInt m0) pA pB uOld acc.ppWave)
-                                          pace1
-                                          (S acc.ppYields)
-                                          acc.ppSkips)
-                       (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
-  in (MkSparseField pFin.ppWave newMet pFin.ppPace [], (pFin.ppYields, pFin.ppSkips))
+stepSparseFieldPaced ax subTicks lagDiv decayNum decayDen linkCoup m0 sf =
+  if isEmptyMaxel sf.waveMaxel && isEmptyMaxel sf.metricMaxel && isEmptyMaxel sf.paceMaxel
+    then (sf, (0, 0))
+    else
+      let kInt         = max 1 (natToInteger subTicks)
+          mSub         = kInt * m0
+          paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
+          (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
+          newMet       = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 (the (List (SealedCore k body)) []) sf.metricMaxel
+          runSubs      : Nat -> PacedPassAcc k -> PacedPassAcc k
+          runSubs Z acc = acc
+          runSubs (S rem) acc =
+            let acc1 = sweepCheckerboard ax (.ppWave)
+                         (\posA, posB, pA, pB, uOld, a =>
+                            let rawC = unwrapBox (linkMetricSum newMet posA posB)
+                                cost = if rawC < lagDiv then 0 else rawC
+                                bal  = lookupMaxel posA posB a.ppPace
+                            in case paceStreamStep paceBudget cost bal of
+                                 (step, newBal) =>
+                                   let pace1 = if newBal /= bal then setMaxelEdge posA posB newBal a.ppPace else a.ppPace
+                                   in case step of
+                                        StreamSkip => MkPacedPassAcc a.ppWave pace1 a.ppYields (S a.ppSkips)
+                                        StreamDone => MkPacedPassAcc a.ppWave pace1 a.ppYields a.ppSkips
+                                        StreamYield () =>
+                                          MkPacedPassAcc
+                                            (applyLinkRotation posA posB (MkBoxInt mSub) pA pB uOld a.ppWave)
+                                            pace1
+                                            (S a.ppYields)
+                                            a.ppSkips)
+                         acc
+            in runSubs rem acc1
+          pFin         = runSubs subTicks (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
+      in (MkSparseField pFin.ppWave newMet pFin.ppPace [], (pFin.ppYields, pFin.ppSkips))
 
 ||| Single shared `StepMode` dispatcher over any coordinate basis `AxisBasis k`.
 public export
@@ -628,7 +644,7 @@ stepSparseByMode ax codec ModeUnified sf =
 stepSparseByMode ax codec ModeAdaptive sf =
   fst (stepSparseField ax codec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen sf)
 stepSparseByMode ax _ ModePaced sf =
-  fst (stepSparseFieldPaced ax canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
+  fst (stepSparseFieldPaced ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)

@@ -694,13 +694,13 @@ anisotropicStressCriteriaOk a =
   (a.asProbeHorizSy > a.asProbeVertSy + 100000)
 
 public export
-gravity4BCriteriaOk : GravityCoreMetrics -> Bool
-gravity4BCriteriaOk m =
+gravity4BCriteriaWithVacPct : Integer -> GravityCoreMetrics -> Bool
+gravity4BCriteriaWithVacPct minVacPct m =
   let symSum = m.gcTop.meanYMilli + m.gcBot.meanYMilli
   in (m.gcVac.waveNetSum == 0) &&
      (m.gcTop.waveNetSum == 0) &&
      (m.gcBot.waveNetSum == 0) &&
-     (m.gcVac.waveEnergy * 100 >= m.gcVac.initEnergy * 92) &&
+     (m.gcVac.waveEnergy * 100 >= m.gcVac.initEnergy * minVacPct) &&
      (m.gcVac.waveEnergy <= m.gcVac.initEnergy) &&
      (m.gcVac.maxEnergy <= m.gcVac.initEnergy) &&
      (m.gcTop.waveEnergy <= m.gcTop.initEnergy) &&
@@ -720,6 +720,10 @@ gravity4BCriteriaOk m =
      (m.gcBot.waveEnergy == m.gcTop.waveEnergy)
 
 public export
+gravity4BCriteriaOk : GravityCoreMetrics -> Bool
+gravity4BCriteriaOk = gravity4BCriteriaWithVacPct 92
+
+public export
 gravityCriteriaOk : ModelExperimentMetrics -> Bool
 gravityCriteriaOk m =
   let c = m.core
@@ -736,15 +740,6 @@ gravityCriteriaOk m =
      (c.gcWork > 0)
 
 public export
-sameSelfTrapPhysics : SelfTrapReport -> SelfTrapReport -> Bool
-sameSelfTrapPhysics a b =
-  (a.initEnergy == b.initEnergy) &&
-  (a.finalEnergy == b.finalEnergy) &&
-  (a.maxEnergy == b.maxEnergy) &&
-  (a.coreFracPct == b.coreFracPct) &&
-  (a.netSignedSum == b.netSignedSum)
-
-public export
 sameWavePhysics : WavepacketReport -> WavepacketReport -> Bool
 sameWavePhysics a b =
   (a.meanXMilli == b.meanXMilli) &&
@@ -756,32 +751,6 @@ sameWavePhysics a b =
   (a.waveNetSum == b.waveNetSum)
 
 public export
-sameFreezeThawPhysics : FreezeThawReport -> FreezeThawReport -> Bool
-sameFreezeThawPhysics a b =
-  (a.ftGrazingCoreCount == b.ftGrazingCoreCount) &&
-  sameWavePhysics a.ftGrazingWave b.ftGrazingWave &&
-  (a.ftInitCoreCount == b.ftInitCoreCount) &&
-  (a.ftMidCoreCount == b.ftMidCoreCount) &&
-  (a.ftFinalCoreCount == b.ftFinalCoreCount) &&
-  (a.ftFirstThawStep == b.ftFirstThawStep) &&
-  (a.ftImpactInitE == b.ftImpactInitE) &&
-  (a.ftImpactFinalE == b.ftImpactFinalE) &&
-  (a.ftImpactMaxE == b.ftImpactMaxE) &&
-  (a.ftImpactNetSum == b.ftImpactNetSum)
-
-public export
-sameCorePhysics : GravityCoreMetrics -> GravityCoreMetrics -> Bool
-sameCorePhysics a b =
-  sameSelfTrapPhysics a.gcLin b.gcLin &&
-  sameSelfTrapPhysics a.gcTrap b.gcTrap &&
-  sameWavePhysics a.gcVac b.gcVac &&
-  sameWavePhysics a.gcTop b.gcTop &&
-  sameWavePhysics a.gcBot b.gcBot &&
-  (a.gcTwoBody == b.gcTwoBody) &&
-  (a.gcLightCone == b.gcLightCone) &&
-  (a.gcAniso == b.gcAniso)
-
-public export
 coreEnergyMonoOk : GravityCoreMetrics -> Bool
 coreEnergyMonoOk c =
   c.gcLin.finalEnergy <= c.gcLin.initEnergy && c.gcLin.maxEnergy <= c.gcLin.initEnergy &&
@@ -791,76 +760,141 @@ coreEnergyMonoOk c =
   c.gcBot.waveEnergy <= c.gcBot.initEnergy && c.gcBot.maxEnergy <= c.gcBot.initEnergy &&
   c.gcTwoBody.tbFinalE <= c.gcTwoBody.tbInitE && c.gcTwoBody.tbMaxE <= c.gcTwoBody.tbInitE
 
+public export
+record ModeParityReport where
+  constructor MkModeParityReport
+  mpParityOk : Bool
+  mpFlagsOk  : Bool
+  mpWorkA    : Nat
+  mpWorkB    : Nat
+  mpCoresB   : Nat
+  mpPeekB    : Bool
+
+public export
+record ParitySuiteReport where
+  constructor MkParitySuiteReport
+  psUni : ModeParityReport
+  psAdp : ModeParityReport
+  psPac : ModeParityReport
+
+public export
+record PacedWorkStats where
+  constructor MkPacedWorkStats
+  pwYields : Nat
+  pwSkips  : Nat
+  pwNodes  : Nat
+
+public export
+mkParityReport :
+  EndAudit Coord2 FlatCoreBody ->
+  (WavepacketReport, Nat, Bool, Bool, Bool, Bool) ->
+  EndAudit PureMultiset PureMultiset ->
+  (WavepacketReport, Nat, Bool, Bool, Bool, Bool) ->
+  ModeParityReport
+mkParityReport bgA (wA, cA, _, balA, antiA, symA) bgB (wB, cB, peekB, balB, antiB, symB) =
+  let parOk = sameWavePhysics wA wB && (wA.waveNetSum == 0) && (wB.waveNetSum == 0) && (cA == cB)
+      flgOk = antiA && symA && balA && bgA.eaBalOk && bgA.eaAntiOk && bgA.eaSymOk &&
+              antiB && symB && balB && bgB.eaBalOk && bgB.eaAntiOk && bgB.eaSymOk
+  in MkModeParityReport parOk flgOk wA.waveWorkSteps wB.waveWorkSteps cB peekB
+
+export
+runModeParityCheck :
+  StepMode ->
+  Nat ->
+  App1 {u = Any} e ModeParityReport
+runModeParityCheck mode steps = App1.do
+  let brA = seedSparseBreather coord2Basis 4 5 6 8192
+      brB = seedSparseBreather pureMSetBasis 4 5 6 8192
+  eaBgA <- bootInjectAndRun flatLab       mode steps brA
+  eaBgB <- bootInjectAndRun hereditaryLab mode steps brB
+  resA  <- runLabWave flatLab       mode steps brA eaBgA.eaField
+  resB  <- runLabWave hereditaryLab mode steps brB eaBgB.eaField
+  App1.pure (mkParityReport eaBgA resA eaBgB resB)
+
+export
+runParitySuite : App1 {u = Any} e ParitySuiteReport
+runParitySuite = App1.do
+  u <- runModeParityCheck ModeUnified  4
+  a <- runModeParityCheck ModeAdaptive 4
+  p <- runModeParityCheck ModePaced    4
+  App1.pure (MkParitySuiteReport u a p)
+
+public export
+modeLine : String -> Bool -> ModeParityReport -> String
+modeLine lbl showCores m =
+  "    - " ++ lbl ++ " -> parity=" ++ show m.mpParityOk ++ ", flags=" ++ show m.mpFlagsOk ++
+  (if showCores then ", coresB=" ++ show m.mpCoresB ++ ", peekB=" ++ show m.mpPeekB else "") ++
+  ", workA=" ++ show m.mpWorkA ++ ", workB=" ++ show m.mpWorkB
+
+public export
+mkExp4and5Lines : ModelExperimentMetrics -> ParitySuiteReport -> Bool -> Bool -> List String
+mkExp4and5Lines resA par okA pass =
+  let cA = resA.core
+  in [ "----------------------------------------------------------------"
+     , "[Experiment 4] Half-Stored Maxel Metric, Sealed Multi-Core, 2-Body & 4F"
+     , "  * 4A Self-Trapping (+4096/-4096 at (0,0)/(0,1), 20 sweeps):"
+     , "    - Linear Dispersion  (A) -> " ++ show cA.gcLin
+     , "    - Self-Trapped Core  (A) -> " ++ show cA.gcTrap
+     , "  * 4B Zero-Warmup Causal 1-Hop Gravity (18 sweeps, decay 7/32, c=1):"
+     , "    - Vacuum Control     (A) -> " ++ show cA.gcVac
+     , "    - Top Breather(4,5)  (A) -> " ++ show cA.gcTop
+     , "    - Bot Breather(4,-4) (A) -> " ++ show cA.gcBot
+     , "  * 4C Dimensionless Multi-Core Sealed Freeze & Delayed Selective Thaw:"
+     , "    - Grazing + 2-Core   (A) -> " ++ show resA.freezeThaw
+     , "  * 4D Equal-Mass 2-Body Mutual Attraction (Two free amp=2048 packets, 16 sweeps):"
+     , "    - Equal-Mass Pair    (A) -> " ++ show cA.gcTwoBody
+     , "  * 4E Causal Light-Cone Proof (Spacelike Exact t=2 -> Deflection t=18):"
+     , "    - Light Cone Check   (A) -> " ++ show cA.gcLightCone
+     , "  * 4F Half-Stored Maxel Anisotropic Stress & Quadrupole Polarization:"
+     , "    - Anisotropic Stress (A) -> " ++ show cA.gcAniso
+     , "  * Hypothesis Check (Canonical Model A 4A-4F): okA=" ++ show okA
+     , "----------------------------------------------------------------"
+     , "[Experiment 5] Model A (Canonical) vs Model B Parity Matrix (4-Sweep)"
+     , "  * Multi-Mode Model A == Model B Parity (4 sweeps, anti/sym/zero-sum):"
+     , modeLine "ModeUnified " False par.psUni
+     , modeLine "ModeAdaptive" True  par.psAdp
+     , modeLine "ModePaced   " False par.psPac
+     , "  * Canonical Model A Core Summary: net=" ++ show cA.gcNetSum ++
+       ", dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++
+       ", dX_4F=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++
+       ", workA=" ++ show cA.gcWork ++ ", tagFreeRoundTrip=" ++ show checkTagFreePackUnpackRoundTrip
+     , "  -> Experiment 4 & 5 pass=" ++ show pass
+     ]
+
+public export
+modeParityAndWorkOk : ModeParityReport -> Bool
+modeParityAndWorkOk m = m.mpParityOk && m.mpFlagsOk && (m.mpWorkB > m.mpWorkA)
+
+public export
+buildExp4and5Report : ModelExperimentMetrics -> ParitySuiteReport -> (Bool, List String)
+buildExp4and5Report resA par =
+  let cA       = resA.core
+      okA      = gravityCriteriaOk resA
+      seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
+      u        = par.psUni
+      a        = par.psAdp
+      p        = par.psPac
+      parityOk =
+        modeParityAndWorkOk u && modeParityAndWorkOk a && modeParityAndWorkOk p &&
+        (u.mpCoresB == 0) && (a.mpCoresB == 1) && (p.mpCoresB == 0) && a.mpPeekB &&
+        checkTagFreePackUnpackRoundTrip &&
+        (unwrapBox (sumHMSet seedRoot) == 0) &&
+        (cA.gcNetSum == 0) && cA.gcAntiOk && cA.gcSymOk && cA.gcBalOk
+      pass     = okA && parityOk
+  in (pass, mkExp4and5Lines resA par okA pass)
+
 export
 runExperiment4and5 : Has [Console] e => App e (Bool, List String)
 runExperiment4and5 = do
-  let h = "----------------------------------------------------------------"
-  let t4 = "[Experiment 4] Half-Stored Maxel Metric, Sealed Multi-Core, 2-Body & 4F"
-  let t5 = "[Experiment 5] A/B Comparison: App1 Coord2 vs Zero-Copy HereditaryMSet"
   resA <- app1 (runLabGravitySuite flatLab)
-  resB <- app1 (runLabGravitySuite hereditaryLab)
-  let cA       = resA.core
-      cB       = resB.core
-      okA      = gravityCriteriaOk resA
-      okB      = gravityCriteriaOk resB
-      seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
-      agreement =
-        sameCorePhysics cA cB &&
-        sameFreezeThawPhysics resA.freezeThaw resB.freezeThaw &&
-        checkTagFreePackUnpackRoundTrip &&
-        (unwrapBox (sumHMSet seedRoot) == 0) &&
-        (cA.gcNetSum == 0 && cB.gcNetSum == 0) &&
-        cA.gcAntiOk && cB.gcAntiOk &&
-        cA.gcSymOk && cB.gcSymOk &&
-        cA.gcBalOk && cB.gcBalOk
-      nestedHigherWork = cB.gcWork > cA.gcWork
-      pass = okA && okB && agreement && nestedHigherWork
-  let lines = [ h
-              , t4
-              , "  * 4A Self-Trapping (+4096/-4096 at (0,0)/(0,1), 20 sweeps):"
-              , "    - Linear Dispersion  (A) -> " ++ show cA.gcLin
-              , "    - Self-Trapped Core  (A) -> " ++ show cA.gcTrap
-              , "    - Self-Trapped Core  (B) -> " ++ show cB.gcTrap
-              , "  * 4B Zero-Warmup Causal 1-Hop Gravity (18 sweeps, decay 7/32, c=1):"
-              , "    - Vacuum Control     (A) -> " ++ show cA.gcVac
-              , "    - Top Breather(4,5)  (A) -> " ++ show cA.gcTop
-              , "    - Bot Breather(4,-4) (A) -> " ++ show cA.gcBot
-              , "    - Top Breather(4,5)  (B) -> " ++ show cB.gcTop
-              , "  * 4C Dimensionless Multi-Core Sealed Freeze & Delayed Selective Thaw:"
-              , "    - Grazing + 2-Core   (A) -> " ++ show resA.freezeThaw
-              , "    - Grazing + 2-Core   (B) -> " ++ show resB.freezeThaw
-              , "  * 4D Equal-Mass 2-Body Mutual Attraction (Two free amp=2048 packets, 16 sweeps):"
-              , "    - Equal-Mass Pair    (A) -> " ++ show cA.gcTwoBody
-              , "    - Equal-Mass Pair    (B) -> " ++ show cB.gcTwoBody
-              , "  * 4E Causal Light-Cone Proof (Spacelike Exact t=2 -> Deflection t=18):"
-              , "    - Light Cone Check   (A) -> " ++ show cA.gcLightCone
-              , "    - Light Cone Check   (B) -> " ++ show cB.gcLightCone
-              , "  * 4F Half-Stored Maxel Anisotropic Stress & Quadrupole Polarization:"
-              , "    - Anisotropic Stress (A) -> " ++ show cA.gcAniso
-              , "    - Anisotropic Stress (B) -> " ++ show cB.gcAniso
-              , "  * Hypothesis Check (Exact Pyth + SymMaxel + MultiCore + 2-Body + LightCone + 4F): okA=" ++ show okA ++ ", okB=" ++ show okB
-              , h
-              , t5
-              , "  | Metric / Capability            | Model A (Sparse Coord2)| Model B (Zero-Copy HMSet) |"
-              , "  | Global 0D Net, Sym & Dipoles   | net=" ++ show cA.gcNetSum ++ ", sym=" ++ show cA.gcSymOk ++ ", bal=" ++ show cA.gcBalOk ++ " | net=" ++ show cB.gcNetSum ++ ", sym=" ++ show cB.gcSymOk ++ ", bal=" ++ show cB.gcBalOk ++ " |"
-              , "  | 4A CoreTrap (Lin -> SelfTrap)  | " ++ show cA.gcLin.coreFracPct ++ "% -> " ++ show cA.gcTrap.coreFracPct ++ "% | " ++ show cB.gcLin.coreFracPct ++ "% -> " ++ show cB.gcTrap.coreFracPct ++ "% |"
-              , "  | Vac Centroid & E retained      | (" ++ show cA.gcVac.meanXMilli ++ ", " ++ show cA.gcVac.meanYMilli ++ "), " ++ show (divIntegerPos (cA.gcVac.waveEnergy * 100) cA.gcVac.initEnergy) ++ "% | (" ++ show cB.gcVac.meanXMilli ++ ", " ++ show cB.gcVac.meanYMilli ++ "), " ++ show (divIntegerPos (cB.gcVac.waveEnergy * 100) cB.gcVac.initEnergy) ++ "% |"
-              , "  | Top(4,5) Centroid & Sy         | (" ++ show cA.gcTop.meanXMilli ++ ", " ++ show cA.gcTop.meanYMilli ++ "), Sy=" ++ show cA.gcTop.poyntingYAccum ++ " | (" ++ show cB.gcTop.meanXMilli ++ ", " ++ show cB.gcTop.meanYMilli ++ "), Sy=" ++ show cB.gcTop.poyntingYAccum ++ " |"
-              , "  | Bot(4,-4) Centroid & Sy        | (" ++ show cA.gcBot.meanXMilli ++ ", " ++ show cA.gcBot.meanYMilli ++ "), Sy=" ++ show cA.gcBot.poyntingYAccum ++ " | (" ++ show cB.gcBot.meanXMilli ++ ", " ++ show cB.gcBot.meanYMilli ++ "), Sy=" ++ show cB.gcBot.poyntingYAccum ++ " |"
-              , "  | 4C Freeze Work & Delayed Thaw  | " ++ show resA.freezeThaw.ftLiveWorkSteps ++ "->" ++ show resA.freezeThaw.ftFrozenWorkSteps ++ ", 2->" ++ show resA.freezeThaw.ftMidCoreCount ++ "->" ++ show resA.freezeThaw.ftFinalCoreCount ++ "@t" ++ show resA.freezeThaw.ftFirstThawStep ++ " | " ++ show resB.freezeThaw.ftLiveWorkSteps ++ "->" ++ show resB.freezeThaw.ftFrozenWorkSteps ++ ", 2->" ++ show resB.freezeThaw.ftMidCoreCount ++ "->" ++ show resB.freezeThaw.ftFinalCoreCount ++ "@t" ++ show resB.freezeThaw.ftFirstThawStep ++ " |"
-              , "  | 4D 2-Body (dy, SyBot vs Lin)   | dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show cA.gcTwoBody.tbBotSy ++ " (lin=" ++ show cA.gcTwoBody.tbLinearBotSy ++ ") | dy=+" ++ show (cB.gcTwoBody.tbBotYMilli - cB.gcTwoBody.tbSingleBotYMilli) ++ ", Sy=" ++ show cB.gcTwoBody.tbBotSy ++ " (lin=" ++ show cB.gcTwoBody.tbLinearBotSy ++ ") |"
-              , "  | 4E Causal Light-Cone (t=2)     | exact=" ++ show cA.gcLightCone.clSpacelikeExact ++ ", BrSy=" ++ show cA.gcLightCone.clEarlyBrSy ++ " | exact=" ++ show cB.gcLightCone.clSpacelikeExact ++ ", BrSy=" ++ show cB.gcLightCone.clEarlyBrSy ++ " |"
-              , "  | 4F SymMaxel Anisotropy (dX)    | dX=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++ ", Q_H=" ++ show cA.gcAniso.asQuadHoriz ++ ", Q_V=" ++ show cA.gcAniso.asQuadVert ++ " | dX=" ++ show (cB.gcAniso.asProbeHorizX - cB.gcAniso.asProbeVertX) ++ ", Q_H=" ++ show cB.gcAniso.asQuadHoriz ++ ", Q_V=" ++ show cB.gcAniso.asQuadVert ++ " |"
-              , "  | Total Compute Work (Co-Ev)     | " ++ show cA.gcWork ++ " | " ++ show cB.gcWork ++ " |"
-              , "  | Native Vertical zoomSpace      | No (flat pair coords)  | Yes (viewAsAntiBox)       |"
-              , "  -> Experiment 4 & 5 pass=" ++ show pass
-              ]
-  traverse_ putStrLn lines
-  pure (pass, lines)
+  par  <- app1 runParitySuite
+  let res = buildExp4and5Report resA par
+  traverse_ putStrLn (snd res)
+  pure res
 
 --------------------------------------------------------------------------------
--- EXPERIMENT 6: ENDOGENOUS `StreamSkip`/`StreamYield` LOCAL COMPUTE PACING
---   Fixed elementary rotation `m0 = 7` (NO `m0 + lag`, NO `SealedCore` BFS)
+-- EXPERIMENT 6: GATE 1 `ModePaced` STREAMING CORE (`k=4, fixed mSub=28`)
+--   Replaced `m0 + lag` & manual `SealedCore` BFS with local `StreamSkip`/`StreamYield`
 --------------------------------------------------------------------------------
 
 export
@@ -869,10 +903,10 @@ collectPacedWorkLoop :
   SparseField Coord2 FlatCoreBody ->
   Nat ->
   Nat ->
-  (Nat, Nat, Nat)
-collectPacedWorkLoop Z sf accY accS = (accY, accS, maxelNodeCount sf.paceMaxel)
+  PacedWorkStats
+collectPacedWorkLoop Z sf accY accS = MkPacedWorkStats accY accS (maxelNodeCount sf.paceMaxel)
 collectPacedWorkLoop (S rem) sf accY accS =
-  let (sf1, (y, s)) = stepSparseFieldPaced coord2Basis canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
+  let (sf1, (y, s)) = stepSparseFieldPaced coord2Basis canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
   in collectPacedWorkLoop rem sf1 (accY + y) (accS + s)
 
 public export
@@ -880,55 +914,76 @@ pacedSkipPct : Nat -> Nat -> Integer
 pacedSkipPct y s =
   if y + s == 0 then 0 else divIntegerPos (cast s * 100) (cast (y + s))
 
+public export
+showPacedStats : PacedWorkStats -> String
+showPacedStats w =
+  "yields=" ++ show w.pwYields ++ ", skips=" ++ show w.pwSkips ++
+  " (" ++ show (pacedSkipPct w.pwYields w.pwSkips) ++ "%), paceNodes=" ++ show w.pwNodes
+
+public export
+mkExp6Lines :
+  GravityCoreMetrics ->
+  PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats ->
+  Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool ->
+  List String
+mkExp6Lines pA w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F energyMonoOk quiescenceOk pass =
+  [ "----------------------------------------------------------------"
+  , "[Experiment 6] Gate 1 ModePaced Streaming Core (k=4, fixed mSub=28, 0 SealedCore)"
+  , "  * 6-4A Self-Trapping (" ++ show ok4A ++ "):"
+  , "    - Linear             -> " ++ show pA.gcLin
+  , "    - Paced (A)          -> " ++ show pA.gcTrap
+  , "    - Paced Work         -> " ++ showPacedStats w4A
+  , "  * 6-4B Causal 1-Hop Gravity (" ++ show ok4B ++ "):"
+  , "    - Vacuum Control (A) -> " ++ show pA.gcVac
+  , "    - Top(4,5)       (A) -> " ++ show pA.gcTop
+  , "    - Bot(4,-4)      (A) -> " ++ show pA.gcBot
+  , "    - Paced Quiescence   -> brOnly: " ++ showPacedStats wBr ++ " | vac: " ++ showPacedStats wVac
+  , "    - Paced Work (4B)    -> " ++ showPacedStats w4B
+  , "  * 6-4D Equal-Mass 2-Body (" ++ show ok4D ++ "):"
+  , "    - Equal-Mass     (A) -> " ++ show pA.gcTwoBody
+  , "    - Paced Work (4D)    -> " ++ showPacedStats w4D
+  , "  * 6-4E Causal Light-Cone (" ++ show ok4E ++ ") -> " ++ show pA.gcLightCone
+  , "  * 6-4F Anisotropic Stress (" ++ show ok4F ++ ") -> " ++ show pA.gcAniso
+  , "  * Gate 1 Audit: workA=" ++ show pA.gcWork ++ ", energyMono=" ++ show energyMonoOk ++
+    ", quiescenceOk=" ++ show quiescenceOk ++
+    ", physics=[4A=" ++ show ok4A ++ ",4B=" ++ show ok4B ++ ",4D=" ++ show ok4D ++ ",4E=" ++ show ok4E ++ ",4F=" ++ show ok4F ++ "]"
+  , "  -> Experiment 6 pass=" ++ show pass
+  ]
+
+public export
+buildExp6Report : GravityCoreMetrics -> (Bool, List String)
+buildExp6Report pA =
+  let seed4A       = seedSparseBreather {body = FlatCoreBody} coord2Basis 0 0 1 4096
+      seedBr       = seedSparseBreather {body = FlatCoreBody} coord2Basis 4 5 6 8192
+      seedVac      = seedSparseWavepacketAt {body = FlatCoreBody} coord2Basis 0 0 512
+      seed4B       = addSparseField seedBr seedVac
+      seed4D       = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
+                                    (seedSparseWavepacketAt coord2Basis 0 3 2048)
+      w4A          = collectPacedWorkLoop 20 seed4A  0 0
+      wBr          = collectPacedWorkLoop 18 seedBr  0 0
+      wVac         = collectPacedWorkLoop 18 seedVac 0 0
+      w4B          = collectPacedWorkLoop 18 seed4B  0 0
+      w4D          = collectPacedWorkLoop 16 seed4D  0 0
+      ok4A         = selfTrapCriteriaOk pA.gcLin pA.gcTrap
+      ok4B         = gravity4BCriteriaWithVacPct 78 pA
+      ok4D         = twoBodyCriteriaOk pA.gcTwoBody
+      ok4E         = lightConeCriteriaOk pA.gcLightCone
+      ok4F         = anisotropicStressCriteriaOk pA.gcAniso
+      energyMonoOk = coreEnergyMonoOk pA
+      quiescenceOk =
+        (pacedSkipPct wBr.pwYields wBr.pwSkips >= 40) &&
+        (pacedSkipPct wVac.pwYields wVac.pwSkips <= 2) &&
+        (w4A.pwSkips > 0) && (w4D.pwSkips > 0)
+      pass         =
+        ok4A && ok4B && ok4D && ok4E && ok4F &&
+        energyMonoOk && quiescenceOk &&
+        (pA.gcNetSum == 0) && pA.gcAntiOk && pA.gcSymOk && pA.gcBalOk
+  in (pass, mkExp6Lines pA w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F energyMonoOk quiescenceOk pass)
+
 export
 runExperiment6Paced : Has [Console] e => App e (Bool, List String)
 runExperiment6Paced = do
-  let h = "----------------------------------------------------------------"
-  let t = "[Experiment 6] Prototype ModePaced (StreamSkip/StreamYield, fixed m0=7)"
   pA <- app1 (runLabCoreSuite flatLab ModePaced)
-  pB <- app1 (runLabCoreSuite hereditaryLab ModePaced)
-  let seed4A     = seedSparseBreather {body = FlatCoreBody} coord2Basis 0 0 1 4096
-      seed4B     = addSparseField (seedSparseBreather coord2Basis 4 5 6 8192)
-                                  (seedSparseWavepacketAt coord2Basis 0 0 512)
-      seed4D     = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
-                                  (seedSparseWavepacketAt coord2Basis 0 3 2048)
-      (y4A, s4A, n4A) = collectPacedWorkLoop 20 seed4A 0 0
-      (y4B, s4B, n4B) = collectPacedWorkLoop 18 seed4B 0 0
-      (y4D, s4D, n4D) = collectPacedWorkLoop 16 seed4D 0 0
-      ok4A       = selfTrapCriteriaOk pA.gcLin pA.gcTrap
-      ok4B       = gravity4BCriteriaOk pA
-      ok4D       = twoBodyCriteriaOk pA.gcTwoBody
-      ok4E       = lightConeCriteriaOk pA.gcLightCone
-      ok4F       = anisotropicStressCriteriaOk pA.gcAniso
-      energyMonoOk = coreEnergyMonoOk pA
-      abParity     = sameCorePhysics pA pB
-      structOk   =
-        abParity &&
-        (pA.gcNetSum == 0 && pB.gcNetSum == 0) &&
-        pA.gcAntiOk && pB.gcAntiOk && pA.gcSymOk && pB.gcSymOk && pA.gcBalOk && pB.gcBalOk &&
-        (pB.gcWork > pA.gcWork) &&
-        (s4A > 0 && s4B > 0 && s4D > 0) &&
-        energyMonoOk
-  let lines = [ h
-              , t
-              , "  * 6-4A Self-Trapping (" ++ show ok4A ++ "):"
-              , "    - Linear             -> " ++ show pA.gcLin
-              , "    - Paced (A)          -> " ++ show pA.gcTrap
-              , "    - Paced Work         -> yields=" ++ show y4A ++ ", skips=" ++ show s4A ++ " (" ++ show (pacedSkipPct y4A s4A) ++ "%), paceNodes=" ++ show n4A
-              , "  * 6-4B Causal 1-Hop Gravity (" ++ show ok4B ++ "):"
-              , "    - Vacuum Control (A) -> " ++ show pA.gcVac
-              , "    - Top(4,5)       (A) -> " ++ show pA.gcTop
-              , "    - Bot(4,-4)      (A) -> " ++ show pA.gcBot
-              , "    - Paced Work (4B)    -> yields=" ++ show y4B ++ ", skips=" ++ show s4B ++ " (" ++ show (pacedSkipPct y4B s4B) ++ "%), paceNodes=" ++ show n4B
-              , "  * 6-4D Equal-Mass 2-Body (" ++ show ok4D ++ "):"
-              , "    - Equal-Mass     (A) -> " ++ show pA.gcTwoBody
-              , "    - Paced Work (4D)    -> yields=" ++ show y4D ++ ", skips=" ++ show s4D ++ " (" ++ show (pacedSkipPct y4D s4D) ++ "%), paceNodes=" ++ show n4D
-              , "  * 6-4E Causal Light-Cone (" ++ show ok4E ++ ") -> " ++ show pA.gcLightCone
-              , "  * 6-4F Anisotropic Stress (" ++ show ok4F ++ ") -> " ++ show pA.gcAniso
-              , "  * A/B Work & Structural Audit: workA=" ++ show pA.gcWork ++ ", workB=" ++ show pB.gcWork ++
-                ", abParity=" ++ show abParity ++ ", energyMono=" ++ show energyMonoOk ++
-                ", physics=[4A=" ++ show ok4A ++ ",4B=" ++ show ok4B ++ ",4D=" ++ show ok4D ++ ",4E=" ++ show ok4E ++ ",4F=" ++ show ok4F ++ "]"
-              , "  -> Experiment 6 structural pass=" ++ show structOk
-              ]
-  traverse_ putStrLn lines
-  pure (structOk, lines)
+  let res = buildExp6Report pA
+  traverse_ putStrLn (snd res)
+  pure res

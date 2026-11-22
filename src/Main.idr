@@ -26,7 +26,7 @@ runPureSuite = do
   let ok = p1 && p2 && p3 && p4 && p6
   let footer = [ "================================================================"
                , if ok
-                   then "ALL 5 FINITE-SCIENCE EXPERIMENTS PASSED (+ Experiment 6 ModePaced Structural Audit Passed)"
+                   then "ALL 6 FINITE-SCIENCE EXPERIMENTS PASSED (Model A Canonical + Model B Parity + ModePaced Streaming Core)"
                    else "FINITE-SCIENCE EXPERIMENTS FAILED"
                ]
   traverse_ putStrLn footer
