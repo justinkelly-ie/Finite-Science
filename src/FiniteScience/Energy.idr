@@ -654,28 +654,29 @@ stepCoupledSourceFlow ax qAmp (u, eSrc) =
        then (StreamDone, 0, 0)
        else (StreamYield (uNext, nextSrc), max 1 yStep, sStep)
 
-||| Active bidirectional coupling of two evolving `EnergyState k` universes `(uA, uB)`:
-||| reads the purely local boundary bond `(0,0) -> (1,0)` in `uA.waveMaxel` vs `uB.waveMaxel`
-||| (zero global oracle), transfers a zero-sum gradient quantum `delta` (`-delta` / `+delta`),
+||| Active bidirectional coupling of two evolving `EnergyState k` universes `(uA, uB)` across an
+||| arbitrary `seam : WaveMaxel k` boundary mask (1 link, 1D wall, or 2D interface; zero global oracle):
+||| computes the local seam gradient via `maskByBox`, clamps each bond transfer to `[-qAmp, qAmp]`
+||| with zero-pruning (`zipZeroWeightBox`), applies zero-sum `(-delta)` / `(+delta)` via `<+>`,
 ||| and evolves both universes under `stepEnergyCore`.
 public export
 stepCoupledUniversePair :
   Ord k =>
   AxisBasis k ->
+  (seam : WaveMaxel k) ->
   (qAmp : Integer) ->
   (EnergyState k, EnergyState k) ->
   (StreamStep (EnergyState k, EnergyState k), Nat, Nat)
-stepCoupledUniversePair ax qAmp (uA, uB) =
-  let p0    = ax.fromSiteMSet emptyPureMSet
-      p1    = ax.shiftAdd p0 (ax.axisStep axisX)
-      diff  = unwrapBox (lookupMaxel p0 p1 uA.waveMaxel) - unwrapBox (lookupMaxel p0 p1 uB.waveMaxel)
-      delta = if diff >= qAmp then qAmp
-              else if diff <= (-qAmp) then (-qAmp)
-              else unwrapBox (tdivPosBox (MkBoxInt diff) 2)
-      inA   = if delta == 0 then uA else uA <+> seedEdgeFlux ax 0 0 1 0 (-delta)
-      inB   = if delta == 0 then uB else uB <+> seedEdgeFlux ax 0 0 1 0 delta
-      (nA, (yA, sA)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 inA
-      (nB, (yB, sB)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 inB
+stepCoupledUniversePair ax seam qAmp (uA, uB) =
+  let diffBox  = maskByBox (subMaxel uA.waveMaxel uB.waveMaxel).rawMaxelBox seam.rawMaxelBox
+      clampQ   = \w =>
+        let d = unwrapBox w
+        in MkBoxInt (if d >= qAmp then qAmp else if d <= (-qAmp) then (-qAmp) else unwrapBox (tdivPosBox w 2))
+      deltaBox = zipZeroWeightBox (\w, _ => clampQ w) diffBox diffBox
+      deltaSt  = MkEnergyState (MkMaxel deltaBox) emptyMaxel emptyMaxel
+      negSt    = MkEnergyState (MkMaxel (mapBoxWeight negWeight deltaBox)) emptyMaxel emptyMaxel
+      (nA, (yA, sA)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 (uA <+> negSt)
+      (nB, (yB, sB)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 (uB <+> deltaSt)
   in if yA + yB == 0 && sA + sB == 0
        then (StreamDone, 0, 0)
        else (StreamYield (nA, nB), max 1 (yA + yB), sA + sB)
