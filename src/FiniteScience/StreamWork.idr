@@ -109,11 +109,7 @@ public export
 supportHMSetLoop : MultisetWeight c => Nat -> HereditaryMSet c -> HereditaryMSet c
 supportHMSetLoop Z _ = emptyHMSet
 supportHMSetLoop (S rem) (MkHMSet b) =
-  MkHMSet (foldBox (\k, w, acc =>
-                      if isZero w
-                        then acc
-                        else setBox (supportHMSetLoop rem k) oneWeight acc)
-                   BoxLeaf b)
+  MkHMSet (foldBox (\k, _, acc => setBox (supportHMSetLoop rem k) oneWeight acc) BoxLeaf (supportBox b))
 
 public export
 supportHMSet : MultisetWeight c => HereditaryMSet c -> HereditaryMSet c

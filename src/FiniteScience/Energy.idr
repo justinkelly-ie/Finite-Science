@@ -82,7 +82,7 @@ unitAxesFromAtoms stepFn subFn zeroK =
 public export
 collectSiteAxisAtoms : PureMultiset -> Box BoxInt PureMultiset -> Box BoxInt PureMultiset
 collectSiteAxisAtoms (MkHMSet b) acc0 =
-  foldBox (\k, _, acc => if isAxisAtom k then setBox k (MkBoxInt 1) acc else acc) acc0 b
+  supportBox (acc0 <+> filterBox isAxisAtom b)
 
 ||| Returns the active multiset of spatial axis atoms `{ [] : i }` by taking the multiset union
 ||| of `ax.baseAxes` with all emergent axis atoms present in `wave`.
@@ -611,6 +611,27 @@ freezeEnergyStream :
 freezeEnergyStream ax oP iT lagDiv g cap yFuel sBudget sf0 =
   freezeStateStreamWith g cap yFuel sBudget (stepEnergyStreamCore ax oP iT lagDiv) sf0
 
+||| Maps any peeled `PureMultiset` relic key (directed edge or site key) to a 2D bond `(xA, yA) -> (xB, yB)`.
+public export
+decodeRelicBond : PureMultiset -> (Integer, Integer, Integer, Integer)
+decodeRelicBond k =
+  case unpackEdgeKey k of
+    Just (a, b) =>
+      let (xA, yA, _) = decodeNatSiteKey a
+          (xB, yB, _) = decodeNatSiteKey b
+      in (natToInteger xA, natToInteger yA, natToInteger xB, natToInteger yB)
+    Nothing =>
+      let (x, y, _) = decodeNatSiteKey k
+          xi        = natToInteger x
+          yi        = natToInteger y
+      in (xi, yi, xi + 1, yi)
+
+public export
+injectRelicBond : EnergyState Coord2 -> PureMultiset -> Integer -> EnergyState Coord2
+injectRelicBond u k amp =
+  let (xA, yA, xB, yB) = decodeRelicBond k
+  in u <+> seedEdgeFlux coord2Basis xA yA xB yB amp
+
 ||| Coupled two-multiset boundary flow: external reservoir `eSrc : PureMultiset`
 ||| peels 1 bond quantum (`qAmp`, energy `qAmp^2`) per tick into `U : EnergyState Coord2`
 ||| via `viewAsAntiBox eSrc`, automatically decoupling into closed cooling once `eSrc == []`.
@@ -622,17 +643,9 @@ stepCoupledSourceFlow :
 stepCoupledSourceFlow qAmp (u, eSrc) =
   let (uIn, nextSrc) =
         case viewAsAntiBox eSrc of
-          EmptyVacuum => (u, emptyPureMSet)
-          PopBlackBox siteKey restSrc =>
-            let (x, y, _) = decodeNatSiteKey siteKey
-                xi        = natToInteger x
-                yi        = natToInteger y
-            in (addEnergyState u (seedEdgeFlux coord2Basis xi yi (xi + 1) yi qAmp), restSrc)
-          PopRedBox siteKey restSrc =>
-            let (x, y, _) = decodeNatSiteKey siteKey
-                xi        = natToInteger x
-                yi        = natToInteger y
-            in (addEnergyState u (seedEdgeFlux coord2Basis xi yi (xi + 1) yi (-qAmp)), restSrc)
+          EmptyVacuum       => (u, emptyPureMSet)
+          PopBlackBox k rst => (injectRelicBond u k qAmp, rst)
+          PopRedBox   k rst => (injectRelicBond u k (-qAmp), rst)
       (uNext, (yStep, sStep)) = stepEnergyCore coord2Basis 1 1 0 canonDecayNum canonDecayDen 0 7 uIn
   in if yStep == 0 && sStep == 0 && nextSrc == emptyPureMSet
        then (StreamDone, 0, 0)
@@ -745,34 +758,36 @@ record RootUnpackAcc where
   keptNonField : Box BoxInt PureMultiset
   fieldData    : EnergyState PureMultiset
 
-||| Single-pass zero-copy decoder from `root : PureMultiset` to `EnergyState PureMultiset`.
+||| Decodes a single root multiset entry into `(keptNonField, EnergyState)` for monoidal `<+>` assembly.
+public export
+decodeRootEntry : PureMultiset -> BoxInt -> (Box BoxInt PureMultiset, EnergyState PureMultiset)
+decodeRootEntry entry mult =
+  if isSiteKey entry
+    then (BoxLeaf, MkEnergyState (addAtMaxelEdge entry entry mult emptyMaxel) emptyMaxel emptyMaxel)
+    else case unpackEdgeKey entry of
+           Just (a, b) =>
+             (BoxLeaf, if compare a b == LT
+                         then MkEnergyState (addAtMaxelEdge a b mult emptyMaxel) emptyMaxel emptyMaxel
+                         else neutral)
+           Nothing =>
+             case unpackMetricKey entry of
+               Just metM =>
+                 (BoxLeaf, if mult == MkBoxInt 1 then MkEnergyState emptyMaxel (unpackHMSetToSymMaxel metM) emptyMaxel else neutral)
+               Nothing =>
+                 case unpackPaceKey entry of
+                   Just paceM =>
+                     (BoxLeaf, if mult == MkBoxInt 1 then MkEnergyState emptyMaxel emptyMaxel (unpackHMSetToSymMaxel paceM) else neutral)
+                   Nothing =>
+                     (singletonBox entry mult, neutral)
+
+||| Single-pass zero-copy decoder from `root : PureMultiset` to `EnergyState PureMultiset` via `<+>` / `addBox`.
 public export
 unpackRootToEnergyState : PureMultiset -> RootUnpackAcc
 unpackRootToEnergyState (MkHMSet rootBox) =
   foldBox (\entry, mult, st =>
-             let sf0 = st.fieldData
-             in if isSiteKey entry
-                  then MkRootUnpackAcc st.keptNonField ({ waveMaxel := addAtMaxelEdge entry entry mult sf0.waveMaxel } sf0)
-                  else case unpackEdgeKey entry of
-                         Just (a, b) =>
-                           if compare a b == LT
-                             then MkRootUnpackAcc st.keptNonField ({ waveMaxel := addAtMaxelEdge a b mult sf0.waveMaxel } sf0)
-                             else st
-                         Nothing =>
-                           case unpackMetricKey entry of
-                             Just metM =>
-                               if mult == MkBoxInt 1
-                                 then MkRootUnpackAcc st.keptNonField ({ metricMaxel := addMaxel (unpackHMSetToSymMaxel metM) sf0.metricMaxel } sf0)
-                                 else st
-                             Nothing =>
-                               case unpackPaceKey entry of
-                                 Just paceM =>
-                                   if mult == MkBoxInt 1
-                                     then MkRootUnpackAcc st.keptNonField ({ paceMaxel := addMaxel (unpackHMSetToSymMaxel paceM) sf0.paceMaxel } sf0)
-                                     else st
-                                 Nothing =>
-                                   MkRootUnpackAcc (addAtKeyBox entry mult st.keptNonField) sf0)
-          (MkRootUnpackAcc BoxLeaf emptyEnergyState)
+             let (kBox, sfDelta) = decodeRootEntry entry mult
+             in MkRootUnpackAcc (st.keptNonField <+> kBox) (st.fieldData <+> sfDelta))
+          (MkRootUnpackAcc BoxLeaf neutral)
           rootBox
 
 ||| Verifies explicitly that every active edge pair, metric dipole, and pacing dipole
