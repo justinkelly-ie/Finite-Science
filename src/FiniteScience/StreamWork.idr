@@ -342,115 +342,9 @@ findMatterPayloadAt pos (MkHMSet b) =
 
 --------------------------------------------------------------------------------
 -- 3. PUREMULTISET SPREAD POLYNUMBERS, GOH PRIME-ROOT ALGEBRA & GOHFUEL FREEZE-OUT
+--    (Core `polyX`, `gohPsi1..12`, `spreadZHMSet`, `evalPolyHMSetAt`, and
+--     `evalHomogPolyHMSet` are graduated upstream in `Stage0.HereditaryMSet`.)
 --------------------------------------------------------------------------------
-
-||| Monomial indeterminate `x = { { [] : 1 } : 1 }` inside `PureMultiset`.
-||| Because `Num PureMultiset` defines `(+)` = `addHMSet`, `(*)` = `mulHMSet` (Cauchy convolution),
-||| and `fromInteger c` = `{ [] : c }` (degree-0 constant `c * x^0`), every polynomial in `Z[x]`
-||| is natively a `PureMultiset` with zero extra types.
-public export
-polyX : PureMultiset
-polyX = stepX
-
-||| Cigler-Herbig irreducible spread polynomial factors `Psi_1(x) .. Psi_7(x)` natively in `PureMultiset`:
-||| - `Psi_1(x) = x` (deg 1 = phi(1), root at `x = 0`)
-||| - `Psi_2(x) = 4 - x` (deg 1 = phi(2), root at `x = 4`, fixed point `Psi_2(2) = 2`, von Mangoldt `Psi_2(0) = 2^2 = 4`)
-||| - `Psi_3(x) = (x - 3)^2` (deg 2 = phi(3), double root at `x = 3`, von Mangoldt `Psi_3(0) = 3^2 = 9`)
-||| - `Psi_4(x) = (x - 2)^2` (deg 2 = phi(4), double root at `x = 2`, von Mangoldt `Psi_4(0) = 2^2 = 4`)
-||| - `Psi_5(x) = (x^2 - 5x + 5)^2` (deg 4 = phi(5), von Mangoldt `Psi_5(0) = 5^2 = 25`)
-||| - `Psi_6(x) = (x - 1)^2` (deg 2 = phi(6), double root at `x = 1`, composite von Mangoldt `Psi_6(0) = 1^2 = 1`)
-||| - `Psi_7(x) = (x^3 - 7x^2 + 14x - 7)^2` (deg 6 = phi(7), von Mangoldt `Psi_7(0) = 7^2 = 49`)
-public export
-gohPsi1 : PureMultiset
-gohPsi1 = polyX
-
-public export
-gohPsi2 : PureMultiset
-gohPsi2 = 4 - polyX
-
-public export
-gohPsi3 : PureMultiset
-gohPsi3 = (polyX - 3) * (polyX - 3)
-
-public export
-gohPsi4 : PureMultiset
-gohPsi4 = (polyX - 2) * (polyX - 2)
-
-public export
-gohPsi5 : PureMultiset
-gohPsi5 =
-  let q = polyX * polyX - 5 * polyX + 5
-  in q * q
-
-public export
-gohPsi6 : PureMultiset
-gohPsi6 = (polyX - 1) * (polyX - 1)
-
-public export
-gohPsi7 : PureMultiset
-gohPsi7 =
-  let x2 = polyX * polyX
-      q  = x2 * polyX - 7 * x2 + 14 * polyX - 7
-  in q * q
-
-public export
-gohPsiFactor : Nat -> PureMultiset
-gohPsiFactor 1 = gohPsi1
-gohPsiFactor 2 = gohPsi2
-gohPsiFactor 3 = gohPsi3
-gohPsiFactor 4 = gohPsi4
-gohPsiFactor 5 = gohPsi5
-gohPsiFactor 6 = gohPsi6
-gohPsiFactor 7 = gohPsi7
-gohPsiFactor _ = 1
-
-||| 3-term Cigler-Herbig scaled spread polynomial recurrence directly in `PureMultiset`:
-|||   `Z_{n+3}(x) = (3 - x) * Z_{n+2}(x) + (x - 3) * Z_{n+1}(x) + Z_n(x)`
-public export
-stepSpreadZHMSet : PureMultiset -> PureMultiset -> PureMultiset -> PureMultiset
-stepSpreadZHMSet zn zn1 zn2 =
-  (3 - polyX) * zn2 + (polyX - 3) * zn1 + zn
-
-public export
-spreadZHMSet : Nat -> PureMultiset
-spreadZHMSet Z               = emptyPureMSet
-spreadZHMSet (S Z)           = polyX
-spreadZHMSet (S (S Z))       = 4 * polyX - polyX * polyX
-spreadZHMSet (S (S (S Z)))   = 9 * polyX - 6 * polyX * polyX + polyX * polyX * polyX
-spreadZHMSet (S (S (S (S k)))) =
-  go k polyX (4 * polyX - polyX * polyX) (9 * polyX - 6 * polyX * polyX + polyX * polyX * polyX)
-  where
-    go : Nat -> PureMultiset -> PureMultiset -> PureMultiset -> PureMultiset
-    go Z       zn zn1 zn2 = stepSpreadZHMSet zn zn1 zn2
-    go (S rem) zn zn1 zn2 = go rem zn1 zn2 (stepSpreadZHMSet zn zn1 zn2)
-
-public export
-powNatNum : Num a => a -> Nat -> a
-powNatNum _ Z     = fromInteger 1
-powNatNum x (S k) = x * powNatNum x k
-
-||| Polymorphic `PureMultiset` polynomial evaluator:
-||| - When `a = Integer`, evaluates `P(x0) in Z`.
-||| - When `a = PureMultiset`, evaluates symbolic polynomial composition `(P o Q)(x) = P(Q(x))` in `PureMultiset`!
-public export
-evalPolyHMSetAt : Num a => PureMultiset -> a -> a
-evalPolyHMSetAt (MkHMSet b) x =
-  foldBox (\k, (MkBoxInt c), acc =>
-             let deg = boxToNat (originMultiplicity k)
-             in acc + fromInteger c * powNatNum x deg)
-          (fromInteger 0)
-          b
-
-||| Evaluates the degree-`deg` homogenization `den^deg * P(num / den)` of a `PureMultiset` polynomial `P`,
-||| connecting rational spread evaluation `Z_y(4 * B_1^2 / R_1^2)` to integer Pythagorean powers `4 * B_y^2`.
-public export
-evalHomogPolyHMSet : (deg : Nat) -> PureMultiset -> (num, den : Integer) -> Integer
-evalHomogPolyHMSet deg (MkHMSet b) num den =
-  foldBox (\k, (MkBoxInt c), acc =>
-             let d = boxToNat (originMultiplicity k)
-             in acc + c * powNatNum num d * powNatNum den (minus deg d))
-          0
-          b
 
 ||| Derives an observer `HorizonSpec` intrinsically from `selfFuelOfHMSet (spreadZHMSet polyOrder)`
 ||| (zero arbitrary hardcoded budget constant).
@@ -572,31 +466,35 @@ prfFastPeelMatchesProton = Refl
 
 public export
 0 prfGohFactorizationZ6 :
-  FiniteScience.StreamWork.spreadZHMSet 6 =
-    (FiniteScience.StreamWork.gohPsi1 *
-     FiniteScience.StreamWork.gohPsi2 *
-     FiniteScience.StreamWork.gohPsi3 *
-     FiniteScience.StreamWork.gohPsi6)
+  Stage0.HereditaryMSet.spreadZHMSet 6 =
+    (Stage0.HereditaryMSet.gohPsi1 *
+     Stage0.HereditaryMSet.gohPsi2 *
+     Stage0.HereditaryMSet.gohPsi3 *
+     Stage0.HereditaryMSet.gohPsi6)
 prfGohFactorizationZ6 = Refl
 
 public export
 0 prfGohPrimeRootsAndFixedPoints :
-  ((evalPolyHMSetAt FiniteScience.StreamWork.gohPsi2 (the Integer 2) == 2) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi3 (the Integer 3) == 0) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi4 (the Integer 2) == 0) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi6 (the Integer 1) == 0) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi2 (the Integer 0) == 4) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi3 (the Integer 0) == 9) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi4 (the Integer 0) == 4) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi5 (the Integer 0) == 25) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi6 (the Integer 0) == 1) &&
-   (evalPolyHMSetAt FiniteScience.StreamWork.gohPsi7 (the Integer 0) == 49)) = True
+  ((evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi2 (the Integer 2) == 2) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi3 (the Integer 3) == 0) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi4 (the Integer 2) == 0) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi6 (the Integer 1) == 0) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi2 (the Integer 0) == 4) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi3 (the Integer 0) == 9) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi4 (the Integer 0) == 4) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi5 (the Integer 0) == 25) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi6 (the Integer 0) == 1) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi7 (the Integer 0) == 49) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi8 (the Integer 0) == 4) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi9 (the Integer 0) == 9) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi10 (the Integer 0) == 1) &&
+   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi12 (the Integer 0) == 1)) = True
 prfGohPrimeRootsAndFixedPoints = Refl
 
 public export
 0 prfSpreadSemigroupCompose23 :
-  evalPolyHMSetAt (FiniteScience.StreamWork.spreadZHMSet 2) (FiniteScience.StreamWork.spreadZHMSet 3)
-  = FiniteScience.StreamWork.spreadZHMSet 6
+  evalPolyHMSetAt (Stage0.HereditaryMSet.spreadZHMSet 2) (Stage0.HereditaryMSet.spreadZHMSet 3)
+  = Stage0.HereditaryMSet.spreadZHMSet 6
 prfSpreadSemigroupCompose23 = Refl
 
 public export
@@ -607,8 +505,8 @@ public export
        (_, b4, _)  = Stage1.ProjectiveRotation.pythPowerTriple 4 (MkBoxInt 28)
        num         = 4 * b1 * b1
        den         = r1 * r1
-   in (evalHomogPolyHMSet 1 (FiniteScience.StreamWork.spreadZHMSet 1) num den == 4 * b1 * b1) &&
-      (evalHomogPolyHMSet 2 (FiniteScience.StreamWork.spreadZHMSet 2) num den == 4 * b2 * b2) &&
-      (evalHomogPolyHMSet 3 (FiniteScience.StreamWork.spreadZHMSet 3) num den == 4 * b3 * b3) &&
-      (evalHomogPolyHMSet 4 (FiniteScience.StreamWork.spreadZHMSet 4) num den == 4 * b4 * b4)) = True
+   in (evalHomogPolyHMSet 1 (Stage0.HereditaryMSet.spreadZHMSet 1) num den == 4 * b1 * b1) &&
+      (evalHomogPolyHMSet 2 (Stage0.HereditaryMSet.spreadZHMSet 2) num den == 4 * b2 * b2) &&
+      (evalHomogPolyHMSet 3 (Stage0.HereditaryMSet.spreadZHMSet 3) num den == 4 * b3 * b3) &&
+      (evalHomogPolyHMSet 4 (Stage0.HereditaryMSet.spreadZHMSet 4) num den == 4 * b4 * b4)) = True
 prfPythPowerMatchesSpreadZ28 = Refl

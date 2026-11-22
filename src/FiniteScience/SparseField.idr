@@ -154,7 +154,7 @@ pureMSetBasis3D : AxisBasis PureMultiset
 pureMSetBasis3D = pureMSetBasisND 3
 
 public export
-data StepMode = ModeLinear | ModeSpread | ModePaced
+data StepMode = ModeLinear | ModeSpread | ModeBalanced | ModePaced
 
 public export
 canonLagDiv : Integer
@@ -563,6 +563,16 @@ stepSparseFieldSpread :
   (SparseField k, (Nat, Nat))
 stepSparseFieldSpread ax subTicks = stepSparseFieldCore ax 1 subTicks
 
+||| Arm B3 (`ModeBalanced`): 2-pass x 2-subtick `Z_2 o Z_2 = Z_4` factorization (`outerPasses = 2, innerTicks = 2`).
+public export
+stepSparseFieldBalanced :
+  Ord k =>
+  AxisBasis k ->
+  (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
+  SparseField k ->
+  (SparseField k, (Nat, Nat))
+stepSparseFieldBalanced ax = stepSparseFieldCore ax 2 2
+
 ||| Single shared `StepMode` dispatcher over any coordinate basis `AxisBasis k`.
 public export
 stepSparseByMode :
@@ -575,6 +585,8 @@ stepSparseByMode ax ModeLinear sf =
   fst (stepSparseFieldCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 sf)
 stepSparseByMode ax ModeSpread sf =
   fst (stepSparseFieldSpread ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
+stepSparseByMode ax ModeBalanced sf =
+  fst (stepSparseFieldBalanced ax canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 stepSparseByMode ax ModePaced sf =
   fst (stepSparseFieldPaced ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 

@@ -678,7 +678,8 @@ record ModeParityReport where
 public export
 record ParitySuiteReport where
   constructor MkParitySuiteReport
-  psUni : ModeParityReport
+  psSpr : ModeParityReport
+  psBal : ModeParityReport
   psPac : ModeParityReport
 
 public export
@@ -718,9 +719,10 @@ runModeParityCheck mode steps = App1.do
 export
 runParitySuite : App1 {u = Any} e ParitySuiteReport
 runParitySuite = App1.do
-  u <- runModeParityCheck ModeSpread 4
-  p <- runModeParityCheck ModePaced  4
-  App1.pure (MkParitySuiteReport u p)
+  s <- runModeParityCheck ModeSpread   4
+  b <- runModeParityCheck ModeBalanced 4
+  p <- runModeParityCheck ModePaced    4
+  App1.pure (MkParitySuiteReport s b p)
 
 public export
 modeLine : String -> ModeParityReport -> String
@@ -750,8 +752,9 @@ mkExp4and5Lines cA par okA pass =
   , "----------------------------------------------------------------"
   , "[Experiment 5] Model A (Canonical) vs Model B Parity Matrix (4-Sweep)"
   , "  * Multi-Mode Model A == Model B Parity (4 sweeps, anti/sym/zero-sum):"
-  , modeLine "ModeSpread" par.psUni
-  , modeLine "ModePaced " par.psPac
+  , modeLine "ModeSpread  (1,4)" par.psSpr
+  , modeLine "ModeBalanced(2,2)" par.psBal
+  , modeLine "ModePaced   (4,1)" par.psPac
   , "  * Canonical Model A Core Summary: net=" ++ show cA.gcNetSum ++
     ", dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++
     ", dX_4F=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++
@@ -768,10 +771,10 @@ buildExp4and5Report : GravityCoreMetrics -> ParitySuiteReport -> (Bool, List Str
 buildExp4and5Report cA par =
   let okA      = gravityCriteriaOk cA
       seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
-      u        = par.psUni
-      p        = par.psPac
       parityOk =
-        modeParityAndWorkOk u && modeParityAndWorkOk p &&
+        modeParityAndWorkOk par.psSpr &&
+        modeParityAndWorkOk par.psBal &&
+        modeParityAndWorkOk par.psPac &&
         checkTagFreePackUnpackRoundTrip &&
         (unwrapBox (sumHMSet seedRoot) == 0) &&
         (cA.gcNetSum == 0) && cA.gcAntiOk && cA.gcSymOk && cA.gcBalOk
@@ -844,19 +847,16 @@ emergent3DCriteriaOk r =
 
 export
 collectPacedWorkLoop :
-  Bool ->
+  (Nat, Nat) ->
   Nat ->
   SparseField Coord2 ->
   Nat ->
   Nat ->
   PacedWorkStats
 collectPacedWorkLoop _ Z sf accY accS = MkPacedWorkStats accY accS (maxelNodeCount sf.paceMaxel)
-collectPacedWorkLoop False (S rem) sf accY accS =
-  let (sf1, (y, s)) = stepSparseFieldPaced coord2Basis canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
-  in collectPacedWorkLoop False rem sf1 (accY + y) (accS + s)
-collectPacedWorkLoop True (S rem) sf accY accS =
-  let (sf1, (y, s)) = stepSparseFieldSpread coord2Basis canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
-  in collectPacedWorkLoop True rem sf1 (accY + y) (accS + s)
+collectPacedWorkLoop (oP, iT) (S rem) sf accY accS =
+  let (sf1, (y, s)) = stepSparseFieldCore coord2Basis oP iT canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
+  in collectPacedWorkLoop (oP, iT) rem sf1 (accY + y) (accS + s)
 
 public export
 pacedSkipPct : Nat -> Nat -> Integer
@@ -878,39 +878,51 @@ record GohSpreadAuditReport where
   gsComposeOk   : Bool
   gsHomogPythOk : Bool
   gsFreezeOk    : Bool
-  gsFuelSteps   : Nat
-  gsYieldsUsed  : Nat
-  gsStepsUsed   : Nat
+  gsFuelSteps10 : Nat
+  gsYields10    : Nat
+  gsSteps10     : Nat
 
 public export
 auditGohSpreadPolyHMSet : GohSpreadAuditReport
 auditGohSpreadPolyHMSet =
-  let z1 = spreadZHMSet 1
-      z2 = spreadZHMSet 2
-      z3 = spreadZHMSet 3
-      z4 = spreadZHMSet 4
-      z5 = spreadZHMSet 5
-      z6 = spreadZHMSet 6
-      z7 = spreadZHMSet 7
+  let z1  = spreadZHMSet 1
+      z2  = spreadZHMSet 2
+      z3  = spreadZHMSet 3
+      z4  = spreadZHMSet 4
+      z5  = spreadZHMSet 5
+      z6  = spreadZHMSet 6
+      z7  = spreadZHMSet 7
+      z8  = spreadZHMSet 8
+      z9  = spreadZHMSet 9
+      z10 = spreadZHMSet 10
+      z12 = spreadZHMSet 12
       factOk =
-        (z1 == gohPsi1) &&
-        (z2 == gohPsi1 * gohPsi2) &&
-        (z3 == gohPsi1 * gohPsi3) &&
-        (z4 == gohPsi1 * gohPsi2 * gohPsi4) &&
-        (z5 == gohPsi1 * gohPsi5) &&
-        (z6 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi6) &&
-        (z7 == gohPsi1 * gohPsi7)
+        (z1  == gohPsi1) &&
+        (z2  == gohPsi1 * gohPsi2) &&
+        (z3  == gohPsi1 * gohPsi3) &&
+        (z4  == gohPsi1 * gohPsi2 * gohPsi4) &&
+        (z5  == gohPsi1 * gohPsi5) &&
+        (z6  == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi6) &&
+        (z7  == gohPsi1 * gohPsi7) &&
+        (z8  == gohPsi1 * gohPsi2 * gohPsi4 * gohPsi8) &&
+        (z9  == gohPsi1 * gohPsi3 * gohPsi9) &&
+        (z10 == gohPsi1 * gohPsi2 * gohPsi5 * gohPsi10) &&
+        (z12 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi4 * gohPsi6 * gohPsi12)
       rootOk =
-        (evalPolyHMSetAt gohPsi2 (the Integer 2) == 2) &&
-        (evalPolyHMSetAt gohPsi3 (the Integer 3) == 0) &&
-        (evalPolyHMSetAt gohPsi4 (the Integer 2) == 0) &&
-        (evalPolyHMSetAt gohPsi6 (the Integer 1) == 0) &&
-        (evalPolyHMSetAt gohPsi2 (the Integer 0) == 4) &&
-        (evalPolyHMSetAt gohPsi3 (the Integer 0) == 9) &&
-        (evalPolyHMSetAt gohPsi4 (the Integer 0) == 4) &&
-        (evalPolyHMSetAt gohPsi5 (the Integer 0) == 25) &&
-        (evalPolyHMSetAt gohPsi6 (the Integer 0) == 1) &&
-        (evalPolyHMSetAt gohPsi7 (the Integer 0) == 49)
+        (evalPolyHMSetAt gohPsi2  (the Integer 2) == 2) &&
+        (evalPolyHMSetAt gohPsi3  (the Integer 3) == 0) &&
+        (evalPolyHMSetAt gohPsi4  (the Integer 2) == 0) &&
+        (evalPolyHMSetAt gohPsi6  (the Integer 1) == 0) &&
+        (evalPolyHMSetAt gohPsi2  (the Integer 0) == 4) &&
+        (evalPolyHMSetAt gohPsi3  (the Integer 0) == 9) &&
+        (evalPolyHMSetAt gohPsi4  (the Integer 0) == 4) &&
+        (evalPolyHMSetAt gohPsi5  (the Integer 0) == 25) &&
+        (evalPolyHMSetAt gohPsi6  (the Integer 0) == 1) &&
+        (evalPolyHMSetAt gohPsi7  (the Integer 0) == 49) &&
+        (evalPolyHMSetAt gohPsi8  (the Integer 0) == 4) &&
+        (evalPolyHMSetAt gohPsi9  (the Integer 0) == 9) &&
+        (evalPolyHMSetAt gohPsi10 (the Integer 0) == 1) &&
+        (evalPolyHMSetAt gohPsi12 (the Integer 0) == 1)
       fibOk =
         (evalPolyHMSetAt z1 (the Integer 5) == 5) &&
         (evalPolyHMSetAt z2 (the Integer 5) == (-5)) &&
@@ -919,9 +931,15 @@ auditGohSpreadPolyHMSet =
         (evalPolyHMSetAt z5 (the Integer 5) == 125) &&
         (evalPolyHMSetAt z6 (the Integer 5) == (-320))
       compOk =
+        (evalPolyHMSetAt z2 z2 == z4) &&
         (evalPolyHMSetAt z2 z3 == z6) &&
         (evalPolyHMSetAt z3 z2 == z6) &&
-        (evalPolyHMSetAt z2 z2 == z4)
+        (evalPolyHMSetAt z2 z4 == z8) &&
+        (evalPolyHMSetAt z3 z3 == z9) &&
+        (evalPolyHMSetAt z2 z5 == z10) &&
+        (evalPolyHMSetAt z5 z2 == z10) &&
+        (evalPolyHMSetAt z3 z4 == z12) &&
+        (evalPolyHMSetAt z4 z3 == z12)
       (_, b1, r1) = pythPowerTriple 1 (MkBoxInt 28)
       (_, b2, _)  = pythPowerTriple 2 (MkBoxInt 28)
       (_, b3, _)  = pythPowerTriple 3 (MkBoxInt 28)
@@ -933,14 +951,12 @@ auditGohSpreadPolyHMSet =
         (evalHomogPolyHMSet 2 z2 num28 den28 == 4 * b2 * b2) &&
         (evalHomogPolyHMSet 3 z3 num28 den28 == 4 * b3 * b3) &&
         (evalHomogPolyHMSet 4 z4 num28 den28 == 4 * b4 * b4)
-      (relicZ6, yFuelSteps, yUsed, sUsed, fReason) = freezeGohSpreadStream 6
+      (relicZ6,  yFuel6,  yUsed6,  sUsed6,  fReason6)  = freezeGohSpreadStream 6
+      (relicZ10, yFuel10, yUsed10, sUsed10, fReason10) = freezeGohSpreadStream 10
       frzOk =
-        (relicZ6 == z6) &&
-        (yUsed == 4) &&
-        (sUsed == 6) &&
-        (yUsed <= yFuelSteps) &&
-        (fReason == NaturalCompletion)
-  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk yFuelSteps yUsed sUsed
+        (relicZ6 == z6) && (yUsed6 == 4) && (sUsed6 == 6) && (yUsed6 <= yFuel6) && (fReason6 == NaturalCompletion) &&
+        (relicZ10 == z10) && (yUsed10 == 4) && (sUsed10 == 10) && (yUsed10 <= yFuel10) && (fReason10 == NaturalCompletion)
+  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk yFuel10 yUsed10 sUsed10
 
 public export
 showArmSummary : String -> GravityCoreMetrics -> PacedWorkStats -> PacedWorkStats -> Bool -> Bool -> Bool -> Bool -> Bool -> String
@@ -961,49 +977,59 @@ mkExp6Lines :
   GohSpreadAuditReport ->
   GravityCoreMetrics ->
   GravityCoreMetrics ->
+  GravityCoreMetrics ->
   Emergent3DReport ->
   PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats ->
-  PacedWorkStats -> PacedWorkStats ->
+  PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats ->
+  Bool -> Bool -> Bool -> Bool -> Bool ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
   List String
-mkExp6Lines gs pB1 pB2 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2
+mkExp6Lines gs pB1 pB2 pB3 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
             ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
             ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
+            ok4A3 ok4B3 ok4D3 ok4E3 ok4F3
             ok3D gohOk energyMonoOk quiescenceOk pass =
   [ "----------------------------------------------------------------"
-  , "[Experiment 6] A/B Test: Goh Spread Polynumber Algebra, ModePaced (B1) vs ModeSpread (B2) & 3D"
+  , "[Experiment 6] A/B/C Test: Goh Spread Polynumber Algebra, (4,1) vs (1,4) vs (2,2) & 3D"
   , "  * 6-A PureMultiset Goh Spread Polynumber Algebra & selfFuelOfHMSet Freeze-Out (" ++ show gohOk ++ "):"
-  , "    - Factorization Z_n == prod_{d|n} Psi_d (n=1..7 in PureMultiset) : " ++ show gs.gsFactOk
-  , "    - Prime Roots & von Mangoldt Spectrum (Psi_3(3)=0, Psi_4(2)=0, Psi_6(1)=0, Psi_p(0)=p^2): " ++ show gs.gsPrimeRootOk
+  , "    - Factorization Z_n == prod_{d|n} Psi_d (n=1..10,12 in PureMultiset) : " ++ show gs.gsFactOk
+  , "    - Prime Roots & von Mangoldt Spectrum (Psi_3(3)=0, Psi_4(2)=0, Psi_6(1)=0, Psi_{p^k}(0)=p^2, Psi_comp(0)=1): " ++ show gs.gsPrimeRootOk
   , "    - Fibonacci Specialization Z_n(5) == (-1)^(n-1) * 5 * F_n^2 (n=1..6): " ++ show gs.gsFibOk
-  , "    - Semigroup Composition Z_2(Z_3) == Z_3(Z_2) == Z_6 & Z_2(Z_2) == Z_4: " ++ show gs.gsComposeOk
+  , "    - Semigroup Composition (Z_2 o Z_2 = Z_4, Z_2 o Z_3 = Z_6, Z_2 o Z_5 = Z_10, Z_3 o Z_4 = Z_12): " ++ show gs.gsComposeOk
   , "    - Exact Pythagorean Power Homogenization R_1^(2y) Z_y(4 B_1^2 / R_1^2) == 4 B_y^2 (m=28, y=1..4): " ++ show gs.gsHomogPythOk
-  , "    - Support -> selfFuelOfHMSet -> freezeTimeStreamWith(Z_6): ok=" ++ show gs.gsFreezeOk ++
-    " (yieldFuel=" ++ show gs.gsFuelSteps ++ ", yields=" ++ show gs.gsYieldsUsed ++
-    ", steps=" ++ show gs.gsStepsUsed ++ ", skips=2 at d=4,5 cost 0 GohFuel)"
-  , "  * 6-B A/B Comparison: Iterative Sub-Tick ModePaced (B1) vs Single-Sweep ModeSpread S_y(s_1) (B2):"
-  , showArmSummary "Arm B1 (ModePaced  4-subtick)" pB1 wBr1 wVac1 ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
-  , showArmSummary "Arm B2 (ModeSpread 1-sweep  )" pB2 wBr2 wVac2 ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
-  , "  * 6-4A Self-Trapping (B1=" ++ show ok4A1 ++ ", B2=" ++ show ok4A2 ++ "):"
+  , "    - Support -> selfFuelOfHMSet -> freezeTimeStreamWith(Z_6 & Z_10): ok=" ++ show gs.gsFreezeOk ++
+    " (Z_10 yieldFuel=" ++ show gs.gsFuelSteps10 ++ ", yields=" ++ show gs.gsYields10 ++
+    ", steps=" ++ show gs.gsSteps10 ++ ", skips=6 at d=3,4,6,7,8,9 cost 0 GohFuel)"
+  , "  * 6-B Factorization Comparison of k=4 Sub-Ticks: (4,1) ModePaced vs (1,4) ModeSpread vs (2,2) ModeBalanced:"
+  , showArmSummary "Arm B1 (ModePaced    4x1)" pB1 wBr1 wVac1 ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
+  , showArmSummary "Arm B2 (ModeSpread   1x4)" pB2 wBr2 wVac2 ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
+  , showArmSummary "Arm B3 (ModeBalanced 2x2)" pB3 wBr3 wVac3 ok4A3 ok4B3 ok4D3 ok4E3 ok4F3
+  , "  * 6-4A Self-Trapping (B1=" ++ show ok4A1 ++ ", B2=" ++ show ok4A2 ++ ", B3=" ++ show ok4A3 ++ "):"
   , "    - Linear             -> " ++ show pB1.gcLin
-  , "    - B1 Paced  (A)      -> " ++ show pB1.gcTrap ++ " | " ++ showPacedStats w4A
-  , "    - B2 Spread (A)      -> " ++ show pB2.gcTrap
-  , "  * 6-4B Causal 1-Hop Gravity (B1=" ++ show ok4B1 ++ ", B2=" ++ show ok4B2 ++ "):"
-  , "    - B1 Vac / Top / Bot -> VacX=" ++ show pB1.gcVac.meanXMilli ++ ", Top=(" ++ show pB1.gcTop.meanXMilli ++ "," ++ show pB1.gcTop.meanYMilli ++ ",Sy=" ++ show pB1.gcTop.poyntingYAccum ++ "), Bot=(" ++ show pB1.gcBot.meanXMilli ++ "," ++ show pB1.gcBot.meanYMilli ++ ",Sy=" ++ show pB1.gcBot.poyntingYAccum ++ ")"
-  , "    - B2 Vac / Top / Bot -> VacX=" ++ show pB2.gcVac.meanXMilli ++ ", Top=(" ++ show pB2.gcTop.meanXMilli ++ "," ++ show pB2.gcTop.meanYMilli ++ ",Sy=" ++ show pB2.gcTop.poyntingYAccum ++ "), Bot=(" ++ show pB2.gcBot.meanXMilli ++ "," ++ show pB2.gcBot.meanYMilli ++ ",Sy=" ++ show pB2.gcBot.poyntingYAccum ++ ")"
-  , "    - B1 Quiescence      -> brOnly: " ++ showPacedStats wBr1 ++ " | vac: " ++ showPacedStats wVac1
-  , "    - B2 Quiescence      -> brOnly: " ++ showPacedStats wBr2 ++ " | vac: " ++ showPacedStats wVac2
-  , "  * 6-4D Equal-Mass 2-Body (B1=" ++ show ok4D1 ++ ", B2=" ++ show ok4D2 ++ "):"
-  , "    - B1 Equal-Mass  (A) -> " ++ show pB1.gcTwoBody ++ " | " ++ showPacedStats w4D
-  , "    - B2 Equal-Mass  (A) -> " ++ show pB2.gcTwoBody
-  , "  * 6-4E Causal Light-Cone (B1=" ++ show ok4E1 ++ ", B2=" ++ show ok4E2 ++ "):"
-  , "    - B1 Light-Cone  (A) -> " ++ show pB1.gcLightCone
-  , "    - B2 Light-Cone  (A) -> " ++ show pB2.gcLightCone
-  , "  * 6-4F Anisotropic Stress (B1=" ++ show ok4F1 ++ ", B2=" ++ show ok4F2 ++ "):"
-  , "    - B1 AnisoStress (A) -> " ++ show pB1.gcAniso
-  , "    - B2 AnisoStress (A) -> " ++ show pB2.gcAniso
+  , "    - B1 Paced    (4,1)  -> " ++ show pB1.gcTrap ++ " | " ++ showPacedStats w4A
+  , "    - B2 Spread   (1,4)  -> " ++ show pB2.gcTrap
+  , "    - B3 Balanced (2,2)  -> " ++ show pB3.gcTrap
+  , "  * 6-4B Causal 1-Hop Gravity (B1=" ++ show ok4B1 ++ ", B2=" ++ show ok4B2 ++ ", B3=" ++ show ok4B3 ++ "):"
+  , "    - B1 (4,1) Vac/Top/Bot -> VacX=" ++ show pB1.gcVac.meanXMilli ++ ", Top=(" ++ show pB1.gcTop.meanXMilli ++ "," ++ show pB1.gcTop.meanYMilli ++ ",Sy=" ++ show pB1.gcTop.poyntingYAccum ++ "), Bot=(" ++ show pB1.gcBot.meanXMilli ++ "," ++ show pB1.gcBot.meanYMilli ++ ",Sy=" ++ show pB1.gcBot.poyntingYAccum ++ ")"
+  , "    - B2 (1,4) Vac/Top/Bot -> VacX=" ++ show pB2.gcVac.meanXMilli ++ ", Top=(" ++ show pB2.gcTop.meanXMilli ++ "," ++ show pB2.gcTop.meanYMilli ++ ",Sy=" ++ show pB2.gcTop.poyntingYAccum ++ "), Bot=(" ++ show pB2.gcBot.meanXMilli ++ "," ++ show pB2.gcBot.meanYMilli ++ ",Sy=" ++ show pB2.gcBot.poyntingYAccum ++ ")"
+  , "    - B3 (2,2) Vac/Top/Bot -> VacX=" ++ show pB3.gcVac.meanXMilli ++ ", Top=(" ++ show pB3.gcTop.meanXMilli ++ "," ++ show pB3.gcTop.meanYMilli ++ ",Sy=" ++ show pB3.gcTop.poyntingYAccum ++ "), Bot=(" ++ show pB3.gcBot.meanXMilli ++ "," ++ show pB3.gcBot.meanYMilli ++ ",Sy=" ++ show pB3.gcBot.poyntingYAccum ++ ")"
+  , "    - B1 Quiescence (4,1)  -> brOnly: " ++ showPacedStats wBr1 ++ " | vac: " ++ showPacedStats wVac1
+  , "    - B2 Quiescence (1,4)  -> brOnly: " ++ showPacedStats wBr2 ++ " | vac: " ++ showPacedStats wVac2
+  , "    - B3 Quiescence (2,2)  -> brOnly: " ++ showPacedStats wBr3 ++ " | vac: " ++ showPacedStats wVac3
+  , "  * 6-4D Equal-Mass 2-Body (B1=" ++ show ok4D1 ++ ", B2=" ++ show ok4D2 ++ ", B3=" ++ show ok4D3 ++ "):"
+  , "    - B1 Equal-Mass (4,1)-> " ++ show pB1.gcTwoBody ++ " | " ++ showPacedStats w4D
+  , "    - B2 Equal-Mass (1,4)-> " ++ show pB2.gcTwoBody
+  , "    - B3 Equal-Mass (2,2)-> " ++ show pB3.gcTwoBody
+  , "  * 6-4E Causal Light-Cone (B1=" ++ show ok4E1 ++ ", B2=" ++ show ok4E2 ++ ", B3=" ++ show ok4E3 ++ "):"
+  , "    - B1 Light-Cone (4,1)-> " ++ show pB1.gcLightCone
+  , "    - B2 Light-Cone (1,4)-> " ++ show pB2.gcLightCone
+  , "    - B3 Light-Cone (2,2)-> " ++ show pB3.gcLightCone
+  , "  * 6-4F Anisotropic Stress (B1=" ++ show ok4F1 ++ ", B2=" ++ show ok4F2 ++ ", B3=" ++ show ok4F3 ++ "):"
+  , "    - B1 AnisoStress(4,1)-> " ++ show pB1.gcAniso
+  , "    - B2 AnisoStress(1,4)-> " ++ show pB2.gcAniso
+  , "    - B3 AnisoStress(2,2)-> " ++ show pB3.gcAniso
   , "  * 6-3D Gate 3 Emergent 3D Causal Gravity in HereditaryBlackBox (" ++ show ok3D ++
     ", axes=" ++ show e3D.e3AxesCount ++ ", neighbors=" ++ show e3D.e3UnitCount ++ "):"
   , "    - 3D Vacuum Z-Band(B)-> " ++ show e3D.e3VacZ
@@ -1015,8 +1041,8 @@ mkExp6Lines gs pB1 pB2 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2
   ]
 
 public export
-buildExp6Report : GravityCoreMetrics -> GravityCoreMetrics -> Emergent3DReport -> (Bool, List String)
-buildExp6Report pB1 pB2 e3D =
+buildExp6Report : GravityCoreMetrics -> GravityCoreMetrics -> GravityCoreMetrics -> Emergent3DReport -> (Bool, List String)
+buildExp6Report pB1 pB2 pB3 e3D =
   let gs           = auditGohSpreadPolyHMSet
       gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk
       seed4A       = seedSparseBreather coord2Basis 0 0 1 4096
@@ -1025,13 +1051,15 @@ buildExp6Report pB1 pB2 e3D =
       seed4B       = addSparseField seedBr seedVac
       seed4D       = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
                                     (seedSparseWavepacketAt coord2Basis 0 3 2048)
-      w4A          = collectPacedWorkLoop False 20 seed4A  0 0
-      wBr1         = collectPacedWorkLoop False 18 seedBr  0 0
-      wVac1        = collectPacedWorkLoop False 18 seedVac 0 0
-      w4B          = collectPacedWorkLoop False 18 seed4B  0 0
-      w4D          = collectPacedWorkLoop False 16 seed4D  0 0
-      wBr2         = collectPacedWorkLoop True  18 seedBr  0 0
-      wVac2        = collectPacedWorkLoop True  18 seedVac 0 0
+      w4A          = collectPacedWorkLoop (4, 1) 20 seed4A  0 0
+      wBr1         = collectPacedWorkLoop (4, 1) 18 seedBr  0 0
+      wVac1        = collectPacedWorkLoop (4, 1) 18 seedVac 0 0
+      w4B          = collectPacedWorkLoop (4, 1) 18 seed4B  0 0
+      w4D          = collectPacedWorkLoop (4, 1) 16 seed4D  0 0
+      wBr2         = collectPacedWorkLoop (1, 4) 18 seedBr  0 0
+      wVac2        = collectPacedWorkLoop (1, 4) 18 seedVac 0 0
+      wBr3         = collectPacedWorkLoop (2, 2) 18 seedBr  0 0
+      wVac3        = collectPacedWorkLoop (2, 2) 18 seedVac 0 0
       ok4A1        = selfTrapCriteriaOk pB1.gcLin pB1.gcTrap
       ok4B1        = gravity4BCriteriaWithVacPct 78 pB1
       ok4D1        = twoBodyCriteriaOk pB1.gcTwoBody
@@ -1042,31 +1070,42 @@ buildExp6Report pB1 pB2 e3D =
       ok4D2        = twoBodyCriteriaOk pB2.gcTwoBody
       ok4E2        = lightConeCriteriaOk pB2.gcLightCone
       ok4F2        = anisotropicStressCriteriaOk pB2.gcAniso
+      ok4A3        = selfTrapCriteriaOk pB3.gcLin pB3.gcTrap
+      ok4B3        = gravity4BCriteriaWithVacPct 85 pB3
+      ok4D3        = twoBodyCriteriaOk pB3.gcTwoBody
+      ok4E3        = lightConeCriteriaOk pB3.gcLightCone
+      ok4F3        = anisotropicStressCriteriaOk pB3.gcAniso
       ok3D         = emergent3DCriteriaOk e3D
-      energyMonoOk = coreEnergyMonoOk pB1 && coreEnergyMonoOk pB2
+      energyMonoOk = coreEnergyMonoOk pB1 && coreEnergyMonoOk pB2 && coreEnergyMonoOk pB3
       quiescenceOk =
         (pacedSkipPct wBr1.pwYields wBr1.pwSkips >= 40) &&
         (pacedSkipPct wVac1.pwYields wVac1.pwSkips <= 2) &&
         (pacedSkipPct wBr2.pwYields wBr2.pwSkips >= 30) &&
         (pacedSkipPct wVac2.pwYields wVac2.pwSkips <= 2) &&
+        (pacedSkipPct wBr3.pwYields wBr3.pwSkips >= 40) &&
+        (pacedSkipPct wVac3.pwYields wVac3.pwSkips <= 2) &&
         (w4A.pwSkips > 0) && (w4D.pwSkips > 0)
       pass         =
         gohOk &&
         ok4A1 && ok4B1 && ok4D1 && ok4E1 && ok4F1 &&
-        ok4A2 && ok4B2 && ok4D2 && ok4E2 && ok4F2 && ok3D &&
+        ok4A2 && ok4B2 && ok4D2 && ok4E2 && ok4F2 &&
+        ok4A3 && ok4B3 && ok4D3 && ok4E3 && ok4F3 && ok3D &&
         energyMonoOk && quiescenceOk &&
         (pB1.gcNetSum == 0) && pB1.gcAntiOk && pB1.gcSymOk && pB1.gcBalOk &&
-        (pB2.gcNetSum == 0) && pB2.gcAntiOk && pB2.gcSymOk && pB2.gcBalOk
-  in (pass, mkExp6Lines gs pB1 pB2 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2
+        (pB2.gcNetSum == 0) && pB2.gcAntiOk && pB2.gcSymOk && pB2.gcBalOk &&
+        (pB3.gcNetSum == 0) && pB3.gcAntiOk && pB3.gcSymOk && pB3.gcBalOk
+  in (pass, mkExp6Lines gs pB1 pB2 pB3 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
                         ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
                         ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
+                        ok4A3 ok4B3 ok4D3 ok4E3 ok4F3
                         ok3D gohOk energyMonoOk quiescenceOk pass)
 
 export
 runExperiment6Paced : Has [Console] e => GravityCoreMetrics -> App e (Bool, List String)
 runExperiment6Paced pB2 = do
   pB1 <- app1 (runLabCoreSuite flatLab ModePaced)
+  pB3 <- app1 (runLabCoreSuite flatLab ModeBalanced)
   e3D <- app1 runEmergent3DGravity
-  let res = buildExp6Report pB1 pB2 e3D
+  let res = buildExp6Report pB1 pB2 pB3 e3D
   traverse_ putStrLn (snd res)
   pure res
