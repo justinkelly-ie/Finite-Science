@@ -391,21 +391,20 @@ export
 runLabWaveAxis :
   Ord k =>
   BlackBoxLab e box k ->
-  (stepT : k) ->
-  (coordT : k -> Integer) ->
+  (axisT : PureMultiset) ->
   StepMode ->
   Nat ->
   SparseField k ->
   SparseField k ->
   SparseField k ->
   App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
-runLabWaveAxis lab stepT coordT mode steps pktSeed extraBg bgField = App1.do
+runLabWaveAxis lab axisT mode steps pktSeed extraBg bgField = App1.do
   u0 <- lab.labBoot
   u1 <- lab.labInject (extraBg <+> pktSeed) u0
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, work, balOk) <- driveLabStepsTel lab mode steps u2 initE 0 True
-  let wRep0 = measureSparseBandAxis lab.labBasis stepT coordT (-3) 4 ea.eaField bgField initE ea.eaEnergy maxE work
+  let wRep0 = measureSparseBandAxis lab.labBasis axisT (-3) 4 ea.eaField bgField initE ea.eaEnergy maxE work
       wRep  = { waveNetSum := ea.eaNetSum } wRep0
   App1.pure (wRep, balOk, ea.eaAntiOk, ea.eaSymOk)
 
@@ -419,8 +418,7 @@ runLabWave :
   SparseField k ->
   App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
 runLabWave lab mode steps =
-  runLabWaveAxis lab (axisStepAt 1 lab.labBasis) lab.labBasis.coordY mode steps
-    (seedSparseWavepacketAt lab.labBasis 0 0 512)
+  runLabWaveAxis lab axisY mode steps (seedSparseWavepacketAt lab.labBasis 0 0 512)
 
 export
 runLabTwoBody :
@@ -810,13 +808,13 @@ runEmergent3DGravity = App1.do
       brTopZ = seedPureBreather3DZ 1 0 3 4 8192
       brBotZ = seedPureBreather3DZ 1 0 (-2) (-3) 8192
       combW  = (brTopZ <+> pkt3D).waveMaxel
-      axCnt  = length (activeAxesOf pureMSetBasis combW)
+      axCnt  = treeSizeNonZero (activeAxisAtomsOf pureMSetBasis combW)
       unCnt  = treeSizeNonZero (activeUnitAxesOf pureMSetBasis combW)
   eaBgT <- bootInjectAndRun hereditaryLab ModePaced 6 brTopZ
   eaBgB <- bootInjectAndRun hereditaryLab ModePaced 6 brBotZ
-  (vZ, balV, antiV, symV) <- runLabWaveAxis hereditaryLab stepZ pureCoordZ ModePaced 6 pkt3D neutral neutral
-  (tZ, balT, antiT, symT) <- runLabWaveAxis hereditaryLab stepZ pureCoordZ ModePaced 6 pkt3D brTopZ  eaBgT.eaField
-  (bZ, balB, antiB, symB) <- runLabWaveAxis hereditaryLab stepZ pureCoordZ ModePaced 6 pkt3D brBotZ  eaBgB.eaField
+  (vZ, balV, antiV, symV) <- runLabWaveAxis hereditaryLab axisZ ModePaced 6 pkt3D neutral neutral
+  (tZ, balT, antiT, symT) <- runLabWaveAxis hereditaryLab axisZ ModePaced 6 pkt3D brTopZ  eaBgT.eaField
+  (bZ, balB, antiB, symB) <- runLabWaveAxis hereditaryLab axisZ ModePaced 6 pkt3D brBotZ  eaBgB.eaField
   let flgOk = balV && antiV && symV && balT && antiT && symT && balB && antiB && symB &&
               eaBgT.eaBalOk && eaBgT.eaAntiOk && eaBgT.eaSymOk &&
               eaBgB.eaBalOk && eaBgB.eaAntiOk && eaBgB.eaSymOk
