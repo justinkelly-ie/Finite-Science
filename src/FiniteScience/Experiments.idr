@@ -869,6 +869,40 @@ showPacedStats w =
   "yields=" ++ show w.pwYields ++ ", skips=" ++ show w.pwSkips ++
   " (" ++ show (pacedSkipPct w.pwYields w.pwSkips) ++ "%), paceNodes=" ++ show w.pwNodes
 
+||| Evolves a `SparseField Coord2` under `(outerPasses, innerTicks)` and `lagDiv` until either `maxSteps`
+||| or the intrinsic `GohFuel` yield budget (`remYieldFuel`) is exhausted (`StreamSkip` costs 0 yield fuel!).
+export
+runSelfFueledPacedLoop :
+  (Nat, Nat) ->
+  Integer ->
+  (remSteps, remYieldFuel : Nat) ->
+  SparseField Coord2 ->
+  (accSweeps, accYields, accSkips : Nat) ->
+  (Nat, Nat, Nat, StreamFreezeReason)
+runSelfFueledPacedLoop _ _ Z _ _ cyc yAcc sAcc = (cyc, yAcc, sAcc, StepHorizonReached)
+runSelfFueledPacedLoop (oP, iT) lagD (S sRem) yRem sf cyc yAcc sAcc =
+  let (sf1, (yStep, sStep)) =
+        stepSparseFieldCore coord2Basis oP iT lagD canonDecayNum canonDecayDen canonLinkCoup 7 sf
+  in if yRem < yStep
+       then (cyc, yAcc, sAcc, YieldExhausted)
+       else runSelfFueledPacedLoop (oP, iT) lagD sRem (minus yRem yStep) sf1 (S cyc) (yAcc + yStep) (sAcc + sStep)
+
+||| Runs the 4B causal 1-hop gravity probe (18 sweeps) for any `(outerPasses, innerTicks)` factorization.
+export
+runLab4BQuick : (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats)
+runLab4BQuick (oP, iT) = App1.do
+  let ax        = coord2Basis
+      mode      = ModeFactor oP iT
+      brTopSeed = seedSparseBreather ax 4 5 6 8192
+      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
+      wBr       = collectPacedWorkLoop (oP, iT) 18 brTopSeed 0 0
+  eaBgTop <- bootInjectAndRun flatLab mode 18 brTopSeed
+  eaBgBot <- bootInjectAndRun flatLab mode 18 brBotSeed
+  (vRep, _, _, _) <- runLabWave flatLab mode 18 neutral   neutral
+  (tRep, _, _, _) <- runLabWave flatLab mode 18 brTopSeed eaBgTop.eaField
+  (bRep, _, _, _) <- runLabWave flatLab mode 18 brBotSeed eaBgBot.eaField
+  App1.pure (vRep, tRep, bRep, wBr)
+
 public export
 record GohSpreadAuditReport where
   constructor MkGohSpreadAuditReport
@@ -878,9 +912,13 @@ record GohSpreadAuditReport where
   gsComposeOk   : Bool
   gsHomogPythOk : Bool
   gsFreezeOk    : Bool
+  gsSelfTimeOk  : Bool
   gsFuelSteps10 : Nat
   gsYields10    : Nat
   gsSteps10     : Nat
+  gsDiluteCyc   : Nat
+  gsDenseCyc    : Nat
+  gsDenseSkips  : Nat
 
 public export
 auditGohSpreadPolyHMSet : GohSpreadAuditReport
@@ -956,7 +994,18 @@ auditGohSpreadPolyHMSet =
       frzOk =
         (relicZ6 == z6) && (yUsed6 == 4) && (sUsed6 == 6) && (yUsed6 <= yFuel6) && (fReason6 == NaturalCompletion) &&
         (relicZ10 == z10) && (yUsed10 == 4) && (sUsed10 == 10) && (yUsed10 <= yFuel10) && (fReason10 == NaturalCompletion)
-  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk yFuel10 yUsed10 sUsed10
+      (MkAnyGohFuel _ yFuel12, _) = selfFuelOfHMSet z12
+      linkYieldBudget             = gohSteps yFuel12 * 40
+      seedDense                   = seedSparseBreather coord2Basis 4 5 6 8192
+      (cycDil, _, sDil, rsnDil)   = runSelfFueledPacedLoop (4, 1) 0           25 linkYieldBudget seedDense 0 0 0
+      (cycDen, _, sDen, rsnDen)   = runSelfFueledPacedLoop (4, 1) canonLagDiv 25 linkYieldBudget seedDense 0 0 0
+      selfTimeOk =
+        (rsnDil == YieldExhausted) &&
+        (rsnDen == YieldExhausted) &&
+        (sDil == 0) &&
+        (sDen > 800) &&
+        (cycDen > cycDil)
+  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk yFuel10 yUsed10 sUsed10 cycDil cycDen sDen
 
 public export
 showArmSummary : String -> GravityCoreMetrics -> PacedWorkStats -> PacedWorkStats -> Bool -> Bool -> Bool -> Bool -> Bool -> String
@@ -973,26 +1022,51 @@ showArmSummary lbl c wBr wVac ok4A ok4B ok4D ok4E ok4F =
      show (pacedSkipPct wVac.pwYields wVac.pwSkips) ++ "%, workA=" ++ show c.gcWork
 
 public export
+showZ6Summary : String -> (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) -> Bool -> String
+showZ6Summary lbl (vR, tR, _, wBr) ok =
+  let vacPct = if vR.initEnergy <= 0 then 0 else divIntegerPos (vR.waveEnergy * 100) vR.initEnergy
+      dX     = tR.meanXMilli - vR.meanXMilli
+  in "    - " ++ lbl ++ " -> 4B[dX=" ++ show dX ++ ",TopY=" ++ show tR.meanYMilli ++
+     ",Sy=" ++ show tR.poyntingYAccum ++ ",vacE=" ++ show vacPct ++ "%](" ++ show ok ++
+     "), brSkip=" ++ show (pacedSkipPct wBr.pwYields wBr.pwSkips) ++ "%, yields=" ++
+     show wBr.pwYields ++ ", skips=" ++ show wBr.pwSkips
+
+public export
+z6QuickCriteriaOk : (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) -> Bool
+z6QuickCriteriaOk (vR, tR, bR, wBr) =
+  (vR.waveNetSum == 0) && (tR.waveNetSum == 0) && (bR.waveNetSum == 0) &&
+  (vR.waveEnergy <= vR.initEnergy) && (tR.waveEnergy <= tR.initEnergy) &&
+  (vR.meanYMilli == 500) && (vR.poyntingYAccum == 0) &&
+  (tR.meanXMilli + 50 < vR.meanXMilli) && (tR.meanYMilli > 530) && (tR.poyntingYAccum > 200000) &&
+  (bR.meanXMilli == tR.meanXMilli) && (bR.poyntingYAccum == -(tR.poyntingYAccum)) &&
+  (tR.meanYMilli + bR.meanYMilli == 999) &&
+  (pacedSkipPct wBr.pwYields wBr.pwSkips >= 35)
+
+public export
 mkExp6Lines :
   GohSpreadAuditReport ->
   GravityCoreMetrics ->
   GravityCoreMetrics ->
   GravityCoreMetrics ->
+  (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) ->
+  (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) ->
   Emergent3DReport ->
   PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats ->
   PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
+  Bool -> Bool ->
   Bool -> Bool -> Bool -> Bool -> Bool ->
   List String
-mkExp6Lines gs pB1 pB2 pB3 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
+mkExp6Lines gs pB1 pB2 pB3 z23 z32 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
             ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
             ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
             ok4A3 ok4B3 ok4D3 ok4E3 ok4F3
+            okZ23 okZ32
             ok3D gohOk energyMonoOk quiescenceOk pass =
   [ "----------------------------------------------------------------"
-  , "[Experiment 6] A/B/C Test: Goh Spread Polynumber Algebra, (4,1) vs (1,4) vs (2,2) & 3D"
+  , "[Experiment 6] A/B/C Test: Goh Spread Polynumber Algebra, (4,1) vs (1,4) vs (2,2), k=6 & 3D"
   , "  * 6-A PureMultiset Goh Spread Polynumber Algebra & selfFuelOfHMSet Freeze-Out (" ++ show gohOk ++ "):"
   , "    - Factorization Z_n == prod_{d|n} Psi_d (n=1..10,12 in PureMultiset) : " ++ show gs.gsFactOk
   , "    - Prime Roots & von Mangoldt Spectrum (Psi_3(3)=0, Psi_4(2)=0, Psi_6(1)=0, Psi_{p^k}(0)=p^2, Psi_comp(0)=1): " ++ show gs.gsPrimeRootOk
@@ -1002,10 +1076,16 @@ mkExp6Lines gs pB1 pB2 pB3 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
   , "    - Support -> selfFuelOfHMSet -> freezeTimeStreamWith(Z_6 & Z_10): ok=" ++ show gs.gsFreezeOk ++
     " (Z_10 yieldFuel=" ++ show gs.gsFuelSteps10 ++ ", yields=" ++ show gs.gsYields10 ++
     ", steps=" ++ show gs.gsSteps10 ++ ", skips=6 at d=3,4,6,7,8,9 cost 0 GohFuel)"
+  , "    - Live GohFuel Time Dilation (budget=1640 from Z_12): ok=" ++ show gs.gsSelfTimeOk ++
+    " (unpaced sweeps=" ++ show gs.gsDiluteCyc ++ " [0 skips] vs self-paced breather sweeps=" ++
+    show gs.gsDenseCyc ++ " [" ++ show gs.gsDenseSkips ++ " StreamSkips cost 0 GohFuel])"
   , "  * 6-B Factorization Comparison of k=4 Sub-Ticks: (4,1) ModePaced vs (1,4) ModeSpread vs (2,2) ModeBalanced:"
   , showArmSummary "Arm B1 (ModePaced    4x1)" pB1 wBr1 wVac1 ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
   , showArmSummary "Arm B2 (ModeSpread   1x4)" pB2 wBr2 wVac2 ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
   , showArmSummary "Arm B3 (ModeBalanced 2x2)" pB3 wBr3 wVac3 ok4A3 ok4B3 ok4D3 ok4E3 ok4F3
+  , "  * 6-Z6 Composite k=6 Asymmetric Spatial-vs-Local Factorization (Z_2 o Z_3 vs Z_3 o Z_2, mSub=42):"
+  , showZ6Summary "ModeFactor(2,3) [Z_2 o Z_3]" z23 okZ23
+  , showZ6Summary "ModeFactor(3,2) [Z_3 o Z_2]" z32 okZ32
   , "  * 6-4A Self-Trapping (B1=" ++ show ok4A1 ++ ", B2=" ++ show ok4A2 ++ ", B3=" ++ show ok4A3 ++ "):"
   , "    - Linear             -> " ++ show pB1.gcLin
   , "    - B1 Paced    (4,1)  -> " ++ show pB1.gcTrap ++ " | " ++ showPacedStats w4A
@@ -1041,10 +1121,17 @@ mkExp6Lines gs pB1 pB2 pB3 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
   ]
 
 public export
-buildExp6Report : GravityCoreMetrics -> GravityCoreMetrics -> GravityCoreMetrics -> Emergent3DReport -> (Bool, List String)
-buildExp6Report pB1 pB2 pB3 e3D =
+buildExp6Report :
+  GravityCoreMetrics ->
+  GravityCoreMetrics ->
+  GravityCoreMetrics ->
+  (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) ->
+  (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) ->
+  Emergent3DReport ->
+  (Bool, List String)
+buildExp6Report pB1 pB2 pB3 z23 z32 e3D =
   let gs           = auditGohSpreadPolyHMSet
-      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk
+      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk && gs.gsSelfTimeOk
       seed4A       = seedSparseBreather coord2Basis 0 0 1 4096
       seedBr       = seedSparseBreather coord2Basis 4 5 6 8192
       seedVac      = seedSparseWavepacketAt coord2Basis 0 0 512
@@ -1075,6 +1162,8 @@ buildExp6Report pB1 pB2 pB3 e3D =
       ok4D3        = twoBodyCriteriaOk pB3.gcTwoBody
       ok4E3        = lightConeCriteriaOk pB3.gcLightCone
       ok4F3        = anisotropicStressCriteriaOk pB3.gcAniso
+      okZ23        = z6QuickCriteriaOk z23
+      okZ32        = z6QuickCriteriaOk z32
       ok3D         = emergent3DCriteriaOk e3D
       energyMonoOk = coreEnergyMonoOk pB1 && coreEnergyMonoOk pB2 && coreEnergyMonoOk pB3
       quiescenceOk =
@@ -1089,15 +1178,17 @@ buildExp6Report pB1 pB2 pB3 e3D =
         gohOk &&
         ok4A1 && ok4B1 && ok4D1 && ok4E1 && ok4F1 &&
         ok4A2 && ok4B2 && ok4D2 && ok4E2 && ok4F2 &&
-        ok4A3 && ok4B3 && ok4D3 && ok4E3 && ok4F3 && ok3D &&
+        ok4A3 && ok4B3 && ok4D3 && ok4E3 && ok4F3 &&
+        okZ23 && okZ32 && ok3D &&
         energyMonoOk && quiescenceOk &&
         (pB1.gcNetSum == 0) && pB1.gcAntiOk && pB1.gcSymOk && pB1.gcBalOk &&
         (pB2.gcNetSum == 0) && pB2.gcAntiOk && pB2.gcSymOk && pB2.gcBalOk &&
         (pB3.gcNetSum == 0) && pB3.gcAntiOk && pB3.gcSymOk && pB3.gcBalOk
-  in (pass, mkExp6Lines gs pB1 pB2 pB3 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
+  in (pass, mkExp6Lines gs pB1 pB2 pB3 z23 z32 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wVac3
                         ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
                         ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
                         ok4A3 ok4B3 ok4D3 ok4E3 ok4F3
+                        okZ23 okZ32
                         ok3D gohOk energyMonoOk quiescenceOk pass)
 
 export
@@ -1105,7 +1196,9 @@ runExperiment6Paced : Has [Console] e => GravityCoreMetrics -> App e (Bool, List
 runExperiment6Paced pB2 = do
   pB1 <- app1 (runLabCoreSuite flatLab ModePaced)
   pB3 <- app1 (runLabCoreSuite flatLab ModeBalanced)
+  z23 <- app1 (runLab4BQuick (2, 3))
+  z32 <- app1 (runLab4BQuick (3, 2))
   e3D <- app1 runEmergent3DGravity
-  let res = buildExp6Report pB1 pB2 pB3 e3D
+  let res = buildExp6Report pB1 pB2 pB3 z23 z32 e3D
   traverse_ putStrLn (snd res)
   pure res

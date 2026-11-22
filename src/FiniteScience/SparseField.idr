@@ -154,9 +154,6 @@ pureMSetBasis3D : AxisBasis PureMultiset
 pureMSetBasis3D = pureMSetBasisND 3
 
 public export
-data StepMode = ModeLinear | ModeSpread | ModeBalanced | ModePaced
-
-public export
 canonLagDiv : Integer
 canonLagDiv = 6000000
 
@@ -175,6 +172,23 @@ canonLinkCoup = 1
 public export
 canonPacedSubTicks : Nat
 canonPacedSubTicks = 4
+
+public export
+data StepMode
+  = ModeLinear
+  | ModeFactor Nat Nat
+
+public export
+ModeSpread : StepMode
+ModeSpread = ModeFactor 1 canonPacedSubTicks
+
+public export
+ModeBalanced : StepMode
+ModeBalanced = ModeFactor 2 2
+
+public export
+ModePaced : StepMode
+ModePaced = ModeFactor canonPacedSubTicks 1
 
 ||| Unified sparse discrete field over any discrete coordinate basis `k`:
 ||| - `waveMaxel`   : half-stored diagonal + antisymmetric edge field (`DiagAntisymForm`)
@@ -541,38 +555,6 @@ stepSparseFieldCore ax outerPasses innerTicks lagDiv decayNum decayDen linkCoup 
           pFin         = runPasses outerPasses (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
       in (MkSparseField pFin.ppWave newMet pFin.ppPace, (pFin.ppYields, pFin.ppSkips))
 
-||| Arm B1 (`ModePaced`): `subTicks` interleaved fixed-angle passes (`outerPasses = subTicks, innerTicks = 1`).
-public export
-stepSparseFieldPaced :
-  Ord k =>
-  AxisBasis k ->
-  (subTicks : Nat) ->
-  (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
-  SparseField k ->
-  (SparseField k, (Nat, Nat))
-stepSparseFieldPaced ax subTicks = stepSparseFieldCore ax subTicks 1
-
-||| Arm B2 (`ModeSpread`): single-sweep exact spread power `(A_1 + i B_1)^y` composition (`outerPasses = 1, innerTicks = subTicks`).
-public export
-stepSparseFieldSpread :
-  Ord k =>
-  AxisBasis k ->
-  (subTicks : Nat) ->
-  (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
-  SparseField k ->
-  (SparseField k, (Nat, Nat))
-stepSparseFieldSpread ax subTicks = stepSparseFieldCore ax 1 subTicks
-
-||| Arm B3 (`ModeBalanced`): 2-pass x 2-subtick `Z_2 o Z_2 = Z_4` factorization (`outerPasses = 2, innerTicks = 2`).
-public export
-stepSparseFieldBalanced :
-  Ord k =>
-  AxisBasis k ->
-  (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
-  SparseField k ->
-  (SparseField k, (Nat, Nat))
-stepSparseFieldBalanced ax = stepSparseFieldCore ax 2 2
-
 ||| Single shared `StepMode` dispatcher over any coordinate basis `AxisBasis k`.
 public export
 stepSparseByMode :
@@ -583,12 +565,8 @@ stepSparseByMode :
   SparseField k
 stepSparseByMode ax ModeLinear sf =
   fst (stepSparseFieldCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 sf)
-stepSparseByMode ax ModeSpread sf =
-  fst (stepSparseFieldSpread ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
-stepSparseByMode ax ModeBalanced sf =
-  fst (stepSparseFieldBalanced ax canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
-stepSparseByMode ax ModePaced sf =
-  fst (stepSparseFieldPaced ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
+stepSparseByMode ax (ModeFactor oP iT) sf =
+  fst (stepSparseFieldCore ax oP iT canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
