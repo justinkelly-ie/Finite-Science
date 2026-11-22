@@ -1,5 +1,6 @@
 module FiniteScience.Energy
 
+import Data.Maybe
 import Stage0.BoxInt
 import Stage0.Interfaces
 import Stage0.Box
@@ -654,8 +655,9 @@ stepCoupledSourceFlow ax qAmp (u, eSrc) =
        else (StreamYield (uNext, nextSrc), max 1 yStep, sStep)
 
 ||| Active bidirectional coupling of two evolving `EnergyState k` universes `(uA, uB)`:
-||| transfers 1 zero-sum boundary bond quantum (`-qAmp` / `+qAmp`) from the higher-energy
-||| universe to the lower-energy universe while both evolve under `stepEnergyCore`.
+||| reads the purely local boundary bond `(0,0) -> (1,0)` in `uA.waveMaxel` vs `uB.waveMaxel`
+||| (zero global oracle), transfers a zero-sum gradient quantum `delta` (`-delta` / `+delta`),
+||| and evolves both universes under `stepEnergyCore`.
 public export
 stepCoupledUniversePair :
   Ord k =>
@@ -664,14 +666,14 @@ stepCoupledUniversePair :
   (EnergyState k, EnergyState k) ->
   (StreamStep (EnergyState k, EnergyState k), Nat, Nat)
 stepCoupledUniversePair ax qAmp (uA, uB) =
-  let eA   = fieldEnergy uA
-      eB   = fieldEnergy uB
-      qPos = seedEdgeFlux ax 0 0 1 0 qAmp
-      qNeg = seedEdgeFlux ax 0 0 1 0 (-qAmp)
-      (inA, inB) =
-        if eA > eB then (uA <+> qNeg, uB <+> qPos)
-        else if eB > eA then (uA <+> qPos, uB <+> qNeg)
-        else (uA, uB)
+  let p0    = ax.fromSiteMSet emptyPureMSet
+      p1    = ax.shiftAdd p0 (ax.axisStep axisX)
+      diff  = unwrapBox (lookupMaxel p0 p1 uA.waveMaxel) - unwrapBox (lookupMaxel p0 p1 uB.waveMaxel)
+      delta = if diff >= qAmp then qAmp
+              else if diff <= (-qAmp) then (-qAmp)
+              else unwrapBox (tdivPosBox (MkBoxInt diff) 2)
+      inA   = if delta == 0 then uA else uA <+> seedEdgeFlux ax 0 0 1 0 (-delta)
+      inB   = if delta == 0 then uB else uB <+> seedEdgeFlux ax 0 0 1 0 delta
       (nA, (yA, sA)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 inA
       (nB, (yB, sB)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 inB
   in if yA + yB == 0 && sA + sB == 0
@@ -842,12 +844,9 @@ rootActivePeelWork : PureMultiset -> Nat
 rootActivePeelWork (MkHMSet b) =
   foldBox (\k, w, acc =>
              let mag = weightMagnitude w
-             in case unpackMetricKey k of
-                  Just _  => acc + mag
-                  Nothing =>
-                    case unpackPaceKey k of
-                      Just _  => acc + mag
-                      Nothing => acc + mag * S (fastPeelWorkHMSet k))
+             in if isJust (unpackMetricKey k) || isJust (unpackPaceKey k)
+                  then acc + mag
+                  else acc + mag * S (fastPeelWorkHMSet k))
           0 b
 
 ||| Model B closed-energy sweep dispatcher over `StepMode` reusing `stepEnergyByMode pureMSetBasis`.

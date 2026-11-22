@@ -899,14 +899,21 @@ record GohSpreadAuditReport where
   gsDenseSkips   : Nat
   gsCoupledE3    : Integer
   gsCoupledE6    : Integer
-  gsRelicFuel2   : Nat
-  gsRelicCyc2    : Nat
-  gsRelicE2      : Integer
-  gsRelicFuel3   : Nat
-  gsRelicCyc3    : Nat
-  gsRelicE3      : Integer
+  gsRelicTrace   : List (Nat, Nat, Integer)
   gsPairEA3      : Integer
   gsPairEB3      : Integer
+  gsPairEA6      : Integer
+  gsPairEB6      : Integer
+
+public export
+freezeSteps :
+  (fuelInt : Integer) ->
+  (steps : Nat) ->
+  (s -> (StreamStep s, Nat, Nat)) ->
+  s ->
+  s
+freezeSteps fuelInt steps stepF s0 =
+  (fst (freezeStateStreamWith 0 0 (MkGohFuel (integerToNat fuelInt)) steps stepF s0)).relicState
 
 public export
 auditCoupledSourceFlow : (Bool, Integer, Integer)
@@ -915,20 +922,19 @@ auditCoupledSourceFlow =
       eSrc0 = MkHMSet $ setBox (natSiteKey (0, 8, 0)) (MkBoxInt 1)
                       $ setBox (natSiteKey (0, 4, 0)) (MkBoxInt 1)
                       $ singletonBox (natSiteKey (0, 0, 0)) (MkBoxInt 1)
-      fuel  = MkGohFuel (integerToNat 10000)
       stepF = stepCoupledSourceFlow coord2Basis 50
-      cRel1 = fst (freezeStateStreamWith 0 0 fuel 1 stepF (neutral, eSrc0))
-      cRel2 = fst (freezeStateStreamWith 0 0 fuel 1 stepF cRel1.relicState)
-      cRel3 = fst (freezeStateStreamWith 0 0 fuel 1 stepF cRel2.relicState)
-      cRel6 = fst (freezeStateStreamWith 0 0 fuel 3 stepF cRel3.relicState)
-      eU1   = fieldEnergy (fst cRel1.relicState)
-      eU2   = fieldEnergy (fst cRel2.relicState)
-      eU3   = fieldEnergy (fst cRel3.relicState)
-      eU6   = fieldEnergy (fst cRel6.relicState)
+      s1    = freezeSteps 10000 1 stepF (neutral, eSrc0)
+      s2    = freezeSteps 10000 1 stepF s1
+      s3    = freezeSteps 10000 1 stepF s2
+      s6    = freezeSteps 10000 3 stepF s3
+      eU1   = fieldEnergy (fst s1)
+      eU2   = fieldEnergy (fst s2)
+      eU3   = fieldEnergy (fst s3)
+      eU6   = fieldEnergy (fst s6)
       ok    = (eU1 > 0) && (eU1 <= 2500) && (eU2 > eU1) && (eU2 <= 5000) &&
-              (eU3 > eU2) && (eU3 <= 7500) && (snd cRel3.relicState == emptyPureMSet) &&
+              (eU3 > eU2) && (eU3 <= 7500) && (snd s3 == emptyPureMSet) &&
               (eU6 <= eU3) && (eU6 > 0) &&
-              (fieldPsiNet (fst cRel6.relicState) + fieldFluxNet (fst cRel6.relicState) == 0)
+              (fieldPsiNet (fst s6) + fieldFluxNet (fst s6) == 0)
   in (ok, eU3, eU6)
 
 ||| One composable cosmological cycle: `eSrc` acts as BOTH `GohFuel` clock AND boundary reservoir
@@ -951,34 +957,39 @@ runRelicCycle qAmp eSrc =
                (rCyc.freezeReason == YieldExhausted || rCyc.freezeReason == StepHorizonReached)
   in (nextR, fuel, rCyc.stepsConsumed, eOut, ok)
 
-||| 3-cycle closed cosmological chain: Cycle 1 -> MSetSupport -> Cycle 2 -> MSetSupport -> Cycle 3.
 public export
-auditRelicFuelChain : (Bool, Nat, Nat, Integer, Nat, Nat, Integer)
+runRelicChain : Nat -> Integer -> PureMultiset -> (Bool, List (Nat, Nat, Integer))
+runRelicChain Z       _    _    = (True, [])
+runRelicChain (S rem) qAmp eSrc =
+  let (nextR, fuel, sw, eOut, ok) = runRelicCycle qAmp eSrc
+      (restOk, restTrace)         = runRelicChain rem qAmp nextR
+  in (ok && restOk, (fuel, sw, eOut) :: restTrace)
+
+||| 5-cycle closed cosmological chain: C1 -> MSetSupport -> C2 -> C3 -> C4 -> C5.
+public export
+auditRelicFuelChain : (Bool, List (Nat, Nat, Integer))
 auditRelicFuelChain =
   let seedPure   = seedBreather pureMSetBasis 4 5 6 8192
       (rCyc1, _) = freezeEnergyStream pureMSetBasis 1 4 canonLagDiv 0 0 (MkGohFuel (integerToNat 600)) 5 seedPure
       supp1      = MSetSupport (packEnergyStateToRoot BoxLeaf rCyc1.relicState)
-      (supp2, fuel2, cyc2N, e2, ok2) = runRelicCycle 50 supp1
-      (_,     fuel3, cyc3N, e3, ok3) = runRelicCycle 50 supp2
-  in (ok2 && ok3, fuel2, cyc2N, e2, fuel3, cyc3N, e3)
+  in runRelicChain 4 50 supp1
 
-||| Active bidirectional two-universe coupling (`U_A <-> U_B`): tests zero-sum equilibration.
+||| Purely local boundary-gradient coupling (`U_A <-> U_B`, zero global oracle): tests t=3 -> t=6 equilibration.
 public export
-auditActiveUniversePair : (Bool, Integer, Integer)
+auditActiveUniversePair : (Bool, Integer, Integer, Integer, Integer)
 auditActiveUniversePair =
-  let uA0  = seedEdgeFlux coord2Basis 0 0 1 0 200
-      uB0  = neutral
-      eA0  = fieldEnergy uA0
-      rel3 = fst (freezeStateStreamWith 0 0 (MkGohFuel (integerToNat 10000)) 3
-                                        (stepCoupledUniversePair coord2Basis 50) (uA0, uB0))
-      (uA3, uB3) = rel3.relicState
-      eA3  = fieldEnergy uA3
-      eB3  = fieldEnergy uB3
-      ok   = (eA3 < eA0) && (eB3 > 0) && (eA3 + eB3 <= eA0) &&
-             (abs (eA3 - eB3) < eA0) &&
-             (fieldPsiNet uA3 + fieldFluxNet uA3 == 0) &&
-             (fieldPsiNet uB3 + fieldFluxNet uB3 == 0)
-  in (ok, eA3, eB3)
+  let uA0        = seedEdgeFlux coord2Basis 0 0 1 0 200
+      eA0        = fieldEnergy uA0
+      stepP      = stepCoupledUniversePair coord2Basis 50
+      (uA3, uB3) = freezeSteps 10000 3 stepP (uA0, neutral)
+      (uA6, uB6) = freezeSteps 10000 3 stepP (uA3, uB3)
+      eA3 = fieldEnergy uA3; eB3 = fieldEnergy uB3
+      eA6 = fieldEnergy uA6; eB6 = fieldEnergy uB6
+      ok  = (eA3 < eA0) && (eB3 > 0) && (eA3 + eB3 <= eA0) &&
+            (eA6 + eB6 <= eA3 + eB3) && (abs (eA6 - eB6) < eA0) &&
+            (fieldPsiNet uA6 + fieldFluxNet uA6 == 0) &&
+            (fieldPsiNet uB6 + fieldFluxNet uB6 == 0)
+  in (ok, eA3, eB3, eA6, eB6)
 
 public export
 auditGohSpreadPolyHMSet : GohSpreadAuditReport
@@ -1030,11 +1041,11 @@ auditGohSpreadPolyHMSet =
       selfTimeOk =
         (rDil.freezeReason == YieldExhausted) && (rDen.freezeReason == YieldExhausted) &&
         (sDil == 0) && (sDen > 800) && (cycDen > cycDil)
-      (coupledOk, eU3, eU6)                                = auditCoupledSourceFlow
-      (relicCycleOk, fuel2, cyc2N, e2, fuel3, cyc3N, e3)   = auditRelicFuelChain
-      (activePairOk, pEA3, pEB3)                           = auditActiveUniversePair
+      (coupledOk, eU3, eU6)                    = auditCoupledSourceFlow
+      (relicCycleOk, relicTrace)               = auditRelicFuelChain
+      (activePairOk, pEA3, pEB3, pEA6, pEB6)   = auditActiveUniversePair
   in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk coupledOk relicCycleOk activePairOk
-                            yFuel10 yUsed10 sUsed10 cycDil cycDen sDen eU3 eU6 fuel2 cyc2N e2 fuel3 cyc3N e3 pEA3 pEB3
+                            yFuel10 yUsed10 sUsed10 cycDil cycDen sDen eU3 eU6 relicTrace pEA3 pEB3 pEA6 pEB6
 
 public export
 armChecks : Integer -> GravityCoreMetrics -> (Bool, Bool, Bool, Bool, Bool)
@@ -1123,11 +1134,10 @@ mkExp6Lines gs (pB1, pB2, pB3) (c1@(a1, b1, d1, e1, f1), c2@(a2, b2, d2, e2, f2)
     show gs.gsDenseCyc ++ " [" ++ show gs.gsDenseSkips ++ " StreamSkips cost 0 GohFuel])"
   , "    - Coupled Two-Multiset Energy Flow (E_src[3x2500=7500] -> U -> closed cooling): ok=" ++ show gs.gsCoupledOk ++
     " (E(U_3)=" ++ show gs.gsCoupledE3 ++ " [E_src=[]], E(U_6)=" ++ show gs.gsCoupledE6 ++ " <= E(U_3), net=0)"
-  , "    - 3-Cycle Self-Seeding Relic Chain (C1 -> MSetSupport -> C2 -> MSetSupport -> C3): ok=" ++ show gs.gsRelicCycleOk ++
-    " (C2[fuel=" ++ show gs.gsRelicFuel2 ++ ",sw=" ++ show gs.gsRelicCyc2 ++ ",E=" ++ show gs.gsRelicE2 ++
-    "] -> C3[fuel=" ++ show gs.gsRelicFuel3 ++ ",sw=" ++ show gs.gsRelicCyc3 ++ ",E=" ++ show gs.gsRelicE3 ++ "], net=0)"
-  , "    - Active Bidirectional Coupling (U_A[E0=40000] <-> U_B[E0=0], 3 sweeps): ok=" ++ show gs.gsActivePairOk ++
-    " (E(U_A3)=" ++ show gs.gsPairEA3 ++ ", E(U_B3)=" ++ show gs.gsPairEB3 ++ ", netA=netB=0)"
+  , "    - 5-Cycle Self-Seeding Relic Chain (C1 -> MSetSupport -> C2..C5 [fuel,sw,E]): ok=" ++ show gs.gsRelicCycleOk ++
+    " " ++ show gs.gsRelicTrace ++ ", net=0"
+  , "    - Local Boundary-Gradient Coupling (U_A[E0=40000] <-> U_B[E0=0], zero global oracle): ok=" ++ show gs.gsActivePairOk ++
+    " (t3: [" ++ show gs.gsPairEA3 ++ "," ++ show gs.gsPairEB3 ++ "] -> t6: [" ++ show gs.gsPairEA6 ++ "," ++ show gs.gsPairEB6 ++ "], netA=netB=0)"
   , "  * 6-B Factorization Comparison of k=4 Sub-Ticks: (4,1) ModePaced vs (1,4) ModeSpread vs (2,2) ModeBalanced:"
   , showArmSummary "Arm B1 (ModePaced    4x1)" pB1 wBr1 wVac1 c1
   , showArmSummary "Arm B2 (ModeSpread   1x4)" pB2 wBr2 wVac2 c2
