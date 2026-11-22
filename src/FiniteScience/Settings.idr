@@ -64,18 +64,20 @@ heavyMassSettingText : String
 heavyMassSettingText = "{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}"
 
 --------------------------------------------------------------------------------
--- OBSERVER TIME HORIZON PRESETS (`Observer = Stage1.Basis.Time`)
+-- OBSERVER TIME HORIZON PRESETS (`Observer = Stage1.Basis.Time`, `selfFuelOfHMSet`)
 --------------------------------------------------------------------------------
 
-||| Coarse observation horizon: inspects crossing quanta directly (`RetroTime 0`) under `BoundedTime 60`.
+||| Coarse observation horizon: inspects crossing quanta directly (`RetroTime 0`)
+||| under the intrinsic `BoundedTime` step budget derived from `selfFuelOfHMSet (spreadZHMSet 10)`.
 public export
 coarseHorizonSpec : HorizonSpec
-coarseHorizonSpec = MkHorizonSpec (BoundedTime 60) 0 60
+coarseHorizonSpec = mkPolyFuelHorizonSpec 10 0
 
-||| Deep UV observation horizon: zooms 2 levels deeper (`RetroTime 2`) per photon under `BoundedTime 60`.
+||| Deep UV observation horizon: zooms 2 levels deeper (`RetroTime 2`) per quantum
+||| under the intrinsic `BoundedTime` step budget derived from `selfFuelOfHMSet (spreadZHMSet 10)`.
 public export
 deepUVHorizonSpec : HorizonSpec
-deepUVHorizonSpec = MkHorizonSpec (BoundedTime 60) 2 60
+deepUVHorizonSpec = mkPolyFuelHorizonSpec 10 2
 
 --------------------------------------------------------------------------------
 -- COMPILE-TIME QTT 0 PARITY & DECODING PROOFS

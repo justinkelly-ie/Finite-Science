@@ -11,6 +11,7 @@ import Stage1.Basis.Space
 import Stage1.Basis.SpaceStream
 import Stage1.Basis.Time
 import Stage1.Lenses
+import Stage1.ProjectiveRotation
 import Stage1.MultisetCodec
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -154,17 +155,17 @@ driveUnobservedUnified Z Z u = App1.do
   c <- closeHereditary0D u
   App1.pure (closeOutcomeText c)
 driveUnobservedUnified Z (S urem) u = App1.do
-  u1 <- stepHereditaryByMode ModeUnified u
+  u1 <- stepHereditaryByMode ModeSpread u
   driveUnobservedUnified Z urem u1
 driveUnobservedUnified (S wrem) Z u = App1.do
-  u1 <- stepHereditaryByMode ModeUnified u
+  u1 <- stepHereditaryByMode ModeSpread u
   driveUnobservedUnified wrem Z u1
 driveUnobservedUnified (S Z) live@(S _) u = App1.do
-  u1 <- stepHereditaryByMode ModeUnified u
+  u1 <- stepHereditaryByMode ModeSpread u
   uw <- injectHereditaryField (seedSparseWavepacket pureMSetBasis 0 512) u1
   driveUnobservedUnified Z live uw
 driveUnobservedUnified (S wrem@(S _)) live@(S _) u = App1.do
-  u1 <- stepHereditaryByMode ModeUnified u
+  u1 <- stepHereditaryByMode ModeSpread u
   driveUnobservedUnified wrem live u1
 
 export
@@ -180,7 +181,7 @@ driveObservedZoomedTest Z u snapsOk = App1.do
   c <- closeHereditary0D u
   App1.pure (closeOutcomeText c, snapsOk)
 driveObservedZoomedTest (S rem) u snapsOk = App1.do
-  u1   <- stepHereditaryByMode ModeUnified u
+  u1   <- stepHereditaryByMode ModeSpread u
   obsS <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 2) zeroShift (RetroTime 2) (\m => m /= emptyPureMSet)) u1
   let MkPureObs u2 sOk _ = obsS
   obsT <- observeHereditaryPure (zoomedExternalLens (\m => m) zeroShift (blackShift 1) (BoundedTime 5) (\m => m /= emptyPureMSet)) u2
@@ -195,7 +196,7 @@ driveObservedZoomedWarmup Z u = App1.do
   uw <- injectHereditaryField (seedSparseWavepacket pureMSetBasis 0 512) u
   driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
-  u1   <- stepHereditaryByMode ModeUnified u
+  u1   <- stepHereditaryByMode ModeSpread u
   obsW <- observeHereditaryPure (zoomedExternalLens (\m => m) (blackShift 1) (redShift 1) (RetroTime 1) (\m => m /= emptyPureMSet)) u1
   let MkPureObs u2 _ _ = obsW
   driveObservedZoomedWarmup rem u2
@@ -279,7 +280,7 @@ rootFieldOf r = (unpackRootToSparseField r).fieldData
 export
 flatEndAudit : (1 u : FlatBlackBox) -> App1 {u = Any} e (EndAudit Coord2)
 flatEndAudit u = App1.do
-  obs <- observeFlatDirect (\s => s.snapField) u
+  obs <- observeFlatDirect id u
   let MkPureObs u1 sf _ = obs
   closed <- closeFlat0D u1
   let netW = abs (fieldPsiNet sf + fieldFluxNet sf) + abs (closeNetSum closed)
@@ -312,8 +313,8 @@ flatLab =
     bootFlat0D
     injectFlatField
     stepFlatByMode
-    (observeFlatDirect (\s => fieldEnergy s.snapField))
-    (observeFlatDirect (\s => MkStepTel (fieldEnergy s.snapField) (fieldActiveWork s.snapField) True))
+    (observeFlatDirect fieldEnergy)
+    (observeFlatDirect (\sf => MkStepTel (fieldEnergy sf) (fieldActiveWork sf) True))
     flatEndAudit
 
 export
@@ -717,8 +718,8 @@ runModeParityCheck mode steps = App1.do
 export
 runParitySuite : App1 {u = Any} e ParitySuiteReport
 runParitySuite = App1.do
-  u <- runModeParityCheck ModeUnified 4
-  p <- runModeParityCheck ModePaced   4
+  u <- runModeParityCheck ModeSpread 4
+  p <- runModeParityCheck ModePaced  4
   App1.pure (MkParitySuiteReport u p)
 
 public export
@@ -731,7 +732,7 @@ public export
 mkExp4and5Lines : GravityCoreMetrics -> ParitySuiteReport -> Bool -> Bool -> List String
 mkExp4and5Lines cA par okA pass =
   [ "----------------------------------------------------------------"
-  , "[Experiment 4] Half-Stored Maxel Metric, 2-Body, Light-Cone & 4F (Canonical Model A)"
+  , "[Experiment 4] Half-Stored Maxel Metric, 2-Body, Light-Cone & 4F (Canonical ModeSpread)"
   , "  * 4A Self-Trapping (+4096/-4096 at (0,0)/(0,1), 20 sweeps):"
   , "    - Linear Dispersion  (A) -> " ++ show cA.gcLin
   , "    - Self-Trapped Core  (A) -> " ++ show cA.gcTrap
@@ -745,12 +746,12 @@ mkExp4and5Lines cA par okA pass =
   , "    - Light Cone Check   (A) -> " ++ show cA.gcLightCone
   , "  * 4F Half-Stored Maxel Anisotropic Stress & Quadrupole Polarization:"
   , "    - Anisotropic Stress (A) -> " ++ show cA.gcAniso
-  , "  * Hypothesis Check (Canonical Model A 4A/4B/4D/4E/4F): okA=" ++ show okA
+  , "  * Hypothesis Check (Canonical ModeSpread 4A/4B/4D/4E/4F): okA=" ++ show okA
   , "----------------------------------------------------------------"
   , "[Experiment 5] Model A (Canonical) vs Model B Parity Matrix (4-Sweep)"
   , "  * Multi-Mode Model A == Model B Parity (4 sweeps, anti/sym/zero-sum):"
-  , modeLine "ModeUnified" par.psUni
-  , modeLine "ModePaced  " par.psPac
+  , modeLine "ModeSpread" par.psUni
+  , modeLine "ModePaced " par.psPac
   , "  * Canonical Model A Core Summary: net=" ++ show cA.gcNetSum ++
     ", dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++
     ", dX_4F=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++
@@ -778,13 +779,13 @@ buildExp4and5Report cA par =
   in (pass, mkExp4and5Lines cA par okA pass)
 
 export
-runExperiment4and5 : Has [Console] e => App e (Bool, List String)
+runExperiment4and5 : Has [Console] e => App e (Bool, List String, GravityCoreMetrics)
 runExperiment4and5 = do
-  cA  <- app1 (runLabCoreSuite flatLab ModeUnified)
+  cA  <- app1 (runLabCoreSuite flatLab ModeSpread)
   par <- app1 runParitySuite
   let res = buildExp4and5Report cA par
   traverse_ putStrLn (snd res)
-  pure res
+  pure (fst res, snd res, cA)
 
 --------------------------------------------------------------------------------
 -- EXPERIMENT 6: GATE 1 `ModePaced` STREAMING CORE (`k=4, fixed mSub=28`)
@@ -875,6 +876,7 @@ record GohSpreadAuditReport where
   gsPrimeRootOk : Bool
   gsFibOk       : Bool
   gsComposeOk   : Bool
+  gsHomogPythOk : Bool
   gsFreezeOk    : Bool
   gsFuelSteps   : Nat
   gsYieldsUsed  : Nat
@@ -920,6 +922,17 @@ auditGohSpreadPolyHMSet =
         (evalPolyHMSetAt z2 z3 == z6) &&
         (evalPolyHMSetAt z3 z2 == z6) &&
         (evalPolyHMSetAt z2 z2 == z4)
+      (_, b1, r1) = pythPowerTriple 1 (MkBoxInt 28)
+      (_, b2, _)  = pythPowerTriple 2 (MkBoxInt 28)
+      (_, b3, _)  = pythPowerTriple 3 (MkBoxInt 28)
+      (_, b4, _)  = pythPowerTriple 4 (MkBoxInt 28)
+      num28       = 4 * b1 * b1
+      den28       = r1 * r1
+      homogOk =
+        (evalHomogPolyHMSet 1 z1 num28 den28 == 4 * b1 * b1) &&
+        (evalHomogPolyHMSet 2 z2 num28 den28 == 4 * b2 * b2) &&
+        (evalHomogPolyHMSet 3 z3 num28 den28 == 4 * b3 * b3) &&
+        (evalHomogPolyHMSet 4 z4 num28 den28 == 4 * b4 * b4)
       (relicZ6, yFuelSteps, yUsed, sUsed, fReason) = freezeGohSpreadStream 6
       frzOk =
         (relicZ6 == z6) &&
@@ -927,7 +940,7 @@ auditGohSpreadPolyHMSet =
         (sUsed == 6) &&
         (yUsed <= yFuelSteps) &&
         (fReason == NaturalCompletion)
-  in MkGohSpreadAuditReport factOk rootOk fibOk compOk frzOk yFuelSteps yUsed sUsed
+  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk yFuelSteps yUsed sUsed
 
 public export
 showArmSummary : String -> GravityCoreMetrics -> PacedWorkStats -> PacedWorkStats -> Bool -> Bool -> Bool -> Bool -> Bool -> String
@@ -966,6 +979,7 @@ mkExp6Lines gs pB1 pB2 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2
   , "    - Prime Roots & von Mangoldt Spectrum (Psi_3(3)=0, Psi_4(2)=0, Psi_6(1)=0, Psi_p(0)=p^2): " ++ show gs.gsPrimeRootOk
   , "    - Fibonacci Specialization Z_n(5) == (-1)^(n-1) * 5 * F_n^2 (n=1..6): " ++ show gs.gsFibOk
   , "    - Semigroup Composition Z_2(Z_3) == Z_3(Z_2) == Z_6 & Z_2(Z_2) == Z_4: " ++ show gs.gsComposeOk
+  , "    - Exact Pythagorean Power Homogenization R_1^(2y) Z_y(4 B_1^2 / R_1^2) == 4 B_y^2 (m=28, y=1..4): " ++ show gs.gsHomogPythOk
   , "    - Support -> selfFuelOfHMSet -> freezeTimeStreamWith(Z_6): ok=" ++ show gs.gsFreezeOk ++
     " (yieldFuel=" ++ show gs.gsFuelSteps ++ ", yields=" ++ show gs.gsYieldsUsed ++
     ", steps=" ++ show gs.gsStepsUsed ++ ", skips=2 at d=4,5 cost 0 GohFuel)"
@@ -1004,7 +1018,7 @@ public export
 buildExp6Report : GravityCoreMetrics -> GravityCoreMetrics -> Emergent3DReport -> (Bool, List String)
 buildExp6Report pB1 pB2 e3D =
   let gs           = auditGohSpreadPolyHMSet
-      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsFreezeOk
+      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk
       seed4A       = seedSparseBreather coord2Basis 0 0 1 4096
       seedBr       = seedSparseBreather coord2Basis 4 5 6 8192
       seedVac      = seedSparseWavepacketAt coord2Basis 0 0 512
@@ -1049,10 +1063,9 @@ buildExp6Report pB1 pB2 e3D =
                         ok3D gohOk energyMonoOk quiescenceOk pass)
 
 export
-runExperiment6Paced : Has [Console] e => App e (Bool, List String)
-runExperiment6Paced = do
+runExperiment6Paced : Has [Console] e => GravityCoreMetrics -> App e (Bool, List String)
+runExperiment6Paced pB2 = do
   pB1 <- app1 (runLabCoreSuite flatLab ModePaced)
-  pB2 <- app1 (runLabCoreSuite flatLab ModeSpread)
   e3D <- app1 runEmergent3DGravity
   let res = buildExp6Report pB1 pB2 e3D
   traverse_ putStrLn (snd res)

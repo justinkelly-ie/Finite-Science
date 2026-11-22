@@ -20,9 +20,9 @@ runPureSuite = do
   traverse_ putStrLn banner
   (p1, l1) <- runExperiment1
   (p2, l2) <- runExperiment2
-  (p3, l3) <- runExperiment3
-  (p4, l4) <- runExperiment4and5
-  (p6, l6) <- runExperiment6Paced
+  (p3, l3)     <- runExperiment3
+  (p4, l4, cA) <- runExperiment4and5
+  (p6, l6)     <- runExperiment6Paced cA
   let ok = p1 && p2 && p3 && p4 && p6
   let footer = [ "================================================================"
                , if ok

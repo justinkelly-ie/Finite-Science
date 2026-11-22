@@ -11,6 +11,7 @@ import Stage1.Basis.Space
 import Stage1.Basis.Time
 import Stage1.Basis.SpaceStream
 import Stage1.Views
+import Stage1.ProjectiveRotation
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 
@@ -101,29 +102,6 @@ streamMergeWorkHMSet a b =
       rawL1  = rA.residualL1 + rB.residualL1
       diff   = if rawL1 >= rM.residualL1 then minus rawL1 rM.residualL1 else 0
   in (merged, MkStreamWorkReport (rA.workSteps + rB.workSteps) (half diff) rM.residualL1)
-
-public export
-peelSpace3WorkLoop : Nat -> Space 3 -> Nat
-peelSpace3WorkLoop Z _ = 0
-peelSpace3WorkLoop (S fuel) tree =
-  case extractMinBox tree of
-    Nothing => 0
-    Just (site, w, tailTree) =>
-      case peelQuantum w of
-        Nothing => peelSpace3WorkLoop fuel tailTree
-        Just qW =>
-          let remW     = either id id qW
-              nextTree = if isZero remW then tailTree else setBox site remW tailTree
-          in S (peelSpace3WorkLoop fuel nextTree)
-
-||| Evaluates actual streaming quantum-peeling work directly over a flat `Space 3` (`Voxel`).
-public export
-streamPeelWorkSpace3 : Space 3 -> StreamWorkReport
-streamPeelWorkSpace3 BoxLeaf = MkStreamWorkReport 0 0 0
-streamPeelWorkSpace3 tree =
-  let resL1 = integerToNat (multiplicityL1 tree)
-      steps = peelSpace3WorkLoop (S resL1) tree
-  in MkStreamWorkReport steps 0 resL1
 
 ||| Pure fuel-bounded horizon evaluator shared externally across both models.
 public export
@@ -463,6 +441,25 @@ evalPolyHMSetAt (MkHMSet b) x =
           (fromInteger 0)
           b
 
+||| Evaluates the degree-`deg` homogenization `den^deg * P(num / den)` of a `PureMultiset` polynomial `P`,
+||| connecting rational spread evaluation `Z_y(4 * B_1^2 / R_1^2)` to integer Pythagorean powers `4 * B_y^2`.
+public export
+evalHomogPolyHMSet : (deg : Nat) -> PureMultiset -> (num, den : Integer) -> Integer
+evalHomogPolyHMSet deg (MkHMSet b) num den =
+  foldBox (\k, (MkBoxInt c), acc =>
+             let d = boxToNat (originMultiplicity k)
+             in acc + c * powNatNum num d * powNatNum den (minus deg d))
+          0
+          b
+
+||| Derives an observer `HorizonSpec` intrinsically from `selfFuelOfHMSet (spreadZHMSet polyOrder)`
+||| (zero arbitrary hardcoded budget constant).
+public export
+mkPolyFuelHorizonSpec : (polyOrder, retroDepth : Nat) -> HorizonSpec
+mkPolyFuelHorizonSpec polyOrder retroDepth =
+  let (_, stepBudget) = selfFuelOfHMSet (spreadZHMSet polyOrder)
+  in MkHorizonSpec (BoundedTime stepBudget) retroDepth stepBudget
+
 ||| Streams irreducible Cigler-Herbig spread polynomial factors `Psi_d(x)` across ticks `d = 1..n`:
 ||| - `d | n` : emits `StreamYield (gohPsiFactor d)` (consumes 1 `GohFuel` + 1 `stepBudget`)
 ||| - `d !| n`: emits `StreamSkip` (consumes 0 `GohFuel` + 1 `stepBudget`)
@@ -601,3 +598,17 @@ public export
   evalPolyHMSetAt (FiniteScience.StreamWork.spreadZHMSet 2) (FiniteScience.StreamWork.spreadZHMSet 3)
   = FiniteScience.StreamWork.spreadZHMSet 6
 prfSpreadSemigroupCompose23 = Refl
+
+public export
+0 prfPythPowerMatchesSpreadZ28 :
+  (let (_, b1, r1) = Stage1.ProjectiveRotation.pythPowerTriple 1 (MkBoxInt 28)
+       (_, b2, _)  = Stage1.ProjectiveRotation.pythPowerTriple 2 (MkBoxInt 28)
+       (_, b3, _)  = Stage1.ProjectiveRotation.pythPowerTriple 3 (MkBoxInt 28)
+       (_, b4, _)  = Stage1.ProjectiveRotation.pythPowerTriple 4 (MkBoxInt 28)
+       num         = 4 * b1 * b1
+       den         = r1 * r1
+   in (evalHomogPolyHMSet 1 (FiniteScience.StreamWork.spreadZHMSet 1) num den == 4 * b1 * b1) &&
+      (evalHomogPolyHMSet 2 (FiniteScience.StreamWork.spreadZHMSet 2) num den == 4 * b2 * b2) &&
+      (evalHomogPolyHMSet 3 (FiniteScience.StreamWork.spreadZHMSet 3) num den == 4 * b3 * b3) &&
+      (evalHomogPolyHMSet 4 (FiniteScience.StreamWork.spreadZHMSet 4) num den == 4 * b4 * b4)) = True
+prfPythPowerMatchesSpreadZ28 = Refl

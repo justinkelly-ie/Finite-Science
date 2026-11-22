@@ -19,9 +19,9 @@ import FiniteScience.Settings
 %default total
 
 --------------------------------------------------------------------------------
--- 1. MODEL A: CLOSED OPAQUE 0D SPARSE FIELD + MATTER COMPUTE (`App1`, `NoThrow`)
+-- 1. MODEL A: CLOSED OPAQUE 0D SPARSE FIELD COMPUTE (`App1`, `NoThrow`)
+--    - Holds ONLY ONE `FlatField = SparseField Coord2` (zero sidecar fields).
 --    - Evolves on unbounded `Coord2 = (SignedCoord, SignedCoord)` (zero walls).
---    - Zero observer parameters, zero zoom mutations, zero mirror trash-can keys.
 --------------------------------------------------------------------------------
 
 public export
@@ -30,14 +30,7 @@ FlatField = SparseField Coord2
 
 export
 data FlatBlackBox : Type where
-  MkFlatBox : (matter : Space 3) -> (field : FlatField) -> FlatBlackBox
-
-||| Passive read-only snapshot projected by `observeFlatDirect` / `observeFlatPure`.
-public export
-record FlatSnapshot where
-  constructor MkFlatSnapshot
-  snapMatter : Space 3
-  snapField  : FlatField
+  MkFlatBox : (field : FlatField) -> FlatBlackBox
 
 --------------------------------------------------------------------------------
 -- 2. CLOSED LINEAR `App1` COMPUTE & NON-PERTURBING `PureObservation` TAPS
@@ -46,20 +39,20 @@ record FlatSnapshot where
 ||| Boots Model A cleanly from the 0D vacuum root `[]`.
 export
 bootFlat0D : App1 e FlatBlackBox
-bootFlat0D = App1.pure1 (MkFlatBox emptyMSet emptySparseField)
+bootFlat0D = App1.pure1 (MkFlatBox emptySparseField)
 
-||| Splits a balanced pair `+weight` at `posA` and `-weight` at `posB` inside `Space 3`.
+||| Splits a balanced dipole `+weight` at `posA` and `-weight` at `posB` directly inside `FlatField`.
 export
 splitFlatFromVacuum :
   (posA, posB : (Nat, Nat, Nat)) ->
   (weight     : BoxInt) ->
   (1 u        : FlatBlackBox) ->
   App1 e FlatBlackBox
-splitFlatFromVacuum (x1, y1, z1) (x2, y2, z2) w (MkFlatBox matter field) =
-  let pairA = singletonMSet (mkVoxelSite x1 y1 z1) w
-      pairB = singletonMSet (mkVoxelSite x2 y2 z2) (negWeight w)
-      nxtM  = addMSet matter (addMSet pairA pairB)
-  in App1.pure1 (MkFlatBox nxtM field)
+splitFlatFromVacuum (x1, y1, _) (x2, y2, _) (MkBoxInt w) (MkFlatBox field) =
+  let pA    = mkCoord2D coord2Basis (natToInteger x1) (natToInteger y1)
+      pB    = mkCoord2D coord2Basis (natToInteger x2) (natToInteger y2)
+      delta = seedSparseDipoleSites pA pB w
+  in App1.pure1 (MkFlatBox (addSparseField field delta))
 
 ||| Superposes an arbitrary balanced zero-sum `FlatField` directly into Model A's sparse field.
 export
@@ -67,8 +60,8 @@ injectFlatField :
   FlatField ->
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
-injectFlatField delta (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (addSparseField field delta))
+injectFlatField delta (MkFlatBox field) =
+  App1.pure1 (MkFlatBox (addSparseField field delta))
 
 ||| Pure closed single-pass `StepMode` dispatcher on `FlatBlackBox`.
 export
@@ -76,41 +69,40 @@ stepFlatByMode :
   StepMode ->
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
-stepFlatByMode mode (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseByMode coord2Basis mode field))
+stepFlatByMode mode (MkFlatBox field) =
+  App1.pure1 (MkFlatBox (stepSparseByMode coord2Basis mode field))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export
 observeFlatDirect :
-  (FlatSnapshot -> out) ->
+  (FlatField -> out) ->
   (1 u : FlatBlackBox) ->
   App1 e (PureObservation u out)
-observeFlatDirect proj (MkFlatBox matter field) =
-  let val = proj (MkFlatSnapshot matter field)
-  in App1.pure1 (MkPureObs (MkFlatBox matter field) val Refl)
+observeFlatDirect proj (MkFlatBox field) =
+  let val = proj field
+  in App1.pure1 (MkFlatBox field `MkPureObs` val $ Refl)
 
 ||| Non-perturbing Space/Time zoomed `ExternalLens` observation on `FlatBlackBox` (`0 same : uOut = uIn`).
 export
 observeFlatPure :
-  ExternalLens FlatSnapshot out ->
+  ExternalLens FlatField out ->
   (1 u : FlatBlackBox) ->
   App1 e (PureObservation u out)
-observeFlatPure lens (MkFlatBox matter field) =
-  let val = applyExternalLens lens (MkFlatSnapshot matter field)
-  in App1.pure1 (MkPureObs (MkFlatBox matter field) val Refl)
+observeFlatPure lens (MkFlatBox field) =
+  let val = applyExternalLens lens field
+  in App1.pure1 (MkPureObs (MkFlatBox field) val Refl)
 
 ||| Consumes the linear `FlatBlackBox` once (`One -> Any`), emitting final boundary outcome.
 export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
-closeFlat0D (MkFlatBox matter field) =
-  if matter == emptyMSet && isEmptyMaxel field.waveMaxel &&
+closeFlat0D (MkFlatBox field) =
+  if isEmptyMaxel field.waveMaxel &&
      isEmptyMaxel field.metricMaxel && isEmptyMaxel field.paceMaxel
     then App1.pure CleanVacuumCollapse
-    else let fWork = fieldActiveWork field
-             work  = integerToNat (multiplicityL1 matter) + fWork
-             net   = multiplicitySignedSum matter + fieldPsiNet field + fieldFluxNet field
-             stT   = StaticTime 0 (cast work)
-         in App1.pure (FrozenAtHorizon stT ("FlatSparse(" ++ show fWork ++ " active)") work net)
+    else let work = fieldActiveWork field
+             net  = fieldPsiNet field + fieldFluxNet field
+             stT  = StaticTime 0 (cast work)
+         in App1.pure (FrozenAtHorizon stT ("FlatSparse(" ++ show work ++ " active)") work net)
 
 --------------------------------------------------------------------------------
 -- 3. OUTER `App` BOUNDARY GUARDS & EXTERNAL HORIZON PROBE (`Has [Exception UniverseErr]`)
@@ -140,10 +132,9 @@ runFlatHorizonProbe spec = do
     u0 <- bootFlat0D
     u1 <- splitFlatFromVacuum (5, 0, 0) (30, 30, 0) (intToBoxInt 14) u0
     obs <- observeFlatDirect
-             (\snap =>
-                let wSite        = lookupMSet (mkVoxelSite 5 0 0) snap.snapMatter
-                    single       = singletonMSet (mkVoxelSite 5 0 0) wSite
-                    baseWork     = (streamPeelWorkSpace3 single).workSteps
+             (\field =>
+                let p50          = mkCoord2D coord2Basis 5 0
+                    baseWork     = weightMagnitude (lookupMaxel p50 p50 field.waveMaxel)
                     workPerCycle = if baseWork == 0 then 0 else baseWork + 2 * spec.retroDepth
                     (cyc, used, reason) = runBoundedHorizonLoop 20 spec.budgetCap workPerCycle 0 0
                 in MkHorizonObservationReport spec.boundTime spec.retroDepth cyc used reason)
