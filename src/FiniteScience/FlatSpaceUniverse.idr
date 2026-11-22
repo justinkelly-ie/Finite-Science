@@ -20,13 +20,13 @@ import FiniteScience.Settings
 
 --------------------------------------------------------------------------------
 -- 1. MODEL A: CLOSED OPAQUE 0D SPARSE FIELD COMPUTE (`App1`, `NoThrow`)
---    - Holds ONLY ONE `FlatField = SparseField Coord2` (zero sidecar fields).
+--    - Holds ONLY ONE `FlatField = EnergyState Coord2` (zero sidecar fields).
 --    - Evolves on unbounded `Coord2 = (SignedCoord, SignedCoord)` (zero walls).
 --------------------------------------------------------------------------------
 
 public export
 FlatField : Type
-FlatField = SparseField Coord2
+FlatField = EnergyState Coord2
 
 export
 data FlatBlackBox : Type where
@@ -39,7 +39,7 @@ data FlatBlackBox : Type where
 ||| Boots Model A cleanly from the 0D vacuum root `[]`.
 export
 bootFlat0D : App1 e FlatBlackBox
-bootFlat0D = App1.pure1 (MkFlatBox emptySparseField)
+bootFlat0D = App1.pure1 (MkFlatBox emptyEnergyState)
 
 ||| Splits a balanced dipole `+weight` at `posA` and `-weight` at `posB` directly inside `FlatField`.
 export
@@ -51,8 +51,8 @@ splitFlatFromVacuum :
 splitFlatFromVacuum (x1, y1, _) (x2, y2, _) (MkBoxInt w) (MkFlatBox field) =
   let pA    = mkCoord2D coord2Basis (natToInteger x1) (natToInteger y1)
       pB    = mkCoord2D coord2Basis (natToInteger x2) (natToInteger y2)
-      delta = seedSparseDipoleSites pA pB w
-  in App1.pure1 (MkFlatBox (addSparseField field delta))
+      delta = seedDipoleSites pA pB w
+  in App1.pure1 (MkFlatBox (addEnergyState field delta))
 
 ||| Superposes an arbitrary balanced zero-sum `FlatField` directly into Model A's sparse field.
 export
@@ -61,7 +61,7 @@ injectFlatField :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 injectFlatField delta (MkFlatBox field) =
-  App1.pure1 (MkFlatBox (addSparseField field delta))
+  App1.pure1 (MkFlatBox (addEnergyState field delta))
 
 ||| Pure closed single-pass `StepMode` dispatcher on `FlatBlackBox`.
 export
@@ -70,7 +70,7 @@ stepFlatByMode :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatByMode mode (MkFlatBox field) =
-  App1.pure1 (MkFlatBox (stepSparseByMode coord2Basis mode field))
+  App1.pure1 (MkFlatBox (stepEnergyByMode coord2Basis mode field))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export

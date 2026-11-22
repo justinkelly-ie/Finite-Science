@@ -162,7 +162,7 @@ driveUnobservedUnified (S wrem) Z u = App1.do
   driveUnobservedUnified wrem Z u1
 driveUnobservedUnified (S Z) live@(S _) u = App1.do
   u1 <- stepHereditaryByMode ModeSpread u
-  uw <- injectHereditaryField (seedSparseWavepacket pureMSetBasis 0 512) u1
+  uw <- injectHereditaryField (seedWavepacket pureMSetBasis 0 512) u1
   driveUnobservedUnified Z live uw
 driveUnobservedUnified (S wrem@(S _)) live@(S _) u = App1.do
   u1 <- stepHereditaryByMode ModeSpread u
@@ -172,7 +172,7 @@ export
 runHereditaryUnobservedRef : App1 {u = Any} e String
 runHereditaryUnobservedRef = App1.do
   u0 <- bootHereditary0D
-  u1 <- injectHereditaryField (seedSparseBreather pureMSetBasis 4 5 6 8192) u0
+  u1 <- injectHereditaryField (seedBreather pureMSetBasis 4 5 6 8192) u0
   driveUnobservedUnified 3 3 u1
 
 export
@@ -193,7 +193,7 @@ driveObservedZoomedTest (S rem) u snapsOk = App1.do
 export
 driveObservedZoomedWarmup : Nat -> (1 u : HereditaryBlackBox) -> App1 {u = Any} e (String, Bool)
 driveObservedZoomedWarmup Z u = App1.do
-  uw <- injectHereditaryField (seedSparseWavepacket pureMSetBasis 0 512) u
+  uw <- injectHereditaryField (seedWavepacket pureMSetBasis 0 512) u
   driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
   u1   <- stepHereditaryByMode ModeSpread u
@@ -205,7 +205,7 @@ export
 runHereditaryZoomedObservedRef : App1 {u = Any} e (String, Bool)
 runHereditaryZoomedObservedRef = App1.do
   u0 <- bootHereditary0D
-  u1 <- injectHereditaryField (seedSparseBreather pureMSetBasis 4 5 6 8192) u0
+  u1 <- injectHereditaryField (seedBreather pureMSetBasis 4 5 6 8192) u0
   driveObservedZoomedWarmup 3 u1
 
 export
@@ -250,7 +250,7 @@ record StepTel where
 public export
 record EndAudit (k : Type) where
   constructor MkEndAudit
-  eaField  : SparseField k
+  eaField  : EnergyState k
   eaEnergy : Integer
   eaAntiOk : Bool
   eaSymOk  : Bool
@@ -262,7 +262,7 @@ record BlackBoxLab (e : List Error) (box : Type) (k : Type) where
   constructor MkBlackBoxLab
   labBasis    : AxisBasis k
   labBoot     : App1 e box
-  labInject   : SparseField k -> (1 u : box) -> App1 e box
+  labInject   : EnergyState k -> (1 u : box) -> App1 e box
   labStepMode : StepMode -> (1 u : box) -> App1 e box
   labEnergy   : (1 u : box) -> App1 e (PureObservation u Integer)
   labStepTel  : (1 u : box) -> App1 e (PureObservation u StepTel)
@@ -274,8 +274,8 @@ closeNetSum CleanVacuumCollapse       = 0
 closeNetSum (FrozenAtHorizon _ _ _ g) = g
 
 export
-rootFieldOf : PureMultiset -> SparseField PureMultiset
-rootFieldOf r = (unpackRootToSparseField r).fieldData
+rootFieldOf : PureMultiset -> EnergyState PureMultiset
+rootFieldOf r = (unpackRootToEnergyState r).fieldData
 
 export
 flatEndAudit : (1 u : FlatBlackBox) -> App1 {u = Any} e (EndAudit Coord2)
@@ -346,7 +346,7 @@ bootInjectAndRun :
   BlackBoxLab e box k ->
   StepMode ->
   Nat ->
-  SparseField k ->
+  EnergyState k ->
   App1 {u = Any} e (EndAudit k)
 bootInjectAndRun lab mode steps seed = App1.do
   u0 <- lab.labBoot
@@ -381,7 +381,7 @@ runLabSelfTrap :
   App1 {u = Any} e (SelfTrapReport, (Bool, Bool, Bool))
 runLabSelfTrap lab mode = App1.do
   u0 <- lab.labBoot
-  u1 <- lab.labInject (seedSparseBreather lab.labBasis 0 0 1 4096) u0
+  u1 <- lab.labInject (seedBreather lab.labBasis 0 0 1 4096) u0
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, work, balOk) <- driveLabStepsTel lab mode 20 u2 initE 0 True
@@ -395,9 +395,9 @@ runLabWaveAxis :
   (axisT : PureMultiset) ->
   StepMode ->
   Nat ->
-  SparseField k ->
-  SparseField k ->
-  SparseField k ->
+  EnergyState k ->
+  EnergyState k ->
+  EnergyState k ->
   App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
 runLabWaveAxis lab axisT mode steps pktSeed extraBg bgField = App1.do
   u0 <- lab.labBoot
@@ -405,7 +405,7 @@ runLabWaveAxis lab axisT mode steps pktSeed extraBg bgField = App1.do
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, work, balOk) <- driveLabStepsTel lab mode steps u2 initE 0 True
-  let wRep0 = measureSparseBandAxis lab.labBasis axisT (-3) 4 ea.eaField bgField initE ea.eaEnergy maxE work
+  let wRep0 = measureBandAxis lab.labBasis axisT (-3) 4 ea.eaField bgField initE ea.eaEnergy maxE work
       wRep  = { waveNetSum := ea.eaNetSum } wRep0
   App1.pure (wRep, balOk, ea.eaAntiOk, ea.eaSymOk)
 
@@ -415,11 +415,11 @@ runLabWave :
   BlackBoxLab e box k ->
   StepMode ->
   Nat ->
-  SparseField k ->
-  SparseField k ->
+  EnergyState k ->
+  EnergyState k ->
   App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
 runLabWave lab mode steps =
-  runLabWaveAxis lab axisY mode steps (seedSparseWavepacketAt lab.labBasis 0 0 512)
+  runLabWaveAxis lab axisY mode steps (seedWavepacketAt lab.labBasis 0 0 512)
 
 export
 runLabTwoBody :
@@ -429,15 +429,15 @@ runLabTwoBody :
   Bool ->
   App1 {u = Any} e (WavepacketReport, WavepacketReport, Integer, (Bool, Bool, Bool))
 runLabTwoBody lab mode bothPackets = App1.do
-  let seed = seedSparseWavepacketAt lab.labBasis 0 (-3) 2048 <+>
-             (if bothPackets then seedSparseWavepacketAt lab.labBasis 0 3 2048 else neutral)
+  let seed = seedWavepacketAt lab.labBasis 0 (-3) 2048 <+>
+             (if bothPackets then seedWavepacketAt lab.labBasis 0 3 2048 else neutral)
   u0 <- lab.labBoot
   u1 <- lab.labInject seed u0
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, _, balOk) <- driveLabStepsTel lab mode 16 u2 initE 0 True
-  let botRep = measureSparseBandRange lab.labBasis (-100) 0 ea.eaField neutral initE ea.eaEnergy maxE 0
-      topRep = measureSparseBandRange lab.labBasis 1 100 ea.eaField neutral initE ea.eaEnergy maxE 0
+  let botRep = measureBandRange lab.labBasis (-100) 0 ea.eaField neutral initE ea.eaEnergy maxE 0
+      topRep = measureBandRange lab.labBasis 1 100 ea.eaField neutral initE ea.eaEnergy maxE 0
   App1.pure (botRep, topRep, ea.eaNetSum, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
@@ -448,16 +448,16 @@ runLabLightCone :
   (vRep18, tRep18 : WavepacketReport) ->
   App1 {u = Any} e (CausalLightConeReport, Bool, Bool)
 runLabLightCone lab mode vRep18 tRep18 = App1.do
-  let brSeed  = seedSparseBreather lab.labBasis 4 5 6 8192
-      pktSeed = seedSparseWavepacketAt lab.labBasis 0 0 512
+  let brSeed  = seedBreather lab.labBasis 4 5 6 8192
+      pktSeed = seedWavepacketAt lab.labBasis 0 0 512
   eaVac2 <- bootInjectAndRun lab mode 2 pktSeed
   eaBg2  <- bootInjectAndRun lab mode 2 brSeed
   eaBr2  <- bootInjectAndRun lab mode 2 (brSeed <+> pktSeed)
   let exactSl = bandsEqualInBox lab.labBasis (-4) 4 (-3) 3 eaBr2.eaField eaBg2.eaField eaVac2.eaField
       balOk   = eaVac2.eaBalOk && eaBg2.eaBalOk && eaBr2.eaBalOk
       symOk   = eaVac2.eaSymOk && eaBg2.eaSymOk && eaBr2.eaSymOk
-      wVac2   = measureSparseBand lab.labBasis eaVac2.eaField neutral eaVac2.eaEnergy eaVac2.eaEnergy eaVac2.eaEnergy 0
-      wBr2    = measureSparseBand lab.labBasis eaBr2.eaField  eaBg2.eaField eaBr2.eaEnergy  eaBr2.eaEnergy  eaBr2.eaEnergy  0
+      wVac2   = measureBand lab.labBasis eaVac2.eaField neutral eaVac2.eaEnergy eaVac2.eaEnergy eaVac2.eaEnergy 0
+      wBr2    = measureBand lab.labBasis eaBr2.eaField  eaBg2.eaField eaBr2.eaEnergy  eaBr2.eaEnergy  eaBr2.eaEnergy  0
   App1.pure (MkCausalLightConeReport
                exactSl
                wVac2.meanXMilli wBr2.meanXMilli wBr2.poyntingYAccum
@@ -465,11 +465,11 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
              balOk, symOk)
 
 public export
-stressSourceField : Ord k => AxisBasis k -> Bool -> SparseField k
+stressSourceField : Ord k => AxisBasis k -> Bool -> EnergyState k
 stressSourceField ax True =
-  seedSparseEdgeFlux ax 3 5 4 5 8192 <+> seedSparseEdgeFlux ax 4 5 5 5 8192
+  seedEdgeFlux ax 3 5 4 5 8192 <+> seedEdgeFlux ax 4 5 5 5 8192
 stressSourceField ax False =
-  seedSparseEdgeFlux ax 4 4 4 5 8192 <+> seedSparseEdgeFlux ax 4 5 4 6 8192
+  seedEdgeFlux ax 4 4 4 5 8192 <+> seedEdgeFlux ax 4 5 4 6 8192
 
 export
 runLabAnisotropicStress :
@@ -479,8 +479,8 @@ runLabAnisotropicStress :
   App1 {u = Any} e (AnisotropicStressReport, Bool)
 runLabAnisotropicStress lab mode = App1.do
   let ax = lab.labBasis
-  eaQH <- bootInjectAndRun lab mode 12 (seedSparseEdgeFlux ax 0 0 1 0 8192)
-  eaQV <- bootInjectAndRun lab mode 12 (seedSparseEdgeFlux ax 0 0 0 1 8192)
+  eaQH <- bootInjectAndRun lab mode 12 (seedEdgeFlux ax 0 0 1 0 8192)
+  eaQV <- bootInjectAndRun lab mode 12 (seedEdgeFlux ax 0 0 0 1 8192)
   eaBgH <- bootInjectAndRun lab mode 18 (stressSourceField ax True)
   eaBgV <- bootInjectAndRun lab mode 18 (stressSourceField ax False)
   (mH, balPH, antiPH, symPH) <- runLabWave lab mode 18 (stressSourceField ax True)  eaBgH.eaField
@@ -523,8 +523,8 @@ runLabCoreSuite :
   App1 {u = Any} e GravityCoreMetrics
 runLabCoreSuite lab mode = App1.do
   let ax        = lab.labBasis
-      brTopSeed = seedSparseBreather ax 4 5 6 8192
-      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
+      brTopSeed = seedBreather ax 4 5 6 8192
+      brBotSeed = seedBreather ax 4 (-4) (-5) 8192
   (linRep, (antiLin, symLin, balLin))     <- runLabSelfTrap lab ModeLinear
   (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab mode
   eaBgTop <- bootInjectAndRun lab mode 18 brTopSeed
@@ -708,8 +708,8 @@ runModeParityCheck :
   Nat ->
   App1 {u = Any} e ModeParityReport
 runModeParityCheck mode steps = App1.do
-  let brA = seedSparseBreather coord2Basis 4 5 6 8192
-      brB = seedSparseBreather pureMSetBasis 4 5 6 8192
+  let brA = seedBreather coord2Basis 4 5 6 8192
+      brB = seedBreather pureMSetBasis 4 5 6 8192
   eaBgA <- bootInjectAndRun flatLab       mode steps brA
   eaBgB <- bootInjectAndRun hereditaryLab mode steps brB
   resA  <- runLabWave flatLab       mode steps brA eaBgA.eaField
@@ -770,7 +770,7 @@ public export
 buildExp4and5Report : GravityCoreMetrics -> ParitySuiteReport -> (Bool, List String)
 buildExp4and5Report cA par =
   let okA      = gravityCriteriaOk cA
-      seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
+      seedRoot = packEnergyStateToRoot BoxLeaf (seedWavepacket pureMSetBasis 0 512)
       parityOk =
         modeParityAndWorkOk par.psSpr &&
         modeParityAndWorkOk par.psBal &&
@@ -846,7 +846,7 @@ emergent3DCriteriaOk r =
   (r.e3BotZ.waveEnergy <= r.e3BotZ.initEnergy)
 
 export
-collectPacedWork : (Nat, Nat) -> Nat -> SparseField Coord2 -> PacedWorkStats
+collectPacedWork : (Nat, Nat) -> Nat -> EnergyState Coord2 -> PacedWorkStats
 collectPacedWork (oP, iT) steps sf0 =
   let (relic, skips) = freezeEnergyStream coord2Basis oP iT canonLagDiv 0 0 (MkGohFuel (integerToNat 1000000)) steps sf0
   in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.paceMaxel)
@@ -868,8 +868,8 @@ runLab4BQuick : (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, WavepacketRepo
 runLab4BQuick (oP, iT) = App1.do
   let ax        = coord2Basis
       mode      = ModeFactor oP iT
-      brTopSeed = seedSparseBreather ax 4 5 6 8192
-      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
+      brTopSeed = seedBreather ax 4 5 6 8192
+      brBotSeed = seedBreather ax 4 (-4) (-5) 8192
       wBr       = collectPacedWork (oP, iT) 18 brTopSeed
   eaBgTop <- bootInjectAndRun flatLab mode 18 brTopSeed
   eaBgBot <- bootInjectAndRun flatLab mode 18 brBotSeed
@@ -881,19 +881,66 @@ runLab4BQuick (oP, iT) = App1.do
 public export
 record GohSpreadAuditReport where
   constructor MkGohSpreadAuditReport
-  gsFactOk      : Bool
-  gsPrimeRootOk : Bool
-  gsFibOk       : Bool
-  gsComposeOk   : Bool
-  gsHomogPythOk : Bool
-  gsFreezeOk    : Bool
-  gsSelfTimeOk  : Bool
-  gsFuelSteps10 : Nat
-  gsYields10    : Nat
-  gsSteps10     : Nat
-  gsDiluteCyc   : Nat
-  gsDenseCyc    : Nat
-  gsDenseSkips  : Nat
+  gsFactOk       : Bool
+  gsPrimeRootOk  : Bool
+  gsFibOk        : Bool
+  gsComposeOk    : Bool
+  gsHomogPythOk  : Bool
+  gsFreezeOk     : Bool
+  gsSelfTimeOk   : Bool
+  gsCoupledOk    : Bool
+  gsRelicCycleOk : Bool
+  gsFuelSteps10  : Nat
+  gsYields10     : Nat
+  gsSteps10      : Nat
+  gsDiluteCyc    : Nat
+  gsDenseCyc     : Nat
+  gsDenseSkips   : Nat
+  gsCoupledE3    : Integer
+  gsCoupledE6    : Integer
+  gsRelicFuel2   : Nat
+  gsRelicCyc2    : Nat
+
+public export
+auditCoupledSourceFlow : (Bool, Integer, Integer)
+auditCoupledSourceFlow =
+  let eSrc0 : PureMultiset
+      eSrc0 = MkHMSet $ setBox (natSiteKey (0, 8, 0)) (MkBoxInt 1)
+                      $ setBox (natSiteKey (0, 4, 0)) (MkBoxInt 1)
+                      $ singletonBox (natSiteKey (0, 0, 0)) (MkBoxInt 1)
+      fuel  = MkGohFuel (integerToNat 10000)
+      stepF = stepCoupledSourceFlow 50
+      cRel1 = fst (freezeStateStreamWith 0 0 fuel 1 stepF (emptyEnergyState, eSrc0))
+      cRel2 = fst (freezeStateStreamWith 0 0 fuel 1 stepF cRel1.relicState)
+      cRel3 = fst (freezeStateStreamWith 0 0 fuel 1 stepF cRel2.relicState)
+      cRel6 = fst (freezeStateStreamWith 0 0 fuel 3 stepF cRel3.relicState)
+      eU1 = fieldEnergy (fst cRel1.relicState)
+      eU2 = fieldEnergy (fst cRel2.relicState)
+      eU3 = fieldEnergy (fst cRel3.relicState)
+      eU6 = fieldEnergy (fst cRel6.relicState)
+      ok  = (eU1 > 0) && (eU1 <= 2500) &&
+            (eU2 > eU1) && (eU2 <= 5000) &&
+            (eU3 > eU2) && (eU3 <= 7500) &&
+            (snd cRel3.relicState == emptyPureMSet) &&
+            (eU6 <= eU3) && (eU6 > 0) &&
+            (fieldPsiNet (fst cRel6.relicState) + fieldFluxNet (fst cRel6.relicState) == 0)
+  in (ok, eU3, eU6)
+
+public export
+auditRelicFuelCycle : EnergyState Coord2 -> (Bool, Nat, Nat)
+auditRelicFuelCycle seedDense =
+  let seedPure = seedBreather pureMSetBasis 4 5 6 8192
+      (rCyc1, _) = freezeEnergyStream pureMSetBasis 1 4 canonLagDiv 0 0 (MkGohFuel (integerToNat 600)) 5 seedPure
+      rootRelic1 = packEnergyStateToRoot BoxLeaf rCyc1.relicState
+      suppBit1   = supportHMSet rootRelic1
+      (MkAnyGohFuel _ yFuelBit2, sBudBit2) = selfFuelOfHMSet suppBit1
+      fuelBit2   = gohSteps yFuelBit2
+      (rCyc2, _) = freezeEnergyStream coord2Basis 1 4 canonLagDiv 0 0 (MkGohFuel (fuelBit2 * 10)) sBudBit2 seedDense
+      ok = (fuelBit2 > 0) &&
+           (sBudBit2 > 0) &&
+           (rCyc2.stepsConsumed > 0) &&
+           (rCyc2.freezeReason == YieldExhausted)
+  in (ok, fuelBit2, rCyc2.stepsConsumed)
 
 public export
 auditGohSpreadPolyHMSet : GohSpreadAuditReport
@@ -971,7 +1018,7 @@ auditGohSpreadPolyHMSet =
         (relicZ10 == z10) && (yUsed10 == 4) && (sUsed10 == 10) && (yUsed10 <= yFuel10) && (fReason10 == NaturalCompletion)
       (MkAnyGohFuel _ yFuel12, _) = selfFuelOfHMSet z12
       linkYieldBudget             = gohSteps yFuel12 * 40
-      seedDense                   = seedSparseBreather coord2Basis 4 5 6 8192
+      seedDense                   = seedBreather coord2Basis 4 5 6 8192
       (rDil, sDil)                = freezeEnergyStream coord2Basis 4 1 0           0 linkYieldBudget (MkGohFuel linkYieldBudget) 25 seedDense
       (rDen, sDen)                = freezeEnergyStream coord2Basis 4 1 canonLagDiv 0 linkYieldBudget (MkGohFuel linkYieldBudget) 25 seedDense
       cycDil                      = rDil.stepsConsumed
@@ -982,7 +1029,10 @@ auditGohSpreadPolyHMSet =
         (sDil == 0) &&
         (sDen > 800) &&
         (cycDen > cycDil)
-  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk yFuel10 yUsed10 sUsed10 cycDil cycDen sDen
+      (coupledOk, eU3, eU6)            = auditCoupledSourceFlow
+      (relicCycleOk, fuelBit2, cyc2N)  = auditRelicFuelCycle seedDense
+  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk coupledOk relicCycleOk
+                            yFuel10 yUsed10 sUsed10 cycDil cycDen sDen eU3 eU6 fuelBit2 cyc2N
 
 public export
 showArmSummary : String -> GravityCoreMetrics -> PacedWorkStats -> PacedWorkStats -> Bool -> Bool -> Bool -> Bool -> Bool -> String
@@ -1056,6 +1106,10 @@ mkExp6Lines gs pB1 pB2 pB3 z23 z32 e3D w4A wBr1 wVac1 w4B w4D wBr2 wVac2 wBr3 wV
   , "    - Live GohFuel Time Dilation (budget=1640 from Z_12): ok=" ++ show gs.gsSelfTimeOk ++
     " (unpaced sweeps=" ++ show gs.gsDiluteCyc ++ " [0 skips] vs self-paced breather sweeps=" ++
     show gs.gsDenseCyc ++ " [" ++ show gs.gsDenseSkips ++ " StreamSkips cost 0 GohFuel])"
+  , "    - Coupled Two-Multiset Energy Flow (E_src[3x2500=7500] -> U -> closed cooling): ok=" ++ show gs.gsCoupledOk ++
+    " (E(U_3)=" ++ show gs.gsCoupledE3 ++ " [E_src=[]], E(U_6)=" ++ show gs.gsCoupledE6 ++ " <= E(U_3), net=0)"
+  , "    - Closed Relic Cycle (BoxInt -> Freeze-Out -> Unit-Weight Support -> selfFuelOfHMSet Cycle 2): ok=" ++ show gs.gsRelicCycleOk ++
+    " (Cycle-2 GohFuel=" ++ show gs.gsRelicFuel2 ++ ", Cycle-2 sweeps=" ++ show gs.gsRelicCyc2 ++ ")"
   , "  * 6-B Factorization Comparison of k=4 Sub-Ticks: (4,1) ModePaced vs (1,4) ModeSpread vs (2,2) ModeBalanced:"
   , showArmSummary "Arm B1 (ModePaced    4x1)" pB1 wBr1 wVac1 ok4A1 ok4B1 ok4D1 ok4E1 ok4F1
   , showArmSummary "Arm B2 (ModeSpread   1x4)" pB2 wBr2 wVac2 ok4A2 ok4B2 ok4D2 ok4E2 ok4F2
@@ -1108,13 +1162,13 @@ buildExp6Report :
   (Bool, List String)
 buildExp6Report pB1 pB2 pB3 z23 z32 e3D =
   let gs           = auditGohSpreadPolyHMSet
-      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk && gs.gsSelfTimeOk
-      seed4A       = seedSparseBreather coord2Basis 0 0 1 4096
-      seedBr       = seedSparseBreather coord2Basis 4 5 6 8192
-      seedVac      = seedSparseWavepacketAt coord2Basis 0 0 512
-      seed4B       = addSparseField seedBr seedVac
-      seed4D       = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
-                                    (seedSparseWavepacketAt coord2Basis 0 3 2048)
+      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk && gs.gsSelfTimeOk && gs.gsCoupledOk && gs.gsRelicCycleOk
+      seed4A       = seedBreather coord2Basis 0 0 1 4096
+      seedBr       = seedBreather coord2Basis 4 5 6 8192
+      seedVac      = seedWavepacketAt coord2Basis 0 0 512
+      seed4B       = addEnergyState seedBr seedVac
+      seed4D       = addEnergyState (seedWavepacketAt coord2Basis 0 (-3) 2048)
+                                    (seedWavepacketAt coord2Basis 0 3 2048)
       w4A          = collectPacedWork (4, 1) 20 seed4A
       wBr1         = collectPacedWork (4, 1) 18 seedBr
       wVac1        = collectPacedWork (4, 1) 18 seedVac

@@ -6,6 +6,7 @@ import Stage0.Box
 import Stage0.HereditaryMSet
 import Stage1.Basis.Time
 import Stage1.Basis.SpaceStream
+import Stage1.Views
 import Stage1.ProjectiveRotation
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -203,31 +204,31 @@ ModePaced = ModeFactor canonPacedSubTicks 1
 ||| - `metricMaxel` : causal 1-hop retarded half-stored symmetric Maxel (`SymForm`) at `c = 1`
 ||| - `paceMaxel`   : sparse half-stored local Bresenham pacing balance (`SymForm`, pruned to `0` at vacuum)
 public export
-record SparseField (k : Type) where
-  constructor MkSparseField
+record EnergyState (k : Type) where
+  constructor MkEnergyState
   waveMaxel   : WaveMaxel k
   metricMaxel : EnergyMaxel k
   paceMaxel   : EnergyMaxel k
 
 public export
-emptySparseField : SparseField k
-emptySparseField = MkSparseField emptyMaxel emptyMaxel emptyMaxel
+emptyEnergyState : EnergyState k
+emptyEnergyState = MkEnergyState emptyMaxel emptyMaxel emptyMaxel
 
 public export
-addSparseField : Ord k => SparseField k -> SparseField k -> SparseField k
-addSparseField a b =
-  MkSparseField
+addEnergyState : Ord k => EnergyState k -> EnergyState k -> EnergyState k
+addEnergyState a b =
+  MkEnergyState
     (addMaxel a.waveMaxel b.waveMaxel)
     (addMaxel a.metricMaxel b.metricMaxel)
     (addMaxel a.paceMaxel b.paceMaxel)
 
 public export
-Ord k => Semigroup (SparseField k) where
-  (<+>) = addSparseField
+Ord k => Semigroup (EnergyState k) where
+  (<+>) = addEnergyState
 
 public export
-Ord k => Monoid (SparseField k) where
-  neutral = emptySparseField
+Ord k => Monoid (EnergyState k) where
+  neutral = emptyEnergyState
 
 ||| Canonical Energy Maxel (`SymForm`) of a state `WaveMaxel k`:
 ||| - Diagonal `(a, a)` holds site energy `2 * psi(a)^2`
@@ -245,11 +246,11 @@ waveEnergyOf : Ord k => WaveMaxel k -> Integer
 waveEnergyOf wave = unwrapBox (totalMassBox (energyMaxelOf wave).rawMaxelBox)
 
 public export
-fieldEnergy : Ord k => SparseField k -> Integer
+fieldEnergy : Ord k => EnergyState k -> Integer
 fieldEnergy sf = waveEnergyOf sf.waveMaxel
 
 public export
-fieldPsiNet : Ord k => SparseField k -> Integer
+fieldPsiNet : Ord k => EnergyState k -> Integer
 fieldPsiNet sf = unwrapBox (traceMaxel sf.waveMaxel)
 
 public export
@@ -259,19 +260,19 @@ offDiagGeneralBox wave =
   in maskOutBox (diagMaskBox g) g
 
 public export
-fieldFluxNet : Ord k => SparseField k -> Integer
+fieldFluxNet : Ord k => EnergyState k -> Integer
 fieldFluxNet sf = unwrapBox (totalMassBox (offDiagGeneralBox sf.waveMaxel))
 
 public export
-fieldFluxAntisym : Ord k => SparseField k -> Bool
+fieldFluxAntisym : Ord k => EnergyState k -> Bool
 fieldFluxAntisym sf = isAntisymBox (offDiagGeneralBox sf.waveMaxel)
 
 public export
-fieldMetricSym : Ord k => SparseField k -> Bool
+fieldMetricSym : Ord k => EnergyState k -> Bool
 fieldMetricSym sf = isSymBox (toGeneralMaxel sf.metricMaxel).rawMaxelBox
 
 public export
-fieldActiveWork : Ord k => SparseField k -> Nat
+fieldActiveWork : Ord k => EnergyState k -> Nat
 fieldActiveWork sf =
   maxelNodeCount sf.waveMaxel + maxelNodeCount sf.metricMaxel + maxelNodeCount sf.paceMaxel
 
@@ -280,15 +281,15 @@ fieldActiveWork sf =
 --------------------------------------------------------------------------------
 
 public export
-seedSparseDipoleSites : Ord k => (pPos, pNeg : k) -> (amp : Integer) -> SparseField k
-seedSparseDipoleSites pPos pNeg amp =
+seedDipoleSites : Ord k => (pPos, pNeg : k) -> (amp : Integer) -> EnergyState k
+seedDipoleSites pPos pNeg amp =
   let w = addAtMaxelEdge pNeg pNeg (MkBoxInt (-amp)) (singletonMaxelEdge pPos pPos (MkBoxInt amp))
-  in MkSparseField w emptyMaxel emptyMaxel
+  in MkEnergyState w emptyMaxel emptyMaxel
 
 public export
-seedSparseBreather : Ord k => AxisBasis k -> (x, yPos, yNeg, amp : Integer) -> SparseField k
-seedSparseBreather ax x yPos yNeg amp =
-  seedSparseDipoleSites (mkCoord2D ax x yPos) (mkCoord2D ax x yNeg) amp
+seedBreather : Ord k => AxisBasis k -> (x, yPos, yNeg, amp : Integer) -> EnergyState k
+seedBreather ax x yPos yNeg amp =
+  seedDipoleSites (mkCoord2D ax x yPos) (mkCoord2D ax x yNeg) amp
 
 public export
 transverseEnv4 : Ord k => (Integer -> k) -> (t0, halfA, fullA : Integer) -> Box BoxInt k
@@ -300,13 +301,13 @@ transverseEnv4 mkAxisCoord t0 halfA fullA =
 
 ||| Balanced zero-sum 4-row wavepacket propagating along $+X$ and convolved across any transverse coordinate generator.
 public export
-seedSparseWavepacketAlong :
+seedWavepacketAlong :
   Ord k =>
   AxisBasis k ->
   (mkTransCoord : Integer -> k) ->
   (x0, t0, amp : Integer) ->
-  SparseField k
-seedSparseWavepacketAlong ax mkTransCoord x0 t0 amp =
+  EnergyState k
+seedWavepacketAlong ax mkTransCoord x0 t0 amp =
   let halfA   = divIntegerPos amp 2
       tEnv    = transverseEnv4 mkTransCoord t0 halfA amp
       e1      = mkCoord2D ax (x0 - 2) 0
@@ -320,21 +321,21 @@ seedSparseWavepacketAlong ax mkTransCoord x0 t0 amp =
                 setMaxelEdge e2 e3 (MkBoxInt (-2)) $
                 setMaxelEdge e3 e4 (MkBoxInt 2)    $
                 singletonMaxelEdge e4 e5 (MkBoxInt 2)
-  in MkSparseField (shiftConvolveMaxel ax.shiftAdd rowWave tEnv) emptyMaxel emptyMaxel
+  in MkEnergyState (shiftConvolveMaxel ax.shiftAdd rowWave tEnv) emptyMaxel emptyMaxel
 
 public export
-seedSparseWavepacketAt : Ord k => AxisBasis k -> (x0, y0, amp : Integer) -> SparseField k
-seedSparseWavepacketAt ax = seedSparseWavepacketAlong ax (mkCoord2D ax 0)
+seedWavepacketAt : Ord k => AxisBasis k -> (x0, y0, amp : Integer) -> EnergyState k
+seedWavepacketAt ax = seedWavepacketAlong ax (mkCoord2D ax 0)
 
 public export
-seedSparseWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> SparseField k
-seedSparseWavepacket ax x0 amp = seedSparseWavepacketAt ax x0 0 amp
+seedWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> EnergyState k
+seedWavepacket ax x0 amp = seedWavepacketAt ax x0 0 amp
 
 ||| Seeds a balanced zero-sum antisymmetric directed-edge flux link `(x1,y1) -> (x2,y2)` with weight `u`.
 public export
-seedSparseEdgeFlux : Ord k => AxisBasis k -> (x1, y1, x2, y2, u : Integer) -> SparseField k
-seedSparseEdgeFlux ax x1 y1 x2 y2 u =
-  MkSparseField (singletonMaxelEdge (mkCoord2D ax x1 y1) (mkCoord2D ax x2 y2) (MkBoxInt u)) emptyMaxel emptyMaxel
+seedEdgeFlux : Ord k => AxisBasis k -> (x1, y1, x2, y2, u : Integer) -> EnergyState k
+seedEdgeFlux ax x1 y1 x2 y2 u =
+  MkEnergyState (singletonMaxelEdge (mkCoord2D ax x1 y1) (mkCoord2D ax x2 y2) (MkBoxInt u)) emptyMaxel emptyMaxel
 
 ||| Constructs a signed 3D site key `{ axisX : x, axisY : y, axisZ : z }` inside `PureMultiset` (zero-pruning zeros).
 public export
@@ -346,15 +347,15 @@ mkPureCoord3D x y z =
 
 ||| Seeds a 3D balanced breather dipole displaced along the emergent Z axis (`axisZ = { [] : 3 }`).
 public export
-seedPureBreather3DZ : (x, y, zPos, zNeg, amp : Integer) -> SparseField PureMultiset
+seedPureBreather3DZ : (x, y, zPos, zNeg, amp : Integer) -> EnergyState PureMultiset
 seedPureBreather3DZ x y zPos zNeg amp =
-  seedSparseDipoleSites (mkPureCoord3D x y zPos) (mkPureCoord3D x y zNeg) amp
+  seedDipoleSites (mkPureCoord3D x y zPos) (mkPureCoord3D x y zNeg) amp
 
 ||| Seeds a 3D wavepacket propagating along $+X$ at slice `y = y0` with a 4-layer transverse Z envelope (`z in {z0-1..z0+2}`).
 public export
-seedPureWavepacket3DZ : (x0, y0, z0, amp : Integer) -> SparseField PureMultiset
+seedPureWavepacket3DZ : (x0, y0, z0, amp : Integer) -> EnergyState PureMultiset
 seedPureWavepacket3DZ x0 y0 z0 amp =
-  seedSparseWavepacketAlong pureMSetBasis (mkPureCoord3D 0 y0) x0 z0 amp
+  seedWavepacketAlong pureMSetBasis (mkPureCoord3D 0 y0) x0 z0 amp
 
 --------------------------------------------------------------------------------
 -- 3. CAUSAL 1-HOP RETARDED MAXEL METRIC & ENDOGENOUS STREAM PACING
@@ -525,14 +526,14 @@ paceMultiSubTicks (S rem) budget cost bal =
 ||| - `(1, k)` with `lagDiv > 0` : `ModeSpread` (1-sweep exact spread power `(A_1 + i B_1)^y` composition)
 ||| - `(k, 1)` with `lagDiv > 0` : `ModePaced`  (`k` interleaved fixed-angle sub-tick sweeps)
 public export
-stepSparseFieldCore :
+stepEnergyCore :
   Ord k =>
   AxisBasis k ->
   (outerPasses, innerTicks : Nat) ->
   (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
-  SparseField k ->
-  (SparseField k, (Nat, Nat))
-stepSparseFieldCore ax outerPasses innerTicks lagDiv decayNum decayDen linkCoup m0 sf =
+  EnergyState k ->
+  (EnergyState k, (Nat, Nat))
+stepEnergyCore ax outerPasses innerTicks lagDiv decayNum decayDen linkCoup m0 sf =
   if isEmptyMaxel sf.waveMaxel && isEmptyMaxel sf.metricMaxel && isEmptyMaxel sf.paceMaxel
     then (sf, (0, 0))
     else
@@ -558,22 +559,22 @@ stepSparseFieldCore ax outerPasses innerTicks lagDiv decayNum decayDen linkCoup 
                          acc
             in runPasses rem acc1
           pFin         = runPasses outerPasses (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
-      in (MkSparseField pFin.ppWave newMet pFin.ppPace, (pFin.ppYields, pFin.ppSkips))
+      in (MkEnergyState pFin.ppWave newMet pFin.ppPace, (pFin.ppYields, pFin.ppSkips))
 
 ||| Single shared `StepMode` dispatcher over any coordinate basis `AxisBasis k`.
 public export
-stepSparseByMode :
+stepEnergyByMode :
   Ord k =>
   AxisBasis k ->
   StepMode ->
-  SparseField k ->
-  SparseField k
-stepSparseByMode ax ModeLinear sf =
-  fst (stepSparseFieldCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 sf)
-stepSparseByMode ax (ModeFactor oP iT) sf =
-  fst (stepSparseFieldCore ax oP iT canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
+  EnergyState k ->
+  EnergyState k
+stepEnergyByMode ax ModeLinear sf =
+  fst (stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 sf)
+stepEnergyByMode ax (ModeFactor oP iT) sf =
+  fst (stepEnergyCore ax oP iT canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 
-||| One streaming energy step over `SparseField k`:
+||| One streaming energy step over `EnergyState k`:
 ||| - `yStep == 0 && sStep == 0` : emits `(StreamDone, 0, 0)` (`NaturalCompletion`).
 ||| - `yStep == 0 && sStep > 0`  : emits `(StreamSkip, 0, sStep)` (0 yield fuel cost!).
 ||| - `yStep > 0`                : emits `(StreamYield sf1, yStep, sStep)` (consumes `yStep` yield fuel).
@@ -583,11 +584,11 @@ stepEnergyStreamCore :
   AxisBasis k ->
   (outerPasses, innerTicks : Nat) ->
   (lagDiv : Integer) ->
-  SparseField k ->
-  (StreamStep (SparseField k), Nat, Nat)
+  EnergyState k ->
+  (StreamStep (EnergyState k), Nat, Nat)
 stepEnergyStreamCore ax outerPasses innerTicks lagDiv sf =
   let (sf1, (yStep, sStep)) =
-        stepSparseFieldCore ax outerPasses innerTicks lagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
+        stepEnergyCore ax outerPasses innerTicks lagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
   in if yStep == 0
        then if sStep == 0
               then (StreamDone, 0, 0)
@@ -605,10 +606,37 @@ freezeEnergyStream :
   (g, cap     : Nat) ->
   (yieldFuel  : GohFuel cap) ->
   (stepBudget : Nat) ->
-  SparseField k ->
-  (SolidifiedStream (StaticTime (- cast g) (cast cap)) cap (SparseField k), Nat)
+  EnergyState k ->
+  (SolidifiedStream (StaticTime (- cast g) (cast cap)) cap (EnergyState k), Nat)
 freezeEnergyStream ax oP iT lagDiv g cap yFuel sBudget sf0 =
   freezeStateStreamWith g cap yFuel sBudget (stepEnergyStreamCore ax oP iT lagDiv) sf0
+
+||| Coupled two-multiset boundary flow: external reservoir `eSrc : PureMultiset`
+||| peels 1 bond quantum (`qAmp`, energy `qAmp^2`) per tick into `U : EnergyState Coord2`
+||| via `viewAsAntiBox eSrc`, automatically decoupling into closed cooling once `eSrc == []`.
+public export
+stepCoupledSourceFlow :
+  (qAmp : Integer) ->
+  (EnergyState Coord2, PureMultiset) ->
+  (StreamStep (EnergyState Coord2, PureMultiset), Nat, Nat)
+stepCoupledSourceFlow qAmp (u, eSrc) =
+  let (uIn, nextSrc) =
+        case viewAsAntiBox eSrc of
+          EmptyVacuum => (u, emptyPureMSet)
+          PopBlackBox siteKey restSrc =>
+            let (x, y, _) = decodeNatSiteKey siteKey
+                xi        = natToInteger x
+                yi        = natToInteger y
+            in (addEnergyState u (seedEdgeFlux coord2Basis xi yi (xi + 1) yi qAmp), restSrc)
+          PopRedBox siteKey restSrc =>
+            let (x, y, _) = decodeNatSiteKey siteKey
+                xi        = natToInteger x
+                yi        = natToInteger y
+            in (addEnergyState u (seedEdgeFlux coord2Basis xi yi (xi + 1) yi (-qAmp)), restSrc)
+      (uNext, (yStep, sStep)) = stepEnergyCore coord2Basis 1 1 0 canonDecayNum canonDecayDen 0 7 uIn
+  in if yStep == 0 && sStep == 0 && nextSrc == emptyPureMSet
+       then (StreamDone, 0, 0)
+       else (StreamYield (uNext, nextSrc), max 1 yStep, sStep)
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
@@ -701,11 +729,11 @@ hasSignedUnitPartner oppK mult rootBox =
   (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
   hasBalancedPartner oppK mult rootBox
 
-||| Packs `SparseField PureMultiset` cleanly into ONE zero-sum `PureMultiset` root
+||| Packs `EnergyState PureMultiset` cleanly into ONE zero-sum `PureMultiset` root
 ||| with ZERO synthetic tags and $O(1)$ zero-copy sealing for metric and pacing dipoles.
 public export
-packSparseFieldToRoot : Box BoxInt PureMultiset -> SparseField PureMultiset -> PureMultiset
-packSparseFieldToRoot keptBox sf =
+packEnergyStateToRoot : Box BoxInt PureMultiset -> EnergyState PureMultiset -> PureMultiset
+packEnergyStateToRoot keptBox sf =
   let bAct  = packWaveBox keptBox sf.waveMaxel
       bMet  = packSymDipole mkMetricKey sf.metricMaxel bAct
       bPace = packSymDipole mkPaceKey sf.paceMaxel bMet
@@ -715,12 +743,12 @@ public export
 record RootUnpackAcc where
   constructor MkRootUnpackAcc
   keptNonField : Box BoxInt PureMultiset
-  fieldData    : SparseField PureMultiset
+  fieldData    : EnergyState PureMultiset
 
-||| Single-pass zero-copy decoder from `root : PureMultiset` to `SparseField PureMultiset`.
+||| Single-pass zero-copy decoder from `root : PureMultiset` to `EnergyState PureMultiset`.
 public export
-unpackRootToSparseField : PureMultiset -> RootUnpackAcc
-unpackRootToSparseField (MkHMSet rootBox) =
+unpackRootToEnergyState : PureMultiset -> RootUnpackAcc
+unpackRootToEnergyState (MkHMSet rootBox) =
   foldBox (\entry, mult, st =>
              let sf0 = st.fieldData
              in if isSiteKey entry
@@ -744,7 +772,7 @@ unpackRootToSparseField (MkHMSet rootBox) =
                                      else st
                                  Nothing =>
                                    MkRootUnpackAcc (addAtKeyBox entry mult st.keptNonField) sf0)
-          (MkRootUnpackAcc BoxLeaf emptySparseField)
+          (MkRootUnpackAcc BoxLeaf emptyEnergyState)
           rootBox
 
 ||| Verifies explicitly that every active edge pair, metric dipole, and pacing dipole
@@ -780,13 +808,13 @@ rootActivePeelWork (MkHMSet b) =
                       Nothing => acc + mag * S (fastPeelWorkHMSet k))
           0 b
 
-||| Model B closed-energy sweep dispatcher over `StepMode` reusing `stepSparseByMode pureMSetBasis`.
+||| Model B closed-energy sweep dispatcher over `StepMode` reusing `stepEnergyByMode pureMSetBasis`.
 public export
 stepHereditaryByModeRoot : StepMode -> PureMultiset -> PureMultiset
 stepHereditaryByModeRoot mode root =
-  let unp = unpackRootToSparseField root
-      sf1 = stepSparseByMode pureMSetBasis mode unp.fieldData
-  in packSparseFieldToRoot unp.keptNonField sf1
+  let unp = unpackRootToEnergyState root
+      sf1 = stepEnergyByMode pureMSetBasis mode unp.fieldData
+  in packEnergyStateToRoot unp.keptNonField sf1
 
 --------------------------------------------------------------------------------
 -- 5. MULTISET EXTERNAL OBSERVABLES (`flattenHMSetBox`, `dotBox`, CORE & BAND)
@@ -811,7 +839,7 @@ canonAnyLinkStart ax wave a b =
 
 ||| Fraction (in %) of `energyMaxelOf sf.waveMaxel` localized in the central core `[-1..1] x [-1..2]`.
 public export
-fieldCoreEnergyFrac : Ord k => AxisBasis k -> SparseField k -> Integer
+fieldCoreEnergyFrac : Ord k => AxisBasis k -> EnergyState k -> Integer
 fieldCoreEnergyFrac ax sf =
   let eBox = (energyMaxelOf sf.waveMaxel).rawMaxelBox
       totE = unwrapBox (totalMassBox eBox)
@@ -850,16 +878,16 @@ extractBandPsiAndFluxAxis ax axisT tLo tHi (MkMaxel m) =
 ||| computing spatial moments via the multiset linear combination `flattenHMSetBox (mapBox ax.toSiteMSet epBox)`
 ||| and Poynting flux via `dotBox bandPsi (contractR dFluxT + contractL dFluxT)`.
 public export
-measureSparseBandAxis :
+measureBandAxis :
   Ord k =>
   AxisBasis k ->
   (axisT : PureMultiset) ->
   (tLo, tHi : Integer) ->
-  (sf, bgSf : SparseField k) ->
+  (sf, bgSf : EnergyState k) ->
   (initE, finalE, maxE : Integer) ->
   (workSteps : Nat) ->
   WavepacketReport
-measureSparseBandAxis ax axisT tLo tHi sf bgSf initE finalE maxE workSteps =
+measureBandAxis ax axisT tLo tHi sf bgSf initE finalE maxE workSteps =
   let dWave             = subMaxel sf.waveMaxel bgSf.waveMaxel
       (bandPsi, dFluxT) = extractBandPsiAndFluxAxis ax axisT tLo tHi dWave
       epBox             = hadamardBox bandPsi bandPsi
@@ -874,26 +902,26 @@ measureSparseBandAxis ax axisT tLo tHi sf bgSf initE finalE maxE workSteps =
   in MkWavepacketReport mxM mtM accSt initE finalE maxE net workSteps
 
 public export
-measureSparseBandRange :
+measureBandRange :
   Ord k =>
   AxisBasis k ->
   (yLo, yHi : Integer) ->
-  (sf, bgSf : SparseField k) ->
+  (sf, bgSf : EnergyState k) ->
   (initE, finalE, maxE : Integer) ->
   (workSteps : Nat) ->
   WavepacketReport
-measureSparseBandRange ax = measureSparseBandAxis ax axisY
+measureBandRange ax = measureBandAxis ax axisY
 
 ||| Sparse band-restricted (`-3 <= y <= 4`) background-subtracted wavepacket observable.
 public export
-measureSparseBand :
+measureBand :
   Ord k =>
   AxisBasis k ->
-  (sf, bgSf : SparseField k) ->
+  (sf, bgSf : EnergyState k) ->
   (initE, finalE, maxE : Integer) ->
   (workSteps : Nat) ->
   WavepacketReport
-measureSparseBand ax = measureSparseBandRange ax (-3) 4
+measureBand ax = measureBandRange ax (-3) 4
 
 public export
 inBoxRange : AxisBasis k -> (xLo, xHi, yLo, yHi : Integer) -> k -> Bool
@@ -909,7 +937,7 @@ bandsEqualInBox :
   Ord k =>
   AxisBasis k ->
   (xLo, xHi, yLo, yHi : Integer) ->
-  (sf, bgSf, vacSf : SparseField k) ->
+  (sf, bgSf, vacSf : EnergyState k) ->
   Bool
 bandsEqualInBox ax xLo xHi yLo yHi sf bgSf vacSf =
   let dWave = subMaxel sf.waveMaxel bgSf.waveMaxel
@@ -948,12 +976,12 @@ prfAntisymSingleEdge = Refl
 public export
 0 prfBreatherZeroNet :
   FiniteScience.Energy.fieldPsiNet
-    (FiniteScience.Energy.seedSparseBreather FiniteScience.Energy.coord2Basis 0 0 1 10) = 0
+    (FiniteScience.Energy.seedBreather FiniteScience.Energy.coord2Basis 0 0 1 10) = 0
 prfBreatherZeroNet = Refl
 
 public export
 0 prfEnergyMaxelTotalMass :
-  (let br = FiniteScience.Energy.seedSparseBreather FiniteScience.Energy.coord2Basis 0 0 1 10
+  (let br = FiniteScience.Energy.seedBreather FiniteScience.Energy.coord2Basis 0 0 1 10
        eM = FiniteScience.Energy.energyMaxelOf br.waveMaxel
    in (Stage0.Box.totalMassBox eM.rawMaxelBox == MkBoxInt 400) &&
       (FiniteScience.Energy.fieldEnergy br == 400)) = True
@@ -1016,9 +1044,9 @@ checkTagFreePackUnpackRoundTrip =
       metB  = addMaxel (diagEmbedMaxel (singletonBox p0 (MkBoxInt 16))) (singletonMaxelEdge p1 p0 (MkBoxInt 25))
       paceB = addMaxel (singletonMaxelEdge p0 p1 (MkBoxInt 11))
                        (singletonMaxelEdge p0 (mkPureCoord3D 0 1 1) (MkBoxInt (-23)))
-      sf0   = MkSparseField (addMaxel actBr.waveMaxel edgeF) metB paceB
-      root0 = packSparseFieldToRoot BoxLeaf sf0
-      sf1   = (unpackRootToSparseField root0).fieldData
+      sf0   = MkEnergyState (addMaxel actBr.waveMaxel edgeF) metB paceB
+      root0 = packEnergyStateToRoot BoxLeaf sf0
+      sf1   = (unpackRootToEnergyState root0).fieldData
   in (unwrapBox (sumHMSet root0) == 0) &&
      verifyRootBalancedDipoles root0 &&
      isSymBox (toGeneralMaxel sf1.metricMaxel).rawMaxelBox &&
@@ -1030,6 +1058,6 @@ checkTagFreePackUnpackRoundTrip =
 
 public export
 0 prfTagFreeActiveVertexZeroSum :
-  (let root0 = packSparseFieldToRoot BoxLeaf (seedSparseBreather pureMSetBasis 0 0 1 10)
+  (let root0 = packEnergyStateToRoot BoxLeaf (seedBreather pureMSetBasis 0 0 1 10)
    in unwrapBox (sumHMSet root0) == 0) = True
 prfTagFreeActiveVertexZeroSum = Refl

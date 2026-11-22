@@ -51,14 +51,14 @@ splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
-||| Superposes an arbitrary balanced zero-sum `SparseField PureMultiset` directly into `root : PureMultiset`.
+||| Superposes an arbitrary balanced zero-sum `EnergyState PureMultiset` directly into `root : PureMultiset`.
 export
 injectHereditaryField :
-  SparseField PureMultiset ->
+  EnergyState PureMultiset ->
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 injectHereditaryField delta (MkHereditaryBox root) =
-  let sfRoot = packSparseFieldToRoot BoxLeaf delta
+  let sfRoot = packEnergyStateToRoot BoxLeaf delta
   in App1.pure1 (MkHereditaryBox (addHMSet root sfRoot))
 
 ||| Pure closed single-pass `StepMode` dispatcher directly inside `root : HereditaryMSet BoxInt`.
