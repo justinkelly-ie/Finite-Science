@@ -1,9 +1,10 @@
+# Idris 2 build artifacts
 build/
-**/*.ibc
 **/*.ttc
 **/*.ttm
-idris2-LUniverse/build/
-idris2-Multiset/build/
-idris2-chromogeometry/build/
-idris2-QuickCheck/idris2-QuickCheck/build/
+**/*.ibc
+**/*.ss
+**/*.so
+
+# Generated experiment telemetry
 experiment_trace.txt
