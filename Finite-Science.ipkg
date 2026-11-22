@@ -12,7 +12,7 @@ sourcedir = "src"
 modules = FiniteScience
         , FiniteScience.BlackBoxErrors
         , FiniteScience.StreamWork
-        , FiniteScience.SparseField
+        , FiniteScience.Energy
         , FiniteScience.Settings
         , FiniteScience.FlatSpaceUniverse
         , FiniteScience.HereditaryUniverse

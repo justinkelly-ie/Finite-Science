@@ -12,7 +12,7 @@ import Stage1.MultisetCodec
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
-import FiniteScience.SparseField
+import FiniteScience.Energy
 import FiniteScience.Settings
 
 %default total

@@ -1,4 +1,4 @@
-module FiniteScience.SparseField
+module FiniteScience.Energy
 
 import Stage0.BoxInt
 import Stage0.Interfaces
@@ -20,11 +20,18 @@ public export
 Coord2 : Type
 Coord2 = (SignedCoord, SignedCoord)
 
-||| Active coupled field carrier: diagonal `(a, a)` holds scalar amplitude `psi(a)`
+||| Active coupled state carrier: diagonal `(a, a)` holds scalar amplitude `psi(a)`
 ||| and off-diagonal `(a, b)` holds antisymmetric flux `u_{ab} = -u_{ba}` (`DiagAntisymForm`).
 public export
 WaveMaxel : Type -> Type
 WaveMaxel k = Maxel BoxInt k k DiagAntisymForm
+
+||| Symmetric Energy carrier (`SymForm`) produced by `wave .*. wave`:
+||| diagonal `(a, a)` holds site energy `2 * psi(a)^2` and off-diagonal `(a, b)` (`a < b`)
+||| holds undirected link interaction energy `u_{ab}^2`.
+public export
+EnergyMaxel : Type -> Type
+EnergyMaxel k = Maxel BoxInt k k SymForm
 
 ||| Pure multiset spatial basis shared by Model A (`Coord2`) and Model B (`PureMultiset`):
 ||| - `baseAxes`          : multiset `Box BoxInt PureMultiset` of baseline axis atoms `{ [] : i }`
@@ -198,8 +205,8 @@ public export
 record SparseField (k : Type) where
   constructor MkSparseField
   waveMaxel   : WaveMaxel k
-  metricMaxel : Maxel BoxInt k k SymForm
-  paceMaxel   : Maxel BoxInt k k SymForm
+  metricMaxel : EnergyMaxel k
+  paceMaxel   : EnergyMaxel k
 
 public export
 emptySparseField : SparseField k
@@ -221,13 +228,20 @@ public export
 Ord k => Monoid (SparseField k) where
   neutral = emptySparseField
 
-||| Quadratic field energy `2 * sum psi(a)^2 + sum_{a < b} u_{ab}^2` expressed purely via
-||| `wSq = wave .*. wave`, `traceMaxel wSq`, and `totalMassBox wSq.rawMaxelBox`.
+||| Canonical Energy Maxel (`SymForm`) of a state `WaveMaxel k`:
+||| - Diagonal `(a, a)` holds site energy `2 * psi(a)^2`
+||| - Off-diagonal `(a, b)` (`a < b`) holds undirected link interaction energy `u_{ab}^2`
+public export
+energyMaxelOf : Ord k => WaveMaxel k -> EnergyMaxel k
+energyMaxelOf wave =
+  let wSq = wave .*. wave
+  in addMaxel wSq (diagEmbedMaxel (diagBox wSq))
+
+||| Total quadratic energy `2 * sum psi(a)^2 + sum_{a < b} u_{ab}^2` as the `totalMassBox`
+||| reduction of `energyMaxelOf wave`.
 public export
 waveEnergyOf : Ord k => WaveMaxel k -> Integer
-waveEnergyOf wave =
-  let wSq = wave .*. wave
-  in unwrapBox (addBox (traceMaxel wSq) (totalMassBox wSq.rawMaxelBox))
+waveEnergyOf wave = unwrapBox (totalMassBox (energyMaxelOf wave).rawMaxelBox)
 
 public export
 fieldEnergy : Ord k => SparseField k -> Integer
@@ -345,41 +359,31 @@ seedPureWavepacket3DZ x0 y0 z0 amp =
 -- 3. CAUSAL 1-HOP RETARDED MAXEL METRIC & ENDOGENOUS STREAM PACING
 --------------------------------------------------------------------------------
 
-||| Exact local quadratic density `T_00 = 2 * (psi .*. psi) + floor((contractR + contractL)(F .*. F) / 2)`
-||| paired with the full symmetric Maxel source `diagEmbedMaxel T_00 + linkCoup * (F .*. F)`,
-||| computed directly from `wSq = wave .*. wave` (`DiagAntisymForm .*. DiagAntisymForm = SymForm`).
+||| Causal 1-hop symmetric `EnergyMaxel k` source derived directly from `eM = energyMaxelOf wave`:
+||| `diagEmbedMaxel (2 * psi^2 + floor((contractR + contractL)(u^2) / 2)) + linkCoup * u^2`.
 public export
-activeRhoAndSource :
+activeEnergySource :
   Ord k =>
+  Bool ->
   (linkCoup : Integer) ->
   (wave : WaveMaxel k) ->
-  (Box BoxInt k, Maxel BoxInt k k SymForm)
-activeRhoAndSource linkCoup wave =
-  let wSq     = wave .*. wave
-      diagSq  = diagBox wSq
-      off     = maskOutBox (diagEmbedBox diagSq) wSq.rawMaxelBox
-      incU2   = unionBox (contractRBox off) (contractLBox off)
-      actRho  = unionBox (scaleBox (MkBoxInt 2) diagSq)
-                         (scaleDivPruneBox 2 1 incU2)
+  EnergyMaxel k
+activeEnergySource False _        _    = emptyMaxel
+activeEnergySource True  linkCoup wave =
+  let eM      = energyMaxelOf wave
+      diagE   = diagBox eM
+      off     = maskOutBox (diagEmbedBox diagE) eM.rawMaxelBox
+      incU2   = scaleDivPruneBox 2 1 (unionBox (contractRBox off) (contractLBox off))
+      siteSrc = diagEmbedMaxel (unionBox diagE incU2)
       fluxSq  = MkMaxel {form = SymForm} off
       linkSrc = if linkCoup <= 0
                   then emptyMaxel
                   else if linkCoup == 1
                     then fluxSq
                     else scaleMaxel (MkBoxInt linkCoup) fluxSq
-  in (actRho, addMaxel (diagEmbedMaxel actRho) linkSrc)
+  in addMaxel siteSrc linkSrc
 
-public export
-activeRhoAndSourceIf :
-  Ord k =>
-  Bool ->
-  (linkCoup : Integer) ->
-  (wave : WaveMaxel k) ->
-  (Box BoxInt k, Maxel BoxInt k k SymForm)
-activeRhoAndSourceIf False _        _    = (BoxLeaf, emptyMaxel)
-activeRhoAndSourceIf True  linkCoup wave = activeRhoAndSource linkCoup wave
-
-||| Causal 1-hop retarded Symmetric `Maxel` metric step across arbitrary-dimension `unitSt`:
+||| Causal 1-hop retarded Symmetric `EnergyMaxel` metric step across arbitrary-dimension `unitSt`:
 |||   `G_{t+1} = prune(actSrcM)
 |||            + floor((decayNum * shiftConvolveMaxel shiftAdd G_t unitSt) / decayDen)`
 ||| Half-stores `a <= b`, enforces strict light-cone speed `c = 1`, and preserves `SymForm` by construction.
@@ -389,9 +393,9 @@ stepCausalMetricMaxel :
   AxisBasis k ->
   (unitSt : Box BoxInt k) ->
   (lagDiv, decayNum, decayDen : Integer) ->
-  (actSrcM : Maxel BoxInt k k SymForm) ->
-  (oldM : Maxel BoxInt k k SymForm) ->
-  Maxel BoxInt k k SymForm
+  (actSrcM : EnergyMaxel k) ->
+  (oldM : EnergyMaxel k) ->
+  EnergyMaxel k
 stepCausalMetricMaxel ax unitSt lagDiv decayNum decayDen actSrcM oldM =
   if lagDiv <= 0
     then emptyMaxel
@@ -536,7 +540,7 @@ stepSparseFieldCore ax outerPasses innerTicks lagDiv decayNum decayDen linkCoup 
           paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
           axesBox      = activeAxisAtomsOf ax sf.waveMaxel
           unitSt       = activeUnitAxesOf ax sf.waveMaxel
-          (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
+          actSrc0      = activeEnergySource (lagDiv > 0) linkCoup sf.waveMaxel
           newMet       = stepCausalMetricMaxel ax unitSt lagDiv decayNum decayDen actSrc0 sf.metricMaxel
           runPasses    : Nat -> PacedPassAcc k -> PacedPassAcc k
           runPasses Z acc = acc
@@ -767,20 +771,20 @@ canonAnyLinkStart ax wave a b =
           Nothing
           (activeAxisAtomsOf ax wave)
 
-||| Fraction (in %) of Lyapunov energy localized in the central core `[-1..1] x [-1..2]`.
+||| Fraction (in %) of `energyMaxelOf sf.waveMaxel` localized in the central core `[-1..1] x [-1..2]`.
 public export
 fieldCoreEnergyFrac : Ord k => AxisBasis k -> SparseField k -> Integer
 fieldCoreEnergyFrac ax sf =
-  let totE     = fieldEnergy sf
-      coreWave = MkMaxel {form = DiagAntisymForm} $
-                   filterBox (\(a, b) =>
-                                if a == b
-                                  then isCoreSite ax a
-                                  else case canonAnyLinkStart ax sf.waveMaxel a b of
-                                         Just s  => isCoreSite ax s
-                                         Nothing => False)
-                             sf.waveMaxel.rawMaxelBox
-      cTot     = waveEnergyOf coreWave
+  let eBox = (energyMaxelOf sf.waveMaxel).rawMaxelBox
+      totE = unwrapBox (totalMassBox eBox)
+      cBox = filterBox (\(a, b) =>
+                         if a == b
+                           then isCoreSite ax a
+                           else case canonAnyLinkStart ax sf.waveMaxel a b of
+                                  Just s  => isCoreSite ax s
+                                  Nothing => False)
+                       eBox
+      cTot = unwrapBox (totalMassBox cBox)
   in if totE <= 0 then 0 else divIntegerPos (cTot * 100) totE
 
 public export
@@ -905,9 +909,17 @@ prfAntisymSingleEdge = Refl
 
 public export
 0 prfBreatherZeroNet :
-  FiniteScience.SparseField.fieldPsiNet
-    (FiniteScience.SparseField.seedSparseBreather FiniteScience.SparseField.coord2Basis 0 0 1 10) = 0
+  FiniteScience.Energy.fieldPsiNet
+    (FiniteScience.Energy.seedSparseBreather FiniteScience.Energy.coord2Basis 0 0 1 10) = 0
 prfBreatherZeroNet = Refl
+
+public export
+0 prfEnergyMaxelTotalMass :
+  (let br = FiniteScience.Energy.seedSparseBreather FiniteScience.Energy.coord2Basis 0 0 1 10
+       eM = FiniteScience.Energy.energyMaxelOf br.waveMaxel
+   in (Stage0.Box.totalMassBox eM.rawMaxelBox == MkBoxInt 400) &&
+      (FiniteScience.Energy.fieldEnergy br == 400)) = True
+prfEnergyMaxelTotalMass = Refl
 
 public export
 0 prfWildbergerPythParam7 :

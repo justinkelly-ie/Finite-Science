@@ -13,7 +13,7 @@ import Stage1.Lenses
 import Stage1.MultisetCodec
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
-import FiniteScience.SparseField
+import FiniteScience.Energy
 import FiniteScience.Settings
 
 %default total
