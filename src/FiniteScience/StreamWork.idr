@@ -1,18 +1,16 @@
 module FiniteScience.StreamWork
 
 import Data.Nat
-import Stage0.BoxInt
-import Stage0.Interfaces
-import Stage0.Box
-import Stage0.Multiset
-import Stage0.Multiplicity
-import Stage0.HereditaryMSet
-import Stage1.Basis.Space
-import Stage1.Basis.Time
-import Stage1.Basis.SpaceStream
-import Stage1.Views
-import Stage1.ProjectiveRotation
-import Stage1.BlackRedZoom
+import FinScBox.BoxInt
+import FinScBox.Interfaces
+import FinScBox.Box
+import FinScBox.Multiset
+import FinScBox.HereditaryMSet
+import FinScBox.SpaceTime
+import FinScBox.SpaceStream
+import FinScBox.Views
+import FinScBox.ProjectiveRotation
+import FinScBox.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 
 %default total
@@ -347,7 +345,7 @@ findMatterPayloadAt pos (MkHMSet b) =
 --------------------------------------------------------------------------------
 -- 3. PUREMULTISET SPREAD POLYNUMBERS, GOH PRIME-ROOT ALGEBRA & GOHFUEL FREEZE-OUT
 --    (Core `polyX`, `gohPsi1..12`, `spreadZHMSet`, `evalPolyHMSetAt`, and
---     `evalHomogPolyHMSet` are graduated upstream in `Stage0.HereditaryMSet`.)
+--     `evalHomogPolyHMSet` are graduated upstream in `FinScBox.HereditaryMSet`.)
 --------------------------------------------------------------------------------
 
 ||| Derives an observer `HorizonSpec` intrinsically from `selfFuelOfHMSet (spreadZHMSet polyOrder)`
@@ -386,7 +384,7 @@ freezeGohSpreadStream n =
 --------------------------------------------------------------------------------
 
 public export
-0 prfDivMod4BoxCheck : Stage0.BoxInt.divMod4Box (MkBoxInt 15) = (MkBoxInt 3, MkBoxInt 3)
+0 prfDivMod4BoxCheck : FinScBox.BoxInt.divMod4Box (MkBoxInt 15) = (MkBoxInt 3, MkBoxInt 3)
 prfDivMod4BoxCheck = Refl
 
 public export
@@ -470,47 +468,47 @@ prfFastPeelMatchesProton = Refl
 
 public export
 0 prfGohFactorizationZ6 :
-  Stage0.HereditaryMSet.spreadZHMSet 6 =
-    (Stage0.HereditaryMSet.gohPsi1 *
-     Stage0.HereditaryMSet.gohPsi2 *
-     Stage0.HereditaryMSet.gohPsi3 *
-     Stage0.HereditaryMSet.gohPsi6)
+  FinScBox.HereditaryMSet.spreadZHMSet 6 =
+    (FinScBox.HereditaryMSet.gohPsi1 *
+     FinScBox.HereditaryMSet.gohPsi2 *
+     FinScBox.HereditaryMSet.gohPsi3 *
+     FinScBox.HereditaryMSet.gohPsi6)
 prfGohFactorizationZ6 = Refl
 
 public export
 0 prfGohPrimeRootsAndFixedPoints :
-  ((evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi2 (the Integer 2) == 2) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi3 (the Integer 3) == 0) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi4 (the Integer 2) == 0) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi6 (the Integer 1) == 0) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi2 (the Integer 0) == 4) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi3 (the Integer 0) == 9) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi4 (the Integer 0) == 4) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi5 (the Integer 0) == 25) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi6 (the Integer 0) == 1) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi7 (the Integer 0) == 49) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi8 (the Integer 0) == 4) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi9 (the Integer 0) == 9) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi10 (the Integer 0) == 1) &&
-   (evalPolyHMSetAt Stage0.HereditaryMSet.gohPsi12 (the Integer 0) == 1)) = True
+  ((evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi2 (the Integer 2) == 2) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi3 (the Integer 3) == 0) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi4 (the Integer 2) == 0) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi6 (the Integer 1) == 0) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi2 (the Integer 0) == 4) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi3 (the Integer 0) == 9) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi4 (the Integer 0) == 4) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi5 (the Integer 0) == 25) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi6 (the Integer 0) == 1) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi7 (the Integer 0) == 49) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi8 (the Integer 0) == 4) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi9 (the Integer 0) == 9) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi10 (the Integer 0) == 1) &&
+   (evalPolyHMSetAt FinScBox.HereditaryMSet.gohPsi12 (the Integer 0) == 1)) = True
 prfGohPrimeRootsAndFixedPoints = Refl
 
 public export
 0 prfSpreadSemigroupCompose23 :
-  evalPolyHMSetAt (Stage0.HereditaryMSet.spreadZHMSet 2) (Stage0.HereditaryMSet.spreadZHMSet 3)
-  = Stage0.HereditaryMSet.spreadZHMSet 6
+  evalPolyHMSetAt (FinScBox.HereditaryMSet.spreadZHMSet 2) (FinScBox.HereditaryMSet.spreadZHMSet 3)
+  = FinScBox.HereditaryMSet.spreadZHMSet 6
 prfSpreadSemigroupCompose23 = Refl
 
 public export
 0 prfPythPowerMatchesSpreadZ28 :
-  (let (_, b1, r1) = Stage1.ProjectiveRotation.pythPowerTriple 1 (MkBoxInt 28)
-       (_, b2, _)  = Stage1.ProjectiveRotation.pythPowerTriple 2 (MkBoxInt 28)
-       (_, b3, _)  = Stage1.ProjectiveRotation.pythPowerTriple 3 (MkBoxInt 28)
-       (_, b4, _)  = Stage1.ProjectiveRotation.pythPowerTriple 4 (MkBoxInt 28)
+  (let (_, b1, r1) = FinScBox.ProjectiveRotation.pythPowerTriple 1 (MkBoxInt 28)
+       (_, b2, _)  = FinScBox.ProjectiveRotation.pythPowerTriple 2 (MkBoxInt 28)
+       (_, b3, _)  = FinScBox.ProjectiveRotation.pythPowerTriple 3 (MkBoxInt 28)
+       (_, b4, _)  = FinScBox.ProjectiveRotation.pythPowerTriple 4 (MkBoxInt 28)
        num         = 4 * b1 * b1
        den         = r1 * r1
-   in (evalHomogPolyHMSet 1 (Stage0.HereditaryMSet.spreadZHMSet 1) num den == 4 * b1 * b1) &&
-      (evalHomogPolyHMSet 2 (Stage0.HereditaryMSet.spreadZHMSet 2) num den == 4 * b2 * b2) &&
-      (evalHomogPolyHMSet 3 (Stage0.HereditaryMSet.spreadZHMSet 3) num den == 4 * b3 * b3) &&
-      (evalHomogPolyHMSet 4 (Stage0.HereditaryMSet.spreadZHMSet 4) num den == 4 * b4 * b4)) = True
+   in (evalHomogPolyHMSet 1 (FinScBox.HereditaryMSet.spreadZHMSet 1) num den == 4 * b1 * b1) &&
+      (evalHomogPolyHMSet 2 (FinScBox.HereditaryMSet.spreadZHMSet 2) num den == 4 * b2 * b2) &&
+      (evalHomogPolyHMSet 3 (FinScBox.HereditaryMSet.spreadZHMSet 3) num den == 4 * b3 * b3) &&
+      (evalHomogPolyHMSet 4 (FinScBox.HereditaryMSet.spreadZHMSet 4) num den == 4 * b4 * b4)) = True
 prfPythPowerMatchesSpreadZ28 = Refl

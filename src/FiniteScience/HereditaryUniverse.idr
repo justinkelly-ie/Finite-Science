@@ -1,15 +1,15 @@
 module FiniteScience.HereditaryUniverse
 
 import Control.App
-import Stage0.BoxInt
-import Stage0.Interfaces
-import Stage0.Box
-import Stage0.HereditaryMSet
-import Stage1.Basis.SpaceStream
-import Stage1.Basis.Time
-import Stage1.Lenses
-import Stage1.MultisetCodec
-import Stage1.BlackRedZoom
+import FinScBox.BoxInt
+import FinScBox.Interfaces
+import FinScBox.Box
+import FinScBox.HereditaryMSet
+import FinScBox.SpaceStream
+import FinScBox.SpaceTime
+import FinScBox.Lenses
+import FinScBox.MultisetCodec
+import FinScBox.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 import FiniteScience.Energy

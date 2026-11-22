@@ -1,15 +1,15 @@
 module FiniteScience.Energy
 
 import Data.Maybe
-import Stage0.BoxInt
-import Stage0.Interfaces
-import Stage0.Box
-import Stage0.HereditaryMSet
-import Stage1.Basis.Time
-import Stage1.Basis.SpaceStream
-import Stage1.Views
-import Stage1.ProjectiveRotation
-import Stage1.BlackRedZoom
+import FinScBox.BoxInt
+import FinScBox.Interfaces
+import FinScBox.Box
+import FinScBox.HereditaryMSet
+import FinScBox.SpaceTime
+import FinScBox.SpaceStream
+import FinScBox.Views
+import FinScBox.ProjectiveRotation
+import FinScBox.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 
@@ -983,10 +983,10 @@ metricQuadrupolePlus ax met =
 
 public export
 0 prfAntisymSingleEdge :
-  (let e = Stage0.Box.singletonMaxelEdge {form = AntisymForm} (ZeroZ, ZeroZ) (PosZ 0, ZeroZ) (MkBoxInt 12)
-   in (Stage0.Box.maxelNodeCount e == 1) &&
-      (Stage0.Box.traceMaxel e == MkBoxInt 0) &&
-      (Stage0.Box.lookupMaxel (PosZ 0, ZeroZ) (ZeroZ, ZeroZ) e == MkBoxInt (-12))) = True
+  (let e = FinScBox.Box.singletonMaxelEdge {form = AntisymForm} (ZeroZ, ZeroZ) (PosZ 0, ZeroZ) (MkBoxInt 12)
+   in (FinScBox.Box.maxelNodeCount e == 1) &&
+      (FinScBox.Box.traceMaxel e == MkBoxInt 0) &&
+      (FinScBox.Box.lookupMaxel (PosZ 0, ZeroZ) (ZeroZ, ZeroZ) e == MkBoxInt (-12))) = True
 prfAntisymSingleEdge = Refl
 
 public export
@@ -999,13 +999,13 @@ public export
 0 prfEnergyMaxelTotalMass :
   (let br = FiniteScience.Energy.seedBreather FiniteScience.Energy.coord2Basis 0 0 1 10
        eM = FiniteScience.Energy.energyMaxelOf br.waveMaxel
-   in (Stage0.Box.totalMassBox eM.rawMaxelBox == MkBoxInt 400) &&
+   in (FinScBox.Box.totalMassBox eM.rawMaxelBox == MkBoxInt 400) &&
       (FiniteScience.Energy.fieldEnergy br == 400)) = True
 prfEnergyMaxelTotalMass = Refl
 
 public export
 0 prfBondEnergyCausesDipoleSplit :
-  (let r  = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 0) (MkBoxInt 50)
+  (let r  = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 0) (MkBoxInt 50)
        a1 = unwrapBox r.valA
        b1 = unwrapBox r.valB
        u1 = unwrapBox r.valU
@@ -1016,7 +1016,7 @@ prfBondEnergyCausesDipoleSplit = Refl
 
 public export
 0 prfWildbergerPythParam7 :
-  (let r  = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
+  (let r  = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 100) (MkBoxInt (-43)) (MkBoxInt 80)
        a1 = unwrapBox r.valA
        b1 = unwrapBox r.valB
        u1 = unwrapBox r.valU
@@ -1027,8 +1027,8 @@ prfWildbergerPythParam7 = Refl
 
 public export
 0 prfWildbergerPythResonance :
-  (let r1 = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 24)
-       r2 = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 7) (MkBoxInt (-24))
+  (let r1 = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 24)
+       r2 = FinScBox.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 7) (MkBoxInt (-24))
        a1 = unwrapBox r1.valA
        b1 = unwrapBox r1.valB
        u1 = unwrapBox r1.valU
@@ -1040,14 +1040,14 @@ prfWildbergerPythResonance = Refl
 
 public export
 0 prfSparseUnitAxes2DConvolve :
-  (let st = Stage0.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
-       pt = Stage0.Box.singletonBox (ZeroZ, ZeroZ) (MkBoxInt 3)
-       c  = Stage0.Box.mulBoxWith pt st
-   in (Stage0.Box.lookupBox (PosZ 0, ZeroZ) c == MkBoxInt 3) &&
-      (Stage0.Box.lookupBox (NegZ 0, ZeroZ) c == MkBoxInt 3) &&
-      (Stage0.Box.lookupBox (ZeroZ, PosZ 0) c == MkBoxInt 3) &&
-      (Stage0.Box.lookupBox (ZeroZ, NegZ 0) c == MkBoxInt 3) &&
-      (Stage0.Box.totalMassBox c == MkBoxInt 12)) = True
+  (let st = FinScBox.Box.unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0)
+       pt = FinScBox.Box.singletonBox (ZeroZ, ZeroZ) (MkBoxInt 3)
+       c  = FinScBox.Box.mulBoxWith pt st
+   in (FinScBox.Box.lookupBox (PosZ 0, ZeroZ) c == MkBoxInt 3) &&
+      (FinScBox.Box.lookupBox (NegZ 0, ZeroZ) c == MkBoxInt 3) &&
+      (FinScBox.Box.lookupBox (ZeroZ, PosZ 0) c == MkBoxInt 3) &&
+      (FinScBox.Box.lookupBox (ZeroZ, NegZ 0) c == MkBoxInt 3) &&
+      (FinScBox.Box.totalMassBox c == MkBoxInt 12)) = True
 prfSparseUnitAxes2DConvolve = Refl
 
 public export

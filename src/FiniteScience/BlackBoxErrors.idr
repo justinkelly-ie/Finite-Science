@@ -1,7 +1,7 @@
 module FiniteScience.BlackBoxErrors
 
-import Stage1.Basis.Time
-import Stage1.Basis.SpaceStream
+import FinScBox.SpaceTime
+import FinScBox.SpaceStream
 
 %default total
 
@@ -9,7 +9,7 @@ import Stage1.Basis.SpaceStream
 -- 1. TIME HORIZON DISPLAY & CONFIGURATION (`Observer = Time`)
 --------------------------------------------------------------------------------
 
-||| Renders a `Stage1.Basis.Time` horizon concisely for boundary telemetry.
+||| Renders a `FinScBox.SpaceTime` horizon concisely for boundary telemetry.
 public export
 showTime : Time -> String
 showTime (StaticTime l h)  = "StaticTime(" ++ show l ++ ", " ++ show h ++ ")"
@@ -19,7 +19,7 @@ showTime (WindowedTime w)  = "WindowedTime(" ++ show w ++ ")"
 showTime OpenFuture        = "OpenFuture"
 showTime BilateralTime     = "BilateralTime"
 
-||| Defines an observation horizon strictly through `Stage1.Basis.Time`
+||| Defines an observation horizon strictly through `FinScBox.SpaceTime`
 ||| (no separate observer particle entity):
 ||| - `boundTime`  : Bounded compute horizon (`BoundedTime cap` or `WindowedTime win`)
 ||| - `retroDepth` : Retrograde UV zoom depth (`RetroTime g`)

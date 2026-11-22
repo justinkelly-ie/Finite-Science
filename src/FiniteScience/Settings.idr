@@ -2,11 +2,11 @@ module FiniteScience.Settings
 
 import Control.App
 import Data.DPair
-import Stage0.BoxInt
-import Stage0.HereditaryMSet
-import Stage1.Basis.Time
-import Stage1.MultisetCodec
-import Stage1.BlackRedZoom
+import FinScBox.BoxInt
+import FinScBox.HereditaryMSet
+import FinScBox.SpaceTime
+import FinScBox.MultisetCodec
+import FinScBox.BlackRedZoom
 import FiniteScience.BlackBoxErrors
 import FiniteScience.StreamWork
 
@@ -37,7 +37,7 @@ requireBalancedSplit wA wB =
        else throw (UnbalancedVacuumSplitError net)
 
 --------------------------------------------------------------------------------
--- SERIALIZED CANONICAL MULTISET SETTINGS (`Stage0.HereditaryMSet.show` FORMAT)
+-- SERIALIZED CANONICAL MULTISET SETTINGS (`FinScBox.HereditaryMSet.show` FORMAT)
 -- Physical particle states are serialized multisets verified via `Dec` recognizers.
 -- Observer resolutions are pure `Time` horizons (`BoundedTime` / `RetroTime`),
 -- eliminating any separate `roleObserver` particle!
@@ -64,7 +64,7 @@ heavyMassSettingText : String
 heavyMassSettingText = "{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}"
 
 --------------------------------------------------------------------------------
--- OBSERVER TIME HORIZON PRESETS (`Observer = Stage1.Basis.Time`, `selfFuelOfHMSet`)
+-- OBSERVER TIME HORIZON PRESETS (`Observer = FinScBox.SpaceTime`, `selfFuelOfHMSet`)
 --------------------------------------------------------------------------------
 
 ||| Coarse observation horizon: inspects crossing quanta directly (`RetroTime 0`)
@@ -86,31 +86,31 @@ deepUVHorizonSpec = mkPolyFuelHorizonSpec 10 2
 public export
 0 prfVacuumSettingParity :
   FiniteScience.Settings.vacuumSettingText =
-  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.vacuumMSet
+  FinScBox.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.vacuumMSet
 prfVacuumSettingParity = Refl
 
 public export
 0 prfPhotonSettingParity :
   FiniteScience.Settings.photonSettingText =
-  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.photonMSet
+  FinScBox.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.photonMSet
 prfPhotonSettingParity = Refl
 
 public export
 0 prfProtonSettingParity :
   FiniteScience.Settings.protonSettingText =
-  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.protonMSet
+  FinScBox.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.protonMSet
 prfProtonSettingParity = Refl
 
 public export
 0 prfNeutronSettingParity :
   FiniteScience.Settings.neutronSettingText =
-  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.neutronMSet
+  FinScBox.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.neutronMSet
 prfNeutronSettingParity = Refl
 
 public export
 0 prfHeavyMassSettingParity :
   FiniteScience.Settings.heavyMassSettingText =
-  Stage1.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.heavyMassMSet
+  FinScBox.MultisetCodec.renderPureMultiset FiniteScience.StreamWork.heavyMassMSet
 prfHeavyMassSettingParity = Refl
 
 public export
