@@ -131,20 +131,66 @@ Because everything is a `PureMultiset`, universes can also interact with externa
   - [`FlatSpaceUniverse.idr`](src/FiniteScience/FlatSpaceUniverse.idr) & [`HereditaryUniverse.idr`](src/FiniteScience/HereditaryUniverse.idr) — Linear `App1` black-box isolation comparing flat `Coord2` (Model A) against single-root `PureMultiset` (Model B).
   - [`Experiments.idr`](src/FiniteScience/Experiments.idr) — 6 automated experiments verifying 0D conservation, peel work, non-interfering zoomed observers, 2D causal gravity (`4A–4F`), Model A == Model B parity, Goh spread polynumbers, coupled flow, 5-cycle relic attractors, `Maxel`-seam equilibration, and emergent 3D gravity.
 
-### Build & Run
+### Building Finite-Science
 
-Requires Idris 2 (`>= 0.8.0`) with `FinSc-Box` installed:
+#### Prerequisites
+- [Idris 2](https://github.com/idris-lang/Idris2) `>= 0.8.0` (with its Chez Scheme backend, the default) on your `PATH`.
+- The `base` and `linear` libraries, both of which ship with Idris 2.
+- [`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box), built and installed (this is Finite-Science's only external dependency).
+
+#### 1. Clone the repositories side by side
 
 ```bash
-# 1. Build and install FinSc-Box (from sibling FinSc-Box directory)
-cd ../FinSc-Box && rm -rf build && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg
-
-# 2. Verify FinSc-Box-Wiki proofs & QuickCheck (optional)
-cd ../FinSc-Box-Wiki && rm -rf build && idris2 --build FinSc-Box-Wiki.ipkg && ./build/exec/finsc-box-wiki
-
-# 3. Build and run Finite-Science Experiments 1–6 (~2m19s runtime)
-cd ../Finite-Science && rm -rf build && idris2 --build Finite-Science.ipkg && ./build/exec/finite-science-experiments
+git clone https://github.com/justinkelly-ie/FinSc-Box.git
+git clone https://github.com/justinkelly-ie/Finite-Science.git
+# optional: compile-time proofs and QuickCheck properties for FinSc-Box
+git clone https://github.com/justinkelly-ie/FinSc-Box-Wiki.git
 ```
+
+#### 2. Build and install `FinSc-Box`
+
+```bash
+cd FinSc-Box
+idris2 --build FinSc-Box.ipkg
+idris2 --install FinSc-Box.ipkg
+cd ..
+```
+
+#### 3. Build and run `Finite-Science`
+
+```bash
+cd Finite-Science
+idris2 --build Finite-Science.ipkg
+./build/exec/finite-science-experiments
+```
+
+The first build takes a few minutes (`Energy.idr` is the slowest module), and running the 6 experiments takes about 2m20s. A successful run ends with:
+
+```text
+ALL 6 FINITE-SCIENCE EXPERIMENTS PASSED (Model A Canonical + Model B Parity + ModePaced Streaming Core)
+Boundary telemetry written to experiment_trace.txt: True
+```
+
+The full report is also written to `experiment_trace.txt` (git-ignored). The process exits with a non-zero status if any experiment fails.
+
+#### Troubleshooting
+- **`Couldn't find an installed package: FinSc-Box`** — run `idris2 --install FinSc-Box.ipkg` inside the `FinSc-Box` directory first.
+- **Stale or mismatched `.ttc` errors after pulling changes** — Idris 2 caches compiled interfaces, so purge the build directory and reinstall:
+  ```bash
+  cd FinSc-Box && rm -rf build && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg
+  cd ../Finite-Science && rm -rf build && idris2 --build Finite-Science.ipkg
+  ```
+- **Using `pack`** — if you manage Idris 2 with [pack](https://github.com/stefan-hoeck/idris2-pack), add `FinSc-Box` as a local package in your `pack.toml`, then run `pack build Finite-Science.ipkg` and `pack run Finite-Science.ipkg`.
+
+#### Optional: verify `FinSc-Box` proofs and properties
+
+```bash
+cd FinSc-Box-Wiki
+idris2 --build FinSc-Box-Wiki.ipkg
+./build/exec/finsc-box-wiki
+```
+
+This needs [`idris2-QuickCheck`](https://github.com/stefan-hoeck/idris2-quickcheck) installed. The compile-time `QTT 0` `Refl` proofs are checked during the build itself.
 
 ---
 
