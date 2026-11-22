@@ -2,7 +2,9 @@
 
 **A step-by-step introduction to discrete physics built purely from finite multisets of Black and Red boxes — no floating-point numbers, no pre-built grid walls, and no external clock.**
 
-All mathematics and simulations are written in total (`%default total`) Idris 2 over [`FinSc-Box`](file:///var/home/justin/Projects/FinSc-Box), with every core conservation law checked by the compiler or verified across 6 automated experiments.
+All mathematics and simulations are written in total (`%default total`) Idris 2 over [`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box), with every core conservation law checked by the compiler or verified across 6 automated experiments.
+
+All mathematics and simulations are written in total (`%default total`) Idris 2 over [`FinSc-Box`]( with every core conservation law checked by the compiler or verified across 6 automated experiments.
 
 ---
 
@@ -50,7 +52,7 @@ Notice what this also allows in reverse: **empty vacuum `[]` can split into a ba
 
 So far we only have a single pile of Black and Red boxes (`0D`). How do you get **space** (left/right, up/down, forward/back) without inventing a separate coordinate grid?
 
-**Put boxes inside other boxes.** A container whose items are themselves containers of Black and Red boxes is called a **Hereditary Multiset** (`PureMultiset` in [`HereditaryMSet.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/HereditaryMSet.idr)).
+**Put boxes inside other boxes.** A container whose items are themselves containers of Black and Red boxes is called a **Hereditary Multiset** (`PureMultiset` in `FinScBox.HereditaryMSet`).
 
 Each inner box acts as an **address**:
 
@@ -80,7 +82,7 @@ Because addresses are just nested boxes:
 
 Neighboring addresses are connected by **directed links**. A flow of `⬛` boxes from `A` to `B` is simultaneously a flow of `🟥` boxes from `B` to `A` (`u_AB = -u_BA`).
 
-We store site charges ($\psi$, Black or Red) on the diagonal `(A, A)` and directed link flows ($u_{AB}$) off the diagonal `(A, B)` inside one half-stored table called a **`WaveMaxel`** ([`Energy.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Energy.idr)). Its signed sum is always `0`.
+We store site charges ($\psi$, Black or Red) on the diagonal `(A, A)` and directed link flows ($u_{AB}$) off the diagonal `(A, B)` inside one half-stored table called a **`WaveMaxel`** ([`Energy.idr`](src/FiniteScience/Energy.idr)). Its signed sum is always `0`.
 
 **Energy** is what you get when you multiply every entry by itself (`EnergyMaxel = wave .*. wave`):
 - Both `⬛` (`+`) and `🟥` (`-`) square to **positive** energy (`2 * psi^2` on sites, `u^2` on links).
@@ -91,13 +93,13 @@ Before:  Site A = 0,   Site B = 0,   Bond = 50   ->  E = 0 + 0 + 50^2          =
 After:   Site A = -7,  Site B = +7,  Bond = 48   ->  E = 2*(49 + 49) + 48^2    = 2500
 ```
 
-All updates use exact Wildberger Pythagorean integer rotations (`rotatePythPow` in [`ProjectiveRotation.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/ProjectiveRotation.idr)), so energy never grows (`E_{t+1} <= E_t`) and net charge stays strictly `0`.
+All updates use exact Wildberger Pythagorean integer rotations (`rotatePythPow` in `FinScBox.ProjectiveRotation`), so energy never grows (`E_{t+1} <= E_t`) and net charge stays strictly `0`.
 
 ---
 
 ## Step 5: Time = Peeling Boxes & Emergent Gravity
 
-In this model, **time is not an external ticking clock** — time is the finite work of peeling boxes one quantum at a time (`GohFuel` in [`HereditaryMSet.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/HereditaryMSet.idr)):
+In this model, **time is not an external ticking clock** — time is the finite work of peeling boxes one quantum at a time (`GohFuel` in `FinScBox.HereditaryMSet`):
 - An active update emits `StreamYield` (spending `GohFuel`).
 - A paused or empty tick emits `StreamSkip` (costing **`0 GohFuel`**).
 
@@ -122,29 +124,26 @@ Because everything is a `PureMultiset`, universes can also interact with externa
 ## Step 7: Project Layout & Running the Verified Suite
 
 ### Active Stack
-- **[`FinSc-Box`](file:///var/home/justin/Projects/FinSc-Box)** (10 modules): Pure multiset & `Maxel` algebra (`BoxInt`, `Interfaces`, `Box`, `HereditaryMSet` + `MSetSupport` + `GohFuel`/freeze-out, `ProjectiveRotation`, `MultisetCodec`, `Views`, `BlackRedZoom`, `Lenses`).
-- **[`FinSc-Box-Wiki`](file:///var/home/justin/Projects/FinSc-Box-Wiki)**: Compile-time `QTT 0` `Refl` proofs and QuickCheck property tests.
-- **[`Finite-Science`](file:///var/home/justin/Projects/Finite-Science)** (`src/FiniteScience/`):
-  - [`Energy.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Energy.idr) — `EnergyState`, `WaveMaxel`/`EnergyMaxel`, Pythagorean sweeps, coupled source & `Maxel`-seam dynamics, and Model-B zero-tag root pack/unpack.
-  - [`FlatSpaceUniverse.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/FlatSpaceUniverse.idr) & [`HereditaryUniverse.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/HereditaryUniverse.idr) — Linear `App1` black-box isolation comparing flat `Coord2` (Model A) against single-root `PureMultiset` (Model B).
-  - [`Experiments.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Experiments.idr) — 6 automated experiments verifying 0D conservation, peel work, non-interfering zoomed observers, 2D causal gravity (`4A–4F`), Model A == Model B parity, Goh spread polynumbers, coupled flow, 5-cycle relic attractors, `Maxel`-seam equilibration, and emergent 3D gravity.
+- **[`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box)** (10 modules): Pure multiset & `Maxel` algebra (`BoxInt`, `Interfaces`, `Box`, `HereditaryMSet` + `MSetSupport` + `GohFuel`/freeze-out, `ProjectiveRotation`, `MultisetCodec`, `Views`, `BlackRedZoom`, `Lenses`).
+- **[`FinSc-Box-Wiki`](https://github.com/justinkelly-ie/FinSc-Box-Wiki)**: Compile-time `QTT 0` `Refl` proofs and QuickCheck property tests.
+- **`Finite-Science`** (`src/FiniteScience/`):
+  - [`Energy.idr`](src/FiniteScience/Energy.idr) — `EnergyState`, `WaveMaxel`/`EnergyMaxel`, Pythagorean sweeps, coupled source & `Maxel`-seam dynamics, and Model-B zero-tag root pack/unpack.
+  - [`FlatSpaceUniverse.idr`](src/FiniteScience/FlatSpaceUniverse.idr) & [`HereditaryUniverse.idr`](src/FiniteScience/HereditaryUniverse.idr) — Linear `App1` black-box isolation comparing flat `Coord2` (Model A) against single-root `PureMultiset` (Model B).
+  - [`Experiments.idr`](src/FiniteScience/Experiments.idr) — 6 automated experiments verifying 0D conservation, peel work, non-interfering zoomed observers, 2D causal gravity (`4A–4F`), Model A == Model B parity, Goh spread polynumbers, coupled flow, 5-cycle relic attractors, `Maxel`-seam equilibration, and emergent 3D gravity.
 
 ### Build & Run
 
-All commands run non-interactively inside `fedora-toolbox-44` using `/var/home/justin/.local/bin/idris2`:
+Requires Idris 2 (`>= 0.8.0`) with `FinSc-Box` installed:
 
 ```bash
-# 1. Build and install FinSc-Box
-toolbox run -c fedora-toolbox-44 bash -c \
-  "cd /var/home/justin/Projects/FinSc-Box && rm -rf build && /var/home/justin/.local/bin/idris2 --build FinSc-Box.ipkg && /var/home/justin/.local/bin/idris2 --install FinSc-Box.ipkg"
+# 1. Build and install FinSc-Box (from sibling FinSc-Box directory)
+cd ../FinSc-Box && rm -rf build && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg
 
-# 2. Verify FinSc-Box-Wiki proofs & QuickCheck
-toolbox run -c fedora-toolbox-44 bash -c \
-  "cd /var/home/justin/Projects/FinSc-Box-Wiki && rm -rf build && /var/home/justin/.local/bin/idris2 --build FinSc-Box-Wiki.ipkg && ./build/exec/finsc-box-wiki"
+# 2. Verify FinSc-Box-Wiki proofs & QuickCheck (optional)
+cd ../FinSc-Box-Wiki && rm -rf build && idris2 --build FinSc-Box-Wiki.ipkg && ./build/exec/finsc-box-wiki
 
 # 3. Build and run Finite-Science Experiments 1–6 (~2m19s runtime)
-toolbox run -c fedora-toolbox-44 bash -c \
-  "cd /var/home/justin/Projects/Finite-Science && rm -rf build && /var/home/justin/.local/bin/idris2 --build Finite-Science.ipkg && ./build/exec/finite-science-experiments"
+cd ../Finite-Science && rm -rf build && idris2 --build Finite-Science.ipkg && ./build/exec/finite-science-experiments
 ```
 
 ---
