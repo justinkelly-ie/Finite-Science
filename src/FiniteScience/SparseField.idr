@@ -1,5 +1,6 @@
 module FiniteScience.SparseField
 
+import Data.List
 import Stage0.BoxInt
 import Stage0.Interfaces
 import Stage0.Box
@@ -13,59 +14,133 @@ import FiniteScience.StreamWork
 %default total
 
 --------------------------------------------------------------------------------
--- 1. COORDINATE-GENERIC SPARSE BASIS & FIELD CARRIER
+-- 1. ARBITRARY-DIMENSION SPARSE BASIS & FIELD CARRIER
 --------------------------------------------------------------------------------
 
 public export
 Coord2 : Type
 Coord2 = (SignedCoord, SignedCoord)
 
-||| Minimal algebraic coordinate basis shared identically by Model A (`Coord2`) and Model B (`PureMultiset`).
+||| Active coupled field carrier: diagonal `(a, a)` holds scalar amplitude `psi(a)`
+||| and off-diagonal `(a, b)` holds antisymmetric flux `u_{ab} = -u_{ba}` (`DiagAntisymForm`).
+public export
+WaveMaxel : Type -> Type
+WaveMaxel k = Maxel BoxInt k k DiagAntisymForm
+
+||| Coordinate-generic discrete spatial basis shared by Model A (`Coord2`) and Model B (`PureMultiset`):
+||| - `axes`       : baseline list of `(stepDir, isOddFn)` axis generators
+||| - `extendAxes` : discovers any emergent higher-dimensional `(stepDir, isOddFn)` axes from active field coordinates
 public export
 record AxisBasis (k : Type) where
   constructor MkAxisBasis
-  stepX    : k
-  stepY    : k
-  shiftAdd : k -> k -> k
-  shiftSub : k -> k -> k
-  coordX   : k -> Integer
-  coordY   : k -> Integer
-  mkCoord  : Integer -> Integer -> k
-  isOddX   : k -> Bool
-  isOddY   : k -> Bool
-  unitAxes : Box BoxInt k
+  axes       : List (k, k -> Bool)
+  extendAxes : WaveMaxel k -> List (k, k -> Bool)
+  shiftAdd   : k -> k -> k
+  shiftSub   : k -> k -> k
+  coordX     : k -> Integer
+  coordY     : k -> Integer
+  mkCoord    : Integer -> Integer -> k
+  unitAxes   : Box BoxInt k
+
+public export
+axisStepAt : Nat -> AxisBasis k -> k
+axisStepAt idx ax =
+  case drop idx ax.axes of
+    ((s, _) :: _) => s
+    []            => ax.mkCoord 0 0
+
+public export
+activeAxesOf : AxisBasis k -> WaveMaxel k -> List (k, k -> Bool)
+activeAxesOf ax wave =
+  case ax.extendAxes wave of
+    []    => ax.axes
+    extra => ax.axes ++ extra
+
+public export
+activeUnitAxesOf : Ord k => AxisBasis k -> WaveMaxel k -> Box BoxInt k
+activeUnitAxesOf ax wave =
+  case ax.extendAxes wave of
+    []    => ax.unitAxes
+    extra =>
+      let z0 = ax.mkCoord 0 0
+      in foldl (\acc, (d, _) =>
+                  addAtKeyBox (ax.shiftSub z0 d) (MkBoxInt 1)
+                    (addAtKeyBox d (MkBoxInt 1) acc))
+               ax.unitAxes
+               extra
+
+public export
+coord2Axes : List (Coord2, Coord2 -> Bool)
+coord2Axes =
+  ((PosZ 0, ZeroZ), \(x, _) => isOddSigned x) ::
+  ((ZeroZ, PosZ 0), \(_, y) => isOddSigned y) :: []
 
 public export
 coord2Basis : AxisBasis Coord2
 coord2Basis =
   MkAxisBasis
-    (PosZ 0, ZeroZ)
-    (ZeroZ, PosZ 0)
+    coord2Axes
+    (\_ => [])
     combine
     (\a, b => combine a (inverse b))
     (\(x, _) => signedToInteger x)
     (\(_, y) => signedToInteger y)
     (\x, y => (intToSigned x, intToSigned y))
-    (\(x, _) => isOddSigned x)
-    (\(_, y) => isOddSigned y)
-    (unitAxes2D (PosZ 0, ZeroZ) (ZeroZ, PosZ 0))
+    (unitAxes (map fst coord2Axes))
+
+public export
+pureAxisEntry : PureMultiset -> (PureMultiset, PureMultiset -> Bool)
+pureAxisEntry axKey =
+  (MkHMSet (singletonBox axKey (MkBoxInt 1)),
+   \pos => isOddBox (lookupPureKey axKey pos))
+
+public export
+buildPureAxesList : Nat -> Integer -> List (PureMultiset, PureMultiset -> Bool)
+buildPureAxesList Z       _   = []
+buildPureAxesList (S rem) idx = pureAxisEntry (scalarKeyHMSet idx) :: buildPureAxesList rem (idx + 1)
+
+public export
+collectHigherAxesSite : Integer -> PureMultiset -> Box BoxInt PureMultiset -> Box BoxInt PureMultiset
+collectHigherAxesSite baseDim (MkHMSet b) acc0 =
+  foldBox (\k, _, acc =>
+             case axisAtomIndex k of
+               Just i  => if i > baseDim then setBox k (MkBoxInt 1) acc else acc
+               Nothing => acc)
+          acc0 b
+
+||| Emergently discovers any spatial axis atoms `{ [] : i }` (`i > baseDim`, e.g. `axisZ = { [] : 3 }`)
+||| present in `wave` without hardcoded dimension bounds.
+public export
+discoverHigherPureAxes : Integer -> WaveMaxel PureMultiset -> List (PureMultiset, PureMultiset -> Bool)
+discoverHigherPureAxes baseDim (MkMaxel m) =
+  let axBox = foldBox (\(a, b), _, acc =>
+                         collectHigherAxesSite baseDim b (collectHigherAxesSite baseDim a acc))
+                      BoxLeaf m
+  in map (\(axKey, _) => pureAxisEntry axKey) (toAscListBox axBox)
+
+public export
+pureMSetBasisND : Nat -> AxisBasis PureMultiset
+pureMSetBasisND dim =
+  let baseAxes = buildPureAxesList dim 1
+  in MkAxisBasis
+       baseAxes
+       (discoverHigherPureAxes (natToInteger dim))
+       addHMSet
+       subHMSet
+       (\pos => unwrapBox (lookupPureKey axisX pos))
+       (\pos => unwrapBox (lookupPureKey axisY pos))
+       (\x, y =>
+          addHMSet (MkHMSet (singletonBox axisX (MkBoxInt x)))
+                   (MkHMSet (singletonBox axisY (MkBoxInt y))))
+       (unitAxesWith negHMSet (map fst baseAxes))
 
 public export
 pureMSetBasis : AxisBasis PureMultiset
-pureMSetBasis =
-  MkAxisBasis
-    FiniteScience.StreamWork.stepX
-    FiniteScience.StreamWork.stepY
-    addHMSet
-    subHMSet
-    (\pos => unwrapBox (lookupPureKey axisX pos))
-    (\pos => unwrapBox (lookupPureKey axisY pos))
-    (\x, y =>
-       addHMSet (MkHMSet (singletonBox axisX (MkBoxInt x)))
-                (MkHMSet (singletonBox axisY (MkBoxInt y))))
-    (\pos => isOddBox (lookupPureKey axisX pos))
-    (\pos => isOddBox (lookupPureKey axisY pos))
-    (unitAxes2DWith negHMSet FiniteScience.StreamWork.stepX FiniteScience.StreamWork.stepY)
+pureMSetBasis = pureMSetBasisND 2
+
+public export
+pureMSetBasis3D : AxisBasis PureMultiset
+pureMSetBasis3D = pureMSetBasisND 3
 
 public export
 data StepMode = ModeLinear | ModeUnified | ModePaced
@@ -89,12 +164,6 @@ canonLinkCoup = 1
 public export
 canonPacedSubTicks : Nat
 canonPacedSubTicks = 4
-
-||| Active coupled field carrier: diagonal `(a, a)` holds scalar amplitude `psi(a)`
-||| and off-diagonal `(a, b)` holds antisymmetric flux `u_{ab} = -u_{ba}` (`DiagAntisymForm`).
-public export
-WaveMaxel : Type -> Type
-WaveMaxel k = Maxel BoxInt k k DiagAntisymForm
 
 ||| Unified sparse discrete field over any discrete group basis `k`:
 ||| - `waveMaxel`   : half-stored diagonal + antisymmetric edge field (`DiagAntisymForm`)
@@ -164,27 +233,39 @@ fieldActiveWork sf =
   maxelNodeCount sf.waveMaxel + maxelNodeCount sf.metricMaxel + maxelNodeCount sf.paceMaxel
 
 --------------------------------------------------------------------------------
--- 2. GENERIC BALANCED ZERO-SUM SEEDS (ZERO PINNED MATTER!)
+-- 2. GENERIC BALANCED ZERO-SUM SEEDS (2D, 3D & ARBITRARY DIMENSION)
 --------------------------------------------------------------------------------
+
+public export
+seedSparseDipoleSites : Ord k => (pPos, pNeg : k) -> (amp : Integer) -> SparseField k
+seedSparseDipoleSites pPos pNeg amp =
+  let w = addAtMaxelEdge pNeg pNeg (MkBoxInt (-amp)) (singletonMaxelEdge pPos pPos (MkBoxInt amp))
+  in MkSparseField w emptyMaxel emptyMaxel
 
 public export
 seedSparseBreather : Ord k => AxisBasis k -> (x, yPos, yNeg, amp : Integer) -> SparseField k
 seedSparseBreather ax x yPos yNeg amp =
-  let pPos = ax.mkCoord x yPos
-      pNeg = ax.mkCoord x yNeg
-      w    = addAtMaxelEdge pNeg pNeg (MkBoxInt (-amp)) (singletonMaxelEdge pPos pPos (MkBoxInt amp))
-  in MkSparseField w emptyMaxel emptyMaxel
+  seedSparseDipoleSites (ax.mkCoord x yPos) (ax.mkCoord x yNeg) amp
 
-||| Balanced zero-sum 4-row wavepacket centered at `(x0, y0 + 0.5)` (`y in {y0-1..y0+2}`),
-||| generated directly by convolving one 1D `WaveMaxel` row generator with the 4-row envelope `yEnv`.
 public export
-seedSparseWavepacketAt : Ord k => AxisBasis k -> (x0, y0, amp : Integer) -> SparseField k
-seedSparseWavepacketAt ax x0 y0 amp =
+transverseEnv4 : Ord k => (Integer -> k) -> (t0, halfA, fullA : Integer) -> Box BoxInt k
+transverseEnv4 mkAxisCoord t0 halfA fullA =
+  addAtKeyBox (mkAxisCoord (t0 - 1)) (MkBoxInt halfA) $
+  addAtKeyBox (mkAxisCoord t0)       (MkBoxInt fullA) $
+  addAtKeyBox (mkAxisCoord (t0 + 1)) (MkBoxInt fullA) $
+  singletonBox (mkAxisCoord (t0 + 2)) (MkBoxInt halfA)
+
+||| Balanced zero-sum 4-row wavepacket propagating along $+X$ and convolved across any transverse coordinate generator.
+public export
+seedSparseWavepacketAlong :
+  Ord k =>
+  AxisBasis k ->
+  (mkTransCoord : Integer -> k) ->
+  (x0, t0, amp : Integer) ->
+  SparseField k
+seedSparseWavepacketAlong ax mkTransCoord x0 t0 amp =
   let halfA   = divIntegerPos amp 2
-      yEnv    = addAtKeyBox (ax.mkCoord 0 (y0 - 1)) (MkBoxInt halfA) $
-                addAtKeyBox (ax.mkCoord 0 y0)       (MkBoxInt amp)   $
-                addAtKeyBox (ax.mkCoord 0 (y0 + 1)) (MkBoxInt amp)   $
-                singletonBox (ax.mkCoord 0 (y0 + 2)) (MkBoxInt halfA)
+      tEnv    = transverseEnv4 mkTransCoord t0 halfA amp
       e1      = ax.mkCoord (x0 - 2) 0
       e2      = ax.mkCoord (x0 - 1) 0
       e3      = ax.mkCoord x0 0
@@ -196,7 +277,11 @@ seedSparseWavepacketAt ax x0 y0 amp =
                 setMaxelEdge e2 e3 (MkBoxInt (-2)) $
                 setMaxelEdge e3 e4 (MkBoxInt 2)    $
                 singletonMaxelEdge e4 e5 (MkBoxInt 2)
-  in MkSparseField (shiftConvolveMaxel ax.shiftAdd rowWave yEnv) emptyMaxel emptyMaxel
+  in MkSparseField (shiftConvolveMaxel ax.shiftAdd rowWave tEnv) emptyMaxel emptyMaxel
+
+public export
+seedSparseWavepacketAt : Ord k => AxisBasis k -> (x0, y0, amp : Integer) -> SparseField k
+seedSparseWavepacketAt ax = seedSparseWavepacketAlong ax (ax.mkCoord 0)
 
 public export
 seedSparseWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> SparseField k
@@ -207,6 +292,30 @@ public export
 seedSparseEdgeFlux : Ord k => AxisBasis k -> (x1, y1, x2, y2, u : Integer) -> SparseField k
 seedSparseEdgeFlux ax x1 y1 x2 y2 u =
   MkSparseField (singletonMaxelEdge (ax.mkCoord x1 y1) (ax.mkCoord x2 y2) (MkBoxInt u)) emptyMaxel emptyMaxel
+
+||| Constructs a signed 3D site key `{ axisX : x, axisY : y, axisZ : z }` inside `PureMultiset` (zero-pruning zeros).
+public export
+mkPureCoord3D : (x, y, z : Integer) -> PureMultiset
+mkPureCoord3D x y z =
+  MkHMSet $ addAtKeyBox axisZ (MkBoxInt z)
+          $ addAtKeyBox axisY (MkBoxInt y)
+          $ addAtKeyBox axisX (MkBoxInt x) BoxLeaf
+
+public export
+pureCoordZ : PureMultiset -> Integer
+pureCoordZ pos = unwrapBox (lookupPureKey axisZ pos)
+
+||| Seeds a 3D balanced breather dipole displaced along the emergent Z axis (`axisZ = { [] : 3 }`).
+public export
+seedPureBreather3DZ : (x, y, zPos, zNeg, amp : Integer) -> SparseField PureMultiset
+seedPureBreather3DZ x y zPos zNeg amp =
+  seedSparseDipoleSites (mkPureCoord3D x y zPos) (mkPureCoord3D x y zNeg) amp
+
+||| Seeds a 3D wavepacket propagating along $+X$ at slice `y = y0` with a 4-layer transverse Z envelope (`z in {z0-1..z0+2}`).
+public export
+seedPureWavepacket3DZ : (x0, y0, z0, amp : Integer) -> SparseField PureMultiset
+seedPureWavepacket3DZ x0 y0 z0 amp =
+  seedSparseWavepacketAlong pureMSetBasis (mkPureCoord3D 0 y0) x0 z0 amp
 
 --------------------------------------------------------------------------------
 -- 3. CAUSAL 1-HOP RETARDED MAXEL METRIC & ENDOGENOUS STREAM PACING
@@ -245,19 +354,20 @@ activeRhoAndSourceIf :
 activeRhoAndSourceIf False _        _    = (BoxLeaf, emptyMaxel)
 activeRhoAndSourceIf True  linkCoup wave = activeRhoAndSource linkCoup wave
 
-||| Causal 1-hop retarded Symmetric `Maxel` metric step:
+||| Causal 1-hop retarded Symmetric `Maxel` metric step across arbitrary-dimension `unitSt`:
 |||   `G_{t+1} = prune(actSrcM)
-|||            + floor((decayNum * shiftConvolveMaxel shiftAdd G_t unitAxes) / decayDen)`
+|||            + floor((decayNum * shiftConvolveMaxel shiftAdd G_t unitSt) / decayDen)`
 ||| Half-stores `a <= b`, enforces strict light-cone speed `c = 1`, and preserves `SymForm` by construction.
 public export
 stepCausalMetricMaxel :
   Ord k =>
   AxisBasis k ->
+  (unitSt : Box BoxInt k) ->
   (lagDiv, decayNum, decayDen : Integer) ->
   (actSrcM : Maxel BoxInt k k SymForm) ->
   (oldM : Maxel BoxInt k k SymForm) ->
   Maxel BoxInt k k SymForm
-stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrcM oldM =
+stepCausalMetricMaxel ax unitSt lagDiv decayNum decayDen actSrcM oldM =
   if lagDiv <= 0
     then emptyMaxel
     else
@@ -267,7 +377,7 @@ stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrcM oldM =
                       then emptyMaxel
                       else scaleDivPruneMaxel decayDen minCut
                              (scaleMaxel (MkBoxInt decayNum)
-                                (shiftConvolveMaxel ax.shiftAdd oldM ax.unitAxes))
+                                (shiftConvolveMaxel ax.shiftAdd oldM unitSt))
       in addMaxel decayed (pruneMinMaxel minCut actSrcM)
 
 ||| Canonical start vertex `s` when `(a, b)` spans an undirected step along `stepDir` (`b = a+dir` or `a = b+dir`).
@@ -333,21 +443,23 @@ sweepAxisPass ax stepDir wantOdd isOddFn linksBox getWave onLink initAcc =
           initAcc
           linksBox
 
+||| Arbitrary-dimension checkerboard link sweep over `axesList` (`[(step_1, isOdd_1), ..., (step_D, isOdd_D)]`).
 public export
 sweepCheckerboard :
   Ord k =>
   AxisBasis k ->
+  List (k, k -> Bool) ->
   (getWave : acc -> WaveMaxel k) ->
   (onLink : k -> k -> BoxInt -> BoxInt -> BoxInt -> acc -> acc) ->
   acc ->
   acc
-sweepCheckerboard ax getWave onLink acc0 =
-  let xLinks = collectAxisLinks ax ax.stepX (getWave acc0)
-      accX1  = sweepAxisPass ax ax.stepX False ax.isOddX xLinks getWave onLink acc0
-      accX2  = sweepAxisPass ax ax.stepX True  ax.isOddX xLinks getWave onLink accX1
-      yLinks = collectAxisLinks ax ax.stepY (getWave accX2)
-      accY1  = sweepAxisPass ax ax.stepY False ax.isOddY yLinks getWave onLink accX2
-  in sweepAxisPass ax ax.stepY True ax.isOddY yLinks getWave onLink accY1
+sweepCheckerboard ax axesList getWave onLink acc0 =
+  foldl (\acc, (stepDir, isOddFn) =>
+           let links = collectAxisLinks ax stepDir (getWave acc)
+               accE  = sweepAxisPass ax stepDir False isOddFn links getWave onLink acc
+           in sweepAxisPass ax stepDir True isOddFn links getWave onLink accE)
+        acc0
+        axesList
 
 public export
 record PacedPassAcc (k : Type) where
@@ -366,9 +478,11 @@ stepSparseField :
   SparseField k ->
   SparseField k
 stepSparseField ax lagDiv decayNum decayDen linkCoup m0 sf =
-  let (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
-      newMet       = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 sf.metricMaxel
-      wFin         = sweepCheckerboard ax id
+  let axesList     = activeAxesOf ax sf.waveMaxel
+      unitSt       = activeUnitAxesOf ax sf.waveMaxel
+      (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
+      newMet       = stepCausalMetricMaxel ax unitSt lagDiv decayNum decayDen actSrc0 sf.metricMaxel
+      wFin         = sweepCheckerboard ax axesList id
                        (\posA, posB, pA, pB, uOld, wave =>
                           let lag = if lagDiv <= 0
                                       then MkBoxInt 0
@@ -379,7 +493,7 @@ stepSparseField ax lagDiv decayNum decayDen linkCoup m0 sf =
 
 ||| One endogenous `StreamSkip`/`StreamYield` paced sweep over `SparseField k`
 ||| with `subTicks` fixed-angle elementary passes (`mSub = subTicks * m0`) and Bresenham tick budget
-||| `m0 * lagDiv` (no variable-angle `m0 + lag` slowdown and no manual `SealedCore` freeze-thaw).
+||| `m0 * lagDiv` across all active/emergent axes.
 public export
 stepSparseFieldPaced :
   Ord k =>
@@ -395,12 +509,14 @@ stepSparseFieldPaced ax subTicks lagDiv decayNum decayDen linkCoup m0 sf =
       let kInt         = max 1 (natToInteger subTicks)
           mSub         = kInt * m0
           paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
+          axesList     = activeAxesOf ax sf.waveMaxel
+          unitSt       = activeUnitAxesOf ax sf.waveMaxel
           (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
-          newMet       = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 sf.metricMaxel
+          newMet       = stepCausalMetricMaxel ax unitSt lagDiv decayNum decayDen actSrc0 sf.metricMaxel
           runSubs      : Nat -> PacedPassAcc k -> PacedPassAcc k
           runSubs Z acc = acc
           runSubs (S rem) acc =
-            let acc1 = sweepCheckerboard ax (.ppWave)
+            let acc1 = sweepCheckerboard ax axesList (.ppWave)
                          (\posA, posB, pA, pB, uOld, a =>
                             let rawC = unwrapBox (linkMetricSum newMet posA posB)
                                 cost = if rawC < lagDiv then 0 else rawC
@@ -624,11 +740,14 @@ isCoreSiteXY : Integer -> Integer -> Bool
 isCoreSiteXY x y = x >= (-1) && x <= 1 && y >= (-1) && y <= 2
 
 public export
-canonAnyLinkStart : Ord k => AxisBasis k -> k -> k -> Maybe k
-canonAnyLinkStart ax a b =
-  case canonLinkStart ax ax.stepX a b of
-    Just s  => Just s
-    Nothing => canonLinkStart ax ax.stepY a b
+canonAnyLinkStart : Ord k => AxisBasis k -> WaveMaxel k -> k -> k -> Maybe k
+canonAnyLinkStart ax wave a b =
+  foldl (\res, (stepDir, _) =>
+           case res of
+             Just s  => Just s
+             Nothing => canonLinkStart ax stepDir a b)
+        Nothing
+        (activeAxesOf ax wave)
 
 ||| Fraction (in %) of Lyapunov energy localized in the central core `[-1..1] x [-1..2]`.
 public export
@@ -639,7 +758,7 @@ fieldCoreEnergyFrac ax sf =
                    filterBox (\(a, b) =>
                                 if a == b
                                   then isCoreSiteXY (ax.coordX a) (ax.coordY a)
-                                  else case canonAnyLinkStart ax a b of
+                                  else case canonAnyLinkStart ax sf.waveMaxel a b of
                                          Just s  => isCoreSiteXY (ax.coordX s) (ax.coordY s)
                                          Nothing => False)
                              sf.waveMaxel.rawMaxelBox
@@ -647,32 +766,57 @@ fieldCoreEnergyFrac ax sf =
   in if totE <= 0 then 0 else divIntegerPos (cTot * 100) totE
 
 public export
-accumulateBandXY : Ord k => AxisBasis k -> Box BoxInt k -> (Integer, Integer)
-accumulateBandXY ax =
-  foldBox (\pos, (MkBoxInt ep), (sx, sy) => (sx + ep * ax.coordX pos, sy + ep * ax.coordY pos))
+accumulateBandXT : Ord k => AxisBasis k -> (k -> Integer) -> Box BoxInt k -> (Integer, Integer)
+accumulateBandXT ax coordT =
+  foldBox (\pos, (MkBoxInt ep), (sx, st) => (sx + ep * ax.coordX pos, st + ep * coordT pos))
           (0, 0)
 
 public export
-extractBandPsiAndFluxY :
+extractBandPsiAndFluxAxis :
   Ord k =>
   AxisBasis k ->
-  (yLo, yHi : Integer) ->
+  (stepT : k) ->
+  (coordT : k -> Integer) ->
+  (tLo, tHi : Integer) ->
   WaveMaxel k ->
   (Box BoxInt k, Box BoxInt (k, k))
-extractBandPsiAndFluxY ax yLo yHi (MkMaxel m) =
+extractBandPsiAndFluxAxis ax stepT coordT tLo tHi (MkMaxel m) =
   foldBox (\(a, b), w, (bp, df) =>
              if a == b
-               then let y = ax.coordY a
-                    in if y >= yLo && y <= yHi then (setBox a w bp, df) else (bp, df)
-               else if b == ax.shiftAdd a ax.stepY
+               then let t = coordT a
+                    in if t >= tLo && t <= tHi then (setBox a w bp, df) else (bp, df)
+               else if b == ax.shiftAdd a stepT
                  then (bp, setBox (a, b) w df)
-                 else if a == ax.shiftAdd b ax.stepY
+                 else if a == ax.shiftAdd b stepT
                    then (bp, setBox (b, a) (negWeight w) df)
                    else (bp, df))
           (BoxLeaf, BoxLeaf) m
 
-||| Generalized band-restricted (`yLo <= y <= yHi`) background-subtracted wavepacket observable,
-||| expressing Poynting flux via `dotBox bandPsi (contractR dFluxY + contractL dFluxY)`.
+||| Generalized transverse-axis (`stepT`, `coordT`, `tLo <= t <= tHi`) background-subtracted wavepacket observable,
+||| expressing Poynting flux via `dotBox bandPsi (contractR dFluxT + contractL dFluxT)`.
+public export
+measureSparseBandAxis :
+  Ord k =>
+  AxisBasis k ->
+  (stepT : k) ->
+  (coordT : k -> Integer) ->
+  (tLo, tHi : Integer) ->
+  (sf, bgSf : SparseField k) ->
+  (initE, finalE, maxE : Integer) ->
+  (workSteps : Nat) ->
+  WavepacketReport
+measureSparseBandAxis ax stepT coordT tLo tHi sf bgSf initE finalE maxE workSteps =
+  let dWave             = subMaxel sf.waveMaxel bgSf.waveMaxel
+      (bandPsi, dFluxT) = extractBandPsiAndFluxAxis ax stepT coordT tLo tHi dWave
+      epBox             = hadamardBox bandPsi bandPsi
+      accEPsi           = unwrapBox (totalMassBox epBox)
+      (wX, wT)          = accumulateBandXT ax coordT epBox
+      accSt             = unwrapBox (dotBox bandPsi (unionBox (contractRBox dFluxT) (contractLBox dFluxT)))
+      mxM               = if accEPsi == 0 then 0 else unwrapBox (tdivPosBox (MkBoxInt (wX * 1000)) accEPsi)
+      mtM               = if accEPsi == 0 then 0 else unwrapBox (tdivPosBox (MkBoxInt (wT * 1000)) accEPsi)
+      net               = fieldPsiNet sf + fieldFluxNet sf
+  in MkWavepacketReport mxM mtM accSt initE finalE maxE net workSteps
+
 public export
 measureSparseBandRange :
   Ord k =>
@@ -682,17 +826,7 @@ measureSparseBandRange :
   (initE, finalE, maxE : Integer) ->
   (workSteps : Nat) ->
   WavepacketReport
-measureSparseBandRange ax yLo yHi sf bgSf initE finalE maxE workSteps =
-  let dWave             = subMaxel sf.waveMaxel bgSf.waveMaxel
-      (bandPsi, dFluxY) = extractBandPsiAndFluxY ax yLo yHi dWave
-      epBox             = hadamardBox bandPsi bandPsi
-      accEPsi           = unwrapBox (totalMassBox epBox)
-      (wX, wY)          = accumulateBandXY ax epBox
-      accSy             = unwrapBox (dotBox bandPsi (unionBox (contractRBox dFluxY) (contractLBox dFluxY)))
-      mxM               = if accEPsi == 0 then 0 else unwrapBox (tdivPosBox (MkBoxInt (wX * 1000)) accEPsi)
-      myM               = if accEPsi == 0 then 0 else unwrapBox (tdivPosBox (MkBoxInt (wY * 1000)) accEPsi)
-      net               = fieldPsiNet sf + fieldFluxNet sf
-  in MkWavepacketReport mxM myM accSy initE finalE maxE net workSteps
+measureSparseBandRange ax = measureSparseBandAxis ax (axisStepAt 1 ax) ax.coordY
 
 ||| Sparse band-restricted (`-3 <= y <= 4`) background-subtracted wavepacket observable.
 public export
@@ -726,17 +860,19 @@ bandsEqualInBox ax xLo xHi yLo yHi sf bgSf vacSf =
   in fltW dWave.rawMaxelBox == fltW vWave.rawMaxelBox
 
 ||| Pure Maxel plus-mode quadrupole polarization:
-||| `sum_{a} G(a, a + stepX) - sum_{a} G(a, a + stepY)` over canonical directed nearest-neighbor links.
+||| `sum_{a} G(a, a + step_0) - sum_{a} G(a, a + step_1)` over canonical directed nearest-neighbor links.
 public export
 metricQuadrupolePlus : Ord k => AxisBasis k -> Maxel BoxInt k k SymForm -> Integer
 metricQuadrupolePlus ax met =
-  foldBox (\(a, b), (MkBoxInt w), acc =>
-             case canonLinkStart ax ax.stepX a b of
-               Just _  => acc + w
-               Nothing => case canonLinkStart ax ax.stepY a b of
-                            Just _  => acc - w
-                            Nothing => acc)
-          0 met.rawMaxelBox
+  let s0 = axisStepAt 0 ax
+      s1 = axisStepAt 1 ax
+  in foldBox (\(a, b), (MkBoxInt w), acc =>
+                case canonLinkStart ax s0 a b of
+                  Just _  => acc + w
+                  Nothing => case canonLinkStart ax s1 a b of
+                               Just _  => acc - w
+                               Nothing => acc)
+             0 met.rawMaxelBox
 
 --------------------------------------------------------------------------------
 -- 6. COMPILE-TIME QTT 0 ALGEBRAIC INVARIANTS
@@ -793,19 +929,21 @@ prfSparseUnitAxes2DConvolve = Refl
 public export
 checkTagFreePackUnpackRoundTrip : Bool
 checkTagFreePackUnpackRoundTrip =
-  let actBr = seedSparseBreather pureMSetBasis 2 0 1 3
-      p0    = pureMSetBasis.mkCoord 0 0
-      p1    = pureMSetBasis.mkCoord 1 0
+  let actBr = seedPureBreather3DZ 2 1 3 4 3
+      p0    = mkPureCoord3D 0 0 0
+      p1    = mkPureCoord3D 1 0 1
       edgeF = singletonMaxelEdge {form = DiagAntisymForm} p1 p0 (MkBoxInt 5)
       metB  = addMaxel (diagEmbedMaxel (singletonBox p0 (MkBoxInt 16))) (singletonMaxelEdge p1 p0 (MkBoxInt 25))
       paceB = addMaxel (singletonMaxelEdge p0 p1 (MkBoxInt 11))
-                       (singletonMaxelEdge p0 (pureMSetBasis.mkCoord 0 1) (MkBoxInt (-23)))
+                       (singletonMaxelEdge p0 (mkPureCoord3D 0 1 1) (MkBoxInt (-23)))
       sf0   = MkSparseField (addMaxel actBr.waveMaxel edgeF) metB paceB
       root0 = packSparseFieldToRoot BoxLeaf sf0
       sf1   = (unpackRootToSparseField root0).fieldData
   in (unwrapBox (sumHMSet root0) == 0) &&
      verifyRootBalancedDipoles root0 &&
      isSymBox (toGeneralMaxel sf1.metricMaxel).rawMaxelBox &&
+     (length (activeAxesOf pureMSetBasis sf1.waveMaxel) == 3) &&
+     (treeSizeNonZero (activeUnitAxesOf pureMSetBasis sf1.waveMaxel) == 6) &&
      (sf1.waveMaxel == sf0.waveMaxel) &&
      (sf1.metricMaxel == sf0.metricMaxel) &&
      (sf1.paceMaxel == sf0.paceMaxel)

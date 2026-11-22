@@ -195,6 +195,10 @@ stepY : PureMultiset
 stepY = MkHMSet (singletonBox axisY (intToBoxInt 1))
 
 public export
+stepZ : PureMultiset
+stepZ = MkHMSet (singletonBox axisZ (intToBoxInt 1))
+
+public export
 originSiteKey : PureMultiset
 originSiteKey = emptyPureMSet
 
@@ -214,7 +218,7 @@ decodeNatSiteKey m =
 
 -- Five mutually disjoint structural shapes natively inside `PureMultiset`
 -- (ZERO synthetic integer channel tags, ZERO mirror keys, ZERO clock registers!):
---   1. Active 2D Vertex      : keys subset `{ axisX, axisY }` (`isSiteKey`)
+--   1. Active D-Dim Vertex   : keys are positive scalar axis atoms `{ [] : i }` (`i >= 1`, `isSiteKey`)
 --   2. Active Directed Edge  : `{ wrapBox posA : +1, wrapBox posB : -1 }` (`mkEdgeKey`)
 --   3. Causal Metric Dipole  : `{ wrapBox (wrapBox phiM) : +1 }` (`mkMetricKey`)
 --   4. Pacing Balance Dipole : `{ wrapBox { paceM : -1 } }` (`mkPaceKey`)
@@ -225,11 +229,28 @@ isNothingMaybe : Maybe a -> Bool
 isNothingMaybe Nothing = True
 isNothingMaybe _       = False
 
-||| True iff every key in `m` belongs to the 2D spatial basis `{ axisX, axisY }` (including `[]` at `(0,0)`).
+||| If `k` is a positive scalar axis atom `{ [] : i }` (`i >= 1`), returns `Just i`.
+public export
+axisAtomIndex : PureMultiset -> Maybe Integer
+axisAtomIndex (MkHMSet (BoxNode _ BoxLeaf (MkHMSet BoxLeaf) (MkBoxInt i) BoxLeaf)) =
+  if i > 0 then Just i else Nothing
+axisAtomIndex _ = Nothing
+
+||| True iff `k` is an emergent positive scalar axis atom `{ [] : i }` (`i >= 1`),
+||| e.g. `axisX = { [] : 1 }`, `axisY = { [] : 2 }`, `axisZ = { [] : 3 }`, ...
+public export
+isAxisAtom : PureMultiset -> Bool
+isAxisAtom k =
+  case axisAtomIndex k of
+    Just _  => True
+    Nothing => False
+
+||| True iff every key in `m` is an emergent spatial axis atom `{ [] : i }` (`i >= 1`, including `[]` at the origin).
+||| Natively supports 1D, 2D, 3D, and arbitrary-dimensional coordinates inside `PureMultiset`.
 public export
 isSiteKey : PureMultiset -> Bool
 isSiteKey (MkHMSet b) =
-  foldBox (\k, _, ok => ok && (k == axisX || k == axisY)) True b
+  foldBox (\k, _, ok => ok && isAxisAtom k) True b
 
 ||| Decodes a single-entry wrapped box `{ k : expectedW }` cleanly without allocation.
 public export
@@ -401,8 +422,8 @@ prfPaceKeyRoundTrip = Refl
 
 public export
 0 prfFiveShapesDisjoint :
-  (let site = natSiteKey (1, 0, 0)
-       edge = mkEdgeKey originSiteKey stepX
+  (let site = natSiteKey (1, 2, 3)
+       edge = mkEdgeKey originSiteKey stepZ
        metr = mkMetricKey FiniteScience.StreamWork.photonMSet
        pace = mkPaceKey FiniteScience.StreamWork.photonMSet
        mat  = mkMatterKey (natSiteKey (5, 0, 0)) FiniteScience.StreamWork.protonMSet

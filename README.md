@@ -8,9 +8,9 @@
 
 - **Zero Floating-Point Drift & Zero `assert_total`:** All dynamics use exact arbitrary-precision signed integers (`BoxInt`) and total binary integer division, guaranteeing exact global zero-sum neutrality (`net = 0`) and monotone discrete Lyapunov energy conservation (`E_{t+1} <= E_t`).
 - **Closed-Universe Black-Box Isolation (`Control.App` + Linear `App1`):** Boundary validation (`Dec` recognizers and `UniverseErr` exceptions) runs in the outer `App` layer, while internal universe evolution runs strictly inside linear, `NoThrow` `App1` handles (`FlatBlackBox` and `HereditaryBlackBox`).
-- **A/B Structural Equivalence (Flat `Coord2` vs Zero-Tag `PureMultiset`):**
+- **A/B Structural Equivalence (Flat `Coord2` vs Emergent Arbitrary-Dimension `PureMultiset`):**
   - **Model A ([FlatSpaceUniverse.idr](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/FlatSpaceUniverse.idr)):** Evolves `FlatField = SparseField Coord2` paired with `Space 3` matter on unbounded signed coordinates `Coord2 = (SignedCoord, SignedCoord)` (zero grid walls).
-  - **Model B ([HereditaryUniverse.idr](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/HereditaryUniverse.idr)):** Encodes the entire universe state inside one single zero-sum `PureMultiset` (`HereditaryMSet BoxInt`) using five mutually disjoint zero-tag structural shapes (`isSiteKey`, `mkEdgeKey`, `mkMetricKey`, `mkPaceKey`, `mkMatterKey` with QTT `0` disjointness proof `prfFiveShapesDisjoint`).
+  - **Model B ([HereditaryUniverse.idr](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/HereditaryUniverse.idr)):** Encodes the entire universe state inside one single zero-sum `PureMultiset` (`HereditaryMSet BoxInt`) using five mutually disjoint zero-tag structural shapes (`isSiteKey` over emergent arbitrary-dimension axis atoms `{ [] : i }`, `mkEdgeKey`, `mkMetricKey`, `mkPaceKey`, `mkMatterKey` with QTT `0` 3D disjointness proof `prfFiveShapesDisjoint`).
 
 ---
 
@@ -49,7 +49,7 @@
 | **Experiment 3** | Observer Time Horizons & Non-Interference | `RetroTime 2` freezes earlier than `RetroTime 0`; passive `observeHereditaryPure` zoom probes match unobserved evolution bit-for-bit. |
 | **Experiment 4** | Canonical Model A Half-Stored `Maxel` Causal Gravity (`4A, 4B, 4D, 4E, 4F`) | `4A` breather self-trapping (`>= 85%` core energy vs linear dispersion); `4B` gravitational centroid deflection & Shapiro delay; `4D` equal-mass 2-body attraction; `4E` exact spacelike invariance outside `c = 1` light cone; `4F` horizontal vs vertical anisotropic stress quadrupole (`Q_H`, `Q_V`) and arrival split. |
 | **Experiment 5** | Model A vs Model B Multi-Mode Parity Matrix | Fast 4-sweep bit-for-bit `sameWavePhysics` parity across `ModeUnified` and `ModePaced`, `net = 0`, `SymForm`/`DiagAntisymForm` invariants, balanced dipoles, and higher hierarchical peel cost in Model B (`workB > workA`). |
-| **Experiment 6** | Gate 1 `ModePaced` Streaming Core | Sub-tick fixed-angle (`k = 4`, `mSub = 28`) local `StreamSkip`/`StreamYield` pacing with zero `m0 + lag` and zero manual freeze/thaw: passes all of `4A, 4B, 4D, 4E, 4F`, Lyapunov monotonicity, and endogenous core quiescence (`>= 40%` skips on dense breathers vs `<= 2%` in dilute packets). |
+| **Experiment 6** | Gate 1 `ModePaced` Streaming Core & Gate 3 Emergent 3D Gravity | Sub-tick fixed-angle (`k = 4`, `mSub = 28`) local `StreamSkip`/`StreamYield` pacing with zero `m0 + lag` and zero manual freeze/thaw: passes all of `4A, 4B, 4D, 4E, 4F`, Lyapunov monotonicity, endogenous core quiescence (`>= 40%` skips on dense breathers vs `<= 2%` in dilute packets), and emergent 3D (`axes = 3, neighbors = 6`) Z-axis gravitational attraction inside `HereditaryBlackBox`. |
 
 ---
 

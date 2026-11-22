@@ -388,6 +388,28 @@ runLabSelfTrap lab mode = App1.do
   App1.pure (MkSelfTrapReport initE ea.eaEnergy maxE corePct ea.eaNetSum work, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
+runLabWaveAxis :
+  Ord k =>
+  BlackBoxLab e box k ->
+  (stepT : k) ->
+  (coordT : k -> Integer) ->
+  StepMode ->
+  Nat ->
+  SparseField k ->
+  SparseField k ->
+  SparseField k ->
+  App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
+runLabWaveAxis lab stepT coordT mode steps pktSeed extraBg bgField = App1.do
+  u0 <- lab.labBoot
+  u1 <- lab.labInject (extraBg <+> pktSeed) u0
+  obs <- lab.labEnergy u1
+  let MkPureObs u2 initE _ = obs
+  (ea, maxE, work, balOk) <- driveLabStepsTel lab mode steps u2 initE 0 True
+  let wRep0 = measureSparseBandAxis lab.labBasis stepT coordT (-3) 4 ea.eaField bgField initE ea.eaEnergy maxE work
+      wRep  = { waveNetSum := ea.eaNetSum } wRep0
+  App1.pure (wRep, balOk, ea.eaAntiOk, ea.eaSymOk)
+
+export
 runLabWave :
   Ord k =>
   BlackBoxLab e box k ->
@@ -396,15 +418,9 @@ runLabWave :
   SparseField k ->
   SparseField k ->
   App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
-runLabWave lab mode steps extraBg bgField = App1.do
-  u0 <- lab.labBoot
-  u1 <- lab.labInject (extraBg <+> seedSparseWavepacketAt lab.labBasis 0 0 512) u0
-  obs <- lab.labEnergy u1
-  let MkPureObs u2 initE _ = obs
-  (ea, maxE, work, balOk) <- driveLabStepsTel lab mode steps u2 initE 0 True
-  let wRep0 = measureSparseBand lab.labBasis ea.eaField bgField initE ea.eaEnergy maxE work
-      wRep  = { waveNetSum := ea.eaNetSum } wRep0
-  App1.pure (wRep, balOk, ea.eaAntiOk, ea.eaSymOk)
+runLabWave lab mode steps =
+  runLabWaveAxis lab (axisStepAt 1 lab.labBasis) lab.labBasis.coordY mode steps
+    (seedSparseWavepacketAt lab.labBasis 0 0 512)
 
 export
 runLabTwoBody :
@@ -777,6 +793,56 @@ runExperiment4and5 = do
 --   Replaced `m0 + lag` & manual `SealedCore` BFS with local `StreamSkip`/`StreamYield`
 --------------------------------------------------------------------------------
 
+public export
+record Emergent3DReport where
+  constructor MkEmergent3DReport
+  e3AxesCount  : Nat
+  e3UnitCount  : Nat
+  e3VacZ       : WavepacketReport
+  e3TopZ       : WavepacketReport
+  e3BotZ       : WavepacketReport
+  e3FlagsOk    : Bool
+
+export
+runEmergent3DGravity : App1 {u = Any} e Emergent3DReport
+runEmergent3DGravity = App1.do
+  let pkt3D  = seedPureWavepacket3DZ 0 0 0 512
+      brTopZ = seedPureBreather3DZ 1 0 3 4 8192
+      brBotZ = seedPureBreather3DZ 1 0 (-2) (-3) 8192
+      combW  = (brTopZ <+> pkt3D).waveMaxel
+      axCnt  = length (activeAxesOf pureMSetBasis combW)
+      unCnt  = treeSizeNonZero (activeUnitAxesOf pureMSetBasis combW)
+  eaBgT <- bootInjectAndRun hereditaryLab ModePaced 6 brTopZ
+  eaBgB <- bootInjectAndRun hereditaryLab ModePaced 6 brBotZ
+  (vZ, balV, antiV, symV) <- runLabWaveAxis hereditaryLab stepZ pureCoordZ ModePaced 6 pkt3D neutral neutral
+  (tZ, balT, antiT, symT) <- runLabWaveAxis hereditaryLab stepZ pureCoordZ ModePaced 6 pkt3D brTopZ  eaBgT.eaField
+  (bZ, balB, antiB, symB) <- runLabWaveAxis hereditaryLab stepZ pureCoordZ ModePaced 6 pkt3D brBotZ  eaBgB.eaField
+  let flgOk = balV && antiV && symV && balT && antiT && symT && balB && antiB && symB &&
+              eaBgT.eaBalOk && eaBgT.eaAntiOk && eaBgT.eaSymOk &&
+              eaBgB.eaBalOk && eaBgB.eaAntiOk && eaBgB.eaSymOk
+  App1.pure (MkEmergent3DReport axCnt unCnt vZ tZ bZ flgOk)
+
+public export
+emergent3DCriteriaOk : Emergent3DReport -> Bool
+emergent3DCriteriaOk r =
+  (r.e3AxesCount == 3) &&
+  (r.e3UnitCount == 6) &&
+  r.e3FlagsOk &&
+  (r.e3VacZ.waveNetSum == 0) &&
+  (r.e3TopZ.waveNetSum == 0) &&
+  (r.e3BotZ.waveNetSum == 0) &&
+  (r.e3VacZ.meanYMilli == 500) &&
+  (r.e3VacZ.poyntingYAccum == 0) &&
+  (r.e3TopZ.meanXMilli < r.e3VacZ.meanXMilli) &&
+  (r.e3TopZ.meanYMilli > 500) &&
+  (r.e3TopZ.poyntingYAccum /= 0) &&
+  (r.e3BotZ.meanXMilli == r.e3TopZ.meanXMilli) &&
+  (r.e3BotZ.meanYMilli < 500) &&
+  (r.e3TopZ.meanYMilli + r.e3BotZ.meanYMilli == 999) &&
+  (r.e3BotZ.poyntingYAccum == -(r.e3TopZ.poyntingYAccum)) &&
+  (r.e3TopZ.waveEnergy <= r.e3TopZ.initEnergy) &&
+  (r.e3BotZ.waveEnergy <= r.e3BotZ.initEnergy)
+
 export
 collectPacedWorkLoop :
   Nat ->
@@ -803,12 +869,13 @@ showPacedStats w =
 public export
 mkExp6Lines :
   GravityCoreMetrics ->
+  Emergent3DReport ->
   PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats -> PacedWorkStats ->
-  Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool ->
+  Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool -> Bool ->
   List String
-mkExp6Lines pA w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F energyMonoOk quiescenceOk pass =
+mkExp6Lines pA e3D w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F ok3D energyMonoOk quiescenceOk pass =
   [ "----------------------------------------------------------------"
-  , "[Experiment 6] Gate 1 ModePaced Streaming Core (k=4, fixed mSub=28, 0 SealedCore)"
+  , "[Experiment 6] Gate 1 ModePaced Streaming Core & Gate 3 Emergent 3D Gravity"
   , "  * 6-4A Self-Trapping (" ++ show ok4A ++ "):"
   , "    - Linear             -> " ++ show pA.gcLin
   , "    - Paced (A)          -> " ++ show pA.gcTrap
@@ -824,15 +891,20 @@ mkExp6Lines pA w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F energyMonoOk quiesc
   , "    - Paced Work (4D)    -> " ++ showPacedStats w4D
   , "  * 6-4E Causal Light-Cone (" ++ show ok4E ++ ") -> " ++ show pA.gcLightCone
   , "  * 6-4F Anisotropic Stress (" ++ show ok4F ++ ") -> " ++ show pA.gcAniso
-  , "  * Gate 1 Audit: workA=" ++ show pA.gcWork ++ ", energyMono=" ++ show energyMonoOk ++
-    ", quiescenceOk=" ++ show quiescenceOk ++
+  , "  * 6-3D Gate 3 Emergent 3D Causal Gravity in HereditaryBlackBox (" ++ show ok3D ++
+    ", axes=" ++ show e3D.e3AxesCount ++ ", neighbors=" ++ show e3D.e3UnitCount ++ "):"
+  , "    - 3D Vacuum Z-Band(B)-> " ++ show e3D.e3VacZ
+  , "    - 3D +Z Breather  (B)-> " ++ show e3D.e3TopZ
+  , "    - 3D -Z Breather  (B)-> " ++ show e3D.e3BotZ
+  , "  * Gate 1 & 3 Audit: workA=" ++ show pA.gcWork ++ ", energyMono=" ++ show energyMonoOk ++
+    ", quiescenceOk=" ++ show quiescenceOk ++ ", emergent3D=" ++ show ok3D ++
     ", physics=[4A=" ++ show ok4A ++ ",4B=" ++ show ok4B ++ ",4D=" ++ show ok4D ++ ",4E=" ++ show ok4E ++ ",4F=" ++ show ok4F ++ "]"
   , "  -> Experiment 6 pass=" ++ show pass
   ]
 
 public export
-buildExp6Report : GravityCoreMetrics -> (Bool, List String)
-buildExp6Report pA =
+buildExp6Report : GravityCoreMetrics -> Emergent3DReport -> (Bool, List String)
+buildExp6Report pA e3D =
   let seed4A       = seedSparseBreather coord2Basis 0 0 1 4096
       seedBr       = seedSparseBreather coord2Basis 4 5 6 8192
       seedVac      = seedSparseWavepacketAt coord2Basis 0 0 512
@@ -849,21 +921,23 @@ buildExp6Report pA =
       ok4D         = twoBodyCriteriaOk pA.gcTwoBody
       ok4E         = lightConeCriteriaOk pA.gcLightCone
       ok4F         = anisotropicStressCriteriaOk pA.gcAniso
+      ok3D         = emergent3DCriteriaOk e3D
       energyMonoOk = coreEnergyMonoOk pA
       quiescenceOk =
         (pacedSkipPct wBr.pwYields wBr.pwSkips >= 40) &&
         (pacedSkipPct wVac.pwYields wVac.pwSkips <= 2) &&
         (w4A.pwSkips > 0) && (w4D.pwSkips > 0)
       pass         =
-        ok4A && ok4B && ok4D && ok4E && ok4F &&
+        ok4A && ok4B && ok4D && ok4E && ok4F && ok3D &&
         energyMonoOk && quiescenceOk &&
         (pA.gcNetSum == 0) && pA.gcAntiOk && pA.gcSymOk && pA.gcBalOk
-  in (pass, mkExp6Lines pA w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F energyMonoOk quiescenceOk pass)
+  in (pass, mkExp6Lines pA e3D w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F ok3D energyMonoOk quiescenceOk pass)
 
 export
 runExperiment6Paced : Has [Console] e => App e (Bool, List String)
 runExperiment6Paced = do
-  pA <- app1 (runLabCoreSuite flatLab ModePaced)
-  let res = buildExp6Report pA
+  pA  <- app1 (runLabCoreSuite flatLab ModePaced)
+  e3D <- app1 runEmergent3DGravity
+  let res = buildExp6Report pA e3D
   traverse_ putStrLn (snd res)
   pure res
