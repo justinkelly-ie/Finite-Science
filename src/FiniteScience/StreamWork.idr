@@ -103,18 +103,6 @@ streamMergeWorkHMSet a b =
       diff   = if rawL1 >= rM.residualL1 then minus rawL1 rM.residualL1 else 0
   in (merged, MkStreamWorkReport (rA.workSteps + rB.workSteps) (half diff) rM.residualL1)
 
-||| Projects any `HereditaryMSet c` down to its pure unit-weight structural support
-||| (recursively mapping every non-zero multiplicity to `oneWeight`, stripping magnitudes and signs).
-public export
-supportHMSetLoop : MultisetWeight c => Nat -> HereditaryMSet c -> HereditaryMSet c
-supportHMSetLoop Z _ = emptyHMSet
-supportHMSetLoop (S rem) (MkHMSet b) =
-  MkHMSet (foldBox (\k, _, acc => setBox (supportHMSetLoop rem k) oneWeight acc) BoxLeaf (supportBox b))
-
-public export
-supportHMSet : MultisetWeight c => HereditaryMSet c -> HereditaryMSet c
-supportHMSet m = supportHMSetLoop (hmDepth m) m
-
 ||| Freezes a constant-work-per-cycle observer stream via `freezeStateStreamWith`,
 ||| producing a `HorizonObservationReport` without ad-hoc loop recursion.
 public export

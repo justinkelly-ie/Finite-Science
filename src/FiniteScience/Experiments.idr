@@ -890,6 +890,7 @@ record GohSpreadAuditReport where
   gsSelfTimeOk   : Bool
   gsCoupledOk    : Bool
   gsRelicCycleOk : Bool
+  gsActivePairOk : Bool
   gsFuelSteps10  : Nat
   gsYields10     : Nat
   gsSteps10      : Nat
@@ -901,6 +902,11 @@ record GohSpreadAuditReport where
   gsRelicFuel2   : Nat
   gsRelicCyc2    : Nat
   gsRelicE2      : Integer
+  gsRelicFuel3   : Nat
+  gsRelicCyc3    : Nat
+  gsRelicE3      : Integer
+  gsPairEA3      : Integer
+  gsPairEB3      : Integer
 
 public export
 auditCoupledSourceFlow : (Bool, Integer, Integer)
@@ -910,8 +916,8 @@ auditCoupledSourceFlow =
                       $ setBox (natSiteKey (0, 4, 0)) (MkBoxInt 1)
                       $ singletonBox (natSiteKey (0, 0, 0)) (MkBoxInt 1)
       fuel  = MkGohFuel (integerToNat 10000)
-      stepF = stepCoupledSourceFlow 50
-      cRel1 = fst (freezeStateStreamWith 0 0 fuel 1 stepF (emptyEnergyState, eSrc0))
+      stepF = stepCoupledSourceFlow coord2Basis 50
+      cRel1 = fst (freezeStateStreamWith 0 0 fuel 1 stepF (neutral, eSrc0))
       cRel2 = fst (freezeStateStreamWith 0 0 fuel 1 stepF cRel1.relicState)
       cRel3 = fst (freezeStateStreamWith 0 0 fuel 1 stepF cRel2.relicState)
       cRel6 = fst (freezeStateStreamWith 0 0 fuel 3 stepF cRel3.relicState)
@@ -925,97 +931,90 @@ auditCoupledSourceFlow =
               (fieldPsiNet (fst cRel6.relicState) + fieldFluxNet (fst cRel6.relicState) == 0)
   in (ok, eU3, eU6)
 
-||| Closed cosmological loop: Cycle 1 freezes to `rootRelic1`, `supportHMSet` strips amplitudes
-||| to unit-weight topology `supp1`, and `supp1` acts as BOTH Cycle 2's `GohFuel` clock AND its
-||| external `E_src` reservoir feeding an initially empty Cycle-2 universe (`emptyEnergyState`).
+||| One composable cosmological cycle: `eSrc` acts as BOTH `GohFuel` clock AND boundary reservoir
+||| feeding an initially empty `PureMultiset` universe, returning its stripped `MSetSupport` relic.
 public export
-auditRelicFuelCycle : (Bool, Nat, Nat, Integer)
-auditRelicFuelCycle =
+runRelicCycle : (qAmp : Integer) -> PureMultiset -> (PureMultiset, Nat, Nat, Integer, Bool)
+runRelicCycle qAmp eSrc =
+  let (MkAnyGohFuel _ yFuel, sBud) = selfFuelOfHMSet eSrc
+      fuel   = gohSteps yFuel
+      rCyc   = fst (freezeStateStreamWith 0 0 (MkGohFuel (fuel * 25)) (max 4 sBud)
+                                          (stepCoupledSourceFlow pureMSetBasis qAmp)
+                                          (neutral, eSrc))
+      uOut   = fst rCyc.relicState
+      remSrc = snd rCyc.relicState
+      eOut   = fieldEnergy uOut
+      nextR  = MSetSupport (packEnergyStateToRoot BoxLeaf uOut)
+      ok     = (fuel > 0) && (sBud > 0) && (rCyc.stepsConsumed > 0) &&
+               (eOut > 0) && (fastPeelWorkHMSet remSrc < fastPeelWorkHMSet eSrc) &&
+               (fieldPsiNet uOut + fieldFluxNet uOut == 0) &&
+               (rCyc.freezeReason == YieldExhausted || rCyc.freezeReason == StepHorizonReached)
+  in (nextR, fuel, rCyc.stepsConsumed, eOut, ok)
+
+||| 3-cycle closed cosmological chain: Cycle 1 -> MSetSupport -> Cycle 2 -> MSetSupport -> Cycle 3.
+public export
+auditRelicFuelChain : (Bool, Nat, Nat, Integer, Nat, Nat, Integer)
+auditRelicFuelChain =
   let seedPure   = seedBreather pureMSetBasis 4 5 6 8192
       (rCyc1, _) = freezeEnergyStream pureMSetBasis 1 4 canonLagDiv 0 0 (MkGohFuel (integerToNat 600)) 5 seedPure
-      supp1      = supportHMSet (packEnergyStateToRoot BoxLeaf rCyc1.relicState)
-      (MkAnyGohFuel _ yFuel2, sBud2) = selfFuelOfHMSet supp1
-      fuel2      = gohSteps yFuel2
-      rCyc2      = fst (freezeStateStreamWith 0 0 (MkGohFuel (fuel2 * 25)) (max 4 sBud2)
-                                              (stepCoupledSourceFlow 50) (emptyEnergyState, supp1))
-      u2         = fst rCyc2.relicState
-      remSrc2    = snd rCyc2.relicState
-      e2         = fieldEnergy u2
-      ok         = (fuel2 > 0) && (sBud2 > 0) && (rCyc2.stepsConsumed > 0) &&
-                   (e2 > 0) && (fastPeelWorkHMSet remSrc2 < fastPeelWorkHMSet supp1) &&
-                   (fieldPsiNet u2 + fieldFluxNet u2 == 0) &&
-                   (rCyc2.freezeReason == YieldExhausted || rCyc2.freezeReason == StepHorizonReached)
-  in (ok, fuel2, rCyc2.stepsConsumed, e2)
+      supp1      = MSetSupport (packEnergyStateToRoot BoxLeaf rCyc1.relicState)
+      (supp2, fuel2, cyc2N, e2, ok2) = runRelicCycle 50 supp1
+      (_,     fuel3, cyc3N, e3, ok3) = runRelicCycle 50 supp2
+  in (ok2 && ok3, fuel2, cyc2N, e2, fuel3, cyc3N, e3)
+
+||| Active bidirectional two-universe coupling (`U_A <-> U_B`): tests zero-sum equilibration.
+public export
+auditActiveUniversePair : (Bool, Integer, Integer)
+auditActiveUniversePair =
+  let uA0  = seedEdgeFlux coord2Basis 0 0 1 0 200
+      uB0  = neutral
+      eA0  = fieldEnergy uA0
+      rel3 = fst (freezeStateStreamWith 0 0 (MkGohFuel (integerToNat 10000)) 3
+                                        (stepCoupledUniversePair coord2Basis 50) (uA0, uB0))
+      (uA3, uB3) = rel3.relicState
+      eA3  = fieldEnergy uA3
+      eB3  = fieldEnergy uB3
+      ok   = (eA3 < eA0) && (eB3 > 0) && (eA3 + eB3 <= eA0) &&
+             (abs (eA3 - eB3) < eA0) &&
+             (fieldPsiNet uA3 + fieldFluxNet uA3 == 0) &&
+             (fieldPsiNet uB3 + fieldFluxNet uB3 == 0)
+  in (ok, eA3, eB3)
 
 public export
 auditGohSpreadPolyHMSet : GohSpreadAuditReport
 auditGohSpreadPolyHMSet =
-  let z1  = spreadZHMSet 1
-      z2  = spreadZHMSet 2
-      z3  = spreadZHMSet 3
-      z4  = spreadZHMSet 4
-      z5  = spreadZHMSet 5
-      z6  = spreadZHMSet 6
-      z7  = spreadZHMSet 7
-      z8  = spreadZHMSet 8
-      z9  = spreadZHMSet 9
-      z10 = spreadZHMSet 10
-      z12 = spreadZHMSet 12
-      factOk =
-        (z1  == gohPsi1) &&
-        (z2  == gohPsi1 * gohPsi2) &&
-        (z3  == gohPsi1 * gohPsi3) &&
-        (z4  == gohPsi1 * gohPsi2 * gohPsi4) &&
-        (z5  == gohPsi1 * gohPsi5) &&
-        (z6  == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi6) &&
-        (z7  == gohPsi1 * gohPsi7) &&
-        (z8  == gohPsi1 * gohPsi2 * gohPsi4 * gohPsi8) &&
-        (z9  == gohPsi1 * gohPsi3 * gohPsi9) &&
-        (z10 == gohPsi1 * gohPsi2 * gohPsi5 * gohPsi10) &&
-        (z12 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi4 * gohPsi6 * gohPsi12)
-      rootOk =
-        (evalPolyHMSetAt gohPsi2  (the Integer 2) == 2) &&
-        (evalPolyHMSetAt gohPsi3  (the Integer 3) == 0) &&
-        (evalPolyHMSetAt gohPsi4  (the Integer 2) == 0) &&
-        (evalPolyHMSetAt gohPsi6  (the Integer 1) == 0) &&
-        (evalPolyHMSetAt gohPsi2  (the Integer 0) == 4) &&
-        (evalPolyHMSetAt gohPsi3  (the Integer 0) == 9) &&
-        (evalPolyHMSetAt gohPsi4  (the Integer 0) == 4) &&
-        (evalPolyHMSetAt gohPsi5  (the Integer 0) == 25) &&
-        (evalPolyHMSetAt gohPsi6  (the Integer 0) == 1) &&
-        (evalPolyHMSetAt gohPsi7  (the Integer 0) == 49) &&
-        (evalPolyHMSetAt gohPsi8  (the Integer 0) == 4) &&
-        (evalPolyHMSetAt gohPsi9  (the Integer 0) == 9) &&
-        (evalPolyHMSetAt gohPsi10 (the Integer 0) == 1) &&
-        (evalPolyHMSetAt gohPsi12 (the Integer 0) == 1)
-      fibOk =
-        (evalPolyHMSetAt z1 (the Integer 5) == 5) &&
-        (evalPolyHMSetAt z2 (the Integer 5) == (-5)) &&
-        (evalPolyHMSetAt z3 (the Integer 5) == 20) &&
-        (evalPolyHMSetAt z4 (the Integer 5) == (-45)) &&
-        (evalPolyHMSetAt z5 (the Integer 5) == 125) &&
-        (evalPolyHMSetAt z6 (the Integer 5) == (-320))
-      compOk =
-        (evalPolyHMSetAt z2 z2 == z4) &&
-        (evalPolyHMSetAt z2 z3 == z6) &&
-        (evalPolyHMSetAt z3 z2 == z6) &&
-        (evalPolyHMSetAt z2 z4 == z8) &&
-        (evalPolyHMSetAt z3 z3 == z9) &&
-        (evalPolyHMSetAt z2 z5 == z10) &&
-        (evalPolyHMSetAt z5 z2 == z10) &&
-        (evalPolyHMSetAt z3 z4 == z12) &&
-        (evalPolyHMSetAt z4 z3 == z12)
+  let z1 = spreadZHMSet 1;  z2 = spreadZHMSet 2;  z3 = spreadZHMSet 3;  z4 = spreadZHMSet 4
+      z5 = spreadZHMSet 5;  z6 = spreadZHMSet 6;  z7 = spreadZHMSet 7;  z8 = spreadZHMSet 8
+      z9 = spreadZHMSet 9;  z10 = spreadZHMSet 10; z12 = spreadZHMSet 12
+      factOk = all id
+        [ z1 == gohPsi1, z2 == gohPsi1 * gohPsi2, z3 == gohPsi1 * gohPsi3
+        , z4 == gohPsi1 * gohPsi2 * gohPsi4, z5 == gohPsi1 * gohPsi5
+        , z6 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi6, z7 == gohPsi1 * gohPsi7
+        , z8 == gohPsi1 * gohPsi2 * gohPsi4 * gohPsi8, z9 == gohPsi1 * gohPsi3 * gohPsi9
+        , z10 == gohPsi1 * gohPsi2 * gohPsi5 * gohPsi10
+        , z12 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi4 * gohPsi6 * gohPsi12
+        ]
+      rootOk = all id
+        [ evalPolyHMSetAt gohPsi2  (the Integer 2) == 2,  evalPolyHMSetAt gohPsi3  (the Integer 3) == 0
+        , evalPolyHMSetAt gohPsi4  (the Integer 2) == 0,  evalPolyHMSetAt gohPsi6  (the Integer 1) == 0
+        , evalPolyHMSetAt gohPsi2  (the Integer 0) == 4,  evalPolyHMSetAt gohPsi3  (the Integer 0) == 9
+        , evalPolyHMSetAt gohPsi4  (the Integer 0) == 4,  evalPolyHMSetAt gohPsi5  (the Integer 0) == 25
+        , evalPolyHMSetAt gohPsi6  (the Integer 0) == 1,  evalPolyHMSetAt gohPsi7  (the Integer 0) == 49
+        , evalPolyHMSetAt gohPsi8  (the Integer 0) == 4,  evalPolyHMSetAt gohPsi9  (the Integer 0) == 9
+        , evalPolyHMSetAt gohPsi10 (the Integer 0) == 1,  evalPolyHMSetAt gohPsi12 (the Integer 0) == 1
+        ]
+      fibOk = all (\(z, v) => evalPolyHMSetAt z (the Integer 5) == v)
+        [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)]
+      compOk = all (\(p, q, r) => evalPolyHMSetAt p q == r)
+        [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)]
       (_, b1, r1) = pythPowerTriple 1 (MkBoxInt 28)
       (_, b2, _)  = pythPowerTriple 2 (MkBoxInt 28)
       (_, b3, _)  = pythPowerTriple 3 (MkBoxInt 28)
       (_, b4, _)  = pythPowerTriple 4 (MkBoxInt 28)
       num28       = 4 * b1 * b1
       den28       = r1 * r1
-      homogOk =
-        (evalHomogPolyHMSet 1 z1 num28 den28 == 4 * b1 * b1) &&
-        (evalHomogPolyHMSet 2 z2 num28 den28 == 4 * b2 * b2) &&
-        (evalHomogPolyHMSet 3 z3 num28 den28 == 4 * b3 * b3) &&
-        (evalHomogPolyHMSet 4 z4 num28 den28 == 4 * b4 * b4)
+      homogOk = all (\(d, z, b) => evalHomogPolyHMSet d z num28 den28 == 4 * b * b)
+        [(1, z1, b1), (2, z2, b2), (3, z3, b3), (4, z4, b4)]
       (relicZ6,  yFuel6,  yUsed6,  sUsed6,  fReason6)  = freezeGohSpreadStream 6
       (relicZ10, yFuel10, yUsed10, sUsed10, fReason10) = freezeGohSpreadStream 10
       frzOk =
@@ -1029,15 +1028,13 @@ auditGohSpreadPolyHMSet =
       cycDil                      = rDil.stepsConsumed
       cycDen                      = rDen.stepsConsumed
       selfTimeOk =
-        (rDil.freezeReason == YieldExhausted) &&
-        (rDen.freezeReason == YieldExhausted) &&
-        (sDil == 0) &&
-        (sDen > 800) &&
-        (cycDen > cycDil)
-      (coupledOk, eU3, eU6)               = auditCoupledSourceFlow
-      (relicCycleOk, fuelBit2, cyc2N, e2) = auditRelicFuelCycle
-  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk coupledOk relicCycleOk
-                            yFuel10 yUsed10 sUsed10 cycDil cycDen sDen eU3 eU6 fuelBit2 cyc2N e2
+        (rDil.freezeReason == YieldExhausted) && (rDen.freezeReason == YieldExhausted) &&
+        (sDil == 0) && (sDen > 800) && (cycDen > cycDil)
+      (coupledOk, eU3, eU6)                                = auditCoupledSourceFlow
+      (relicCycleOk, fuel2, cyc2N, e2, fuel3, cyc3N, e3)   = auditRelicFuelChain
+      (activePairOk, pEA3, pEB3)                           = auditActiveUniversePair
+  in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk coupledOk relicCycleOk activePairOk
+                            yFuel10 yUsed10 sUsed10 cycDil cycDen sDen eU3 eU6 fuel2 cyc2N e2 fuel3 cyc3N e3 pEA3 pEB3
 
 public export
 armChecks : Integer -> GravityCoreMetrics -> (Bool, Bool, Bool, Bool, Bool)
@@ -1126,8 +1123,11 @@ mkExp6Lines gs (pB1, pB2, pB3) (c1@(a1, b1, d1, e1, f1), c2@(a2, b2, d2, e2, f2)
     show gs.gsDenseCyc ++ " [" ++ show gs.gsDenseSkips ++ " StreamSkips cost 0 GohFuel])"
   , "    - Coupled Two-Multiset Energy Flow (E_src[3x2500=7500] -> U -> closed cooling): ok=" ++ show gs.gsCoupledOk ++
     " (E(U_3)=" ++ show gs.gsCoupledE3 ++ " [E_src=[]], E(U_6)=" ++ show gs.gsCoupledE6 ++ " <= E(U_3), net=0)"
-  , "    - Self-Seeding Relic Loop (Cycle 1 -> supportHMSet -> GohFuel & E_src -> Empty Cycle 2): ok=" ++ show gs.gsRelicCycleOk ++
-    " (Cycle-2 GohFuel=" ++ show gs.gsRelicFuel2 ++ ", sweeps=" ++ show gs.gsRelicCyc2 ++ ", E(U2)=" ++ show gs.gsRelicE2 ++ ", net=0)"
+  , "    - 3-Cycle Self-Seeding Relic Chain (C1 -> MSetSupport -> C2 -> MSetSupport -> C3): ok=" ++ show gs.gsRelicCycleOk ++
+    " (C2[fuel=" ++ show gs.gsRelicFuel2 ++ ",sw=" ++ show gs.gsRelicCyc2 ++ ",E=" ++ show gs.gsRelicE2 ++
+    "] -> C3[fuel=" ++ show gs.gsRelicFuel3 ++ ",sw=" ++ show gs.gsRelicCyc3 ++ ",E=" ++ show gs.gsRelicE3 ++ "], net=0)"
+  , "    - Active Bidirectional Coupling (U_A[E0=40000] <-> U_B[E0=0], 3 sweeps): ok=" ++ show gs.gsActivePairOk ++
+    " (E(U_A3)=" ++ show gs.gsPairEA3 ++ ", E(U_B3)=" ++ show gs.gsPairEB3 ++ ", netA=netB=0)"
   , "  * 6-B Factorization Comparison of k=4 Sub-Ticks: (4,1) ModePaced vs (1,4) ModeSpread vs (2,2) ModeBalanced:"
   , showArmSummary "Arm B1 (ModePaced    4x1)" pB1 wBr1 wVac1 c1
   , showArmSummary "Arm B2 (ModeSpread   1x4)" pB2 wBr2 wVac2 c2
@@ -1180,7 +1180,7 @@ buildExp6Report :
   (Bool, List String)
 buildExp6Report pB1 pB2 pB3 z23 z32 e3D =
   let gs           = auditGohSpreadPolyHMSet
-      gohOk        = gs.gsFactOk && gs.gsPrimeRootOk && gs.gsFibOk && gs.gsComposeOk && gs.gsHomogPythOk && gs.gsFreezeOk && gs.gsSelfTimeOk && gs.gsCoupledOk && gs.gsRelicCycleOk
+      gohOk        = all id [gs.gsFactOk, gs.gsPrimeRootOk, gs.gsFibOk, gs.gsComposeOk, gs.gsHomogPythOk, gs.gsFreezeOk, gs.gsSelfTimeOk, gs.gsCoupledOk, gs.gsRelicCycleOk, gs.gsActivePairOk]
       seed4A       = seedBreather coord2Basis 0 0 1 4096
       seedBr       = seedBreather coord2Basis 4 5 6 8192
       seedVac      = seedWavepacketAt coord2Basis 0 0 512

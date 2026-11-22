@@ -627,29 +627,56 @@ decodeRelicBond k =
       in (xi, yi, xi + 1, yi)
 
 public export
-injectRelicBond : EnergyState Coord2 -> PureMultiset -> Integer -> EnergyState Coord2
-injectRelicBond u k amp =
+injectRelicBond : Ord k => AxisBasis k -> EnergyState k -> PureMultiset -> Integer -> EnergyState k
+injectRelicBond ax u k amp =
   let (xA, yA, xB, yB) = decodeRelicBond k
-  in u <+> seedEdgeFlux coord2Basis xA yA xB yB amp
+  in u <+> seedEdgeFlux ax xA yA xB yB amp
 
-||| Coupled two-multiset boundary flow: external reservoir `eSrc : PureMultiset`
-||| peels 1 bond quantum (`qAmp`, energy `qAmp^2`) per tick into `U : EnergyState Coord2`
+||| Coupled two-multiset boundary flow over any `AxisBasis k`: external reservoir `eSrc : PureMultiset`
+||| peels 1 bond quantum (`qAmp`, energy `qAmp^2`) per tick into `U : EnergyState k`
 ||| via `viewAsAntiBox eSrc`, automatically decoupling into closed cooling once `eSrc == []`.
 public export
 stepCoupledSourceFlow :
+  Ord k =>
+  AxisBasis k ->
   (qAmp : Integer) ->
-  (EnergyState Coord2, PureMultiset) ->
-  (StreamStep (EnergyState Coord2, PureMultiset), Nat, Nat)
-stepCoupledSourceFlow qAmp (u, eSrc) =
+  (EnergyState k, PureMultiset) ->
+  (StreamStep (EnergyState k, PureMultiset), Nat, Nat)
+stepCoupledSourceFlow ax qAmp (u, eSrc) =
   let (uIn, nextSrc) =
         case viewAsAntiBox eSrc of
           EmptyVacuum       => (u, emptyPureMSet)
-          PopBlackBox k rst => (injectRelicBond u k qAmp, rst)
-          PopRedBox   k rst => (injectRelicBond u k (-qAmp), rst)
-      (uNext, (yStep, sStep)) = stepEnergyCore coord2Basis 1 1 0 canonDecayNum canonDecayDen 0 7 uIn
+          PopBlackBox k rst => (injectRelicBond ax u k qAmp, rst)
+          PopRedBox   k rst => (injectRelicBond ax u k (-qAmp), rst)
+      (uNext, (yStep, sStep)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 uIn
   in if yStep == 0 && sStep == 0 && nextSrc == emptyPureMSet
        then (StreamDone, 0, 0)
        else (StreamYield (uNext, nextSrc), max 1 yStep, sStep)
+
+||| Active bidirectional coupling of two evolving `EnergyState k` universes `(uA, uB)`:
+||| transfers 1 zero-sum boundary bond quantum (`-qAmp` / `+qAmp`) from the higher-energy
+||| universe to the lower-energy universe while both evolve under `stepEnergyCore`.
+public export
+stepCoupledUniversePair :
+  Ord k =>
+  AxisBasis k ->
+  (qAmp : Integer) ->
+  (EnergyState k, EnergyState k) ->
+  (StreamStep (EnergyState k, EnergyState k), Nat, Nat)
+stepCoupledUniversePair ax qAmp (uA, uB) =
+  let eA   = fieldEnergy uA
+      eB   = fieldEnergy uB
+      qPos = seedEdgeFlux ax 0 0 1 0 qAmp
+      qNeg = seedEdgeFlux ax 0 0 1 0 (-qAmp)
+      (inA, inB) =
+        if eA > eB then (uA <+> qNeg, uB <+> qPos)
+        else if eB > eA then (uA <+> qPos, uB <+> qNeg)
+        else (uA, uB)
+      (nA, (yA, sA)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 inA
+      (nB, (yB, sB)) = stepEnergyCore ax 1 1 0 canonDecayNum canonDecayDen 0 7 inB
+  in if yA + yB == 0 && sA + sB == 0
+       then (StreamDone, 0, 0)
+       else (StreamYield (nA, nB), max 1 (yA + yB), sA + sB)
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
