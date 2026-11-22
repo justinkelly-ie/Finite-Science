@@ -1,6 +1,6 @@
 module FiniteScience.BlackBoxErrors
 
-import FinScBox.Time
+import FinScBox.HereditaryMSet
 
 %default total
 
@@ -8,7 +8,7 @@ import FinScBox.Time
 -- 1. TIME HORIZON DISPLAY & CONFIGURATION (`Observer = Time`)
 --------------------------------------------------------------------------------
 
-||| Renders a `FinScBox.Time` horizon concisely for boundary telemetry.
+||| Renders a `FinScBox.HereditaryMSet` horizon concisely for boundary telemetry.
 public export
 showTime : Time -> String
 showTime (StaticTime l h)  = "StaticTime(" ++ show l ++ ", " ++ show h ++ ")"
@@ -18,7 +18,7 @@ showTime (WindowedTime w)  = "WindowedTime(" ++ show w ++ ")"
 showTime OpenFuture        = "OpenFuture"
 showTime BilateralTime     = "BilateralTime"
 
-||| Defines an observation horizon strictly through `FinScBox.Time`
+||| Defines an observation horizon strictly through `FinScBox.HereditaryMSet`
 ||| (no separate observer particle entity):
 ||| - `boundTime`  : Bounded compute horizon (`BoundedTime cap` or `WindowedTime win`)
 ||| - `retroDepth` : Retrograde UV zoom depth (`RetroTime g`)

@@ -5,7 +5,6 @@ import FinScBox.BoxInt
 import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
-import FinScBox.Time
 import FinScBox.Views
 import FinScBox.ProjectiveRotation
 import FinScBox.BlackRedZoom

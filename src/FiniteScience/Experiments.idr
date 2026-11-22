@@ -6,7 +6,6 @@ import FinScBox.BoxInt
 import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
-import FinScBox.Time
 import FinScBox.Lenses
 import FinScBox.ProjectiveRotation
 import FinScBox.MultisetCodec
