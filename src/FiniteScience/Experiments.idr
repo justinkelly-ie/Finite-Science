@@ -4,6 +4,7 @@ import Control.App
 import Control.App.Console
 import Stage0.BoxInt
 import Stage0.Interfaces
+import Stage0.Box
 import Stage0.Multiset
 import Stage0.HereditaryMSet
 import Stage1.Basis.Space
@@ -239,7 +240,7 @@ runExperiment3 = do
 --------------------------------------------------------------------------------
 
 public export
-data StepMode = ModeLinear | ModeUnified | ModeAdaptive
+data StepMode = ModeLinear | ModeUnified | ModeAdaptive | ModePaced
 
 public export
 record StepTel where
@@ -302,12 +303,14 @@ stepFlatByMode : StepMode -> (1 u : FlatBlackBox) -> App1 e FlatBlackBox
 stepFlatByMode ModeLinear   u = stepFlatLinear1 u
 stepFlatByMode ModeUnified  u = stepFlatUnified1 u
 stepFlatByMode ModeAdaptive u = stepFlatAdaptive1 u
+stepFlatByMode ModePaced    u = stepFlatPaced1 u
 
 export
 stepHereditaryByMode : StepMode -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
 stepHereditaryByMode ModeLinear   u = stepHereditaryLinear1 u
 stepHereditaryByMode ModeUnified  u = stepHereditaryUnified1 u
 stepHereditaryByMode ModeAdaptive u = stepHereditaryAdaptive1 u
+stepHereditaryByMode ModePaced    u = stepHereditaryPaced1 u
 
 export
 rootFieldOf : PureMultiset -> SparseField PureMultiset PureMultiset
@@ -517,14 +520,15 @@ export
 runLabLightCone :
   Ord k =>
   BlackBoxLab e box k body ->
+  StepMode ->
   (vRep18, tRep18 : WavepacketReport) ->
   App1 {u = Any} e (CausalLightConeReport, Bool, Bool)
-runLabLightCone lab vRep18 tRep18 = App1.do
+runLabLightCone lab mode vRep18 tRep18 = App1.do
   let brSeed  = seedSparseBreather lab.labBasis 4 5 6 8192
       pktSeed = seedSparseWavepacketAt lab.labBasis 0 0 512
-  eaVac2 <- bootInjectAndRun lab ModeUnified 2 pktSeed
-  eaBg2  <- bootInjectAndRun lab ModeUnified 2 brSeed
-  eaBr2  <- bootInjectAndRun lab ModeUnified 2 (brSeed <+> pktSeed)
+  eaVac2 <- bootInjectAndRun lab mode 2 pktSeed
+  eaBg2  <- bootInjectAndRun lab mode 2 brSeed
+  eaBr2  <- bootInjectAndRun lab mode 2 (brSeed <+> pktSeed)
   let exactSl = bandsEqualInBox lab.labBasis lab.labCodec (-4) 4 (-3) 3 eaBr2.eaField eaBg2.eaField eaVac2.eaField
       balOk   = eaVac2.eaBalOk && eaBg2.eaBalOk && eaBr2.eaBalOk
       symOk   = eaVac2.eaSymOk && eaBg2.eaSymOk && eaBr2.eaSymOk
@@ -547,15 +551,16 @@ export
 runLabAnisotropicStress :
   Ord k =>
   BlackBoxLab e box k body ->
+  StepMode ->
   App1 {u = Any} e (AnisotropicStressReport, Bool)
-runLabAnisotropicStress lab = App1.do
+runLabAnisotropicStress lab mode = App1.do
   let ax = lab.labBasis
-  eaQH <- bootInjectAndRun lab ModeUnified 12 (seedSparseEdgeFlux ax 0 0 1 0 8192)
-  eaQV <- bootInjectAndRun lab ModeUnified 12 (seedSparseEdgeFlux ax 0 0 0 1 8192)
-  eaBgH <- bootInjectAndRun lab ModeUnified 18 (stressSourceField ax True)
-  eaBgV <- bootInjectAndRun lab ModeUnified 18 (stressSourceField ax False)
-  (mH, _, _, balPH, antiPH, symPH) <- runLabWave lab ModeUnified 18 (stressSourceField ax True)  eaBgH.eaField
-  (mV, _, _, balPV, antiPV, symPV) <- runLabWave lab ModeUnified 18 (stressSourceField ax False) eaBgV.eaField
+  eaQH <- bootInjectAndRun lab mode 12 (seedSparseEdgeFlux ax 0 0 1 0 8192)
+  eaQV <- bootInjectAndRun lab mode 12 (seedSparseEdgeFlux ax 0 0 0 1 8192)
+  eaBgH <- bootInjectAndRun lab mode 18 (stressSourceField ax True)
+  eaBgV <- bootInjectAndRun lab mode 18 (stressSourceField ax False)
+  (mH, _, _, balPH, antiPH, symPH) <- runLabWave lab mode 18 (stressSourceField ax True)  eaBgH.eaField
+  (mV, _, _, balPV, antiPV, symPV) <- runLabWave lab mode 18 (stressSourceField ax False) eaBgV.eaField
   let qH     = metricQuadrupolePlus ax eaQH.eaField.metricMaxel
       qV     = metricQuadrupolePlus ax eaQV.eaField.metricMaxel
       symOk  = eaQH.eaSymOk && eaQV.eaSymOk && eaBgH.eaSymOk && eaBgV.eaSymOk &&
@@ -591,8 +596,8 @@ runLabGravitySuite lab = App1.do
   (b2Bot, b2Top, net2B, (anti2B, sym2B, bal2B)) <- runLabTwoBody lab ModeUnified True
   (b1Bot, _,     net1B, (anti1B, sym1B, bal1B)) <- runLabTwoBody lab ModeUnified False
   (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear  True
-  (lcRep, balLC, symLC) <- runLabLightCone lab vRep tRep
-  (asRep, balAS)        <- runLabAnisotropicStress lab
+  (lcRep, balLC, symLC) <- runLabLightCone lab ModeUnified vRep tRep
+  (asRep, balAS)        <- runLabAnisotropicStress lab ModeUnified
   let ftRep = MkFreezeThawReport fCores fRep tRep.waveWorkSteps fRep.waveWorkSteps (fCores == 1 && peekOk)
                                  initC midC finC thwS iE0 iEF iEM netI
   let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
@@ -822,3 +827,172 @@ runExperiment4and5 = do
               ]
   traverse_ putStrLn lines
   pure (pass, lines)
+
+--------------------------------------------------------------------------------
+-- EXPERIMENT 6: ENDOGENOUS `StreamSkip`/`StreamYield` LOCAL COMPUTE PACING
+--   Fixed elementary rotation `m0 = 7` (NO `m0 + lag`, NO `SealedCore` BFS)
+--------------------------------------------------------------------------------
+
+public export
+record PacedSuiteMetrics where
+  constructor MkPacedSuiteMetrics
+  pWork      : Nat
+  pNetSum    : Integer
+  pAntiOk    : Bool
+  pSymOk     : Bool
+  pBalOk     : Bool
+  pLin       : SelfTrapReport
+  pTrap      : SelfTrapReport
+  pVac       : WavepacketReport
+  pTop       : WavepacketReport
+  pBot       : WavepacketReport
+  pTwoBody   : TwoBodyReport
+  pLightCone : CausalLightConeReport
+  pAniso     : AnisotropicStressReport
+
+export
+collectPacedWorkLoop :
+  Nat ->
+  SparseField Coord2 FlatCoreBody ->
+  Nat ->
+  Nat ->
+  (Nat, Nat, Nat)
+collectPacedWorkLoop Z sf accY accS = (accY, accS, maxelNodeCount sf.paceMaxel)
+collectPacedWorkLoop (S rem) sf accY accS =
+  let (sf1, (y, s)) = stepSparseFieldPaced coord2Basis canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
+  in collectPacedWorkLoop rem sf1 (accY + y) (accS + s)
+
+export
+runLabPacedSuite :
+  Ord k =>
+  BlackBoxLab e box k body ->
+  App1 {u = Any} e PacedSuiteMetrics
+runLabPacedSuite lab = App1.do
+  let ax        = lab.labBasis
+      brTopSeed = seedSparseBreather ax 4 5 6 8192
+      brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
+  (linRep, (antiLin, symLin, balLin))   <- runLabSelfTrap lab ModeLinear
+  (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab ModePaced
+  eaBgTop <- bootInjectAndRun lab ModePaced 18 brTopSeed
+  eaBgBot <- bootInjectAndRun lab ModePaced 18 brBotSeed
+  (vRep, _, _, balV, antiV, symV) <- runLabWave lab ModePaced 18 neutral   neutral
+  (tRep, _, _, balT, antiT, symT) <- runLabWave lab ModePaced 18 brTopSeed eaBgTop.eaField
+  (bRep, _, _, balB, antiB, symB) <- runLabWave lab ModePaced 18 brBotSeed eaBgBot.eaField
+  (b2Bot, b2Top, net2B, (anti2B, sym2B, bal2B)) <- runLabTwoBody lab ModePaced  True
+  (b1Bot, _,     net1B, (anti1B, sym1B, bal1B)) <- runLabTwoBody lab ModePaced  False
+  (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear True
+  (lcRep, balLC, symLC) <- runLabLightCone lab ModePaced vRep tRep
+  (asRep, balAS)        <- runLabAnisotropicStress lab ModePaced
+  let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
+                              b2Bot.poyntingYAccum b2Top.poyntingYAccum
+                              b1Bot.poyntingYAccum blBot.poyntingYAccum
+                              b2Bot.initEnergy b2Bot.waveEnergy b2Bot.maxEnergy net2B
+  let totalAbsNet = abs vRep.waveNetSum + abs tRep.waveNetSum + abs bRep.waveNetSum +
+                    abs net2B + abs net1B + abs net2L +
+                    abs linRep.netSignedSum + abs trapRep.netSignedSum + abs asRep.asNetSum
+  let antiAll     = antiLin && antiTrap && antiV && antiT && antiB && anti2B && anti1B && anti2L
+  let symAll      = symLin && symTrap && symV && symT && symB && sym2B && sym1B && sym2L &&
+                    symLC && asRep.asSymMetricOk
+  let balAll      = balLin && balTrap && balV && balT && balB &&
+                    bal2B && bal1B && bal2L && balLC && balAS &&
+                    eaBgTop.eaBalOk && eaBgBot.eaBalOk
+  App1.pure (MkPacedSuiteMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll symAll balAll
+                                 linRep trapRep vRep tRep bRep tbRep lcRep asRep)
+
+public export
+paced4BCriteriaOk : PacedSuiteMetrics -> Bool
+paced4BCriteriaOk m =
+  let symSum = m.pTop.meanYMilli + m.pBot.meanYMilli
+  in (m.pVac.waveNetSum == 0) &&
+     (m.pTop.waveNetSum == 0) &&
+     (m.pBot.waveNetSum == 0) &&
+     (m.pVac.waveEnergy * 100 >= m.pVac.initEnergy * 92) &&
+     (m.pVac.waveEnergy <= m.pVac.initEnergy) &&
+     (m.pVac.maxEnergy <= m.pVac.initEnergy) &&
+     (m.pTop.waveEnergy <= m.pTop.initEnergy) &&
+     (m.pTop.maxEnergy <= m.pTop.initEnergy) &&
+     (m.pBot.waveEnergy <= m.pBot.initEnergy) &&
+     (m.pBot.maxEnergy <= m.pBot.initEnergy) &&
+     (m.pTop.waveEnergy * 100 >= m.pTop.initEnergy * 97) &&
+     (m.pVac.meanYMilli == 500) &&
+     (m.pVac.poyntingYAccum == 0) &&
+     (m.pTop.meanXMilli + 50 < m.pVac.meanXMilli) &&
+     (m.pTop.meanYMilli > 530) &&
+     (m.pTop.poyntingYAccum > 200000) &&
+     (m.pBot.meanXMilli == m.pTop.meanXMilli) &&
+     (m.pBot.meanYMilli < 500) &&
+     (m.pBot.poyntingYAccum == -(m.pTop.poyntingYAccum)) &&
+     (symSum == 999) &&
+     (m.pBot.waveEnergy == m.pTop.waveEnergy)
+
+public export
+pacedSkipPct : Nat -> Nat -> Integer
+pacedSkipPct y s =
+  if y + s == 0 then 0 else divIntegerPos (cast s * 100) (cast (y + s))
+
+export
+runExperiment6Paced : Has [Console] e => App e (Bool, List String)
+runExperiment6Paced = do
+  let h = "----------------------------------------------------------------"
+  let t = "[Experiment 6] Prototype ModePaced (StreamSkip/StreamYield, fixed m0=7)"
+  pA <- app1 (runLabPacedSuite flatLab)
+  pB <- app1 (runLabPacedSuite hereditaryLab)
+  let seed4A     = seedSparseBreather {body = FlatCoreBody} coord2Basis 0 0 1 4096
+      seed4B     = addSparseField (seedSparseBreather coord2Basis 4 5 6 8192)
+                                  (seedSparseWavepacketAt coord2Basis 0 0 512)
+      seed4D     = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
+                                  (seedSparseWavepacketAt coord2Basis 0 3 2048)
+      (y4A, s4A, n4A) = collectPacedWorkLoop 20 seed4A 0 0
+      (y4B, s4B, n4B) = collectPacedWorkLoop 18 seed4B 0 0
+      (y4D, s4D, n4D) = collectPacedWorkLoop 16 seed4D 0 0
+      ok4A       = selfTrapCriteriaOk pA.pLin pA.pTrap
+      ok4B       = paced4BCriteriaOk pA
+      ok4D       = twoBodyCriteriaOk pA.pTwoBody
+      ok4E       = lightConeCriteriaOk pA.pLightCone
+      ok4F       = anisotropicStressCriteriaOk pA.pAniso
+      energyMonoOk =
+        pA.pLin.finalEnergy <= pA.pLin.initEnergy && pA.pLin.maxEnergy <= pA.pLin.initEnergy &&
+        pA.pTrap.finalEnergy <= pA.pTrap.initEnergy && pA.pTrap.maxEnergy <= pA.pTrap.initEnergy &&
+        pA.pVac.waveEnergy <= pA.pVac.initEnergy && pA.pVac.maxEnergy <= pA.pVac.initEnergy &&
+        pA.pTop.waveEnergy <= pA.pTop.initEnergy && pA.pTop.maxEnergy <= pA.pTop.initEnergy &&
+        pA.pBot.waveEnergy <= pA.pBot.initEnergy && pA.pBot.maxEnergy <= pA.pBot.initEnergy &&
+        pA.pTwoBody.tbFinalE <= pA.pTwoBody.tbInitE && pA.pTwoBody.tbMaxE <= pA.pTwoBody.tbInitE
+      abParity   =
+        sameSelfTrapPhysics pA.pLin pB.pLin &&
+        sameSelfTrapPhysics pA.pTrap pB.pTrap &&
+        sameWavePhysics pA.pVac pB.pVac &&
+        sameWavePhysics pA.pTop pB.pTop &&
+        sameWavePhysics pA.pBot pB.pBot &&
+        (pA.pTwoBody == pB.pTwoBody) &&
+        (pA.pLightCone == pB.pLightCone) &&
+        (pA.pAniso == pB.pAniso)
+      structOk   =
+        abParity &&
+        (pA.pNetSum == 0 && pB.pNetSum == 0) &&
+        pA.pAntiOk && pB.pAntiOk && pA.pSymOk && pB.pSymOk && pA.pBalOk && pB.pBalOk &&
+        (pB.pWork > pA.pWork) &&
+        (s4A > 0 && s4B > 0 && s4D > 0) &&
+        energyMonoOk
+  let lines = [ h
+              , t
+              , "  * 6-4A Self-Trapping (" ++ show ok4A ++ "):"
+              , "    - Linear             -> " ++ show pA.pLin
+              , "    - Paced (A)          -> " ++ show pA.pTrap
+              , "    - Paced Work         -> yields=" ++ show y4A ++ ", skips=" ++ show s4A ++ " (" ++ show (pacedSkipPct y4A s4A) ++ "%), paceNodes=" ++ show n4A
+              , "  * 6-4B Causal 1-Hop Gravity (" ++ show ok4B ++ "):"
+              , "    - Vacuum Control (A) -> " ++ show pA.pVac
+              , "    - Top(4,5)       (A) -> " ++ show pA.pTop
+              , "    - Bot(4,-4)      (A) -> " ++ show pA.pBot
+              , "    - Paced Work (4B)    -> yields=" ++ show y4B ++ ", skips=" ++ show s4B ++ " (" ++ show (pacedSkipPct y4B s4B) ++ "%), paceNodes=" ++ show n4B
+              , "  * 6-4D Equal-Mass 2-Body (" ++ show ok4D ++ "):"
+              , "    - Equal-Mass     (A) -> " ++ show pA.pTwoBody
+              , "    - Paced Work (4D)    -> yields=" ++ show y4D ++ ", skips=" ++ show s4D ++ " (" ++ show (pacedSkipPct y4D s4D) ++ "%), paceNodes=" ++ show n4D
+              , "  * 6-4E Causal Light-Cone (" ++ show ok4E ++ ") -> " ++ show pA.pLightCone
+              , "  * 6-4F Anisotropic Stress (" ++ show ok4F ++ ") -> " ++ show pA.pAniso
+              , "  * A/B Work & Structural Audit: workA=" ++ show pA.pWork ++ ", workB=" ++ show pB.pWork ++
+                ", abParity=" ++ show abParity ++ ", energyMono=" ++ show energyMonoOk ++
+                ", physics=[4A=" ++ show ok4A ++ ",4B=" ++ show ok4B ++ ",4D=" ++ show ok4D ++ ",4E=" ++ show ok4E ++ ",4F=" ++ show ok4F ++ "]"
+              , "  -> Experiment 6 structural pass=" ++ show structOk
+              ]
+  traverse_ putStrLn lines
+  pure (structOk, lines)

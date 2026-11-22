@@ -4,6 +4,7 @@ import Stage0.BoxInt
 import Stage0.Interfaces
 import Stage0.Box
 import Stage0.HereditaryMSet
+import Stage1.Basis.SpaceStream
 import Stage1.ProjectiveRotation
 import Stage1.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -101,17 +102,19 @@ Eq k => Eq body => Eq (SealedCore k body) where
 ||| Unified sparse discrete field over any discrete group basis `k`:
 ||| - `waveMaxel`   : half-stored diagonal + antisymmetric edge field (`DiagAntisymForm`)
 ||| - `metricMaxel` : causal 1-hop retarded half-stored symmetric Maxel (`SymForm`) at `c = 1`
+||| - `paceMaxel`   : sparse half-stored local Bresenham pacing balance (`SymForm`, pruned to `0` at vacuum)
 ||| - `frozenCores` : independent sealed quiescent particle cores (`body` left unopened until thaw)
 public export
 record SparseField (k : Type) (body : Type) where
   constructor MkSparseField
   waveMaxel   : WaveMaxel k
   metricMaxel : Maxel BoxInt k k SymForm
+  paceMaxel   : Maxel BoxInt k k SymForm
   frozenCores : List (SealedCore k body)
 
 public export
 emptySparseField : SparseField k body
-emptySparseField = MkSparseField emptyMaxel emptyMaxel []
+emptySparseField = MkSparseField emptyMaxel emptyMaxel emptyMaxel []
 
 public export
 coreCount : SparseField k body -> Nat
@@ -127,6 +130,7 @@ addSparseField a b =
   MkSparseField
     (addMaxel a.waveMaxel b.waveMaxel)
     (addMaxel a.metricMaxel b.metricMaxel)
+    (addMaxel a.paceMaxel b.paceMaxel)
     (a.frozenCores ++ b.frozenCores)
 
 public export
@@ -180,7 +184,7 @@ fieldMetricSym sf = isSymBox (toGeneralMaxel sf.metricMaxel).rawMaxelBox
 public export
 fieldActiveWork : Ord k => SparseField k body -> Nat
 fieldActiveWork sf =
-  maxelNodeCount sf.waveMaxel + maxelNodeCount sf.metricMaxel + 2 * length sf.frozenCores
+  maxelNodeCount sf.waveMaxel + maxelNodeCount sf.metricMaxel + maxelNodeCount sf.paceMaxel + 2 * length sf.frozenCores
 
 --------------------------------------------------------------------------------
 -- 2. GENERIC BALANCED ZERO-SUM SEEDS (ZERO PINNED MATTER!)
@@ -192,7 +196,7 @@ seedSparseBreather ax x yPos yNeg amp =
   let pPos = ax.mkCoord x yPos
       pNeg = ax.mkCoord x yNeg
       w    = addAtMaxelEdge pNeg pNeg (MkBoxInt (-amp)) (singletonMaxelEdge pPos pPos (MkBoxInt amp))
-  in MkSparseField w emptyMaxel []
+  in MkSparseField w emptyMaxel emptyMaxel []
 
 ||| Balanced zero-sum 4-row wavepacket centered at `(x0, y0 + 0.5)` (`y in {y0-1..y0+2}`),
 ||| generated directly by convolving one 1D `WaveMaxel` row generator with the 4-row envelope `yEnv`.
@@ -215,7 +219,7 @@ seedSparseWavepacketAt ax x0 y0 amp =
                 setMaxelEdge e2 e3 (MkBoxInt (-2)) $
                 setMaxelEdge e3 e4 (MkBoxInt 2)    $
                 singletonMaxelEdge e4 e5 (MkBoxInt 2)
-  in MkSparseField (convolveMaxelStencil ax.shiftAdd rowWave yEnv) emptyMaxel []
+  in MkSparseField (convolveMaxelStencil ax.shiftAdd rowWave yEnv) emptyMaxel emptyMaxel []
 
 public export
 seedSparseWavepacket : Ord k => AxisBasis k -> (x0, amp : Integer) -> SparseField k body
@@ -225,7 +229,7 @@ seedSparseWavepacket ax x0 amp = seedSparseWavepacketAt ax x0 0 amp
 public export
 seedSparseEdgeFlux : Ord k => AxisBasis k -> (x1, y1, x2, y2, u : Integer) -> SparseField k body
 seedSparseEdgeFlux ax x1 y1 x2 y2 u =
-  MkSparseField (singletonMaxelEdge (ax.mkCoord x1 y1) (ax.mkCoord x2 y2) (MkBoxInt u)) emptyMaxel []
+  MkSparseField (singletonMaxelEdge (ax.mkCoord x1 y1) (ax.mkCoord x2 y2) (MkBoxInt u)) emptyMaxel emptyMaxel []
 
 --------------------------------------------------------------------------------
 -- 3. CAUSAL 1-HOP RETARDED MAXEL METRIC & MULTI-CORE FREEZE/THAW
@@ -367,6 +371,14 @@ collectAxisLinks ax stepDir wave =
           wave.rawMaxelBox
 
 public export
+applyLinkRotation : Ord k => (posA, posB : k) -> (m, pA, pB, uOld : BoxInt) -> WaveMaxel k -> WaveMaxel k
+applyLinkRotation posA posB m pA pB uOld wave =
+  let res = rotatePythParam m pA pB uOld
+      w1  = if res.valA /= pA then setMaxelEdge posA posA res.valA wave else wave
+      w2  = if res.valB /= pB then setMaxelEdge posB posB res.valB w1   else w1
+  in if res.valU /= uOld then setMaxelEdge posA posB res.valU w2 else w2
+
+public export
 applySparseLinkPass :
   Ord k =>
   AxisBasis k ->
@@ -399,11 +411,62 @@ applySparseLinkPass ax stepDir lagDiv m0 metricM frozenSites wantOdd isOddFn lin
                                    gB  = lookupMaxel posB posB metricM
                                    gAB = lookupMaxel posA posB metricM
                                    lag = if lagDiv <= 0 then MkBoxInt 0 else tdivPosBox (addBox (addBox gA gB) gAB) lagDiv
-                                   res = rotatePythParam (addBox (MkBoxInt m0) lag) pA pB uOld
-                                   w1  = if res.valA /= pA then setMaxelEdge posA posA res.valA wave else wave
-                                   w2  = if res.valB /= pB then setMaxelEdge posB posB res.valB w1   else w1
-                               in if res.valU /= uOld then setMaxelEdge posA posB res.valU w2 else w2)
+                               in applyLinkRotation posA posB (addBox (MkBoxInt m0) lag) pA pB uOld wave)
           initWave
+          linksBox
+
+public export
+record PacedPassAcc (k : Type) where
+  constructor MkPacedPassAcc
+  ppWave   : WaveMaxel k
+  ppPace   : Maxel BoxInt k k SymForm
+  ppYields : Nat
+  ppSkips  : Nat
+
+public export
+applyPacedLinkPass :
+  Ord k =>
+  AxisBasis k ->
+  (stepDir : k) ->
+  (paceBudget, m0 : Integer) ->
+  (metricM : Maxel BoxInt k k SymForm) ->
+  (wantOdd : Bool) ->
+  (isOddFn : k -> Bool) ->
+  (linksBox : Box BoxInt k) ->
+  PacedPassAcc k ->
+  PacedPassAcc k
+applyPacedLinkPass ax stepDir paceBudget m0 metricM wantOdd isOddFn linksBox initAcc =
+  foldBox (\posA, _, acc =>
+             if isOddFn posA /= wantOdd
+               then acc
+               else
+                 let posB = ax.shiftAdd posA stepDir
+                     pA   = lookupMaxel posA posA acc.ppWave
+                     pB   = lookupMaxel posB posB acc.ppWave
+                     uOld = lookupMaxel posA posB acc.ppWave
+                 in if boxIsZero pA && boxIsZero pB && boxIsZero uOld
+                      then acc
+                      else
+                        let gA   = lookupMaxel posA posA metricM
+                            gB   = lookupMaxel posB posB metricM
+                            gAB  = lookupMaxel posA posB metricM
+                            cost = unwrapBox (addBox (addBox gA gB) gAB)
+                            bal  = lookupMaxel posA posB acc.ppPace
+                        in case paceStreamStep paceBudget cost bal of
+                             (step, newBal) =>
+                               let pace1 = if newBal /= bal then setMaxelEdge posA posB newBal acc.ppPace else acc.ppPace
+                               in case step of
+                                    StreamSkip =>
+                                      MkPacedPassAcc acc.ppWave pace1 acc.ppYields (S acc.ppSkips)
+                                    StreamDone =>
+                                      MkPacedPassAcc acc.ppWave pace1 acc.ppYields acc.ppSkips
+                                    StreamYield () =>
+                                      MkPacedPassAcc
+                                        (applyLinkRotation posA posB (MkBoxInt m0) pA pB uOld acc.ppWave)
+                                        pace1
+                                        (S acc.ppYields)
+                                        acc.ppSkips)
+          initAcc
           linksBox
 
 public export
@@ -515,7 +578,29 @@ stepSparseField ax codec lagDiv decayNum decayDen linkCoup m0 freezeLagRatio tha
       wY2                = applySparseLinkPass ax ax.stepY lagDiv m0 newMet frzSites True  ax.isOddY yLinks wY1
       (finWave, finCores) =
         freezeQuietComponents ax codec linkCoup freezeThr thawThr thawRes.tpThawedSites wY2 thawRes.tpKeptCores
-  in (MkSparseField finWave newMet finCores, thawRes.tpThawedCount)
+  in (MkSparseField finWave newMet emptyMaxel finCores, thawRes.tpThawedCount)
+
+||| One endogenous `StreamSkip`/`StreamYield` paced sweep over `SparseField k body`
+||| with fixed elementary rotation parameter `m0` and Bresenham tick budget `m0 * lagDiv`
+||| (no variable-angle `m0 + lag` slowdown and no manual `SealedCore` freeze-thaw).
+public export
+stepSparseFieldPaced :
+  Ord k =>
+  AxisBasis k ->
+  (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
+  SparseField k body ->
+  (SparseField k body, (Nat, Nat))
+stepSparseFieldPaced ax lagDiv decayNum decayDen linkCoup m0 sf =
+  let paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
+      (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
+      newMet       = stepCausalMetricMaxel ax lagDiv decayNum decayDen actSrc0 (the (List (SealedCore k body)) []) sf.metricMaxel
+      xLinks       = collectAxisLinks ax ax.stepX sf.waveMaxel
+      pX1          = applyPacedLinkPass ax ax.stepX paceBudget m0 newMet False ax.isOddX xLinks (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
+      pX2          = applyPacedLinkPass ax ax.stepX paceBudget m0 newMet True  ax.isOddX xLinks pX1
+      yLinks       = collectAxisLinks ax ax.stepY pX2.ppWave
+      pY1          = applyPacedLinkPass ax ax.stepY paceBudget m0 newMet False ax.isOddY yLinks pX2
+      pY2          = applyPacedLinkPass ax ax.stepY paceBudget m0 newMet True  ax.isOddY yLinks pY1
+  in (MkSparseField pY2.ppWave newMet pY2.ppPace [], (pY2.ppYields, pY2.ppSkips))
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
@@ -595,26 +680,30 @@ unpackHMSetToSymMaxel (MkHMSet b) =
           emptyMaxel b
 
 ||| Packs `SparseField PureMultiset PureMultiset` cleanly into ONE zero-sum `PureMultiset` root
-||| with ZERO synthetic tags and $O(1)$ zero-copy sealing for metric & frozen cores!
+||| with ZERO synthetic tags and $O(1)$ zero-copy sealing for metric, pacing & frozen cores!
 public export
 packSparseFieldToRoot : Box BoxInt PureMultiset -> SparseField PureMultiset PureMultiset -> PureMultiset
 packSparseFieldToRoot keptBox sf =
-  let bAct = packWaveBox keptBox sf.waveMaxel
-      metM = packSymMaxelToHMSet sf.metricMaxel
-      bMet = if metM == emptyPureMSet
-               then bAct
-               else addBalancedUnitDipole (mkMetricKey metM) (mkMetricKey (negHMSet metM)) bAct
-      bFin = foldl (\acc, c =>
-                      let sM = MkHMSet c.coreSites
-                          rM = packSymMaxelToHMSet c.coreSourceMaxel
-                          eM = scalarKeyHMSet c.coreEnergy
-                          pM = c.coreBody
-                      in addBalancedUnitDipole
-                           (mkSealedCoreKey sM rM eM pM)
-                           (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM))
-                           acc)
-                   bMet
-                   sf.frozenCores
+  let bAct  = packWaveBox keptBox sf.waveMaxel
+      metM  = packSymMaxelToHMSet sf.metricMaxel
+      bMet  = if metM == emptyPureMSet
+                then bAct
+                else addBalancedUnitDipole (mkMetricKey metM) (mkMetricKey (negHMSet metM)) bAct
+      paceM = packSymMaxelToHMSet sf.paceMaxel
+      bPace = if paceM == emptyPureMSet
+                then bMet
+                else addBalancedUnitDipole (mkPaceKey paceM) (mkPaceKey (negHMSet paceM)) bMet
+      bFin  = foldl (\acc, c =>
+                       let sM = MkHMSet c.coreSites
+                           rM = packSymMaxelToHMSet c.coreSourceMaxel
+                           eM = scalarKeyHMSet c.coreEnergy
+                           pM = c.coreBody
+                       in addBalancedUnitDipole
+                            (mkSealedCoreKey sM rM eM pM)
+                            (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM))
+                            acc)
+                    bPace
+                    sf.frozenCores
   in MkHMSet bFin
 
 public export
@@ -644,18 +733,24 @@ unpackRootToSparseField (MkHMSet rootBox) =
                                  then MkRootUnpackAcc st.keptNonField ({ metricMaxel := addMaxel (unpackHMSetToSymMaxel metM) sf0.metricMaxel } sf0)
                                  else st
                              Nothing =>
-                               case unpackSealedCoreKey entry of
-                                 Just (MkHMSet sitesB, srcM, engM, payM) =>
+                               case unpackPaceKey entry of
+                                 Just paceM =>
                                    if mult == MkBoxInt 1
-                                     then let core = MkSealedCore sitesB (unpackHMSetToSymMaxel srcM) (unwrapBox (originMultiplicity engM)) payM
-                                          in MkRootUnpackAcc st.keptNonField ({ frozenCores := core :: sf0.frozenCores } sf0)
+                                     then MkRootUnpackAcc st.keptNonField ({ paceMaxel := addMaxel (unpackHMSetToSymMaxel paceM) sf0.paceMaxel } sf0)
                                      else st
                                  Nothing =>
-                                   MkRootUnpackAcc (addAtKeyBox entry mult st.keptNonField) sf0)
+                                   case unpackSealedCoreKey entry of
+                                     Just (MkHMSet sitesB, srcM, engM, payM) =>
+                                       if mult == MkBoxInt 1
+                                         then let core = MkSealedCore sitesB (unpackHMSetToSymMaxel srcM) (unwrapBox (originMultiplicity engM)) payM
+                                              in MkRootUnpackAcc st.keptNonField ({ frozenCores := core :: sf0.frozenCores } sf0)
+                                         else st
+                                     Nothing =>
+                                       MkRootUnpackAcc (addAtKeyBox entry mult st.keptNonField) sf0)
           (MkRootUnpackAcc BoxLeaf emptySparseField)
           rootBox
 
-||| Verifies explicitly that every active edge pair, metric dipole, and sealed-core dipole
+||| Verifies explicitly that every active edge pair, metric dipole, pacing dipole, and sealed-core dipole
 ||| inside `root` appears with its canonical opposing partner.
 public export
 verifyRootBalancedDipoles : PureMultiset -> Bool
@@ -670,11 +765,16 @@ verifyRootBalancedDipoles (MkHMSet rootBox) =
                           (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
                           hasBalancedPartner (mkMetricKey (negHMSet phiM)) mult rootBox
                         Nothing =>
-                          case unpackSealedCoreKey entry of
-                            Just (sM, rM, eM, pM) =>
+                          case unpackPaceKey entry of
+                            Just paceM =>
                               (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
-                              hasBalancedPartner (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM)) mult rootBox
-                            Nothing => True)
+                              hasBalancedPartner (mkPaceKey (negHMSet paceM)) mult rootBox
+                            Nothing =>
+                              case unpackSealedCoreKey entry of
+                                Just (sM, rM, eM, pM) =>
+                                  (mult == MkBoxInt 1 || mult == MkBoxInt (-1)) &&
+                                  hasBalancedPartner (mkSealedCoreKey (negHMSet sM) (negHMSet rM) (negHMSet eM) (negHMSet pM)) mult rootBox
+                                Nothing => True)
           True rootBox
 
 ||| Extracts `wrapBox (wrapBox payM)` from the first sealed core so passive `ExternalLens` `zoomSpace (redShift 2)`
@@ -691,7 +791,7 @@ extractFirstSealedCorePayloadKey (MkHMSet b) =
           emptyPureMSet b
 
 ||| Counts active streaming peel work on `root : PureMultiset`:
-||| sealed cores and causal metric dipoles charge ONLY their outer boundary quanta (`1` per pole),
+||| sealed cores, causal metric dipoles, and pacing dipoles charge ONLY their outer boundary quanta (`1` per pole),
 ||| never opening sealed core payloads!
 public export
 rootActivePeelWork : PureMultiset -> Nat
@@ -701,9 +801,12 @@ rootActivePeelWork (MkHMSet b) =
              in case unpackMetricKey k of
                   Just _  => acc + mag
                   Nothing =>
-                    case unpackSealedCoreKey k of
+                    case unpackPaceKey k of
                       Just _  => acc + mag
-                      Nothing => acc + mag * S (fastPeelWorkHMSet k))
+                      Nothing =>
+                        case unpackSealedCoreKey k of
+                          Just _  => acc + mag
+                          Nothing => acc + mag * S (fastPeelWorkHMSet k))
           0 b
 
 ||| Model B closed-energy sweep reusing `stepSparseField pureMSetBasis pureMSetCoreCodec`.
@@ -715,6 +818,17 @@ stepHereditarySparse :
 stepHereditarySparse lagDiv decayNum decayDen linkCoup freezeLagRatio thawLagNum thawLagDen root =
   let unp      = unpackRootToSparseField root
       (sf1, _) = stepSparseField pureMSetBasis pureMSetCoreCodec lagDiv decayNum decayDen linkCoup 7 freezeLagRatio thawLagNum thawLagDen unp.fieldData
+  in packSparseFieldToRoot unp.keptNonField sf1
+
+||| Model B endogenous `StreamSkip`/`StreamYield` paced sweep reusing `stepSparseFieldPaced pureMSetBasis`.
+public export
+stepHereditaryPaced :
+  (lagDiv, decayNum, decayDen, linkCoup : Integer) ->
+  PureMultiset ->
+  PureMultiset
+stepHereditaryPaced lagDiv decayNum decayDen linkCoup root =
+  let unp      = unpackRootToSparseField root
+      (sf1, _) = stepSparseFieldPaced pureMSetBasis lagDiv decayNum decayDen linkCoup 7 unp.fieldData
   in packSparseFieldToRoot unp.keptNonField sf1
 
 --------------------------------------------------------------------------------
@@ -906,9 +1020,11 @@ checkTagFreePackUnpackRoundTrip =
       p1     = pureMSetBasis.mkCoord 1 0
       edgeF  = singletonMaxelEdge {form = DiagAntisymForm} p1 p0 (MkBoxInt 5)
       metB   = addMaxel (diagEmbedMaxel (singletonBox p0 (MkBoxInt 16))) (singletonMaxelEdge p1 p0 (MkBoxInt 25))
+      paceB  = addMaxel (singletonMaxelEdge p0 p1 (MkBoxInt 11))
+                        (singletonMaxelEdge p0 (pureMSetBasis.mkCoord 0 1) (MkBoxInt (-23)))
       cBody  = pureMSetCoreCodec.sealCore br.waveMaxel
       cCore  = MkSealedCore (diagBox br.waveMaxel) metB 400 cBody
-      sf0    = MkSparseField (addMaxel actBr.waveMaxel edgeF) metB [cCore]
+      sf0    = MkSparseField (addMaxel actBr.waveMaxel edgeF) metB paceB [cCore]
       root0  = packSparseFieldToRoot BoxLeaf sf0
       sf1    = (unpackRootToSparseField root0).fieldData
   in (unwrapBox (sumHMSet root0) == 0) &&
@@ -916,6 +1032,7 @@ checkTagFreePackUnpackRoundTrip =
      isSymBox (toGeneralMaxel sf1.metricMaxel).rawMaxelBox &&
      (sf1.waveMaxel == sf0.waveMaxel) &&
      (sf1.metricMaxel == sf0.metricMaxel) &&
+     (sf1.paceMaxel == sf0.paceMaxel) &&
      (sf1.frozenCores == sf0.frozenCores) &&
      (zoomSpace (redShift 2) (extractFirstSealedCorePayloadKey root0) == cBody)
 

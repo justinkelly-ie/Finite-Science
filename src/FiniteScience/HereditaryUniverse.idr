@@ -87,6 +87,15 @@ stepHereditaryAdaptive1 :
 stepHereditaryAdaptive1 (MkHereditaryBox root) =
   App1.pure1 (MkHereditaryBox (stepHereditarySparse canonLagDiv canonDecayNum canonDecayDen canonLinkCoup canonFreezeLagRatio canonThawLagNum canonThawLagDen root))
 
+||| Pure closed endogenous `StreamSkip`/`StreamYield` paced fixed-angle `(24, 7, 25)` stepper
+||| directly inside `root : HereditaryMSet BoxInt`.
+export
+stepHereditaryPaced1 :
+  (1 u : HereditaryBlackBox) ->
+  App1 e HereditaryBlackBox
+stepHereditaryPaced1 (MkHereditaryBox root) =
+  App1.pure1 (MkHereditaryBox (stepHereditaryPaced canonLagDiv canonDecayNum canonDecayDen canonLinkCoup root))
+
 ||| Compile-time-proven non-perturbing external observation (`0 same : uOut = uIn`).
 ||| Supports arbitrary `zoomSpace`, `zoomTime`, `Time` horizons, and read-only projections
 ||| without ever modifying `HereditaryBlackBox`.

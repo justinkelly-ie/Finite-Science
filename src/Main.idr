@@ -22,12 +22,15 @@ runPureSuite = do
   (p2, l2) <- runExperiment2
   (p3, l3) <- runExperiment3
   (p4, l4) <- runExperiment4and5
-  let ok = p1 && p2 && p3 && p4
+  (p6, l6) <- runExperiment6Paced
+  let ok = p1 && p2 && p3 && p4 && p6
   let footer = [ "================================================================"
-               , if ok then "ALL 5 FINITE-SCIENCE EXPERIMENTS PASSED" else "FINITE-SCIENCE EXPERIMENTS FAILED"
+               , if ok
+                   then "ALL 5 FINITE-SCIENCE EXPERIMENTS PASSED (+ Experiment 6 ModePaced Structural Audit Passed)"
+                   else "FINITE-SCIENCE EXPERIMENTS FAILED"
                ]
   traverse_ putStrLn footer
-  pure (ok, banner ++ l1 ++ l2 ++ l3 ++ l4 ++ footer)
+  pure (ok, banner ++ l1 ++ l2 ++ l3 ++ l4 ++ l6 ++ footer)
 
 public export
 covering

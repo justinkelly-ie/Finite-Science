@@ -212,13 +212,14 @@ decodeNatSiteKey m =
    boxToNat (lookupPureKey axisY m),
    boxToNat (lookupPureKey axisZ m))
 
--- Five mutually disjoint structural shapes natively inside `PureMultiset`
+-- Six mutually disjoint structural shapes natively inside `PureMultiset`
 -- (ZERO synthetic integer channel tags, ZERO mirror keys, ZERO clock registers!):
 --   1. Active 2D Vertex      : keys subset `{ axisX, axisY }` (`isSiteKey`)
 --   2. Active Directed Edge  : `{ wrapBox posA : +1, wrapBox posB : -1 }` (`mkEdgeKey`)
 --   3. Causal Metric Dipole  : `{ wrapBox (wrapBox phiM) : +1 }` (`mkMetricKey`)
---   4. Localized 3D Matter   : `{ wrapBox pos3D : +1, { pay : -2 } : +2 }` (`mkMatterKey`)
---   5. Sealed Frozen Core    : `{ sites:+1, rho:+2, eng:+3, {wrap pay:-4}:+4 }` (`mkSealedCoreKey`)
+--   4. Pacing Balance Dipole : `{ wrapBox { paceM : -1 } }` (`mkPaceKey`)
+--   5. Localized 3D Matter   : `{ wrapBox pos3D : +1, { pay : -2 } : +2 }` (`mkMatterKey`)
+--   6. Sealed Frozen Core    : `{ sites:+1, rho:+2, eng:+3, {wrap pay:-4}:+4 }` (`mkSealedCoreKey`)
 
 public export
 isNothingMaybe : Maybe a -> Bool
@@ -288,6 +289,22 @@ unpackMetricKey entry =
       inner <- extractWrapBox entry
       phiM  <- extractWrapBox inner
       if phiM == emptyPureMSet then Nothing else Just phiM
+
+||| Pure local pacing-balance key `wrapBox { paceM : -1 }` inside `HereditaryMSet BoxInt`.
+public export
+mkPaceKey : PureMultiset -> PureMultiset
+mkPaceKey paceM = wrapBox (MkHMSet (singletonBox paceM (intToBoxInt (-1))))
+
+||| Decoder for wrapped local pacing-balance keys `mkPaceKey paceM`.
+public export
+unpackPaceKey : PureMultiset -> Maybe PureMultiset
+unpackPaceKey entry =
+  if isSiteKey entry
+    then Nothing
+    else do
+      inner <- extractWrapBox entry
+      paceM <- extractSignedWrap (intToBoxInt (-1)) inner
+      if paceM == emptyPureMSet then Nothing else Just paceM
 
 ||| Pure localized 3D matter entry key `{ wrapBox pos3D : +1, { payload : -2 } : +2 }`.
 public export
@@ -438,6 +455,30 @@ public export
       not (isSiteKey mat)  && isNothingMaybe (unpackEdgeKey mat)  && isNothingMaybe (unpackMetricKey mat)  && isNothingMaybe (unpackSealedCoreKey mat) &&
       not (isSiteKey core) && isNothingMaybe (unpackEdgeKey core) && isNothingMaybe (unpackMetricKey core) && isNothingMaybe (unpackMatterKey core)) = True
 prfFiveShapesDisjoint = Refl
+
+public export
+0 prfPaceKeyRoundTrip :
+  (let k = mkPaceKey FiniteScience.StreamWork.photonMSet
+   in case unpackPaceKey k of
+        Just m  => m == FiniteScience.StreamWork.photonMSet
+        Nothing => False) = True
+prfPaceKeyRoundTrip = Refl
+
+public export
+0 prfSixShapesDisjoint :
+  (let site = natSiteKey (1, 0, 0)
+       edge = mkEdgeKey originSiteKey stepX
+       metr = mkMetricKey FiniteScience.StreamWork.photonMSet
+       pace = mkPaceKey FiniteScience.StreamWork.photonMSet
+       mat  = mkMatterKey (natSiteKey (5, 0, 0)) FiniteScience.StreamWork.protonMSet
+       core = mkSealedCoreKey stepX stepY (scalarKeyHMSet 99) FiniteScience.StreamWork.photonMSet
+   in isSiteKey site && isNothingMaybe (unpackEdgeKey site) && isNothingMaybe (unpackMetricKey site) && isNothingMaybe (unpackPaceKey site) && isNothingMaybe (unpackMatterKey site) && isNothingMaybe (unpackSealedCoreKey site) &&
+      not (isSiteKey edge) && isNothingMaybe (unpackMetricKey edge) && isNothingMaybe (unpackPaceKey edge) && isNothingMaybe (unpackMatterKey edge) && isNothingMaybe (unpackSealedCoreKey edge) &&
+      not (isSiteKey metr) && isNothingMaybe (unpackEdgeKey metr) && isNothingMaybe (unpackPaceKey metr) && isNothingMaybe (unpackMatterKey metr) && isNothingMaybe (unpackSealedCoreKey metr) &&
+      not (isSiteKey pace) && isNothingMaybe (unpackEdgeKey pace) && isNothingMaybe (unpackMetricKey pace) && isNothingMaybe (unpackMatterKey pace) && isNothingMaybe (unpackSealedCoreKey pace) &&
+      not (isSiteKey mat)  && isNothingMaybe (unpackEdgeKey mat)  && isNothingMaybe (unpackMetricKey mat)  && isNothingMaybe (unpackPaceKey mat)  && isNothingMaybe (unpackSealedCoreKey mat) &&
+      not (isSiteKey core) && isNothingMaybe (unpackEdgeKey core) && isNothingMaybe (unpackMetricKey core) && isNothingMaybe (unpackPaceKey core) && isNothingMaybe (unpackMatterKey core)) = True
+prfSixShapesDisjoint = Refl
 
 public export
 0 prfStreamWorkMonotonic :

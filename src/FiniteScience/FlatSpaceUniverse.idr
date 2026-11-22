@@ -129,6 +129,16 @@ stepFlatAdaptive1 (MkFlatBox matter field) =
   let res = stepSparseField coord2Basis coord2CoreCodec canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 canonFreezeLagRatio canonThawLagNum canonThawLagDen field
   in App1.pure1 (MkFlatBox matter (fst res))
 
+||| Pure closed endogenous `StreamSkip`/`StreamYield` paced fixed-angle `(24, 7, 25)` stepper
+||| (no variable-angle `m0 + lag` slowdown and no manual `SealedCore` freeze-thaw).
+export
+stepFlatPaced1 :
+  (1 u : FlatBlackBox) ->
+  App1 e FlatBlackBox
+stepFlatPaced1 (MkFlatBox matter field) =
+  let res = stepSparseFieldPaced coord2Basis canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 field
+  in App1.pure1 (MkFlatBox matter (fst res))
+
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export
 observeFlatDirect :
@@ -154,7 +164,7 @@ export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
   if matter == emptyMSet && isEmptyMaxel field.waveMaxel &&
-     isEmptyMaxel field.metricMaxel && null field.frozenCores
+     isEmptyMaxel field.metricMaxel && isEmptyMaxel field.paceMaxel && null field.frozenCores
     then App1.pure CleanVacuumCollapse
     else let fWork = fieldActiveWork field
              work  = integerToNat (multiplicityL1 matter) + fWork
