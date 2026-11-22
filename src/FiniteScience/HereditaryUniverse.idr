@@ -51,10 +51,10 @@ splitHereditaryFromVacuum posA posB payload (MkHereditaryBox root) =
       nxt    = addHMSet root (addHMSet entryA entryB)
   in App1.pure1 (MkHereditaryBox nxt)
 
-||| Superposes an arbitrary balanced zero-sum `SparseField PureMultiset PureMultiset` directly into `root : PureMultiset`.
+||| Superposes an arbitrary balanced zero-sum `SparseField PureMultiset` directly into `root : PureMultiset`.
 export
 injectHereditaryField :
-  SparseField PureMultiset PureMultiset ->
+  SparseField PureMultiset ->
   (1 u : HereditaryBlackBox) ->
   App1 e HereditaryBlackBox
 injectHereditaryField delta (MkHereditaryBox root) =

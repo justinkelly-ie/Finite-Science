@@ -235,7 +235,7 @@ runExperiment3 = do
   pure (pass, lines)
 
 --------------------------------------------------------------------------------
--- EXPERIMENT 4: HALF-STORED MAXEL, T_00 LAURENT HALO, FREEZE/THAW & 2-BODY
+-- EXPERIMENT 4: HALF-STORED MAXEL, T_00 LAURENT HALO, 2-BODY, LIGHT-CONE & 4F
 --   Unified `BlackBoxLab` interface eliminating all duplicated A/B drivers!
 --------------------------------------------------------------------------------
 
@@ -244,33 +244,28 @@ record StepTel where
   constructor MkStepTel
   stEnergy : Integer
   stWork   : Nat
-  stCores  : Nat
   stBalOk  : Bool
 
 public export
-record EndAudit (k : Type) (body : Type) where
+record EndAudit (k : Type) where
   constructor MkEndAudit
-  eaField  : SparseField k body
+  eaField  : SparseField k
   eaEnergy : Integer
-  eaCores  : Nat
   eaAntiOk : Bool
   eaSymOk  : Bool
   eaBalOk  : Bool
-  eaPeekOk : Bool
   eaNetSum : Integer
 
 public export
-record BlackBoxLab (e : List Error) (box : Type) (k : Type) (body : Type) where
+record BlackBoxLab (e : List Error) (box : Type) (k : Type) where
   constructor MkBlackBoxLab
   labBasis    : AxisBasis k
-  labCodec    : CoreCodec k body
   labBoot     : App1 e box
-  labInject   : SparseField k body -> (1 u : box) -> App1 e box
+  labInject   : SparseField k -> (1 u : box) -> App1 e box
   labStepMode : StepMode -> (1 u : box) -> App1 e box
   labEnergy   : (1 u : box) -> App1 e (PureObservation u Integer)
-  labCoresBal : (1 u : box) -> App1 e (PureObservation u (Nat, Bool))
   labStepTel  : (1 u : box) -> App1 e (PureObservation u StepTel)
-  labEndAudit : (1 u : box) -> App1 {u = Any} e (EndAudit k body)
+  labEndAudit : (1 u : box) -> App1 {u = Any} e (EndAudit k)
 
 public export
 closeNetSum : CloseOutcome -> Integer
@@ -278,78 +273,68 @@ closeNetSum CleanVacuumCollapse       = 0
 closeNetSum (FrozenAtHorizon _ _ _ g) = g
 
 export
-rootFieldOf : PureMultiset -> SparseField PureMultiset PureMultiset
+rootFieldOf : PureMultiset -> SparseField PureMultiset
 rootFieldOf r = (unpackRootToSparseField r).fieldData
 
 export
-flatEndAudit : (1 u : FlatBlackBox) -> App1 {u = Any} e (EndAudit Coord2 FlatCoreBody)
+flatEndAudit : (1 u : FlatBlackBox) -> App1 {u = Any} e (EndAudit Coord2)
 flatEndAudit u = App1.do
   obs <- observeFlatDirect (\s => s.snapField) u
   let MkPureObs u1 sf _ = obs
   closed <- closeFlat0D u1
-  let netW = abs (fieldPsiNet coord2CoreCodec sf + fieldFluxNet coord2CoreCodec sf) + abs (closeNetSum closed)
-  App1.pure (MkEndAudit sf (fieldEnergy sf) (coreCount sf)
-                        (fieldFluxAntisym coord2CoreCodec sf) (fieldMetricSym sf) True True netW)
+  let netW = abs (fieldPsiNet sf + fieldFluxNet sf) + abs (closeNetSum closed)
+  App1.pure (MkEndAudit sf (fieldEnergy sf) (fieldFluxAntisym sf) (fieldMetricSym sf) True netW)
 
 export
-hereditaryEndAudit : (1 u : HereditaryBlackBox) -> App1 {u = Any} e (EndAudit PureMultiset PureMultiset)
+hereditaryEndAudit : (1 u : HereditaryBlackBox) -> App1 {u = Any} e (EndAudit PureMultiset)
 hereditaryEndAudit u = App1.do
   obsLens <- observeHereditaryPure
                (zoomedExternalLens id (blackShift 1) zeroShift (RetroTime 18) (\zr => zoomSpace (redShift 1) zr))
                u
   let MkPureObs u1 zoomedBack _ = obsLens
-  obsPeek <- observeHereditaryPure
-               (zoomedExternalLens extractFirstSealedCorePayloadKey (redShift 2) zeroShift (RetroTime 2)
-                  (\pay => not (pay == emptyPureMSet) && unwrapBox (sumHMSet pay) == 0))
-               u1
-  let MkPureObs u2 peekOk _ = obsPeek
-  obs <- observeHereditaryPure (directPureLens id) u2
-  let MkPureObs u3 finRoot _ = obs
+  obs <- observeHereditaryPure (directPureLens id) u1
+  let MkPureObs u2 finRoot _ = obs
   let sf     = rootFieldOf finRoot
       balOk  = verifyRootBalancedDipoles finRoot
       lensOk = zoomedBack == finRoot
       rNet   = unwrapBox (sumHMSet finRoot)
-  closed <- closeHereditary0D u3
+  closed <- closeHereditary0D u2
   let netW = abs rNet + abs (closeNetSum closed)
-  App1.pure (MkEndAudit sf (fieldEnergy sf) (coreCount sf)
-                        (fieldFluxAntisym pureMSetCoreCodec sf && lensOk)
-                        (fieldMetricSym sf) balOk peekOk netW)
+  App1.pure (MkEndAudit sf (fieldEnergy sf)
+                        (fieldFluxAntisym sf && lensOk)
+                        (fieldMetricSym sf) balOk netW)
 
 export
-flatLab : BlackBoxLab e FlatBlackBox Coord2 FlatCoreBody
+flatLab : BlackBoxLab e FlatBlackBox Coord2
 flatLab =
   MkBlackBoxLab
     coord2Basis
-    coord2CoreCodec
     bootFlat0D
     injectFlatField
     stepFlatByMode
     (observeFlatDirect (\s => fieldEnergy s.snapField))
-    (observeFlatDirect (\s => (coreCount s.snapField, True)))
-    (observeFlatDirect (\s => MkStepTel (fieldEnergy s.snapField) (fieldActiveWork s.snapField) (coreCount s.snapField) True))
+    (observeFlatDirect (\s => MkStepTel (fieldEnergy s.snapField) (fieldActiveWork s.snapField) True))
     flatEndAudit
 
 export
-hereditaryLab : BlackBoxLab e HereditaryBlackBox PureMultiset PureMultiset
+hereditaryLab : BlackBoxLab e HereditaryBlackBox PureMultiset
 hereditaryLab =
   MkBlackBoxLab
     pureMSetBasis
-    pureMSetCoreCodec
     bootHereditary0D
     injectHereditaryField
     stepHereditaryByMode
     (observeHereditaryPure (directPureLens (\r => fieldEnergy (rootFieldOf r))))
-    (observeHereditaryPure (directPureLens (\r => (coreCount (rootFieldOf r), verifyRootBalancedDipoles r))))
-    (observeHereditaryPure (directPureLens (\r => let sf = rootFieldOf r in MkStepTel (fieldEnergy sf) (rootActivePeelWork r) (coreCount sf) (verifyRootBalancedDipoles r))))
+    (observeHereditaryPure (directPureLens (\r => let sf = rootFieldOf r in MkStepTel (fieldEnergy sf) (rootActivePeelWork r) (verifyRootBalancedDipoles r))))
     hereditaryEndAudit
 
 export
 runLabFieldSteps :
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   Nat ->
   (1 u : box) ->
-  App1 {u = Any} e (EndAudit k body)
+  App1 {u = Any} e (EndAudit k)
 runLabFieldSteps lab _    Z       u = lab.labEndAudit u
 runLabFieldSteps lab mode (S rem) u = App1.do
   u1 <- lab.labStepMode mode u
@@ -357,11 +342,11 @@ runLabFieldSteps lab mode (S rem) u = App1.do
 
 export
 bootInjectAndRun :
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   Nat ->
-  SparseField k body ->
-  App1 {u = Any} e (EndAudit k body)
+  SparseField k ->
+  App1 {u = Any} e (EndAudit k)
 bootInjectAndRun lab mode steps seed = App1.do
   u0 <- lab.labBoot
   u1 <- lab.labInject seed u0
@@ -369,14 +354,14 @@ bootInjectAndRun lab mode steps seed = App1.do
 
 export
 driveLabStepsTel :
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   (rem : Nat) ->
   (1 u : box) ->
   (maxE : Integer) ->
   (accWork : Nat) ->
   (balOk : Bool) ->
-  App1 {u = Any} e (EndAudit k body, Integer, Nat, Bool)
+  App1 {u = Any} e (EndAudit k, Integer, Nat, Bool)
 driveLabStepsTel lab _ Z u maxE accWork balOk = App1.do
   ea <- lab.labEndAudit u
   App1.pure (ea, maxE, accWork, balOk && ea.eaBalOk)
@@ -390,7 +375,7 @@ driveLabStepsTel lab mode (S rem) u maxE accWork balOk = App1.do
 export
 runLabSelfTrap :
   Ord k =>
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   App1 {u = Any} e (SelfTrapReport, (Bool, Bool, Bool))
 runLabSelfTrap lab mode = App1.do
@@ -399,73 +384,32 @@ runLabSelfTrap lab mode = App1.do
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, work, balOk) <- driveLabStepsTel lab mode 20 u2 initE 0 True
-  let corePct = fieldCoreEnergyFrac lab.labBasis lab.labCodec ea.eaField
+  let corePct = fieldCoreEnergyFrac lab.labBasis ea.eaField
   App1.pure (MkSelfTrapReport initE ea.eaEnergy maxE corePct ea.eaNetSum work, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
 runLabWave :
   Ord k =>
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   Nat ->
-  SparseField k body ->
-  SparseField k body ->
-  App1 {u = Any} e (WavepacketReport, Nat, Bool, Bool, Bool, Bool)
+  SparseField k ->
+  SparseField k ->
+  App1 {u = Any} e (WavepacketReport, Bool, Bool, Bool)
 runLabWave lab mode steps extraBg bgField = App1.do
   u0 <- lab.labBoot
   u1 <- lab.labInject (extraBg <+> seedSparseWavepacketAt lab.labBasis 0 0 512) u0
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, work, balOk) <- driveLabStepsTel lab mode steps u2 initE 0 True
-  let wRep0 = measureSparseBand lab.labBasis lab.labCodec ea.eaField bgField initE ea.eaEnergy maxE work
+  let wRep0 = measureSparseBand lab.labBasis ea.eaField bgField initE ea.eaEnergy maxE work
       wRep  = { waveNetSum := ea.eaNetSum } wRep0
-  App1.pure (wRep, ea.eaCores, ea.eaPeekOk && ea.eaCores >= 1, balOk, ea.eaAntiOk, ea.eaSymOk)
-
-export
-driveLabMultiCoreImpact :
-  BlackBoxLab e box k body ->
-  (stepIdx, rem : Nat) ->
-  (1 u : box) ->
-  (initE, maxE : Integer) ->
-  (prevCores, midCores : Nat) ->
-  (firstThaw : Integer) ->
-  (balOk : Bool) ->
-  App1 {u = Any} e (Nat, Nat, Integer, Integer, Integer, Integer, Bool, Integer, (Bool, Bool))
-driveLabMultiCoreImpact lab _ Z u initE maxE _ midCores firstThaw balOk = App1.do
-  ea <- lab.labEndAudit u
-  App1.pure (midCores, ea.eaCores, firstThaw, initE, ea.eaEnergy, maxE, balOk && ea.eaBalOk, ea.eaNetSum, (ea.eaAntiOk, ea.eaSymOk))
-driveLabMultiCoreImpact lab idx (S rem) u initE maxE prevCores midCores firstThaw balOk = App1.do
-  u1  <- lab.labStepMode ModeAdaptive u
-  obs <- lab.labStepTel u1
-  let MkPureObs u2 tel _ = obs
-  let nextMax  = if tel.stEnergy > maxE then tel.stEnergy else maxE
-      nextMid  = if idx == 5 then tel.stCores else midCores
-      nextThaw = if firstThaw < 0 && tel.stCores < prevCores then cast idx else firstThaw
-  driveLabMultiCoreImpact lab (S idx) rem u2 initE nextMax tel.stCores nextMid nextThaw (balOk && tel.stBalOk)
-
-export
-runLabMultiCoreImpact :
-  Ord k =>
-  BlackBoxLab e box k body ->
-  App1 {u = Any} e (Nat, Nat, Nat, Integer, Integer, Integer, Integer, Bool, Integer, (Bool, Bool))
-runLabMultiCoreImpact lab = App1.do
-  u0 <- lab.labBoot
-  u1 <- lab.labInject (seedSparseBreather lab.labBasis 4 5 6 8192 <+>
-                       seedSparseBreather lab.labBasis 4 (-4) (-5) 8192) u0
-  u2 <- lab.labStepMode ModeAdaptive u1
-  obsFr <- lab.labCoresBal u2
-  let MkPureObs u3 (initCores, initBal) _ = obsFr
-  u4 <- lab.labInject (seedSparseWavepacketAt lab.labBasis 0 5 2048) u3
-  obsE0 <- lab.labEnergy u4
-  let MkPureObs u5 initE _ = obsE0
-  (midC, finC, thwS, e0, eF, eM, balOk, netS, flagsI) <-
-    driveLabMultiCoreImpact lab 0 16 u5 initE initE initCores initCores (-1) initBal
-  App1.pure (initCores, midC, finC, thwS, e0, eF, eM, balOk, netS, flagsI)
+  App1.pure (wRep, balOk, ea.eaAntiOk, ea.eaSymOk)
 
 export
 runLabTwoBody :
   Ord k =>
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   Bool ->
   App1 {u = Any} e (WavepacketReport, WavepacketReport, Integer, (Bool, Bool, Bool))
@@ -477,14 +421,14 @@ runLabTwoBody lab mode bothPackets = App1.do
   obs <- lab.labEnergy u1
   let MkPureObs u2 initE _ = obs
   (ea, maxE, _, balOk) <- driveLabStepsTel lab mode 16 u2 initE 0 True
-  let botRep = measureSparseBandRange lab.labBasis lab.labCodec (-100) 0 ea.eaField neutral initE ea.eaEnergy maxE 0
-      topRep = measureSparseBandRange lab.labBasis lab.labCodec 1 100 ea.eaField neutral initE ea.eaEnergy maxE 0
+  let botRep = measureSparseBandRange lab.labBasis (-100) 0 ea.eaField neutral initE ea.eaEnergy maxE 0
+      topRep = measureSparseBandRange lab.labBasis 1 100 ea.eaField neutral initE ea.eaEnergy maxE 0
   App1.pure (botRep, topRep, ea.eaNetSum, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
 runLabLightCone :
   Ord k =>
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   (vRep18, tRep18 : WavepacketReport) ->
   App1 {u = Any} e (CausalLightConeReport, Bool, Bool)
@@ -494,11 +438,11 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
   eaVac2 <- bootInjectAndRun lab mode 2 pktSeed
   eaBg2  <- bootInjectAndRun lab mode 2 brSeed
   eaBr2  <- bootInjectAndRun lab mode 2 (brSeed <+> pktSeed)
-  let exactSl = bandsEqualInBox lab.labBasis lab.labCodec (-4) 4 (-3) 3 eaBr2.eaField eaBg2.eaField eaVac2.eaField
+  let exactSl = bandsEqualInBox lab.labBasis (-4) 4 (-3) 3 eaBr2.eaField eaBg2.eaField eaVac2.eaField
       balOk   = eaVac2.eaBalOk && eaBg2.eaBalOk && eaBr2.eaBalOk
       symOk   = eaVac2.eaSymOk && eaBg2.eaSymOk && eaBr2.eaSymOk
-      wVac2   = measureSparseBand lab.labBasis lab.labCodec eaVac2.eaField neutral eaVac2.eaEnergy eaVac2.eaEnergy eaVac2.eaEnergy 0
-      wBr2    = measureSparseBand lab.labBasis lab.labCodec eaBr2.eaField  eaBg2.eaField eaBr2.eaEnergy  eaBr2.eaEnergy  eaBr2.eaEnergy  0
+      wVac2   = measureSparseBand lab.labBasis eaVac2.eaField neutral eaVac2.eaEnergy eaVac2.eaEnergy eaVac2.eaEnergy 0
+      wBr2    = measureSparseBand lab.labBasis eaBr2.eaField  eaBg2.eaField eaBr2.eaEnergy  eaBr2.eaEnergy  eaBr2.eaEnergy  0
   App1.pure (MkCausalLightConeReport
                exactSl
                wVac2.meanXMilli wBr2.meanXMilli wBr2.poyntingYAccum
@@ -506,7 +450,7 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
              balOk, symOk)
 
 public export
-stressSourceField : Ord k => AxisBasis k -> Bool -> SparseField k body
+stressSourceField : Ord k => AxisBasis k -> Bool -> SparseField k
 stressSourceField ax True =
   seedSparseEdgeFlux ax 3 5 4 5 8192 <+> seedSparseEdgeFlux ax 4 5 5 5 8192
 stressSourceField ax False =
@@ -515,7 +459,7 @@ stressSourceField ax False =
 export
 runLabAnisotropicStress :
   Ord k =>
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   App1 {u = Any} e (AnisotropicStressReport, Bool)
 runLabAnisotropicStress lab mode = App1.do
@@ -524,8 +468,8 @@ runLabAnisotropicStress lab mode = App1.do
   eaQV <- bootInjectAndRun lab mode 12 (seedSparseEdgeFlux ax 0 0 0 1 8192)
   eaBgH <- bootInjectAndRun lab mode 18 (stressSourceField ax True)
   eaBgV <- bootInjectAndRun lab mode 18 (stressSourceField ax False)
-  (mH, _, _, balPH, antiPH, symPH) <- runLabWave lab mode 18 (stressSourceField ax True)  eaBgH.eaField
-  (mV, _, _, balPV, antiPV, symPV) <- runLabWave lab mode 18 (stressSourceField ax False) eaBgV.eaField
+  (mH, balPH, antiPH, symPH) <- runLabWave lab mode 18 (stressSourceField ax True)  eaBgH.eaField
+  (mV, balPV, antiPV, symPV) <- runLabWave lab mode 18 (stressSourceField ax False) eaBgV.eaField
   let qH     = metricQuadrupolePlus ax eaQH.eaField.metricMaxel
       qV     = metricQuadrupolePlus ax eaQV.eaField.metricMaxel
       symOk  = eaQH.eaSymOk && eaQV.eaSymOk && eaBgH.eaSymOk && eaBgV.eaSymOk &&
@@ -556,29 +500,23 @@ record GravityCoreMetrics where
   gcLightCone : CausalLightConeReport
   gcAniso     : AnisotropicStressReport
 
-public export
-record ModelExperimentMetrics where
-  constructor MkModelExperimentMetrics
-  core       : GravityCoreMetrics
-  freezeThaw : FreezeThawReport
-
 export
 runLabCoreSuite :
   Ord k =>
-  BlackBoxLab e box k body ->
+  BlackBoxLab e box k ->
   StepMode ->
   App1 {u = Any} e GravityCoreMetrics
 runLabCoreSuite lab mode = App1.do
   let ax        = lab.labBasis
       brTopSeed = seedSparseBreather ax 4 5 6 8192
       brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
-  (linRep, (antiLin, symLin, balLin))   <- runLabSelfTrap lab ModeLinear
+  (linRep, (antiLin, symLin, balLin))     <- runLabSelfTrap lab ModeLinear
   (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab mode
   eaBgTop <- bootInjectAndRun lab mode 18 brTopSeed
   eaBgBot <- bootInjectAndRun lab mode 18 brBotSeed
-  (vRep, _, _, balV, antiV, symV) <- runLabWave lab mode 18 neutral   neutral
-  (tRep, _, _, balT, antiT, symT) <- runLabWave lab mode 18 brTopSeed eaBgTop.eaField
-  (bRep, _, _, balB, antiB, symB) <- runLabWave lab mode 18 brBotSeed eaBgBot.eaField
+  (vRep, balV, antiV, symV) <- runLabWave lab mode 18 neutral   neutral
+  (tRep, balT, antiT, symT) <- runLabWave lab mode 18 brTopSeed eaBgTop.eaField
+  (bRep, balB, antiB, symB) <- runLabWave lab mode 18 brBotSeed eaBgBot.eaField
   (b2Bot, b2Top, net2B, (anti2B, sym2B, bal2B)) <- runLabTwoBody lab mode       True
   (b1Bot, _,     net1B, (anti1B, sym1B, bal1B)) <- runLabTwoBody lab mode       False
   (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear True
@@ -600,29 +538,6 @@ runLabCoreSuite lab mode = App1.do
   App1.pure (MkGravityCoreMetrics (tRep.waveWorkSteps + trapRep.workSteps) totalAbsNet antiAll symAll balAll
                                   linRep trapRep vRep tRep bRep tbRep lcRep asRep)
 
-export
-runLabGravitySuite :
-  Ord k =>
-  BlackBoxLab e box k body ->
-  App1 {u = Any} e ModelExperimentMetrics
-runLabGravitySuite lab = App1.do
-  let brTopSeed = seedSparseBreather lab.labBasis 4 5 6 8192
-  core <- runLabCoreSuite lab ModeUnified
-  eaBgFrz <- bootInjectAndRun lab ModeAdaptive 18 brTopSeed
-  (fRep, fCores, peekOk, balF, antiF, symF) <- runLabWave lab ModeAdaptive 18 brTopSeed eaBgFrz.eaField
-  (initC, midC, finC, thwS, iE0, iEF, iEM, balI, netI, (antiI, symI)) <- runLabMultiCoreImpact lab
-  let ftRep  = MkFreezeThawReport fCores fRep core.gcTop.waveWorkSteps fRep.waveWorkSteps (fCores == 1 && peekOk)
-                                  initC midC finC thwS iE0 iEF iEM netI
-      core1  = MkGravityCoreMetrics
-                 core.gcWork
-                 (core.gcNetSum + abs fRep.waveNetSum + abs netI)
-                 (core.gcAntiOk && antiF && antiI)
-                 (core.gcSymOk && symF && symI)
-                 (core.gcBalOk && balF && balI && eaBgFrz.eaBalOk)
-                 core.gcLin core.gcTrap core.gcVac core.gcTop core.gcBot
-                 core.gcTwoBody core.gcLightCone core.gcAniso
-  App1.pure (MkModelExperimentMetrics core1 ftRep)
-
 public export
 selfTrapCriteriaOk : SelfTrapReport -> SelfTrapReport -> Bool
 selfTrapCriteriaOk linRep trapRep =
@@ -636,27 +551,6 @@ selfTrapCriteriaOk linRep trapRep =
   (trapRep.finalEnergy * 100 >= trapRep.initEnergy * 95) &&
   (trapRep.coreFracPct >= 85) &&
   (trapRep.coreFracPct > linRep.coreFracPct + 25)
-
-public export
-freezeThawCriteriaOk : WavepacketReport -> FreezeThawReport -> Bool
-freezeThawCriteriaOk vac ft =
-  (ft.ftGrazingCoreCount == 1) &&
-  ft.ftPassivePeekOk &&
-  (ft.ftGrazingWave.waveNetSum == 0) &&
-  (ft.ftGrazingWave.meanXMilli + 50 < vac.meanXMilli) &&
-  (ft.ftGrazingWave.meanYMilli > 520) &&
-  (ft.ftGrazingWave.poyntingYAccum > 180000) &&
-  (ft.ftGrazingWave.waveEnergy <= ft.ftGrazingWave.initEnergy) &&
-  (ft.ftGrazingWave.maxEnergy <= ft.ftGrazingWave.initEnergy) &&
-  (ft.ftFrozenWorkSteps < ft.ftLiveWorkSteps) &&
-  (ft.ftInitCoreCount == 2) &&
-  (ft.ftMidCoreCount == 2) &&
-  (ft.ftFinalCoreCount == 1) &&
-  (ft.ftFirstThawStep >= 5) &&
-  (ft.ftFirstThawStep <= 14) &&
-  (ft.ftImpactFinalE <= ft.ftImpactInitE) &&
-  (ft.ftImpactMaxE <= ft.ftImpactInitE) &&
-  (ft.ftImpactNetSum == 0)
 
 public export
 twoBodyCriteriaOk : TwoBodyReport -> Bool
@@ -724,20 +618,18 @@ gravity4BCriteriaOk : GravityCoreMetrics -> Bool
 gravity4BCriteriaOk = gravity4BCriteriaWithVacPct 92
 
 public export
-gravityCriteriaOk : ModelExperimentMetrics -> Bool
-gravityCriteriaOk m =
-  let c = m.core
-  in c.gcAntiOk &&
-     c.gcSymOk &&
-     c.gcBalOk &&
-     (c.gcNetSum == 0) &&
-     selfTrapCriteriaOk c.gcLin c.gcTrap &&
-     gravity4BCriteriaOk c &&
-     freezeThawCriteriaOk c.gcVac m.freezeThaw &&
-     twoBodyCriteriaOk c.gcTwoBody &&
-     lightConeCriteriaOk c.gcLightCone &&
-     anisotropicStressCriteriaOk c.gcAniso &&
-     (c.gcWork > 0)
+gravityCriteriaOk : GravityCoreMetrics -> Bool
+gravityCriteriaOk c =
+  c.gcAntiOk &&
+  c.gcSymOk &&
+  c.gcBalOk &&
+  (c.gcNetSum == 0) &&
+  selfTrapCriteriaOk c.gcLin c.gcTrap &&
+  gravity4BCriteriaOk c &&
+  twoBodyCriteriaOk c.gcTwoBody &&
+  lightConeCriteriaOk c.gcLightCone &&
+  anisotropicStressCriteriaOk c.gcAniso &&
+  (c.gcWork > 0)
 
 public export
 sameWavePhysics : WavepacketReport -> WavepacketReport -> Bool
@@ -767,14 +659,11 @@ record ModeParityReport where
   mpFlagsOk  : Bool
   mpWorkA    : Nat
   mpWorkB    : Nat
-  mpCoresB   : Nat
-  mpPeekB    : Bool
 
 public export
 record ParitySuiteReport where
   constructor MkParitySuiteReport
   psUni : ModeParityReport
-  psAdp : ModeParityReport
   psPac : ModeParityReport
 
 public export
@@ -786,16 +675,16 @@ record PacedWorkStats where
 
 public export
 mkParityReport :
-  EndAudit Coord2 FlatCoreBody ->
-  (WavepacketReport, Nat, Bool, Bool, Bool, Bool) ->
-  EndAudit PureMultiset PureMultiset ->
-  (WavepacketReport, Nat, Bool, Bool, Bool, Bool) ->
+  EndAudit Coord2 ->
+  (WavepacketReport, Bool, Bool, Bool) ->
+  EndAudit PureMultiset ->
+  (WavepacketReport, Bool, Bool, Bool) ->
   ModeParityReport
-mkParityReport bgA (wA, cA, _, balA, antiA, symA) bgB (wB, cB, peekB, balB, antiB, symB) =
-  let parOk = sameWavePhysics wA wB && (wA.waveNetSum == 0) && (wB.waveNetSum == 0) && (cA == cB)
+mkParityReport bgA (wA, balA, antiA, symA) bgB (wB, balB, antiB, symB) =
+  let parOk = sameWavePhysics wA wB && (wA.waveNetSum == 0) && (wB.waveNetSum == 0)
       flgOk = antiA && symA && balA && bgA.eaBalOk && bgA.eaAntiOk && bgA.eaSymOk &&
               antiB && symB && balB && bgB.eaBalOk && bgB.eaAntiOk && bgB.eaSymOk
-  in MkModeParityReport parOk flgOk wA.waveWorkSteps wB.waveWorkSteps cB peekB
+  in MkModeParityReport parOk flgOk wA.waveWorkSteps wB.waveWorkSteps
 
 export
 runModeParityCheck :
@@ -814,81 +703,72 @@ runModeParityCheck mode steps = App1.do
 export
 runParitySuite : App1 {u = Any} e ParitySuiteReport
 runParitySuite = App1.do
-  u <- runModeParityCheck ModeUnified  4
-  a <- runModeParityCheck ModeAdaptive 4
-  p <- runModeParityCheck ModePaced    4
-  App1.pure (MkParitySuiteReport u a p)
+  u <- runModeParityCheck ModeUnified 4
+  p <- runModeParityCheck ModePaced   4
+  App1.pure (MkParitySuiteReport u p)
 
 public export
-modeLine : String -> Bool -> ModeParityReport -> String
-modeLine lbl showCores m =
+modeLine : String -> ModeParityReport -> String
+modeLine lbl m =
   "    - " ++ lbl ++ " -> parity=" ++ show m.mpParityOk ++ ", flags=" ++ show m.mpFlagsOk ++
-  (if showCores then ", coresB=" ++ show m.mpCoresB ++ ", peekB=" ++ show m.mpPeekB else "") ++
   ", workA=" ++ show m.mpWorkA ++ ", workB=" ++ show m.mpWorkB
 
 public export
-mkExp4and5Lines : ModelExperimentMetrics -> ParitySuiteReport -> Bool -> Bool -> List String
-mkExp4and5Lines resA par okA pass =
-  let cA = resA.core
-  in [ "----------------------------------------------------------------"
-     , "[Experiment 4] Half-Stored Maxel Metric, Sealed Multi-Core, 2-Body & 4F"
-     , "  * 4A Self-Trapping (+4096/-4096 at (0,0)/(0,1), 20 sweeps):"
-     , "    - Linear Dispersion  (A) -> " ++ show cA.gcLin
-     , "    - Self-Trapped Core  (A) -> " ++ show cA.gcTrap
-     , "  * 4B Zero-Warmup Causal 1-Hop Gravity (18 sweeps, decay 7/32, c=1):"
-     , "    - Vacuum Control     (A) -> " ++ show cA.gcVac
-     , "    - Top Breather(4,5)  (A) -> " ++ show cA.gcTop
-     , "    - Bot Breather(4,-4) (A) -> " ++ show cA.gcBot
-     , "  * 4C Dimensionless Multi-Core Sealed Freeze & Delayed Selective Thaw:"
-     , "    - Grazing + 2-Core   (A) -> " ++ show resA.freezeThaw
-     , "  * 4D Equal-Mass 2-Body Mutual Attraction (Two free amp=2048 packets, 16 sweeps):"
-     , "    - Equal-Mass Pair    (A) -> " ++ show cA.gcTwoBody
-     , "  * 4E Causal Light-Cone Proof (Spacelike Exact t=2 -> Deflection t=18):"
-     , "    - Light Cone Check   (A) -> " ++ show cA.gcLightCone
-     , "  * 4F Half-Stored Maxel Anisotropic Stress & Quadrupole Polarization:"
-     , "    - Anisotropic Stress (A) -> " ++ show cA.gcAniso
-     , "  * Hypothesis Check (Canonical Model A 4A-4F): okA=" ++ show okA
-     , "----------------------------------------------------------------"
-     , "[Experiment 5] Model A (Canonical) vs Model B Parity Matrix (4-Sweep)"
-     , "  * Multi-Mode Model A == Model B Parity (4 sweeps, anti/sym/zero-sum):"
-     , modeLine "ModeUnified " False par.psUni
-     , modeLine "ModeAdaptive" True  par.psAdp
-     , modeLine "ModePaced   " False par.psPac
-     , "  * Canonical Model A Core Summary: net=" ++ show cA.gcNetSum ++
-       ", dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++
-       ", dX_4F=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++
-       ", workA=" ++ show cA.gcWork ++ ", tagFreeRoundTrip=" ++ show checkTagFreePackUnpackRoundTrip
-     , "  -> Experiment 4 & 5 pass=" ++ show pass
-     ]
+mkExp4and5Lines : GravityCoreMetrics -> ParitySuiteReport -> Bool -> Bool -> List String
+mkExp4and5Lines cA par okA pass =
+  [ "----------------------------------------------------------------"
+  , "[Experiment 4] Half-Stored Maxel Metric, 2-Body, Light-Cone & 4F (Canonical Model A)"
+  , "  * 4A Self-Trapping (+4096/-4096 at (0,0)/(0,1), 20 sweeps):"
+  , "    - Linear Dispersion  (A) -> " ++ show cA.gcLin
+  , "    - Self-Trapped Core  (A) -> " ++ show cA.gcTrap
+  , "  * 4B Zero-Warmup Causal 1-Hop Gravity (18 sweeps, decay 7/32, c=1):"
+  , "    - Vacuum Control     (A) -> " ++ show cA.gcVac
+  , "    - Top Breather(4,5)  (A) -> " ++ show cA.gcTop
+  , "    - Bot Breather(4,-4) (A) -> " ++ show cA.gcBot
+  , "  * 4D Equal-Mass 2-Body Mutual Attraction (Two free amp=2048 packets, 16 sweeps):"
+  , "    - Equal-Mass Pair    (A) -> " ++ show cA.gcTwoBody
+  , "  * 4E Causal Light-Cone Proof (Spacelike Exact t=2 -> Deflection t=18):"
+  , "    - Light Cone Check   (A) -> " ++ show cA.gcLightCone
+  , "  * 4F Half-Stored Maxel Anisotropic Stress & Quadrupole Polarization:"
+  , "    - Anisotropic Stress (A) -> " ++ show cA.gcAniso
+  , "  * Hypothesis Check (Canonical Model A 4A/4B/4D/4E/4F): okA=" ++ show okA
+  , "----------------------------------------------------------------"
+  , "[Experiment 5] Model A (Canonical) vs Model B Parity Matrix (4-Sweep)"
+  , "  * Multi-Mode Model A == Model B Parity (4 sweeps, anti/sym/zero-sum):"
+  , modeLine "ModeUnified" par.psUni
+  , modeLine "ModePaced  " par.psPac
+  , "  * Canonical Model A Core Summary: net=" ++ show cA.gcNetSum ++
+    ", dy=+" ++ show (cA.gcTwoBody.tbBotYMilli - cA.gcTwoBody.tbSingleBotYMilli) ++
+    ", dX_4F=" ++ show (cA.gcAniso.asProbeHorizX - cA.gcAniso.asProbeVertX) ++
+    ", workA=" ++ show cA.gcWork ++ ", tagFreeRoundTrip=" ++ show checkTagFreePackUnpackRoundTrip
+  , "  -> Experiment 4 & 5 pass=" ++ show pass
+  ]
 
 public export
 modeParityAndWorkOk : ModeParityReport -> Bool
 modeParityAndWorkOk m = m.mpParityOk && m.mpFlagsOk && (m.mpWorkB > m.mpWorkA)
 
 public export
-buildExp4and5Report : ModelExperimentMetrics -> ParitySuiteReport -> (Bool, List String)
-buildExp4and5Report resA par =
-  let cA       = resA.core
-      okA      = gravityCriteriaOk resA
+buildExp4and5Report : GravityCoreMetrics -> ParitySuiteReport -> (Bool, List String)
+buildExp4and5Report cA par =
+  let okA      = gravityCriteriaOk cA
       seedRoot = packSparseFieldToRoot BoxLeaf (seedSparseWavepacket pureMSetBasis 0 512)
       u        = par.psUni
-      a        = par.psAdp
       p        = par.psPac
       parityOk =
-        modeParityAndWorkOk u && modeParityAndWorkOk a && modeParityAndWorkOk p &&
-        (u.mpCoresB == 0) && (a.mpCoresB == 1) && (p.mpCoresB == 0) && a.mpPeekB &&
+        modeParityAndWorkOk u && modeParityAndWorkOk p &&
         checkTagFreePackUnpackRoundTrip &&
         (unwrapBox (sumHMSet seedRoot) == 0) &&
         (cA.gcNetSum == 0) && cA.gcAntiOk && cA.gcSymOk && cA.gcBalOk
       pass     = okA && parityOk
-  in (pass, mkExp4and5Lines resA par okA pass)
+  in (pass, mkExp4and5Lines cA par okA pass)
 
 export
 runExperiment4and5 : Has [Console] e => App e (Bool, List String)
 runExperiment4and5 = do
-  resA <- app1 (runLabGravitySuite flatLab)
-  par  <- app1 runParitySuite
-  let res = buildExp4and5Report resA par
+  cA  <- app1 (runLabCoreSuite flatLab ModeUnified)
+  par <- app1 runParitySuite
+  let res = buildExp4and5Report cA par
   traverse_ putStrLn (snd res)
   pure res
 
@@ -900,7 +780,7 @@ runExperiment4and5 = do
 export
 collectPacedWorkLoop :
   Nat ->
-  SparseField Coord2 FlatCoreBody ->
+  SparseField Coord2 ->
   Nat ->
   Nat ->
   PacedWorkStats
@@ -953,9 +833,9 @@ mkExp6Lines pA w4A wBr wVac w4B w4D ok4A ok4B ok4D ok4E ok4F energyMonoOk quiesc
 public export
 buildExp6Report : GravityCoreMetrics -> (Bool, List String)
 buildExp6Report pA =
-  let seed4A       = seedSparseBreather {body = FlatCoreBody} coord2Basis 0 0 1 4096
-      seedBr       = seedSparseBreather {body = FlatCoreBody} coord2Basis 4 5 6 8192
-      seedVac      = seedSparseWavepacketAt {body = FlatCoreBody} coord2Basis 0 0 512
+  let seed4A       = seedSparseBreather coord2Basis 0 0 1 4096
+      seedBr       = seedSparseBreather coord2Basis 4 5 6 8192
+      seedVac      = seedSparseWavepacketAt coord2Basis 0 0 512
       seed4B       = addSparseField seedBr seedVac
       seed4D       = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
                                     (seedSparseWavepacketAt coord2Basis 0 3 2048)

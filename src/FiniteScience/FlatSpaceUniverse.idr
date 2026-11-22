@@ -25,12 +25,8 @@ import FiniteScience.Settings
 --------------------------------------------------------------------------------
 
 public export
-FlatCoreBody : Type
-FlatCoreBody = WaveMaxel Coord2
-
-public export
 FlatField : Type
-FlatField = SparseField Coord2 FlatCoreBody
+FlatField = SparseField Coord2
 
 export
 data FlatBlackBox : Type where
@@ -81,7 +77,7 @@ stepFlatByMode :
   (1 u : FlatBlackBox) ->
   App1 e FlatBlackBox
 stepFlatByMode mode (MkFlatBox matter field) =
-  App1.pure1 (MkFlatBox matter (stepSparseByMode coord2Basis coord2CoreCodec mode field))
+  App1.pure1 (MkFlatBox matter (stepSparseByMode coord2Basis mode field))
 
 ||| Non-perturbing external projection on `FlatBlackBox` carrying `0 same : uOut = uIn`.
 export
@@ -108,11 +104,11 @@ export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome
 closeFlat0D (MkFlatBox matter field) =
   if matter == emptyMSet && isEmptyMaxel field.waveMaxel &&
-     isEmptyMaxel field.metricMaxel && isEmptyMaxel field.paceMaxel && null field.frozenCores
+     isEmptyMaxel field.metricMaxel && isEmptyMaxel field.paceMaxel
     then App1.pure CleanVacuumCollapse
     else let fWork = fieldActiveWork field
              work  = integerToNat (multiplicityL1 matter) + fWork
-             net   = multiplicitySignedSum matter + fieldPsiNet coord2CoreCodec field + fieldFluxNet coord2CoreCodec field
+             net   = multiplicitySignedSum matter + fieldPsiNet field + fieldFluxNet field
              stT   = StaticTime 0 (cast work)
          in App1.pure (FrozenAtHorizon stT ("FlatSparse(" ++ show fWork ++ " active)") work net)
 

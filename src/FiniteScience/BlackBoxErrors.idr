@@ -178,53 +178,6 @@ Show SelfTrapReport where
     ", net=" ++ show r.netSignedSum ++
     ", work=" ++ show r.workSteps ++ ")"
 
-||| Telemetry for dimensionless multi-core freeze/thaw wrapping under grazing pass and delayed-arrival selective impact.
-public export
-record FreezeThawReport where
-  constructor MkFreezeThawReport
-  ftGrazingCoreCount : Nat
-  ftGrazingWave      : WavepacketReport
-  ftLiveWorkSteps    : Nat
-  ftFrozenWorkSteps  : Nat
-  ftPassivePeekOk    : Bool
-  ftInitCoreCount    : Nat
-  ftMidCoreCount     : Nat
-  ftFinalCoreCount   : Nat
-  ftFirstThawStep    : Integer
-  ftImpactInitE      : Integer
-  ftImpactFinalE     : Integer
-  ftImpactMaxE       : Integer
-  ftImpactNetSum     : Integer
-
-public export
-Eq FreezeThawReport where
-  a == b =
-    a.ftGrazingCoreCount == b.ftGrazingCoreCount &&
-    a.ftGrazingWave == b.ftGrazingWave &&
-    a.ftLiveWorkSteps == b.ftLiveWorkSteps &&
-    a.ftFrozenWorkSteps == b.ftFrozenWorkSteps &&
-    a.ftPassivePeekOk == b.ftPassivePeekOk &&
-    a.ftInitCoreCount == b.ftInitCoreCount &&
-    a.ftMidCoreCount == b.ftMidCoreCount &&
-    a.ftFinalCoreCount == b.ftFinalCoreCount &&
-    a.ftFirstThawStep == b.ftFirstThawStep &&
-    a.ftImpactInitE == b.ftImpactInitE &&
-    a.ftImpactFinalE == b.ftImpactFinalE &&
-    a.ftImpactMaxE == b.ftImpactMaxE &&
-    a.ftImpactNetSum == b.ftImpactNetSum
-
-public export
-Show FreezeThawReport where
-  show r =
-    "FreezeThawReport(grazCores=" ++ show r.ftGrazingCoreCount ++
-    ", grazing=" ++ show r.ftGrazingWave ++
-    ", work=" ++ show r.ftLiveWorkSteps ++ "->" ++ show r.ftFrozenWorkSteps ++
-    ", peek=" ++ show r.ftPassivePeekOk ++
-    ", multiCore=" ++ show r.ftInitCoreCount ++ "->mid=" ++ show r.ftMidCoreCount ++ "->end=" ++ show r.ftFinalCoreCount ++
-    ", thawStep=" ++ show r.ftFirstThawStep ++
-    ", E=" ++ show r.ftImpactInitE ++ "->" ++ show r.ftImpactFinalE ++
-    ", maxE=" ++ show r.ftImpactMaxE ++ ", net=" ++ show r.ftImpactNetSum ++ ")"
-
 ||| Telemetry for equal-mass 2-body mutual gravitational attraction (zero heavy breather).
 public export
 record TwoBodyReport where
