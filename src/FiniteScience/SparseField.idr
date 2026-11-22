@@ -154,7 +154,7 @@ pureMSetBasis3D : AxisBasis PureMultiset
 pureMSetBasis3D = pureMSetBasisND 3
 
 public export
-data StepMode = ModeLinear | ModeUnified | ModePaced
+data StepMode = ModeLinear | ModeUnified | ModePaced | ModeSpread
 
 public export
 canonLagDiv : Integer
@@ -551,6 +551,61 @@ stepSparseFieldPaced ax subTicks lagDiv decayNum decayDen linkCoup m0 sf =
           pFin         = runSubs subTicks (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
       in (MkSparseField pFin.ppWave newMet pFin.ppPace, (pFin.ppYields, pFin.ppSkips))
 
+||| Folds `paceStreamStep` across `subTicks` on a single link to count `(yields, skips, finalBalance)`
+||| in O(1) registers for single-sweep spread polynomial composition.
+public export
+paceMultiSubTicks : (subTicks : Nat) -> (budget, cost : Integer) -> BoxInt -> (Nat, Nat, BoxInt)
+paceMultiSubTicks Z _ _ bal = (0, 0, bal)
+paceMultiSubTicks (S rem) budget cost bal =
+  let (step, bal1)   = paceStreamStep budget cost bal
+      (yR, sR, balF) = paceMultiSubTicks rem budget cost bal1
+  in case step of
+       StreamSkip    => (yR, S sR, balF)
+       StreamDone    => (yR, sR, balF)
+       StreamYield _ => (S yR, sR, balF)
+
+||| Arm B2: Single-sweep multi-yield spread composition (`S_y(s_1) ~ y^2 * s_1 -> m_eff = floor((k * m0) / y)`):
+||| Evaluates `paceMultiSubTicks` (`y in 0..k` yields) on each link in ONE checkerboard sweep per tick:
+||| - `y == 0` (all sub-ticks skipped): skips rotation completely (`S_0(s_1) = 0`).
+||| - `y >= 1` (`y` yields): applies one composite Pythagorean rotation with `m_eff = floor(mSub / y)`.
+public export
+stepSparseFieldSpread :
+  Ord k =>
+  AxisBasis k ->
+  (subTicks : Nat) ->
+  (lagDiv, decayNum, decayDen, linkCoup, m0 : Integer) ->
+  SparseField k ->
+  (SparseField k, (Nat, Nat))
+stepSparseFieldSpread ax subTicks lagDiv decayNum decayDen linkCoup m0 sf =
+  if isEmptyMaxel sf.waveMaxel && isEmptyMaxel sf.metricMaxel && isEmptyMaxel sf.paceMaxel
+    then (sf, (0, 0))
+    else
+      let kInt         = max 1 (natToInteger subTicks)
+          mSub         = kInt * m0
+          paceBudget   = if lagDiv > 0 && m0 > 0 then m0 * lagDiv else 0
+          axesBox      = activeAxisAtomsOf ax sf.waveMaxel
+          unitSt       = activeUnitAxesOf ax sf.waveMaxel
+          (_, actSrc0) = activeRhoAndSourceIf (lagDiv > 0) linkCoup sf.waveMaxel
+          newMet       = stepCausalMetricMaxel ax unitSt lagDiv decayNum decayDen actSrc0 sf.metricMaxel
+          pFin         = sweepCheckerboard ax axesBox (.ppWave)
+                           (\posA, posB, pA, pB, uOld, a =>
+                              let rawC = unwrapBox (linkMetricSum newMet posA posB)
+                                  cost = if rawC < lagDiv then 0 else rawC
+                                  bal  = lookupMaxel posA posB a.ppPace
+                                  (yCnt, sCnt, newBal) = paceMultiSubTicks subTicks paceBudget cost bal
+                                  pace1 = if newBal /= bal then setMaxelEdge posA posB newBal a.ppPace else a.ppPace
+                              in case yCnt of
+                                   Z => MkPacedPassAcc a.ppWave pace1 a.ppYields (a.ppSkips + sCnt)
+                                   S _ =>
+                                     let mEff = divIntegerPos mSub (natToInteger yCnt)
+                                     in MkPacedPassAcc
+                                          (applyLinkRotation posA posB (MkBoxInt mEff) pA pB uOld a.ppWave)
+                                          pace1
+                                          (a.ppYields + yCnt)
+                                          (a.ppSkips + sCnt))
+                           (MkPacedPassAcc sf.waveMaxel sf.paceMaxel 0 0)
+      in (MkSparseField pFin.ppWave newMet pFin.ppPace, (pFin.ppYields, pFin.ppSkips))
+
 ||| Single shared `StepMode` dispatcher over any coordinate basis `AxisBasis k`.
 public export
 stepSparseByMode :
@@ -565,6 +620,8 @@ stepSparseByMode ax ModeUnified sf =
   stepSparseField ax canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
 stepSparseByMode ax ModePaced sf =
   fst (stepSparseFieldPaced ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
+stepSparseByMode ax ModeSpread sf =
+  fst (stepSparseFieldSpread ax canonPacedSubTicks canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
@@ -920,13 +977,15 @@ prfWildbergerPythParam7 = Refl
 
 public export
 0 prfWildbergerPythResonance :
-  (let r  = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 24)
-       a1 = unwrapBox r.valA
-       b1 = unwrapBox r.valB
-       u1 = unwrapBox r.valU
+  (let r1 = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 24)
+       r2 = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 7) (MkBoxInt (-24))
+       a1 = unwrapBox r1.valA
+       b1 = unwrapBox r1.valB
+       u1 = unwrapBox r1.valU
        e0 = 2 * (7 * 7) + 24 * 24
        e1 = 2 * (a1 * a1 + b1 * b1) + u1 * u1
-   in (a1 + b1 == 7) && (e1 <= e0)) = True
+   in (a1 + b1 == 7) && (e1 <= e0) &&
+      (r2.valA == r1.valB) && (r2.valB == r1.valA) && (unwrapBox r2.valU == -u1)) = True
 prfWildbergerPythResonance = Refl
 
 public export
