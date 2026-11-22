@@ -82,16 +82,6 @@ observeFlatDirect proj (MkFlatBox field) =
   let val = proj field
   in App1.pure1 (MkFlatBox field `MkPureObs` val $ Refl)
 
-||| Non-perturbing Space/Time zoomed `ExternalLens` observation on `FlatBlackBox` (`0 same : uOut = uIn`).
-export
-observeFlatPure :
-  ExternalLens FlatField out ->
-  (1 u : FlatBlackBox) ->
-  App1 e (PureObservation u out)
-observeFlatPure lens (MkFlatBox field) =
-  let val = applyExternalLens lens field
-  in App1.pure1 (MkPureObs (MkFlatBox field) val Refl)
-
 ||| Consumes the linear `FlatBlackBox` once (`One -> Any`), emitting final boundary outcome.
 export
 closeFlat0D : (1 u : FlatBlackBox) -> App1 {u=Any} e CloseOutcome

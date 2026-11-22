@@ -160,10 +160,6 @@ pureMSetBasis : AxisBasis PureMultiset
 pureMSetBasis = pureMSetBasisND 2
 
 public export
-pureMSetBasis3D : AxisBasis PureMultiset
-pureMSetBasis3D = pureMSetBasisND 3
-
-public export
 canonLagDiv : Integer
 canonLagDiv = 6000000
 
@@ -443,10 +439,6 @@ applyLinkRotationPow y@(S _) posA posB m pA pB uOld wave =
   in if res.valU /= uOld then setMaxelEdge posA posB res.valU w2 else w2
 
 public export
-applyLinkRotation : Ord k => (posA, posB : k) -> (m, pA, pB, uOld : BoxInt) -> WaveMaxel k -> WaveMaxel k
-applyLinkRotation = applyLinkRotationPow 1
-
-public export
 linkMetricSum : Ord k => Maxel BoxInt k k SymForm -> k -> k -> BoxInt
 linkMetricSum metricM posA posB =
   addBox (addBox (lookupMaxel posA posA metricM) (lookupMaxel posB posB metricM))
@@ -713,31 +705,6 @@ packWaveBox base (MkMaxel m) =
                     addAtKeyBox (mkEdgeKey posA posB) w acc)
           base m
 
-||| Decodes active sites and directed edge keys from a packed `Box BoxInt PureMultiset` into any half-stored `Maxel`.
-||| When `onlyLower` is `True`, off-diagonal `mkEdgeKey a b` entries are inserted only for `compare a b == LT`.
-public export
-unpackHalfMaxelBox :
-  {form : MaxelForm PureMultiset PureMultiset} ->
-  (onlyLower : Bool) ->
-  Box BoxInt PureMultiset ->
-  Maxel BoxInt PureMultiset PureMultiset form
-unpackHalfMaxelBox onlyLower =
-  foldBox (\entry, mult, acc =>
-             if isSiteKey entry
-               then addAtMaxelEdge entry entry mult acc
-               else case unpackEdgeKey entry of
-                      Just (a, b) =>
-                        if not onlyLower || compare a b == LT
-                          then addAtMaxelEdge a b mult acc
-                          else acc
-                      Nothing => acc)
-          emptyMaxel
-
-||| Decodes active site weights and canonical half-stored (`a < b`) antisymmetric link weights into one `WaveMaxel`.
-public export
-unpackWaveHMSetBox : Box BoxInt PureMultiset -> WaveMaxel PureMultiset
-unpackWaveHMSetBox = unpackHalfMaxelBox {form = DiagAntisymForm} True
-
 ||| Packs any half-stored symmetric `Maxel BoxInt PureMultiset PureMultiset SymForm` (`a <= b`)
 ||| into one `PureMultiset` via `a == b -> a` and `a < b -> mkEdgeKey a b`.
 public export
@@ -752,7 +719,14 @@ packSymMaxelToHMSet (MkMaxel m) =
 ||| Decodes a `PureMultiset` produced by `packSymMaxelToHMSet` back into a `Maxel BoxInt PureMultiset PureMultiset SymForm`.
 public export
 unpackHMSetToSymMaxel : PureMultiset -> Maxel BoxInt PureMultiset PureMultiset SymForm
-unpackHMSetToSymMaxel (MkHMSet b) = unpackHalfMaxelBox {form = SymForm} False b
+unpackHMSetToSymMaxel (MkHMSet b) =
+  foldBox (\entry, mult, acc =>
+             if isSiteKey entry
+               then addAtMaxelEdge entry entry mult acc
+               else case unpackEdgeKey entry of
+                      Just (a, b) => addAtMaxelEdge a b mult acc
+                      Nothing     => acc)
+          emptyMaxel b
 
 public export
 packSymDipole :

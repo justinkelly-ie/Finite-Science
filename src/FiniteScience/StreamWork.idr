@@ -177,10 +177,6 @@ stepX : PureMultiset
 stepX = MkHMSet (singletonBox axisX (intToBoxInt 1))
 
 public export
-stepY : PureMultiset
-stepY = MkHMSet (singletonBox axisY (intToBoxInt 1))
-
-public export
 stepZ : PureMultiset
 stepZ = MkHMSet (singletonBox axisZ (intToBoxInt 1))
 
