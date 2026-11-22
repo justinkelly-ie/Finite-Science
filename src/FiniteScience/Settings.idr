@@ -4,7 +4,7 @@ import Control.App
 import Data.DPair
 import FinScBox.BoxInt
 import FinScBox.HereditaryMSet
-import FinScBox.SpaceTime
+import FinScBox.Time
 import FinScBox.MultisetCodec
 import FinScBox.BlackRedZoom
 import FiniteScience.BlackBoxErrors
@@ -64,7 +64,7 @@ heavyMassSettingText : String
 heavyMassSettingText = "{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}"
 
 --------------------------------------------------------------------------------
--- OBSERVER TIME HORIZON PRESETS (`Observer = FinScBox.SpaceTime`, `selfFuelOfHMSet`)
+-- OBSERVER TIME HORIZON PRESETS (`Observer = FinScBox.Time`, `selfFuelOfHMSet`)
 --------------------------------------------------------------------------------
 
 ||| Coarse observation horizon: inspects crossing quanta directly (`RetroTime 0`)

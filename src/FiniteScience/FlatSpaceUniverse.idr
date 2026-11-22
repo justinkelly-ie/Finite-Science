@@ -4,10 +4,8 @@ import Control.App
 import FinScBox.BoxInt
 import FinScBox.Interfaces
 import FinScBox.Box
-import FinScBox.Multiset
 import FinScBox.HereditaryMSet
-import FinScBox.SpaceTime
-import FinScBox.SpaceStream
+import FinScBox.Time
 import FinScBox.Lenses
 import FinScBox.MultisetCodec
 import FiniteScience.BlackBoxErrors

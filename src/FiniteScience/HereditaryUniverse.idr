@@ -5,8 +5,7 @@ import FinScBox.BoxInt
 import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
-import FinScBox.SpaceStream
-import FinScBox.SpaceTime
+import FinScBox.Time
 import FinScBox.Lenses
 import FinScBox.MultisetCodec
 import FinScBox.BlackRedZoom
