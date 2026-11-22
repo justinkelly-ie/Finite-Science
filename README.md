@@ -1,73 +1,148 @@
 # Finite-Science
 
-**A constructive, total (`%default total`) Idris 2 discrete-physics engine comparing an unbounded flat coordinate model (`Coord2`) and a zero-sum single-root hereditary multiset model (`PureMultiset`) inside strict `Control.App` / linear `App1` black-box isolation over [`FinSc-Box`](file:///var/home/justin/Projects/FinSc-Box).**
+**A step-by-step introduction to discrete physics built purely from finite multisets of Black and Red boxes — no floating-point numbers, no pre-built grid walls, and no external clock.**
+
+All mathematics and simulations are written in total (`%default total`) Idris 2 over [`FinSc-Box`](file:///var/home/justin/Projects/FinSc-Box), with every core conservation law checked by the compiler or verified across 6 automated experiments.
 
 ---
 
-## Core Design Principles
+## Step 1: Nothing at All — The Empty Box
 
-- **Zero Floating-Point Drift & Zero `assert_total`:** All dynamics use exact arbitrary-precision signed integers (`BoxInt`) and total binary integer division, guaranteeing exact global zero-sum neutrality (`net = 0`) and monotone discrete Lyapunov energy conservation (`E_{t+1} <= E_t`).
-- **Closed-Universe Black-Box Isolation (`Control.App` + Linear `App1`):** Boundary validation (`Dec` recognizers and `UniverseErr` exceptions) runs in the outer `App` layer, while internal universe evolution runs strictly inside linear, `NoThrow` `App1` handles (`FlatBlackBox` and `HereditaryBlackBox`).
-- **A/B Structural Equivalence (Flat `Coord2` vs Emergent Arbitrary-Dimension `PureMultiset`):**
-  - **Model A ([FlatSpaceUniverse.idr](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/FlatSpaceUniverse.idr)):** Evolves `FlatField = EnergyState Coord2` on unbounded signed coordinates `Coord2 = (SignedCoord, SignedCoord)` (zero grid walls, zero sidecar fields).
-  - **Model B ([HereditaryUniverse.idr](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/HereditaryUniverse.idr)):** Encodes the entire universe state inside one single zero-sum `PureMultiset` (`HereditaryMSet BoxInt`) using five mutually disjoint zero-tag structural shapes (`isSiteKey` over emergent arbitrary-dimension axis atoms `{ [] : i }`, `mkEdgeKey`, `mkMetricKey`, `mkPaceKey`, `mkMatterKey` with QTT `0` 3D disjointness proof `prfFiveShapesDisjoint`).
+Start with an empty container:
 
----
+```text
+[]
+```
 
-## Algebraic Architecture ([Energy.idr](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Energy.idr))
-
-- **Unified State & Energy Carriers (`WaveMaxel k` & `EnergyMaxel k`):** Diagonal entries `(a, a)` hold scalar amplitude $\psi(a)$ and off-diagonal entries `(a, b)` hold canonical half-stored antisymmetric flux $u_{ab} = -u_{ba}$ inside `WaveMaxel k = Maxel BoxInt k k DiagAntisymForm`. Its Hadamard self-overlap projects directly via `energyMaxelOf` into `EnergyMaxel k = Maxel BoxInt k k SymForm` ($2\psi_a^2$ on diagonal sites, $u_{ab}^2$ on undirected links).
-- **Causal 1-Hop Metric (`metricMaxel : EnergyMaxel k`):** Local stress-energy density $T_{00}$ and symmetric flux source `F .*. F` are derived directly from `energyMaxelOf wave` (`activeEnergySource`) and propagated at strict causal speed `c = 1` via `shiftConvolveMaxel` along `activeUnitAxesOf` (`canonDecayNum = 7`, `canonDecayDen = 32`).
-- **Exact Wildberger Pythagorean Link Rotations & Spread Powers (`rotatePythPow`):** Checkerboard passes update active links via exact $y$-fold Gaussian/Pythagorean powers $(A_1 + i B_1)^y = (A_y, B_y, R_y)$ satisfying $R_1^{2y} Z_y(4 B_1^2 / R_1^2) = 4 B_y^2$, preserving pairwise linear momentum (`valA + valB == pA + pB`) and the discrete Lyapunov quadrance invariant `2 * (psi_A^2 + psi_B^2) + u_{AB}^2`.
-- **Parameterized Semigroup Pacing (`ModeFactor outerPasses innerTicks` & `stepEnergyCore`):** Local Bresenham `StreamSkip` / `StreamYield` scheduling (`paceStreamStep` in [`SpaceStream.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/HereditaryMSet.idr)) factors sub-tick evolution of order $k = \text{outerPasses} \times \text{innerTicks}$ into spatial passes (`outerPasses`) and local spread-polynomial composition (`innerTicks`), unifying `ModeSpread` (`(1, 4)`), `ModeBalanced` (`(2, 2)`), `ModePaced` (`(4, 1)`), and composite $k = 6$ (`(2, 3)` vs `(3, 2)`).
-- **Coupled Multiset Flow & Self-Seeding Relic Cycles (`MSetSupport`):** External `PureMultiset` reservoirs peel bond quanta into `EnergyState k` via `viewAsAntiBox` (`stepCoupledSourceFlow`), automatically decoupling into closed cooling when empty; two actively evolving universes (`stepCoupledUniversePair`) equilibrate via purely local boundary-bond gradients; and `MSetSupport` (upstream in [`HereditaryMSet.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/HereditaryMSet.idr)) projects frozen relics to unit-weight topology serving as both `GohFuel` clock and boundary reservoir across multi-cycle chains (`C1 -> C2..C5`).
-- **Passive Non-Perturbing Observation & Self-Fueled Horizons:** External inspection via `ExternalLens` / `PureObservation` (`0 same : uOut = uIn`) and `BlackRedZoom` (`zoomSpace`, `zoomTime`) runs strictly outside the linear universe state under `BoundedTime` budgets derived intrinsically via `selfFuelOfHMSet (spreadZHMSet 10)`.
+This is the **vacuum**. It has:
+- **0 boxes** inside it,
+- **0 energy**,
+- **0 net charge**, and
+- **0 time ticks** (nothing is happening, so nothing advances).
 
 ---
 
-## Module Catalog ([Finite-Science.ipkg](file:///var/home/justin/Projects/Finite-Science/Finite-Science.ipkg))
+## Step 2: Black Boxes (⬛) and Red Boxes (🟥)
 
-| Module | Responsibility |
-| :--- | :--- |
-| [`FiniteScience`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience.idr) | Top-level public re-export hub. |
-| [`FiniteScience.BlackBoxErrors`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/BlackBoxErrors.idr) | `Time` horizon configs (`HorizonSpec`), boundary exceptions (`UniverseErr`), `CloseOutcome`, and experiment telemetry records. |
-| [`FiniteScience.StreamWork`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/StreamWork.idr) | Quantum peeling work (`streamPeelWorkHMSet`, `fastPeelWorkHMSet`), canonical particle seeds, zero-tag `PureMultiset` shape codecs, and Goh spread polynumber freeze-out (`freezeGohSpreadStream`). |
-| [`FiniteScience.Energy`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Energy.idr) | Coordinate-generic `AxisBasis k`, `WaveMaxel k`, `EnergyMaxel k` (`energyMaxelOf`), `stepEnergyCore`, `stepCoupledSourceFlow`, `stepCoupledUniversePair`, `StepMode` (`ModeLinear | ModeFactor outerPasses innerTicks`), and zero-tag root pack/unpack codecs. |
-| [`FiniteScience.Settings`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Settings.idr) | `Dec`-backed serialized multiset decoders (`validateAndDecodeSetting`), zero-sum guards (`requireBalancedSplit`), canonical presets, and self-fueled `HorizonSpec` presets. |
-| [`FiniteScience.FlatSpaceUniverse`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/FlatSpaceUniverse.idr) | Model A closed `App1` universe (`FlatBlackBox`) and outer `App` boundary runners. |
-| [`FiniteScience.HereditaryUniverse`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/HereditaryUniverse.idr) | Model B closed `App1` universe (`HereditaryBlackBox`) over a single `PureMultiset` root. |
-| [`FiniteScience.Experiments`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Experiments.idr) | Parameterized `BlackBoxLab` drivers and pass/parity auditors for Experiments 1–6. |
-| [`Main`](file:///var/home/justin/Projects/Finite-Science/src/Main.idr) | Executes the full suite and writes telemetry output to `experiment_trace.txt`. |
+Now introduce just **two** kinds of elementary tokens that can sit inside a container:
+- a **Black box** `⬛` meaning `+1`, and
+- a **Red box** `🟥` meaning `-1`.
 
----
+There is only **one fundamental cancellation rule**: whenever a Black box and a Red box meet inside the same container, they annihilate back to nothing:
 
-## Experiment Suite Overview
+```text
+[ ⬛ , 🟥 ]  =  []
+```
 
-| Experiment | Focus | Key Verified Criteria |
-| :--- | :--- | :--- |
-| **Experiment 1** | 0D Root Conservation & Boundary Guards | Coincident splits collapse to `CleanVacuumCollapse([])`; invalid text throws `InvalidMultisetTextError`; unbalanced splits throw `UnbalancedVacuumSplitError`. |
-| **Experiment 2** | Streaming Peel Work & `BlackRedZoom` | `Vacuum < Photon < Proton < HeavyMass` peel steps; exact dipole/anti-dipole cancellation; `zoomTime` and `zoomSpace` QTT `0` / runtime round-trips. |
-| **Experiment 3** | Self-Fueled Observer Time Horizons & Non-Interference | `BoundedTime(59)` derived from `selfFuelOfHMSet (spreadZHMSet 10)`; `RetroTime 2` freezes earlier (`3` cycles) than `RetroTime 0` (`4` cycles); passive `observeHereditaryPure` zoom probes match unobserved evolution bit-for-bit. |
-| **Experiment 4** | Canonical `ModeSpread (1,4)` Half-Stored `Maxel` Causal Gravity (`4A, 4B, 4D, 4E, 4F`) | `4A` breather self-trapping (`91%` core energy vs `60%` linear); `4B` gravitational centroid deflection, Shapiro delay, & `94%` vacuum retention; `4D` equal-mass 2-body attraction; `4E` exact spacelike invariance outside `c = 1` light cone; `4F` horizontal vs vertical anisotropic stress quadrupole (`Q_H`, `Q_V`) and arrival split. |
-| **Experiment 5** | Model A vs Model B Multi-Mode Parity Matrix | Fast 4-sweep bit-for-bit `sameWavePhysics` parity across `ModeSpread (1,4)`, `ModeBalanced (2,2)`, and `ModePaced (4,1)`, `net = 0`, `SymForm`/`DiagAntisymForm` invariants, balanced dipoles, and higher hierarchical peel cost in Model B (`workB > workA`). |
-| **Experiment 6** | Goh Spread Polynumber Algebra & Coupled Multiset Dynamics (`6-A`), Canonical Quiescence (`6-B`), and Emergent 3D Gravity (`6-3D`) | `PureMultiset` Cigler-Herbig factorization $Z_n = \prod_{d \mid n} \Psi_d$ ($n = 1..10, 12$), von Mangoldt spectrum $\Psi_d(0) = e^{2\Lambda(d)}$, homogenized Pythagorean power identity $R_1^{2y} Z_y(4 B_1^2 / R_1^2) = 4 B_y^2$, self-fueled $Z_6 / Z_{10}$ freeze-out, live `GohFuel` time dilation, coupled $E_{\text{src}} \to U$ flow, 5-cycle `MSetSupport` relic attractor (2-seed basin check), local `Maxel`-seam $U_A \leftrightarrow U_B$ coupling, canonical `ModeSpread` `StreamSkip` quiescence, and emergent 3D (`axes = 3, neighbors = 6`) Z-axis gravitational attraction inside `HereditaryBlackBox`. |
+Everything else follows from counting:
+
+```text
+[ ⬛ , ⬛ , ⬛ ]           =  +3   (three Black boxes)
+[ 🟥 , 🟥 ]               =  -2   (two Red boxes)
+[ ⬛ , ⬛ , 🟥 ]           =  [ ⬛ ]   (+1, because one ⬛ and one 🟥 cancel)
+```
+
+Notice what this also allows in reverse: **empty vacuum `[]` can split into a balanced pair** — one `⬛` and one `🟥` — while keeping the total count strictly `0`. In our model, every closed universe begins at `0` net boxes and stays at **exact `0`** forever (no floating-point drift).
 
 ---
 
-## Building & Running
+## Step 3: Boxes Inside Boxes — Space Without a Grid
 
-All builds run inside `fedora-toolbox-44` using `/var/home/justin/.local/bin/idris2`:
+So far we only have a single pile of Black and Red boxes (`0D`). How do you get **space** (left/right, up/down, forward/back) without inventing a separate coordinate grid?
+
+**Put boxes inside other boxes.** A container whose items are themselves containers of Black and Red boxes is called a **Hereditary Multiset** (`PureMultiset` in [`HereditaryMSet.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/HereditaryMSet.idr)).
+
+Each inner box acts as an **address**:
+
+```text
+[]                        =  the origin (0)
+[ ⬛ inside [] ]           =  1 step along Axis 1 (X)
+[ ⬛ , ⬛ inside [] ]      =  1 step along Axis 2 (Y)
+[ ⬛ , ⬛ , ⬛ inside [] ]  =  1 step along Axis 3 (Z)
+```
+
+Putting a `⬛` at address `A` and a `🟥` at address `B` creates a **balanced spatial dipole**:
+
+```text
+Address A: [ ⬛ ]   (+1)
+Address B: [ 🟥 ]   (-1)
+────────────────────────
+Total:       []      (0)
+```
+
+Because addresses are just nested boxes:
+- There are **no grid walls** — space extends as far as excitations travel.
+- **Dimension is emergent:** if an excitation uses 2 axis shapes, the universe is 2D; if a 3rd axis shape is present, the exact same engine automatically evolves in 3D (verified in Experiment 6-3D).
+
+---
+
+## Step 4: Links Between Addresses (`WaveMaxel`) and Energy (`EnergyMaxel`)
+
+Neighboring addresses are connected by **directed links**. A flow of `⬛` boxes from `A` to `B` is simultaneously a flow of `🟥` boxes from `B` to `A` (`u_AB = -u_BA`).
+
+We store site charges ($\psi$, Black or Red) on the diagonal `(A, A)` and directed link flows ($u_{AB}$) off the diagonal `(A, B)` inside one half-stored table called a **`WaveMaxel`** ([`Energy.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Energy.idr)). Its signed sum is always `0`.
+
+**Energy** is what you get when you multiply every entry by itself (`EnergyMaxel = wave .*. wave`):
+- Both `⬛` (`+`) and `🟥` (`-`) square to **positive** energy (`2 * psi^2` on sites, `u^2` on links).
+- **Pure link energy creates matter-antimatter dipoles from vacuum:** if an empty link `(0, 0)` holds a pure bond of `u = 50` (`E = 50^2 = 2500`), one exact integer Pythagorean rotation splits the vacuum sites into a balanced Red/Black dipole `(-7, +7)` with `u' = 48` and exact energy conservation:
+
+```text
+Before:  Site A = 0,   Site B = 0,   Bond = 50   ->  E = 0 + 0 + 50^2          = 2500
+After:   Site A = -7,  Site B = +7,  Bond = 48   ->  E = 2*(49 + 49) + 48^2    = 2500
+```
+
+All updates use exact Wildberger Pythagorean integer rotations (`rotatePythPow` in [`ProjectiveRotation.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/ProjectiveRotation.idr)), so energy never grows (`E_{t+1} <= E_t`) and net charge stays strictly `0`.
+
+---
+
+## Step 5: Time = Peeling Boxes & Emergent Gravity
+
+In this model, **time is not an external ticking clock** — time is the finite work of peeling boxes one quantum at a time (`GohFuel` in [`HereditaryMSet.idr`](file:///var/home/justin/Projects/FinSc-Box/src/FinScBox/HereditaryMSet.idr)):
+- An active update emits `StreamYield` (spending `GohFuel`).
+- A paused or empty tick emits `StreamSkip` (costing **`0 GohFuel`**).
+
+Where energy concentrates into a dense core, its causal 1-hop metric (`metricMaxel`, propagating strictly at speed `c = 1`) causes local links to emit more `StreamSkip` pauses. From this single local rule, standard gravitational signatures emerge with no continuous spacetime and no `1/r` force law baked in:
+- **Self-trapping:** dense cores trap `91%` of their energy (vs `60%` in linear dispersion).
+- **Time dilation:** a dense breather executes `12` sweeps on the same `GohFuel` budget where an unpaced packet finishes in `2` sweeps (`1338` `StreamSkip`s at `0 GohFuel` cost).
+- **Causal deflection & Shapiro delay:** passing wavepackets bend toward a nearby breather and arrive later, while remaining bit-for-bit unaffected outside the `c = 1` light cone.
+- **Equal-mass 2-body attraction & 3D gravity:** two free wavepackets pull toward each other, and the same local rule attracts packets along the Z-axis in emergent 3D.
+
+---
+
+## Step 6: Open Universes, Coupled Seams, and Self-Seeding Cycles
+
+Because everything is a `PureMultiset`, universes can also interact with external multisets of the exact same type:
+
+1. **Open $\to$ Closed Energy Flow (`stepCoupledSourceFlow`):** An external reservoir `E_src : PureMultiset` peels one bond quantum per tick into a universe `U` via `viewAsAntiBox`. While `E_src` has boxes left, `U` heats up; the instant `E_src` empties to `[]`, `U` automatically transitions to closed cooling — no mode switch needed.
+2. **Active Two-Universe Seam Coupling (`stepCoupledUniversePair`):** Two evolving universes `U_A` and `U_B` coupled across any `Maxel` boundary seam (`maskByBox`) exchange zero-sum bond quanta strictly along the local boundary gradient, equilibrating smoothly while keeping `netA = netB = 0`.
+3. **Freeze-Out $\to$ Self-Seeding Cycles (`MSetSupport`):** When a universe exhausts its `GohFuel` and freezes, `MSetSupport` strips all signed amplitudes down to pure unit-weight presence — keeping only *where* structure survived. That stripped topological relic then serves as **both** the `GohFuel` clock and the external reservoir `E_src` to boot a fresh empty universe (`[]`), converging from distinct initial seeds to an exact self-reproducing fixed point by Cycle 3.
+
+---
+
+## Step 7: Project Layout & Running the Verified Suite
+
+### Active Stack
+- **[`FinSc-Box`](file:///var/home/justin/Projects/FinSc-Box)** (10 modules): Pure multiset & `Maxel` algebra (`BoxInt`, `Interfaces`, `Box`, `HereditaryMSet` + `MSetSupport` + `GohFuel`/freeze-out, `ProjectiveRotation`, `MultisetCodec`, `Views`, `BlackRedZoom`, `Lenses`).
+- **[`FinSc-Box-Wiki`](file:///var/home/justin/Projects/FinSc-Box-Wiki)**: Compile-time `QTT 0` `Refl` proofs and QuickCheck property tests.
+- **[`Finite-Science`](file:///var/home/justin/Projects/Finite-Science)** (`src/FiniteScience/`):
+  - [`Energy.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Energy.idr) — `EnergyState`, `WaveMaxel`/`EnergyMaxel`, Pythagorean sweeps, coupled source & `Maxel`-seam dynamics, and Model-B zero-tag root pack/unpack.
+  - [`FlatSpaceUniverse.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/FlatSpaceUniverse.idr) & [`HereditaryUniverse.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/HereditaryUniverse.idr) — Linear `App1` black-box isolation comparing flat `Coord2` (Model A) against single-root `PureMultiset` (Model B).
+  - [`Experiments.idr`](file:///var/home/justin/Projects/Finite-Science/src/FiniteScience/Experiments.idr) — 6 automated experiments verifying 0D conservation, peel work, non-interfering zoomed observers, 2D causal gravity (`4A–4F`), Model A == Model B parity, Goh spread polynumbers, coupled flow, 5-cycle relic attractors, `Maxel`-seam equilibration, and emergent 3D gravity.
+
+### Build & Run
+
+All commands run non-interactively inside `fedora-toolbox-44` using `/var/home/justin/.local/bin/idris2`:
 
 ```bash
 # 1. Build and install FinSc-Box
 toolbox run -c fedora-toolbox-44 bash -c \
   "cd /var/home/justin/Projects/FinSc-Box && rm -rf build && /var/home/justin/.local/bin/idris2 --build FinSc-Box.ipkg && /var/home/justin/.local/bin/idris2 --install FinSc-Box.ipkg"
 
-# 2. Clean-build FinSc-Box-Wiki verification suite
+# 2. Verify FinSc-Box-Wiki proofs & QuickCheck
 toolbox run -c fedora-toolbox-44 bash -c \
   "cd /var/home/justin/Projects/FinSc-Box-Wiki && rm -rf build && /var/home/justin/.local/bin/idris2 --build FinSc-Box-Wiki.ipkg && ./build/exec/finsc-box-wiki"
 
-# 3. Clean-build and run Finite-Science Experiments 1–6
+# 3. Build and run Finite-Science Experiments 1–6 (~2m19s runtime)
 toolbox run -c fedora-toolbox-44 bash -c \
   "cd /var/home/justin/Projects/Finite-Science && rm -rf build && /var/home/justin/.local/bin/idris2 --build Finite-Science.ipkg && ./build/exec/finite-science-experiments"
 ```
