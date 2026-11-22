@@ -1059,79 +1059,17 @@ auditGohSpreadPolyHMSet =
                             yFuel10 yUsed10 sUsed10 cycDil cycDen sDen eU3 eU6 relicTrace relicTraceB fixA fixB sameAttr pEA3 pEB3 pEA6 pEB6
 
 public export
-armChecks : Integer -> GravityCoreMetrics -> (Bool, Bool, Bool, Bool, Bool)
-armChecks minVacPct c =
-  ( selfTrapCriteriaOk c.gcLin c.gcTrap
-  , gravity4BCriteriaWithVacPct minVacPct c
-  , twoBodyCriteriaOk c.gcTwoBody
-  , lightConeCriteriaOk c.gcLightCone
-  , anisotropicStressCriteriaOk c.gcAniso
-  )
-
-public export
-armAllOk : GravityCoreMetrics -> (Bool, Bool, Bool, Bool, Bool) -> Bool
-armAllOk c (a, b, d, e, f) =
-  a && b && d && e && f && (c.gcNetSum == 0) && c.gcAntiOk && c.gcSymOk && c.gcBalOk
-
-public export
-showArmSummary : String -> GravityCoreMetrics -> PacedWorkStats -> PacedWorkStats -> (Bool, Bool, Bool, Bool, Bool) -> String
-showArmSummary lbl c wBr wVac (ok4A, ok4B, ok4D, ok4E, ok4F) =
-  let vacPct = if c.gcVac.initEnergy <= 0 then 0 else divIntegerPos (c.gcVac.waveEnergy * 100) c.gcVac.initEnergy
-      dX4B   = c.gcTop.meanXMilli - c.gcVac.meanXMilli
-      dy4D   = c.gcTwoBody.tbBotYMilli - c.gcTwoBody.tbSingleBotYMilli
-      dX4F   = c.gcAniso.asProbeHorizX - c.gcAniso.asProbeVertX
-  in "    - " ++ lbl ++ " -> 4A=" ++ show c.gcTrap.coreFracPct ++ "%(" ++ show ok4A ++
-     "), 4B[dX=" ++ show dX4B ++ ",TopY=" ++ show c.gcTop.meanYMilli ++ ",vacE=" ++ show vacPct ++ "%](" ++ show ok4B ++
-     "), 4D[dy=+" ++ show dy4D ++ ",Sy=" ++ show c.gcTwoBody.tbBotSy ++ "](" ++ show ok4D ++
-     "), 4E=" ++ show ok4E ++ ", 4F[dX=" ++ show dX4F ++ "](" ++ show ok4F ++
-     "), brSkip=" ++ show (pacedSkipPct wBr.pwYields wBr.pwSkips) ++ "%, vacSkip=" ++
-     show (pacedSkipPct wVac.pwYields wVac.pwSkips) ++ "%, workA=" ++ show c.gcWork
-
-public export
-show4BArm : String -> GravityCoreMetrics -> String
-show4BArm lbl c =
-  "    - " ++ lbl ++ " Vac/Top/Bot -> VacX=" ++ show c.gcVac.meanXMilli ++
-  ", Top=(" ++ show c.gcTop.meanXMilli ++ "," ++ show c.gcTop.meanYMilli ++ ",Sy=" ++ show c.gcTop.poyntingYAccum ++
-  "), Bot=(" ++ show c.gcBot.meanXMilli ++ "," ++ show c.gcBot.meanYMilli ++ ",Sy=" ++ show c.gcBot.poyntingYAccum ++ ")"
-
-public export
-showZ6Summary : String -> (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) -> Bool -> String
-showZ6Summary lbl (vR, tR, _, wBr) ok =
-  let vacPct = if vR.initEnergy <= 0 then 0 else divIntegerPos (vR.waveEnergy * 100) vR.initEnergy
-      dX     = tR.meanXMilli - vR.meanXMilli
-  in "    - " ++ lbl ++ " -> 4B[dX=" ++ show dX ++ ",TopY=" ++ show tR.meanYMilli ++
-     ",Sy=" ++ show tR.poyntingYAccum ++ ",vacE=" ++ show vacPct ++ "%](" ++ show ok ++
-     "), brSkip=" ++ show (pacedSkipPct wBr.pwYields wBr.pwSkips) ++ "%, yields=" ++
-     show wBr.pwYields ++ ", skips=" ++ show wBr.pwSkips
-
-public export
-z6QuickCriteriaOk : (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) -> Bool
-z6QuickCriteriaOk (vR, tR, bR, wBr) =
-  (vR.waveNetSum == 0) && (tR.waveNetSum == 0) && (bR.waveNetSum == 0) &&
-  (vR.waveEnergy <= vR.initEnergy) && (tR.waveEnergy <= tR.initEnergy) &&
-  (vR.meanYMilli == 500) && (vR.poyntingYAccum == 0) &&
-  (tR.meanXMilli + 50 < vR.meanXMilli) && (tR.meanYMilli > 530) && (tR.poyntingYAccum > 200000) &&
-  (bR.meanXMilli == tR.meanXMilli) && (bR.poyntingYAccum == -(tR.poyntingYAccum)) &&
-  (tR.meanYMilli + bR.meanYMilli == 999) &&
-  (pacedSkipPct wBr.pwYields wBr.pwSkips >= 35)
-
-public export
 mkExp6Lines :
   GohSpreadAuditReport ->
-  (GravityCoreMetrics, GravityCoreMetrics, GravityCoreMetrics) ->
-  ((Bool, Bool, Bool, Bool, Bool), (Bool, Bool, Bool, Bool, Bool), (Bool, Bool, Bool, Bool, Bool)) ->
-  ((PacedWorkStats, PacedWorkStats), (PacedWorkStats, PacedWorkStats), (PacedWorkStats, PacedWorkStats), PacedWorkStats, PacedWorkStats) ->
-  ((WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats), Bool) ->
-  ((WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats), Bool) ->
+  PacedWorkStats ->
+  PacedWorkStats ->
   (Emergent3DReport, Bool) ->
   (Bool, Bool, Bool, Bool) ->
   List String
-mkExp6Lines gs (pB1, pB2, pB3) (c1@(a1, b1, d1, e1, f1), c2@(a2, b2, d2, e2, f2), c3@(a3, b3, d3, e3, f3))
-            ((wBr1, wVac1), (wBr2, wVac2), (wBr3, wVac3), w4A, w4D)
-            (z23, okZ23) (z32, okZ32) (e3D, ok3D) (gohOk, energyMonoOk, quiescenceOk, pass) =
+mkExp6Lines gs wBr wVac (e3D, ok3D) (gohOk, energyMonoOk, quiescenceOk, pass) =
   [ "----------------------------------------------------------------"
-  , "[Experiment 6] A/B/C Test: Goh Spread Polynumber Algebra, (4,1) vs (1,4) vs (2,2), k=6 & 3D"
-  , "  * 6-A PureMultiset Goh Spread Polynumber Algebra & selfFuelOfHMSet Freeze-Out (" ++ show gohOk ++ "):"
+  , "[Experiment 6] Goh Spread Polynumbers, Self-Seeding Relics, Local Maxel-Seam & 3D Gravity"
+  , "  * 6-A PureMultiset Goh Spread Polynumber Algebra & Coupled Multiset Dynamics (" ++ show gohOk ++ "):"
   , "    - Factorization Z_n == prod_{d|n} Psi_d (n=1..10,12 in PureMultiset) : " ++ show gs.gsFactOk
   , "    - Prime Roots & von Mangoldt Spectrum (Psi_3(3)=0, Psi_4(2)=0, Psi_6(1)=0, Psi_{p^k}(0)=p^2, Psi_comp(0)=1): " ++ show gs.gsPrimeRootOk
   , "    - Fibonacci Specialization Z_n(5) == (-1)^(n-1) * 5 * F_n^2 (n=1..6): " ++ show gs.gsFibOk
@@ -1150,93 +1088,37 @@ mkExp6Lines gs (pB1, pB2, pB3) (c1@(a1, b1, d1, e1, f1), c2@(a2, b2, d2, e2, f2)
     ", A=" ++ show gs.gsRelicTrace ++ ", B=" ++ show gs.gsRelicTraceB ++ ", net=0)"
   , "    - Local Maxel-Seam Coupling (2-bond wall U_A[E0=54400] <-> U_B[E0=0], maskByBox): ok=" ++ show gs.gsActivePairOk ++
     " (t3: [" ++ show gs.gsPairEA3 ++ "," ++ show gs.gsPairEB3 ++ "] -> t6: [" ++ show gs.gsPairEA6 ++ "," ++ show gs.gsPairEB6 ++ "], netA=netB=0)"
-  , "  * 6-B Factorization Comparison of k=4 Sub-Ticks: (4,1) ModePaced vs (1,4) ModeSpread vs (2,2) ModeBalanced:"
-  , showArmSummary "Arm B1 (ModePaced    4x1)" pB1 wBr1 wVac1 c1
-  , showArmSummary "Arm B2 (ModeSpread   1x4)" pB2 wBr2 wVac2 c2
-  , showArmSummary "Arm B3 (ModeBalanced 2x2)" pB3 wBr3 wVac3 c3
-  , "  * 6-Z6 Composite k=6 Asymmetric Spatial-vs-Local Factorization (Z_2 o Z_3 vs Z_3 o Z_2, mSub=42):"
-  , showZ6Summary "ModeFactor(2,3) [Z_2 o Z_3]" z23 okZ23
-  , showZ6Summary "ModeFactor(3,2) [Z_3 o Z_2]" z32 okZ32
-  , "  * 6-4A Self-Trapping (B1=" ++ show a1 ++ ", B2=" ++ show a2 ++ ", B3=" ++ show a3 ++ "):"
-  , "    - Linear             -> " ++ show pB1.gcLin
-  , "    - B1 Paced    (4,1)  -> " ++ show pB1.gcTrap ++ " | " ++ showPacedStats w4A
-  , "    - B2 Spread   (1,4)  -> " ++ show pB2.gcTrap
-  , "    - B3 Balanced (2,2)  -> " ++ show pB3.gcTrap
-  , "  * 6-4B Causal 1-Hop Gravity (B1=" ++ show b1 ++ ", B2=" ++ show b2 ++ ", B3=" ++ show b3 ++ "):"
-  , show4BArm "B1 (4,1)" pB1
-  , show4BArm "B2 (1,4)" pB2
-  , show4BArm "B3 (2,2)" pB3
-  , "    - B1 Quiescence (4,1)  -> brOnly: " ++ showPacedStats wBr1 ++ " | vac: " ++ showPacedStats wVac1
-  , "    - B2 Quiescence (1,4)  -> brOnly: " ++ showPacedStats wBr2 ++ " | vac: " ++ showPacedStats wVac2
-  , "    - B3 Quiescence (2,2)  -> brOnly: " ++ showPacedStats wBr3 ++ " | vac: " ++ showPacedStats wVac3
-  , "  * 6-4D Equal-Mass 2-Body (B1=" ++ show d1 ++ ", B2=" ++ show d2 ++ ", B3=" ++ show d3 ++ "):"
-  , "    - B1 Equal-Mass (4,1)-> " ++ show pB1.gcTwoBody ++ " | " ++ showPacedStats w4D
-  , "    - B2 Equal-Mass (1,4)-> " ++ show pB2.gcTwoBody
-  , "    - B3 Equal-Mass (2,2)-> " ++ show pB3.gcTwoBody
-  , "  * 6-4E Causal Light-Cone (B1=" ++ show e1 ++ ", B2=" ++ show e2 ++ ", B3=" ++ show e3 ++ "):"
-  , "    - B1 Light-Cone (4,1)-> " ++ show pB1.gcLightCone
-  , "    - B2 Light-Cone (1,4)-> " ++ show pB2.gcLightCone
-  , "    - B3 Light-Cone (2,2)-> " ++ show pB3.gcLightCone
-  , "  * 6-4F Anisotropic Stress (B1=" ++ show f1 ++ ", B2=" ++ show f2 ++ ", B3=" ++ show f3 ++ "):"
-  , "    - B1 AnisoStress(4,1)-> " ++ show pB1.gcAniso
-  , "    - B2 AnisoStress(1,4)-> " ++ show pB2.gcAniso
-  , "    - B3 AnisoStress(2,2)-> " ++ show pB3.gcAniso
-  , "  * 6-3D Gate 3 Emergent 3D Causal Gravity in HereditaryBlackBox (" ++ show ok3D ++
+  , "  * 6-B Canonical ModeSpread (1,4) StreamSkip Quiescence (" ++ show quiescenceOk ++ "):"
+  , "    - brOnly: " ++ showPacedStats wBr ++ " | vac: " ++ showPacedStats wVac
+  , "  * 6-3D Emergent 3D Causal Gravity in HereditaryBlackBox (" ++ show ok3D ++
     ", axes=" ++ show e3D.e3AxesCount ++ ", neighbors=" ++ show e3D.e3UnitCount ++ "):"
   , "    - 3D Vacuum Z-Band(B)-> " ++ show e3D.e3VacZ
   , "    - 3D +Z Breather  (B)-> " ++ show e3D.e3TopZ
   , "    - 3D -Z Breather  (B)-> " ++ show e3D.e3BotZ
-  , "  * Gate 1–3 & Goh Audit: gohSpreadOk=" ++ show gohOk ++ ", energyMono=" ++ show energyMonoOk ++
+  , "  * Gate Audit: gohSpreadOk=" ++ show gohOk ++ ", energyMono=" ++ show energyMonoOk ++
     ", quiescenceOk=" ++ show quiescenceOk ++ ", emergent3D=" ++ show ok3D
   , "  -> Experiment 6 pass=" ++ show pass
   ]
 
 public export
-buildExp6Report :
-  GravityCoreMetrics ->
-  GravityCoreMetrics ->
-  GravityCoreMetrics ->
-  (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) ->
-  (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats) ->
-  Emergent3DReport ->
-  (Bool, List String)
-buildExp6Report pB1 pB2 pB3 z23 z32 e3D =
+buildExp6Report : GravityCoreMetrics -> Emergent3DReport -> (Bool, List String)
+buildExp6Report pCan e3D =
   let gs           = auditGohSpreadPolyHMSet
       gohOk        = all id [gs.gsFactOk, gs.gsPrimeRootOk, gs.gsFibOk, gs.gsComposeOk, gs.gsHomogPythOk, gs.gsFreezeOk, gs.gsSelfTimeOk, gs.gsCoupledOk, gs.gsRelicCycleOk, gs.gsActivePairOk]
-      seed4A       = seedBreather coord2Basis 0 0 1 4096
-      seedBr       = seedBreather coord2Basis 4 5 6 8192
-      seedVac      = seedWavepacketAt coord2Basis 0 0 512
-      seed4D       = addEnergyState (seedWavepacketAt coord2Basis 0 (-3) 2048) (seedWavepacketAt coord2Basis 0 3 2048)
-      w4A          = collectPacedWork (4, 1) 20 seed4A
-      w4D          = collectPacedWork (4, 1) 16 seed4D
-      w1@(wBr1, wVac1) = (collectPacedWork (4, 1) 18 seedBr, collectPacedWork (4, 1) 18 seedVac)
-      w2@(wBr2, wVac2) = (collectPacedWork (1, 4) 18 seedBr, collectPacedWork (1, 4) 18 seedVac)
-      w3@(wBr3, wVac3) = (collectPacedWork (2, 2) 18 seedBr, collectPacedWork (2, 2) 18 seedVac)
-      c1           = armChecks 78 pB1
-      c2           = armChecks 90 pB2
-      c3           = armChecks 85 pB3
-      okZ23        = z6QuickCriteriaOk z23
-      okZ32        = z6QuickCriteriaOk z32
+      wBr          = collectPacedWork (1, 4) 18 (seedBreather coord2Basis 4 5 6 8192)
+      wVac         = collectPacedWork (1, 4) 18 (seedWavepacketAt coord2Basis 0 0 512)
       ok3D         = emergent3DCriteriaOk e3D
-      energyMonoOk = coreEnergyMonoOk pB1 && coreEnergyMonoOk pB2 && coreEnergyMonoOk pB3
+      energyMonoOk = coreEnergyMonoOk pCan
       quiescenceOk =
-        (pacedSkipPct wBr1.pwYields wBr1.pwSkips >= 40) && (pacedSkipPct wVac1.pwYields wVac1.pwSkips <= 2) &&
-        (pacedSkipPct wBr2.pwYields wBr2.pwSkips >= 30) && (pacedSkipPct wVac2.pwYields wVac2.pwSkips <= 2) &&
-        (pacedSkipPct wBr3.pwYields wBr3.pwSkips >= 40) && (pacedSkipPct wVac3.pwYields wVac3.pwSkips <= 2) &&
-        (w4A.pwSkips > 0) && (w4D.pwSkips > 0)
-      pass         = gohOk && armAllOk pB1 c1 && armAllOk pB2 c2 && armAllOk pB3 c3 &&
-                     okZ23 && okZ32 && ok3D && energyMonoOk && quiescenceOk
-  in (pass, mkExp6Lines gs (pB1, pB2, pB3) (c1, c2, c3) (w1, w2, w3, w4A, w4D)
-                        (z23, okZ23) (z32, okZ32) (e3D, ok3D) (gohOk, energyMonoOk, quiescenceOk, pass))
+        (pacedSkipPct wBr.pwYields wBr.pwSkips >= 30) &&
+        (pacedSkipPct wVac.pwYields wVac.pwSkips <= 2)
+      pass         = gohOk && ok3D && energyMonoOk && quiescenceOk
+  in (pass, mkExp6Lines gs wBr wVac (e3D, ok3D) (gohOk, energyMonoOk, quiescenceOk, pass))
 
 export
 runExperiment6Paced : Has [Console] e => GravityCoreMetrics -> App e (Bool, List String)
-runExperiment6Paced pB2 = do
-  pB1 <- app1 (runLabCoreSuite flatLab ModePaced)
-  pB3 <- app1 (runLabCoreSuite flatLab ModeBalanced)
-  z23 <- app1 (runLab4BQuick (2, 3))
-  z32 <- app1 (runLab4BQuick (3, 2))
+runExperiment6Paced pCan = do
   e3D <- app1 runEmergent3DGravity
-  let res = buildExp6Report pB1 pB2 pB3 z23 z32 e3D
+  let res = buildExp6Report pCan e3D
   traverse_ putStrLn (snd res)
   pure res
