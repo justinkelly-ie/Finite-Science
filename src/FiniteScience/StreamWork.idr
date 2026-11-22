@@ -103,17 +103,25 @@ streamMergeWorkHMSet a b =
       diff   = if rawL1 >= rM.residualL1 then minus rawL1 rM.residualL1 else 0
   in (merged, MkStreamWorkReport (rA.workSteps + rB.workSteps) (half diff) rM.residualL1)
 
-||| Pure fuel-bounded horizon evaluator shared externally across both models.
+||| Freezes a constant-work-per-cycle observer stream via `freezeStateStreamWith`,
+||| producing a `HorizonObservationReport` without ad-hoc loop recursion.
 public export
-runBoundedHorizonLoop : (remSteps, remFuel, workPerCycle, accCycles, accWork : Nat) ->
-                        (Nat, Nat, StreamFreezeReason)
-runBoundedHorizonLoop Z _ _ accC accW = (accC, accW, StepHorizonReached)
-runBoundedHorizonLoop (S steps) remFuel workPerCycle accC accW =
-  if workPerCycle == 0
-    then runBoundedHorizonLoop steps remFuel 0 accC accW
-    else if remFuel < workPerCycle
-      then (accC, accW, YieldExhausted)
-      else runBoundedHorizonLoop steps (minus remFuel workPerCycle) workPerCycle (S accC) (accW + workPerCycle)
+observeHorizonFreeze : HorizonSpec -> (workPerCycle : Nat) -> HorizonObservationReport
+observeHorizonFreeze spec workPerCycle =
+  let (relic, _) =
+        freezeStateStreamWith
+          spec.retroDepth
+          spec.budgetCap
+          (MkGohFuel spec.budgetCap)
+          20
+          (\u => if workPerCycle == 0 then (StreamSkip, 0, 1) else (StreamYield u, workPerCycle, 0))
+          ()
+  in MkHorizonObservationReport
+       spec.boundTime
+       spec.retroDepth
+       (if workPerCycle == 0 then 0 else relic.stepsConsumed)
+       relic.yieldsConsumed
+       relic.freezeReason
 
 --------------------------------------------------------------------------------
 -- 2. CANONICAL PARTICLE PRESETS, BASIS AXES & MINIMAL ENTRY CODEC

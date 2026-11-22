@@ -846,17 +846,10 @@ emergent3DCriteriaOk r =
   (r.e3BotZ.waveEnergy <= r.e3BotZ.initEnergy)
 
 export
-collectPacedWorkLoop :
-  (Nat, Nat) ->
-  Nat ->
-  SparseField Coord2 ->
-  Nat ->
-  Nat ->
-  PacedWorkStats
-collectPacedWorkLoop _ Z sf accY accS = MkPacedWorkStats accY accS (maxelNodeCount sf.paceMaxel)
-collectPacedWorkLoop (oP, iT) (S rem) sf accY accS =
-  let (sf1, (y, s)) = stepSparseFieldCore coord2Basis oP iT canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
-  in collectPacedWorkLoop (oP, iT) rem sf1 (accY + y) (accS + s)
+collectPacedWork : (Nat, Nat) -> Nat -> SparseField Coord2 -> PacedWorkStats
+collectPacedWork (oP, iT) steps sf0 =
+  let (relic, skips) = freezeEnergyStream coord2Basis oP iT canonLagDiv 0 0 (MkGohFuel (integerToNat 1000000)) steps sf0
+  in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.paceMaxel)
 
 public export
 pacedSkipPct : Nat -> Nat -> Integer
@@ -869,24 +862,6 @@ showPacedStats w =
   "yields=" ++ show w.pwYields ++ ", skips=" ++ show w.pwSkips ++
   " (" ++ show (pacedSkipPct w.pwYields w.pwSkips) ++ "%), paceNodes=" ++ show w.pwNodes
 
-||| Evolves a `SparseField Coord2` under `(outerPasses, innerTicks)` and `lagDiv` until either `maxSteps`
-||| or the intrinsic `GohFuel` yield budget (`remYieldFuel`) is exhausted (`StreamSkip` costs 0 yield fuel!).
-export
-runSelfFueledPacedLoop :
-  (Nat, Nat) ->
-  Integer ->
-  (remSteps, remYieldFuel : Nat) ->
-  SparseField Coord2 ->
-  (accSweeps, accYields, accSkips : Nat) ->
-  (Nat, Nat, Nat, StreamFreezeReason)
-runSelfFueledPacedLoop _ _ Z _ _ cyc yAcc sAcc = (cyc, yAcc, sAcc, StepHorizonReached)
-runSelfFueledPacedLoop (oP, iT) lagD (S sRem) yRem sf cyc yAcc sAcc =
-  let (sf1, (yStep, sStep)) =
-        stepSparseFieldCore coord2Basis oP iT lagD canonDecayNum canonDecayDen canonLinkCoup 7 sf
-  in if yRem < yStep
-       then (cyc, yAcc, sAcc, YieldExhausted)
-       else runSelfFueledPacedLoop (oP, iT) lagD sRem (minus yRem yStep) sf1 (S cyc) (yAcc + yStep) (sAcc + sStep)
-
 ||| Runs the 4B causal 1-hop gravity probe (18 sweeps) for any `(outerPasses, innerTicks)` factorization.
 export
 runLab4BQuick : (Nat, Nat) -> App1 {u = Any} e (WavepacketReport, WavepacketReport, WavepacketReport, PacedWorkStats)
@@ -895,7 +870,7 @@ runLab4BQuick (oP, iT) = App1.do
       mode      = ModeFactor oP iT
       brTopSeed = seedSparseBreather ax 4 5 6 8192
       brBotSeed = seedSparseBreather ax 4 (-4) (-5) 8192
-      wBr       = collectPacedWorkLoop (oP, iT) 18 brTopSeed 0 0
+      wBr       = collectPacedWork (oP, iT) 18 brTopSeed
   eaBgTop <- bootInjectAndRun flatLab mode 18 brTopSeed
   eaBgBot <- bootInjectAndRun flatLab mode 18 brBotSeed
   (vRep, _, _, _) <- runLabWave flatLab mode 18 neutral   neutral
@@ -997,11 +972,13 @@ auditGohSpreadPolyHMSet =
       (MkAnyGohFuel _ yFuel12, _) = selfFuelOfHMSet z12
       linkYieldBudget             = gohSteps yFuel12 * 40
       seedDense                   = seedSparseBreather coord2Basis 4 5 6 8192
-      (cycDil, _, sDil, rsnDil)   = runSelfFueledPacedLoop (4, 1) 0           25 linkYieldBudget seedDense 0 0 0
-      (cycDen, _, sDen, rsnDen)   = runSelfFueledPacedLoop (4, 1) canonLagDiv 25 linkYieldBudget seedDense 0 0 0
+      (rDil, sDil)                = freezeEnergyStream coord2Basis 4 1 0           0 linkYieldBudget (MkGohFuel linkYieldBudget) 25 seedDense
+      (rDen, sDen)                = freezeEnergyStream coord2Basis 4 1 canonLagDiv 0 linkYieldBudget (MkGohFuel linkYieldBudget) 25 seedDense
+      cycDil                      = rDil.stepsConsumed
+      cycDen                      = rDen.stepsConsumed
       selfTimeOk =
-        (rsnDil == YieldExhausted) &&
-        (rsnDen == YieldExhausted) &&
+        (rDil.freezeReason == YieldExhausted) &&
+        (rDen.freezeReason == YieldExhausted) &&
         (sDil == 0) &&
         (sDen > 800) &&
         (cycDen > cycDil)
@@ -1138,15 +1115,15 @@ buildExp6Report pB1 pB2 pB3 z23 z32 e3D =
       seed4B       = addSparseField seedBr seedVac
       seed4D       = addSparseField (seedSparseWavepacketAt coord2Basis 0 (-3) 2048)
                                     (seedSparseWavepacketAt coord2Basis 0 3 2048)
-      w4A          = collectPacedWorkLoop (4, 1) 20 seed4A  0 0
-      wBr1         = collectPacedWorkLoop (4, 1) 18 seedBr  0 0
-      wVac1        = collectPacedWorkLoop (4, 1) 18 seedVac 0 0
-      w4B          = collectPacedWorkLoop (4, 1) 18 seed4B  0 0
-      w4D          = collectPacedWorkLoop (4, 1) 16 seed4D  0 0
-      wBr2         = collectPacedWorkLoop (1, 4) 18 seedBr  0 0
-      wVac2        = collectPacedWorkLoop (1, 4) 18 seedVac 0 0
-      wBr3         = collectPacedWorkLoop (2, 2) 18 seedBr  0 0
-      wVac3        = collectPacedWorkLoop (2, 2) 18 seedVac 0 0
+      w4A          = collectPacedWork (4, 1) 20 seed4A
+      wBr1         = collectPacedWork (4, 1) 18 seedBr
+      wVac1        = collectPacedWork (4, 1) 18 seedVac
+      w4B          = collectPacedWork (4, 1) 18 seed4B
+      w4D          = collectPacedWork (4, 1) 16 seed4D
+      wBr2         = collectPacedWork (1, 4) 18 seedBr
+      wVac2        = collectPacedWork (1, 4) 18 seedVac
+      wBr3         = collectPacedWork (2, 2) 18 seedBr
+      wVac3        = collectPacedWork (2, 2) 18 seedVac
       ok4A1        = selfTrapCriteriaOk pB1.gcLin pB1.gcTrap
       ok4B1        = gravity4BCriteriaWithVacPct 78 pB1
       ok4D1        = twoBodyCriteriaOk pB1.gcTwoBody

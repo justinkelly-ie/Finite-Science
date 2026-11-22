@@ -4,6 +4,7 @@ import Stage0.BoxInt
 import Stage0.Interfaces
 import Stage0.Box
 import Stage0.HereditaryMSet
+import Stage1.Basis.Time
 import Stage1.Basis.SpaceStream
 import Stage1.ProjectiveRotation
 import Stage1.BlackRedZoom
@@ -572,6 +573,43 @@ stepSparseByMode ax ModeLinear sf =
 stepSparseByMode ax (ModeFactor oP iT) sf =
   fst (stepSparseFieldCore ax oP iT canonLagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf)
 
+||| One streaming energy step over `SparseField k`:
+||| - `yStep == 0 && sStep == 0` : emits `(StreamDone, 0, 0)` (`NaturalCompletion`).
+||| - `yStep == 0 && sStep > 0`  : emits `(StreamSkip, 0, sStep)` (0 yield fuel cost!).
+||| - `yStep > 0`                : emits `(StreamYield sf1, yStep, sStep)` (consumes `yStep` yield fuel).
+public export
+stepEnergyStreamCore :
+  Ord k =>
+  AxisBasis k ->
+  (outerPasses, innerTicks : Nat) ->
+  (lagDiv : Integer) ->
+  SparseField k ->
+  (StreamStep (SparseField k), Nat, Nat)
+stepEnergyStreamCore ax outerPasses innerTicks lagDiv sf =
+  let (sf1, (yStep, sStep)) =
+        stepSparseFieldCore ax outerPasses innerTicks lagDiv canonDecayNum canonDecayDen canonLinkCoup 7 sf
+  in if yStep == 0
+       then if sStep == 0
+              then (StreamDone, 0, 0)
+              else (StreamSkip, 0, sStep)
+       else (StreamYield sf1, yStep, sStep)
+
+||| Populates an initial energy state `sf0` at `t = 0` and streams it via `freezeStateStreamWith`
+||| under `(yieldFuel : GohFuel cap, stepBudget : Nat)` until it solidifies into a `SolidifiedStream` relic.
+public export
+freezeEnergyStream :
+  Ord k =>
+  AxisBasis k ->
+  (outerPasses, innerTicks : Nat) ->
+  (lagDiv     : Integer) ->
+  (g, cap     : Nat) ->
+  (yieldFuel  : GohFuel cap) ->
+  (stepBudget : Nat) ->
+  SparseField k ->
+  (SolidifiedStream (StaticTime (- cast g) (cast cap)) cap (SparseField k), Nat)
+freezeEnergyStream ax oP iT lagDiv g cap yFuel sBudget sf0 =
+  freezeStateStreamWith g cap yFuel sBudget (stepEnergyStreamCore ax oP iT lagDiv) sf0
+
 --------------------------------------------------------------------------------
 -- 4. ZERO-TAG ZERO-COPY HEREDITARY EMBEDDING (MODEL B = SINGLE `PureMultiset`)
 --------------------------------------------------------------------------------
@@ -920,6 +958,17 @@ public export
    in (Stage0.Box.totalMassBox eM.rawMaxelBox == MkBoxInt 400) &&
       (FiniteScience.Energy.fieldEnergy br == 400)) = True
 prfEnergyMaxelTotalMass = Refl
+
+public export
+0 prfBondEnergyCausesDipoleSplit :
+  (let r  = Stage1.ProjectiveRotation.rotatePythParam (MkBoxInt 7) (MkBoxInt 0) (MkBoxInt 0) (MkBoxInt 50)
+       a1 = unwrapBox r.valA
+       b1 = unwrapBox r.valB
+       u1 = unwrapBox r.valU
+   in (a1 == (-7)) && (b1 == 7) && (u1 == 48) &&
+      (a1 + b1 == 0) &&
+      (2 * (a1 * a1 + b1 * b1) + u1 * u1 == 2500)) = True
+prfBondEnergyCausesDipoleSplit = Refl
 
 public export
 0 prfWildbergerPythParam7 :

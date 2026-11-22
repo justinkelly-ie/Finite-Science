@@ -136,8 +136,7 @@ runFlatHorizonProbe spec = do
                 let p50          = mkCoord2D coord2Basis 5 0
                     baseWork     = weightMagnitude (lookupMaxel p50 p50 field.waveMaxel)
                     workPerCycle = if baseWork == 0 then 0 else baseWork + 2 * spec.retroDepth
-                    (cyc, used, reason) = runBoundedHorizonLoop 20 spec.budgetCap workPerCycle 0 0
-                in MkHorizonObservationReport spec.boundTime spec.retroDepth cyc used reason)
+                in observeHorizonFreeze spec workPerCycle)
              u1
     let MkPureObs u2 rep _ = obs
     _ <- closeFlat0D u2

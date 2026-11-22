@@ -128,9 +128,8 @@ runHereditaryHorizonProbe spec crossingPayload = do
                  zeroShift
                  spec.boundTime
                  (\zoomed =>
-                    let workPerCycle        = (streamPeelWorkHMSet zoomed).workSteps
-                        (cyc, used, reason) = runBoundedHorizonLoop 20 spec.budgetCap workPerCycle 0 0
-                    in MkHorizonObservationReport spec.boundTime spec.retroDepth cyc used reason)
+                    let workPerCycle = (streamPeelWorkHMSet zoomed).workSteps
+                    in observeHorizonFreeze spec workPerCycle)
     obs <- observeHereditaryPure lens u1
     let MkPureObs u2 rep _ = obs
     _ <- closeHereditary0D u2
