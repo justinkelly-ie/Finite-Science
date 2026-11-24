@@ -6,5 +6,6 @@ build/
 **/*.ss
 **/*.so
 
-# Generated experiment telemetry
+# Generated experiment / audit telemetry
+audit_trace.txt
 experiment_trace.txt

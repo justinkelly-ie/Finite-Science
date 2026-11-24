@@ -1,8 +1,21 @@
 # Finite-Science
 
-**Blind local dynamics built purely from finite multisets of Black (`+1`) and Red (`-1`) boxes — no floating-point numbers, no pre-built grid walls, no external clock, and zero observer state inside the universe.**
+**Top-of-the-stack discrete physics lab and multi-observer audit suite built purely from finite multisets of Black (`+1`) and Red (`-1`) boxes — no floating-point numbers, no pre-built grid walls, and no external clock.**
 
-All mathematics and dynamics are written in total (`%default total`) Idris 2 over [`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box), with external horizons, probes, and read-only audits separated cleanly into [`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens).
+All mathematics, blind dynamics, and non-perturbing observer lenses are written in total (`%default total`) Idris 2 across a strict four-layer DAG:
+
+```text
+                FinSc-Box               (Layer 1: Core Multiset & Maxel Algebra)
+                    │
+                    ▼
+             FinSc-Dynamics             (Layer 2: Blind Local Evolution — App1, NoThrow)
+               ╱         ╲
+              ▼           ▼
+        FinSc-Lens     FinSc-Dihedron   (Layer 3: Independent Non-Perturbing Observers)
+              ╲           ╱
+               ▼         ▼
+             Finite-Science             (Layer 4: Top-of-Stack Lab, Audits & Visualizer)
+```
 
 ---
 
@@ -14,17 +27,13 @@ Start with an empty container:
 []
 ```
 
-This is the **vacuum**. It has:
-- **0 boxes** inside it,
-- **0 quadrance**,
-- **0 net polarity**, and
-- **0 time ticks** (nothing is happening, so nothing advances).
+This is the **vacuum**: `0` boxes, `0` quadrance, `0` net polarity, and `0` time ticks.
 
 ---
 
 ## Step 2: Black Boxes (⬛) and Red Boxes (🟥)
 
-Introduce just **two** kinds of elementary tokens inside a container:
+Introduce two elementary tokens inside a container:
 - a **Black box** `⬛` meaning `+1`, and
 - a **Red box** `🟥` meaning `-1`.
 
@@ -40,96 +49,64 @@ Conversely, empty vacuum `[]` can split into a balanced pair — one `⬛` and o
 
 ## Step 3: Boxes Inside Boxes — Space Without a Grid
 
-Putting boxes inside other boxes forms a **Hereditary Multiset** (`HereditaryMSet BoxInt` in `FinScBox.HereditaryMSet`, aliased in physics as `Configuration`). Each inner box acts as an emergent coordinate address:
-
-```text
-[]                        =  the origin (0)
-[ ⬛ inside [] ]           =  1 step along Axis 1 (X)
-[ ⬛ , ⬛ inside [] ]      =  1 step along Axis 2 (Y)
-[ ⬛ , ⬛ , ⬛ inside [] ]  =  1 step along Axis 3 (Z)
-```
-
+Putting boxes inside other boxes forms a **Hereditary Multiset** (`HereditaryMSet BoxInt` in `FinScBox.HereditaryMSet`, aliased in physics as `Configuration`). Each inner box acts as an emergent coordinate address (`{ [] : 1 }` for X, `{ [] : 2 }` for Y, `{ [] : 3 }` for Z):
 - **No grid walls:** space extends only where active polarities travel.
 - **Emergent dimension:** if an excitation uses 2 axis shapes, the universe evolves in 2D; if a 3rd axis shape is present, the exact same blind stepper automatically evolves in 3D.
 
 ---
 
-## Step 4: Polarity (`PolarityMaxel`), Quadrance (`QuadranceMaxel`), and Conservative Exchange
+## Step 4: Polarity, Quadrance, Interaction Load & Pacing (`FinSc-Dynamics`)
 
-Neighboring addresses are connected by **directed links**. A flow of `⬛` boxes from `A` to `B` is simultaneously a flow of `🟥` boxes from `B` to `A` (`u_AB = -u_BA`).
+In [`FinSc-Dynamics`](https://github.com/justinkelly-ie/FinSc-Dynamics), each closed universe evolves locally with zero observer knowledge (`EvolutionState k`):
+1. **`polarityMaxel`** (`DiagAntisymForm`) — signed site polarities `(A, A)` and antisymmetric directed link fluxes `(A, B)`.
+2. **`loadMaxel`** (`SymForm`) — causal 1-hop retarded interaction load sourced from `quadranceOf polarityMaxel` (`c = 1`).
+3. **`throttleMaxel`** (`SymForm`) — integer Bresenham pacing accumulator emitting `StreamSkip` pauses at **`0 GohFuel`** cost when local load is high.
 
-- **`PolarityMaxel`** ([`Dynamics.idr`](src/FiniteScience/Dynamics.idr)) half-stores signed site polarities `(A, A)` and antisymmetric directed link flows `(A, B)`.
-- **`QuadranceMaxel`** (`quadranceOf pol = pol .*. pol + diag`) computes squared magnitudes (`2 * p^2` on sites, `u^2` on links), which external observers read as energy.
-- **Pure link flux splits vacuum into balanced dipoles:** on an empty link `(0, 0)` carrying `u = 50` (`Q = 2500`), one conservative integer update (`exchangeQuadratic` in `FinScBox.QuadraticExchange`) produces `(-7, +7)` with `u' = 48`, preserving `p_A + p_B = 0` and `2*(49 + 49) + 48^2 = 2500`.
-
----
-
-## Step 5: Interaction Load (`loadMaxel`) and Bresenham Pacing (`throttleMaxel`)
-
-Time is the finite work of peeling boxes (`GohFuel` in `FinScBox.HereditaryMSet`):
-- An active link exchange emits `StreamYield` (spending `GohFuel`).
-- A throttled link emits `StreamSkip` (costing **`0 GohFuel`**).
-
-Each `EvolutionState k` carries only three sparse `Maxel` tables:
-1. `polarityMaxel` — active signed polarities and directed fluxes (`DiagAntisymForm`).
-2. `loadMaxel` — causal 1-hop retarded interaction load (`SymForm`, speed `c = 1`).
-3. `throttleMaxel` — integer Bresenham pacing accumulator (`SymForm`, zero-pruned at vacuum).
-
-From this blind local law alone, self-trapping, time dilation, causal light-cone deflection, equal-pulse 2-body attraction, and 3D deflection emerge without baking in a metric tensor or `1/r` force law.
+All link updates use conservative integer quadratic exchanges (`exchangeQuadraticPow` in `FinScBox.QuadraticExchange`), conserving linear polarity `p_A + p_B` identically and monotonically bounding total quadrance `2*(p_A^2 + p_B^2) + u^2`.
 
 ---
 
-## Step 6: Three-Layer Architecture
+## Step 5: Pluggable Non-Perturbing Observers (`FinSc-Lens` & `FinSc-Dihedron`)
 
-Each repository in the stack has one strict ontological role:
-
-1. **[`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box) (Core Ontology & Algebra):** `HereditaryMSet`, `[⬛, 🟥] = []`, `Maxel`, `GohFuel`, `QuadraticExchange`, `Views` (peel-work counters), `BlackRedZoom`, and `Lenses` (`PureObservation` / `ExternalLens`).
-2. **`Finite-Science` (Blind Local Dynamics — installable library):**
-   - [`Dynamics.idr`](src/FiniteScience/Dynamics.idr) — `Configuration`, `EvolutionState`, `PolarityMaxel`, `QuadranceMaxel`, `loadMaxel`, `throttleMaxel`, `seedExcitation`, `seedDirectedPulse`, `seedBoundDipole`, `stepDynamicsByMode`, `stepCoupledSourceFlow`, and `stepCoupledUniversePair`.
-   - [`FlatSpaceUniverse.idr`](src/FiniteScience/FlatSpaceUniverse.idr) — Linear `App1` `FlatBlackBox` (`EvolutionState Coord2`).
-   - [`HereditaryUniverse.idr`](src/FiniteScience/HereditaryUniverse.idr) — 5-shape zero-tag `Configuration` root codec and linear `App1` `HereditaryBlackBox` (`MkHereditaryBox (root : Configuration)`).
-3. **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens) (External Horizons, Probes & Readout Audits):** `HorizonSpec`, initial probes (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` (`quenchRelic = MSetSupport`), `ExcitationReport`, and the 6-audit executable `finsc-lens-audits` (with rational `SO(3; Q)` / `SL(2; Q)` observer frames staged in `FinSc-Dihedron`).
+Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
+- **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`quenchRelic = MSetSupport`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupolePlus`).
+- **[`FinSc-Dihedron`](https://github.com/justinkelly-ie/FinSc-Dihedron):** Rational `SO(3; Q)` quaternion proportions (`ProjectiveProportion`) and `SL(2; Q)` Dihedron frames for relativistic observer development.
+- **`Finite-Science`** ([`Audits.idr`](src/FiniteScience/Audits.idr) & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 6 automated audits across both `FlatBlackBox` (Model A) and `HereditaryBlackBox` (Model B).
 
 ---
 
-## Building & Installing `Finite-Science`
+## Building & Running the Stack
 
 ### Prerequisites
-- [Idris 2](https://github.com/idris-lang/Idris2) `>= 0.8.0` (Chez Scheme backend) on your `PATH`.
-- [`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box) built and installed.
+- [Idris 2](https://github.com/idris-lang/Idris2) `>= 0.8.0` (Chez Scheme backend) on your `PATH`, including `base` and `linear`.
 
-### 1. Build and install `FinSc-Box`
-
-```bash
-cd FinSc-Box
-idris2 --build FinSc-Box.ipkg
-idris2 --install FinSc-Box.ipkg
-cd ..
-```
-
-### 2. Build and install `Finite-Science`
+### Build in Topological Order
 
 ```bash
+# 1. Layer 1: Core Multiset & Maxel Algebra
+cd FinSc-Box && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg && cd ..
+
+# 2. Layer 2: Blind Local Evolution
+cd FinSc-Dynamics && idris2 --build FinSc-Dynamics.ipkg && idris2 --install FinSc-Dynamics.ipkg && cd ..
+
+# 3. Layer 3: Non-Perturbing Observer Library
+cd FinSc-Lens && idris2 --build FinSc-Lens.ipkg && idris2 --install FinSc-Lens.ipkg && cd ..
+
+# 4. Layer 4: Top-of-Stack Audit Suite
 cd Finite-Science
 idris2 --build Finite-Science.ipkg
-idris2 --install Finite-Science.ipkg
-cd ..
+./build/exec/finite-science-audits
 ```
 
-### 3. Run external observer audits (`FinSc-Lens`)
+A passing run prints all 6 audit reports, writes `audit_trace.txt` (git-ignored), and ends with:
 
-```bash
-cd FinSc-Lens
-idris2 --build FinSc-Lens.ipkg
-./build/exec/finsc-lens-audits
+```text
+ALL 6 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + TopologicalRelic)
+Boundary telemetry written to audit_trace.txt: True
 ```
 
 ### Troubleshooting
-- **Stale `.ttc` caches after upstream changes:** purge `build/` before rebuilding and reinstalling:
-  ```bash
-  cd FinSc-Box && rm -rf build && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg
-  cd ../Finite-Science && rm -rf build && idris2 --build Finite-Science.ipkg && idris2 --install Finite-Science.ipkg
-  ```
+- **Stale `.ttc` caches after upstream changes:** purge `build/` and reinstall in topological order (`FinSc-Box` → `FinSc-Dynamics` → `FinSc-Lens` → `Finite-Science`).
 
 ---
 

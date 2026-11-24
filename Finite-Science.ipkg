@@ -1,15 +1,19 @@
 package Finite-Science
-version = 0.3.0
+version = 0.4.0
 authors = "Justin"
-brief   = "Finite-Science: Blind Local Polarity, Interaction Load & Hereditary Black-Box Dynamics"
+brief   = "Finite-Science: Top-of-Stack Multi-Observer Lab & Black-Box Audit Suite"
 
 depends = base >= 0.8.0
         , linear
         , FinSc-Box
+        , FinSc-Dynamics
+        , FinSc-Lens
 
 sourcedir = "src"
 
-modules = FiniteScience.Dynamics
-        , FiniteScience.FlatSpaceUniverse
-        , FiniteScience.HereditaryUniverse
+modules = FiniteScience.Audits
         , FiniteScience
+        , Main
+
+main       = Main
+executable = "finite-science-audits"
