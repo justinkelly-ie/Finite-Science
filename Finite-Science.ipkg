@@ -1,7 +1,7 @@
 package Finite-Science
-version = 0.2.0
+version = 0.3.0
 authors = "Justin"
-brief   = "App + App1 Black-Box Experimental Engine: Flat Space 3 vs HereditaryMSet"
+brief   = "Finite-Science: Blind Local Polarity, Interaction Load & Hereditary Black-Box Dynamics"
 
 depends = base >= 0.8.0
         , linear
@@ -9,15 +9,7 @@ depends = base >= 0.8.0
 
 sourcedir = "src"
 
-modules = FiniteScience
-        , FiniteScience.BlackBoxErrors
-        , FiniteScience.StreamWork
-        , FiniteScience.Energy
-        , FiniteScience.Settings
+modules = FiniteScience.Dynamics
         , FiniteScience.FlatSpaceUniverse
         , FiniteScience.HereditaryUniverse
-        , FiniteScience.Experiments
-        , Main
-
-main       = Main
-executable = "finite-science-experiments"
+        , FiniteScience
