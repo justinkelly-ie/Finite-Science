@@ -2,7 +2,7 @@
 
 **Blind local dynamics built purely from finite multisets of Black (`+1`) and Red (`-1`) boxes — no floating-point numbers, no pre-built grid walls, no external clock, and zero observer state inside the universe.**
 
-All mathematics and dynamics are written in total (`%default total`) Idris 2 over [`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box), with external horizons, probes, and read-only audits separated cleanly into `FinSc-Lens`.
+All mathematics and dynamics are written in total (`%default total`) Idris 2 over [`FinSc-Box`](https://github.com/justinkelly-ie/FinSc-Box), with external horizons, probes, and read-only audits separated cleanly into [`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens).
 
 ---
 
@@ -88,7 +88,7 @@ Each repository in the stack has one strict ontological role:
    - [`Dynamics.idr`](src/FiniteScience/Dynamics.idr) — `Configuration`, `EvolutionState`, `PolarityMaxel`, `QuadranceMaxel`, `loadMaxel`, `throttleMaxel`, `seedExcitation`, `seedDirectedPulse`, `seedBoundDipole`, `stepDynamicsByMode`, `stepCoupledSourceFlow`, and `stepCoupledUniversePair`.
    - [`FlatSpaceUniverse.idr`](src/FiniteScience/FlatSpaceUniverse.idr) — Linear `App1` `FlatBlackBox` (`EvolutionState Coord2`).
    - [`HereditaryUniverse.idr`](src/FiniteScience/HereditaryUniverse.idr) — 5-shape zero-tag `Configuration` root codec and linear `App1` `HereditaryBlackBox` (`MkHereditaryBox (root : Configuration)`).
-3. **`FinSc-Lens` (External Horizons, Probes & Readout Audits):** `HorizonSpec`, initial probes (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` (`quenchRelic = MSetSupport`), `ExcitationReport`, and the 6-audit executable `finsc-lens-audits` (with rational `SO(3; Q)` / `SL(2; Q)` observer frames staged in `FinSc-Dihedron`).
+3. **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens) (External Horizons, Probes & Readout Audits):** `HorizonSpec`, initial probes (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` (`quenchRelic = MSetSupport`), `ExcitationReport`, and the 6-audit executable `finsc-lens-audits` (with rational `SO(3; Q)` / `SL(2; Q)` observer frames staged in `FinSc-Dihedron`).
 
 ---
 
