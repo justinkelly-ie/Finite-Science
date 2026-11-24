@@ -71,7 +71,7 @@ All link updates use conservative integer quadratic exchanges (`exchangeQuadrati
 Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
 - **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`quenchRelic = MSetSupport`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupolePlus`).
 - **[`FinSc-Dihedron`](https://github.com/justinkelly-ie/FinSc-Dihedron):** Rational `SO(3; Q)` quaternion proportions (`ProjectiveProportion`) and `SL(2; Q)` Dihedron frames for relativistic observer development.
-- **`Finite-Science`** ([`Audits.idr`](src/FiniteScience/Audits.idr) & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 6 automated audits across both `FlatBlackBox` (Model A) and `HereditaryBlackBox` (Model B).
+- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`CosmologyAudits.idr`](src/FiniteScience/CosmologyAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 6 automated audits across polymorphic `FlatBlackBox k` (`Coord2` & `Coord3`) and `HereditaryBlackBox`.
 
 ---
 

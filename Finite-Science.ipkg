@@ -11,7 +11,10 @@ depends = base >= 0.8.0
 
 sourcedir = "src"
 
-modules = FiniteScience.Audits
+modules = FiniteScience.Lab
+        , FiniteScience.BoundaryAudits
+        , FiniteScience.LoadAudits
+        , FiniteScience.CosmologyAudits
         , FiniteScience
         , Main
 
