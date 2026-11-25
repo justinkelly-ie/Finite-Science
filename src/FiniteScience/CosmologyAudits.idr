@@ -95,7 +95,7 @@ export
 collectPacedWork : (Nat, Nat) -> Nat -> EvolutionState Coord2 -> PacedWorkStats
 collectPacedWork (oP, iT) steps st0 =
   let params         = canonDynamicsParams (ModeFactor oP iT)
-      (relic, skips) = freezeDynamicsStreamWith coord2Basis params 0 0 (MkGohFuel (integerToNat 1000000)) steps st0
+      (relic, skips) = freezeDynamicsStreamWith coord2Basis params 0 (mkGohFuel (integerToNat 1000000)) steps st0
   in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.throttleMaxel)
 
 public export
@@ -148,15 +148,13 @@ freezeSteps :
   s ->
   s
 freezeSteps fuelInt steps stepF s0 =
-  (fst (freezeStateStreamWith 0 0 (MkGohFuel (integerToNat fuelInt)) steps stepF s0)).relicState
+  (fst (freezeStateStreamWith 0 (mkGohFuel (integerToNat fuelInt)) steps stepF s0)).relicState
 
 public export
 auditCoupledSourceFlow : (Bool, Integer, Integer)
 auditCoupledSourceFlow =
   let eSrc0 : Configuration
-      eSrc0 = MkHMSet $ setBox (mkPureCoord2D 0 8) (MkBoxInt 1)
-                      $ setBox (mkPureCoord2D 0 (-4)) (MkBoxInt 1)
-                      $ singletonBox (mkPureCoord2D 0 0) (MkBoxInt 1)
+      eSrc0 = wrapBox (mkPureCoord2D 0 8) + wrapBox (mkPureCoord2D 0 (-4)) + wrapBox (mkPureCoord2D 0 0)
       stepF = stepCoupledSourceFlow coord2Basis (canonDynamicsParams ModeLinear) 50
       s1    = freezeSteps 10000 1 stepF (neutral, eSrc0)
       s2    = freezeSteps 10000 1 stepF s1
@@ -172,16 +170,16 @@ auditCoupledSourceFlow =
               (statePolarityNet (fst s6) + stateFluxNet (fst s6) == 0)
   in (ok, qU3, qU6)
 
-||| One cosmological cycle where `eSrc : TopologicalRelic` serves as BOTH `GohFuel` clock
+||| One cosmological cycle where `eSrc : TopologicalRelic` (`HereditaryMSet MultisetBit`) serves as BOTH `GohFuel` clock
 ||| AND boundary bond reservoir feeding an empty universe, quenching to the next `TopologicalRelic`.
 public export
-runRelicCycle : (qAmp : Integer) -> TopologicalRelic -> (TopologicalRelic, Nat, Nat, Integer, Bool)
+runRelicCycle : (qAmp : BoxInt) -> TopologicalRelic -> (TopologicalRelic, Nat, Nat, Integer, Bool)
 runRelicCycle qAmp eSrc =
   let (MkAnyGohFuel _ yFuel, sBud) = selfFuelOfHMSet eSrc
       fuel   = gohSteps yFuel
-      rCyc   = fst (freezeStateStreamWith 0 0 (MkGohFuel (fuel * 25)) (max 4 sBud)
+      rCyc   = fst (freezeStateStreamWith 0 (mkGohFuel (fuel * 25)) (max 4 sBud)
                                           (stepCoupledSourceFlow pureMSetBasis (canonDynamicsParams ModeLinear) qAmp)
-                                          (neutral, eSrc))
+                                          (neutral, embedRelic eSrc))
       uOut   = fst rCyc.relicState
       remSrc = snd rCyc.relicState
       qOut   = stateQuadrance uOut
@@ -193,7 +191,7 @@ runRelicCycle qAmp eSrc =
   in (nextR, fuel, rCyc.stepsConsumed, qOut, ok)
 
 public export
-runRelicChain : Nat -> Integer -> TopologicalRelic -> (Bool, Bool, List (Nat, Nat, Integer), TopologicalRelic)
+runRelicChain : Nat -> BoxInt -> TopologicalRelic -> (Bool, Bool, List (Nat, Nat, Integer), TopologicalRelic)
 runRelicChain Z       _    eSrc = (True, False, [], eSrc)
 runRelicChain (S Z)   qAmp eSrc =
   let (nextR, fuel, sw, qOut, ok) = runRelicCycle qAmp eSrc
@@ -206,7 +204,7 @@ runRelicChain (S rem) qAmp eSrc =
 public export
 seedToFirstRelic : EvolutionState PureMultiset -> TopologicalRelic
 seedToFirstRelic seedPure =
-  let (rCyc1, _) = freezeDynamicsStreamWith pureMSetBasis (canonDynamicsParams ModeSpread) 0 0 (MkGohFuel (integerToNat 600)) 5 seedPure
+  let (rCyc1, _) = freezeDynamicsStreamWith pureMSetBasis (canonDynamicsParams ModeSpread) 0 (mkGohFuel (integerToNat 600)) 5 seedPure
   in quenchRelic (packEvolutionStateToRoot BoxLeaf rCyc1.relicState)
 
 public export
@@ -268,10 +266,10 @@ auditGohSpreadPolyHMSet =
         [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)]
       compOk = all (\(p, q, r) => evalPolyHMSetAt p q == r)
         [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)]
-      (_, b1, r1) = pythPowerTriple 1 (MkBoxInt 28)
-      (_, b2, _)  = pythPowerTriple 2 (MkBoxInt 28)
-      (_, b3, _)  = pythPowerTriple 3 (MkBoxInt 28)
-      (_, b4, _)  = pythPowerTriple 4 (MkBoxInt 28)
+      MkQuadraticTriple _ b1 r1 = pythPowerTriple 1 (MkBoxInt 28)
+      MkQuadraticTriple _ b2 _  = pythPowerTriple 2 (MkBoxInt 28)
+      MkQuadraticTriple _ b3 _  = pythPowerTriple 3 (MkBoxInt 28)
+      MkQuadraticTriple _ b4 _  = pythPowerTriple 4 (MkBoxInt 28)
       num28       = 4 * b1 * b1
       den28       = r1 * r1
       homogOk = all (\(d, z, b) => evalHomogPolyHMSet d z num28 den28 == 4 * b * b)
@@ -286,8 +284,8 @@ auditGohSpreadPolyHMSet =
       seedDense                   = seedBoundDipole coord2Basis 4 5 6 8192
       pUnthrottled                = MkDynamicsParams ModePaced 7 0           canonDecayNum canonDecayDen 0
       pThrottled                  = canonDynamicsParams ModePaced
-      (rDil, sDil)                = freezeDynamicsStreamWith coord2Basis pUnthrottled 0 linkYieldBudget (MkGohFuel linkYieldBudget) 25 seedDense
-      (rDen, sDen)                = freezeDynamicsStreamWith coord2Basis pThrottled   0 linkYieldBudget (MkGohFuel linkYieldBudget) 25 seedDense
+      (rDil, sDil)                = freezeDynamicsStreamWith coord2Basis pUnthrottled 0 (mkGohFuel linkYieldBudget) 25 seedDense
+      (rDen, sDen)                = freezeDynamicsStreamWith coord2Basis pThrottled   0 (mkGohFuel linkYieldBudget) 25 seedDense
       cycDil                      = rDil.stepsConsumed
       cycDen                      = rDen.stepsConsumed
       selfTimeOk =

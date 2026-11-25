@@ -177,9 +177,9 @@ runAudit2 = do
                     wVac.workSteps < wPhot.workSteps &&
                     wPhot.workSteps < wProt.workSteps &&
                     wProt.workSteps < wHeavy.workSteps
-  let (_, annihReport) = streamMergeWorkHMSet photonMSet (scaleHMSet (MkBoxInt (-1)) photonMSet)
+  let (_, annihReport) = streamMergeWorkHMSet photonMSet (-photonMSet)
   let annihZero = annihReport.residualL1 == 0 && annihReport.annihilations == 2
-  let shiftZero = addHMSet (blackShift 1) (redShift 1)
+  let shiftZero = blackShift 1 + redShift 1
   let zoomOk =
         (zoomTime (redShift 1) (zoomTime (blackShift 1) photonMSet) == photonMSet) &&
         (zoomTime shiftZero photonMSet == photonMSet) &&
