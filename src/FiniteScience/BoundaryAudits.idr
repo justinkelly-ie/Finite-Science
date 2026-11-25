@@ -28,8 +28,8 @@ runFlatGuardedSplitBoundary settingTxt wA wB = do
   requireBalancedSplit wA wB
   let p50 = mkCoord2D coord2Basis 5 0
   st <- app1 $ App1.do
-    u0 <- bootFlat0D
-    u1 <- splitFlatFromVacuum p50 p50 (intToBoxInt wA) u0
+    u0 <- bootFlatWith coord2Basis
+    u1 <- splitFlatFromVacuum p50 p50 (MkBoxInt wA) u0
     closeFlat0D u1
   pure (classifyFlatClose st)
 
@@ -41,8 +41,8 @@ runFlatHorizonProbe spec = do
   let p50  = mkCoord2D coord2Basis 5 0
       p30  = mkCoord2D coord2Basis 30 30
   rep <- app1 $ App1.do
-    u0  <- bootFlat0D
-    u1  <- splitFlatFromVacuum p50 p30 (intToBoxInt 14) u0
+    u0  <- bootFlatWith coord2Basis
+    u1  <- splitFlatFromVacuum p50 p30 (MkBoxInt 14) u0
     obs <- observeFlatPure
              (\st =>
                 let baseWork     = weightMagnitude (lookupMaxel p50 p50 st.polarityMaxel)
@@ -81,7 +81,7 @@ runHereditaryHorizonProbe spec crossingPayload = do
       lens = MkExternalLens
                (lookupLocalizedAt p50)
                (blackShift spec.retroDepth)
-               zeroShift
+               emptyHMSet
                (\zoomed =>
                   let workPerCycle = (streamPeelWorkHMSet zoomed).workSteps
                   in observeHorizonFreeze spec workPerCycle)
@@ -177,7 +177,7 @@ runAudit2 = do
                     wVac.workSteps < wPhot.workSteps &&
                     wPhot.workSteps < wProt.workSteps &&
                     wProt.workSteps < wHeavy.workSteps
-  let (_, annihReport) = streamMergeWorkHMSet photonMSet (scaleHMSet (intToBoxInt (-1)) photonMSet)
+  let (_, annihReport) = streamMergeWorkHMSet photonMSet (scaleHMSet (MkBoxInt (-1)) photonMSet)
   let annihZero = annihReport.residualL1 == 0 && annihReport.annihilations == 2
   let shiftZero = addHMSet (blackShift 1) (redShift 1)
   let zoomOk =
@@ -248,9 +248,9 @@ driveObservedZoomedTest Z u snapsOk = App1.do
   App1.pure (closeOutcomeText (classifyHereditaryClose r), snapsOk)
 driveObservedZoomedTest (S rem) u snapsOk = App1.do
   u1   <- stepHereditaryByMode ModeSpread u
-  obsS <- observeHereditaryPure (applyExternalLens (MkExternalLens id (blackShift 2) zeroShift (\m => m /= emptyPureMSet))) u1
+  obsS <- observeHereditaryPure (applyExternalLens (MkExternalLens id (blackShift 2) emptyHMSet (\m => m /= emptyHMSet))) u1
   let MkPureObs u2 sOk _ = obsS
-  obsT <- observeHereditaryPure (applyExternalLens (MkExternalLens id zeroShift (blackShift 1) (\m => m /= emptyPureMSet))) u2
+  obsT <- observeHereditaryPure (applyExternalLens (MkExternalLens id emptyHMSet (blackShift 1) (\m => m /= emptyHMSet))) u2
   let MkPureObs u3 tOk _ = obsT
   obsR <- observeHereditaryPure (applyExternalLens (MkExternalLens id (redShift 1) (redShift 1) renderPureMultiset)) u3
   let MkPureObs u4 txt _ = obsR
@@ -263,7 +263,7 @@ driveObservedZoomedWarmup Z u = App1.do
   driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
   u1   <- stepHereditaryByMode ModeSpread u
-  obsW <- observeHereditaryPure (applyExternalLens (MkExternalLens id (blackShift 1) (redShift 1) (\m => m /= emptyPureMSet))) u1
+  obsW <- observeHereditaryPure (applyExternalLens (MkExternalLens id (blackShift 1) (redShift 1) (\m => m /= emptyHMSet))) u1
   let MkPureObs u2 _ _ = obsW
   driveObservedZoomedWarmup rem u2
 

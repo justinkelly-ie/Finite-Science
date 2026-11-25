@@ -39,9 +39,9 @@ record Emergent3DReport where
 export
 runEmergent3DLoad : App1 {u = Any} e Emergent3DReport
 runEmergent3DLoad = App1.do
-  let exc3DB  = seedPureExcitation3DZ 0 0 0 512
-      dpTopZB = seedPureBoundDipole3DZ 1 0 3 4 8192
-      dpBotZB = seedPureBoundDipole3DZ 1 0 (-2) (-3) 8192
+  let exc3DB  = seedExcitation3DZ pureMSetBasis 0 0 0 512
+      dpTopZB = seedBoundDipole3DZ pureMSetBasis 1 0 3 4 8192
+      dpBotZB = seedBoundDipole3DZ pureMSetBasis 1 0 (-2) (-3) 8192
       exc3DA  = seedExcitation3DZ coord3Basis 0 0 0 512
       dpTopZA = seedBoundDipole3DZ coord3Basis 1 0 3 4 8192
       dpBotZA = seedBoundDipole3DZ coord3Basis 1 0 (-2) (-3) 8192
@@ -167,7 +167,7 @@ auditCoupledSourceFlow =
       qU3   = stateQuadrance (fst s3)
       qU6   = stateQuadrance (fst s6)
       ok    = (qU1 > 0) && (qU1 <= 2500) && (qU2 > qU1) && (qU2 <= 5000) &&
-              (qU3 > qU2) && (qU3 <= 7500) && (snd s3 == emptyPureMSet) &&
+              (qU3 > qU2) && (qU3 <= 7500) && (snd s3 == emptyHMSet) &&
               (qU6 <= qU3) && (qU6 > 0) &&
               (statePolarityNet (fst s6) + stateFluxNet (fst s6) == 0)
   in (ok, qU3, qU6)

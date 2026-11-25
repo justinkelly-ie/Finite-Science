@@ -59,7 +59,7 @@ export
 hereditaryEndAudit : (1 u : HereditaryBlackBox) -> App1 {u = Any} e (EndAudit PureMultiset)
 hereditaryEndAudit u = App1.do
   obsLens <- observeHereditaryPure
-               (applyExternalLens (MkExternalLens id (blackShift 1) zeroShift (\zr => zoomSpace (redShift 1) zr)))
+               (applyExternalLens (MkExternalLens id (blackShift 1) emptyHMSet (\zr => zoomSpace (redShift 1) zr)))
                u
   let MkPureObs u1 zoomedBack _ = obsLens
   finRoot <- closeHereditary0D u1
