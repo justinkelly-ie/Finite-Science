@@ -32,6 +32,10 @@ Show StepTel where
   show t = "StepTel(Q=" ++ show t.stQuad ++ ", work=" ++ show t.stWork ++ ", balOk=" ++ show t.stBalOk ++ ")"
 
 public export
+isValidStepTel : StepTel -> Bool
+isValidStepTel t = t.stQuad >= 0 && t.stBalOk
+
+public export
 record EndAudit (k : Type) where
   constructor MkEndAudit
   eaState  : EvolutionState k
@@ -59,6 +63,14 @@ Show k => Show (EndAudit k) where
     ", symOk=" ++ show a.eaSymOk ++
     ", balOk=" ++ show a.eaBalOk ++
     ", net=" ++ show a.eaNetSum ++ ")"
+
+public export
+isValidEndAudit : Ord k => EndAudit k -> Bool
+isValidEndAudit a =
+  isCanonicalEvolutionState a.eaState &&
+  a.eaQuad == stateQuadrance a.eaState &&
+  a.eaAntiOk && a.eaSymOk && a.eaBalOk &&
+  a.eaNetSum == 0
 
 public export
 record BlackBoxLab (e : List Error) (box : Type) (k : Type) where

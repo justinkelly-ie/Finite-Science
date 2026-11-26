@@ -63,9 +63,9 @@ heavyMassSettingText = "{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}"
 public export
 checkSettingDecode : String -> Configuration -> Bool
 checkSettingDecode txt expected =
-  case parsePureMultiset txt of
-    Just m  => m == expected
-    Nothing => False
+  case decodeCanonicalMultiset txt of
+    Just (Element m _) => m == expected
+    Nothing            => False
 
 public export
 0 prfStreamWorkMonotonic :
@@ -101,8 +101,8 @@ runFlatGuardedSplitBoundary :
   Has [Exception UniverseErr] e =>
   String -> BoxInt -> BoxInt -> App e CloseOutcome
 runFlatGuardedSplitBoundary settingTxt wA wB = do
-  _ <- validateAndDecodeSetting settingTxt
-  requireBalancedSplit wA wB
+  Element _ _ <- validateAndDecodeSetting settingTxt
+  Element _ _ <- requireBalancedSplit wA wB
   let p50 : Space 2
       p50 = [5, 0]
   st <- app1 $ App1.do
@@ -116,6 +116,7 @@ runFlatHorizonProbe :
   Has [Exception UniverseErr] e =>
   HorizonSpec -> App e HorizonObservationReport
 runFlatHorizonProbe spec = do
+  Element validSpec _ <- requireValidHorizon spec
   let p50 : Space 2
       p50 = [5, 0]
       p30 : Space 2
@@ -126,8 +127,8 @@ runFlatHorizonProbe spec = do
     obs <- observeFlatPure
              (\st =>
                 let baseWork     = weightMagnitude (lookupMaxel p50 p50 st.polarityMaxel)
-                    workPerCycle = if baseWork == 0 then 0 else baseWork + 2 * spec.retroDepth
-                in observeHorizonFreeze spec workPerCycle)
+                    workPerCycle = if baseWork == 0 then 0 else baseWork + 2 * validSpec.retroDepth
+                in observeHorizonFreeze validSpec workPerCycle)
              u1
     let MkPureObs u2 rep _ = obs
     _ <- closeFlat0D u2
@@ -142,8 +143,8 @@ runHereditaryGuardedSplitBoundary :
   Has [Exception UniverseErr] e =>
   String -> BoxInt -> BoxInt -> App e CloseOutcome
 runHereditaryGuardedSplitBoundary settingTxt wA wB = do
-  payload <- validateAndDecodeSetting settingTxt
-  requireBalancedSplit wA wB
+  Element payload _ <- validateAndDecodeSetting settingTxt
+  Element _ _       <- requireBalancedSplit wA wB
   let p50 = mkPureCoord [5, 0]
   root <- app1 $ App1.do
     u0 <- bootHereditary0D
@@ -156,15 +157,16 @@ runHereditaryHorizonProbe :
   Has [Exception UniverseErr] e =>
   HorizonSpec -> Configuration -> App e HorizonObservationReport
 runHereditaryHorizonProbe spec crossingPayload = do
+  Element validSpec _ <- requireValidHorizon spec
   let p50  = mkPureCoord [5, 0]
       p30  = mkPureCoord [30, 30]
       lens = MkExternalLens
                (lookupLocalizedAt p50)
-               (blackShift spec.retroDepth)
+               (blackShift validSpec.retroDepth)
                emptyHMSet
                (\zoomed =>
                   let workPerCycle = (streamPeelWorkHMSet zoomed).workSteps
-                  in observeHorizonFreeze spec workPerCycle)
+                  in observeHorizonFreeze validSpec workPerCycle)
   rep <- app1 $ App1.do
     u0  <- bootHereditary0D
     u1  <- splitHereditaryFromVacuum p50 p30 crossingPayload u0
@@ -213,12 +215,21 @@ runAudit1 = do
                                         UnbalancedVacuumSplitError net => pure (net == 3)
                                         _                              => pure False)
 
-  let pass = collapseOk && caughtBadText && caughtUnbalanced
+  caughtOpenHorizon <- handle (the (App (UniverseErr :: e) Bool)
+                                (do _ <- runFlatHorizonProbe (MkHorizonSpec OpenFuture 0 10)
+                                    pure False))
+                             pure
+                             (\err => case err of
+                                        InvalidHorizonSpecError _ => pure True
+                                        _                         => pure False)
+
+  let pass = collapseOk && caughtBadText && caughtUnbalanced && caughtOpenHorizon
   let lines = [ h
               , t
               , "  * Coincident 0D collapse (Flat vs Hereditary): " ++ renderRes outA ++ " | " ++ renderRes outB
               , "  * Boundary Dec guard caught InvalidMultisetTextError : " ++ show caughtBadText
               , "  * Boundary Zero-Sum guard caught UnbalancedSplitError : " ++ show caughtUnbalanced
+              , "  * Boundary Horizon Dec guard caught InvalidHorizonSpecError: " ++ show caughtOpenHorizon
               , "  -> Audit 1 pass=" ++ show pass
               ]
   traverse_ putStrLn lines
