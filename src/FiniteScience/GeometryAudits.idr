@@ -19,12 +19,6 @@ import FiniteScience.Lab
 --          & FRAME-COVARIANT NON-PERTURBING 3D OBSERVATION
 --------------------------------------------------------------------------------
 
-||| Archimedes quadrea of triangle `(0, v1, v2)` under any `SymForm` metric `g`.
-public export
-triangleQuadrea : Ord k => Maxel BoxInt k k SymForm -> (v1, v2 : Box BoxInt k) -> BoxInt
-triangleQuadrea g v1 v2 =
-  archimedesQuadrea (metricQuadrance g v1) (metricQuadrance g v2) (metricQuadrance g (subM v2 v1))
-
 ||| Spread Law `s_i / Q_i == A / (4 Q1 Q2 Q3)` checked with Sterling `Eq Proportion` on all three vertices.
 public export
 spreadLawHolds : Ord k => Maxel BoxInt k k SymForm -> (v1, v2 : Box BoxInt k) -> Bool
