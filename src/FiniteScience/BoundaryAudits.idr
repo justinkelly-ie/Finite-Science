@@ -106,17 +106,16 @@ runAudit1 : Has [Console] e => App e (Bool, List String)
 runAudit1 = do
   let h = "----------------------------------------------------------------"
   let t = "[Audit 1] 0D Root Conservation & Boundary Exception Guard"
-  outA <- handle (the (App (UniverseErr :: e) String)
-                    (do r <- runFlatGuardedSplitBoundary protonSettingText 5 (-5)
-                        pure (show r)))
+  outA <- handle (the (App (UniverseErr :: e) (Either UniverseErr CloseOutcome))
+                    (Right <$> runFlatGuardedSplitBoundary protonSettingText 5 (-5)))
                  pure
-                 (\err => pure ("UNEXPECTED_ERR:" ++ show err))
-  outB <- handle (the (App (UniverseErr :: e) String)
-                    (do r <- runHereditaryGuardedSplitBoundary protonSettingText 1 (-1)
-                        pure (show r)))
+                 (pure . Left)
+  outB <- handle (the (App (UniverseErr :: e) (Either UniverseErr CloseOutcome))
+                    (Right <$> runHereditaryGuardedSplitBoundary protonSettingText 1 (-1)))
                  pure
-                 (\err => pure ("UNEXPECTED_ERR:" ++ show err))
-  let collapseOk = (outA == "CleanVacuumCollapse([])") && (outB == "CleanVacuumCollapse([])")
+                 (pure . Left)
+  let collapseOk = (outA == Right CleanVacuumCollapse) && (outB == Right CleanVacuumCollapse)
+  let renderRes  = either (\err => "UNEXPECTED_ERR:" ++ show err) show
 
   caughtBadText <- handle (the (App (UniverseErr :: e) Bool)
                              (do _ <- validateAndDecodeSetting "{broken_multiset"
@@ -137,7 +136,7 @@ runAudit1 = do
   let pass = collapseOk && caughtBadText && caughtUnbalanced
   let lines = [ h
               , t
-              , "  * Coincident 0D collapse (Flat vs Hereditary): " ++ outA ++ " | " ++ outB
+              , "  * Coincident 0D collapse (Flat vs Hereditary): " ++ renderRes outA ++ " | " ++ renderRes outB
               , "  * Boundary Dec guard caught InvalidMultisetTextError : " ++ show caughtBadText
               , "  * Boundary Zero-Sum guard caught UnbalancedSplitError : " ++ show caughtUnbalanced
               , "  -> Audit 1 pass=" ++ show pass
@@ -248,11 +247,11 @@ driveObservedZoomedTest Z u snapsOk = App1.do
   App1.pure (closeOutcomeText (classifyHereditaryClose r), snapsOk)
 driveObservedZoomedTest (S rem) u snapsOk = App1.do
   u1   <- stepHereditaryByMode ModeSpread u
-  obsS <- observeHereditaryPure (applyExternalLens (MkExternalLens id (blackShift 2) emptyHMSet (\m => m /= emptyHMSet))) u1
+  obsS <- observeHereditaryPure (applyExternalLens (zoomedPureLens (blackShift 2) emptyHMSet (/= emptyHMSet))) u1
   let MkPureObs u2 sOk _ = obsS
-  obsT <- observeHereditaryPure (applyExternalLens (MkExternalLens id emptyHMSet (blackShift 1) (\m => m /= emptyHMSet))) u2
+  obsT <- observeHereditaryPure (applyExternalLens (zoomedPureLens emptyHMSet (blackShift 1) (/= emptyHMSet))) u2
   let MkPureObs u3 tOk _ = obsT
-  obsR <- observeHereditaryPure (applyExternalLens (MkExternalLens id (redShift 1) (redShift 1) renderPureMultiset)) u3
+  obsR <- observeHereditaryPure (applyExternalLens (zoomedPureLens (redShift 1) (redShift 1) renderPureMultiset)) u3
   let MkPureObs u4 txt _ = obsR
   driveObservedZoomedTest rem u4 (snapsOk && sOk && tOk && txt /= "" && txt /= "[]")
 
@@ -263,7 +262,7 @@ driveObservedZoomedWarmup Z u = App1.do
   driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
   u1   <- stepHereditaryByMode ModeSpread u
-  obsW <- observeHereditaryPure (applyExternalLens (MkExternalLens id (blackShift 1) (redShift 1) (\m => m /= emptyHMSet))) u1
+  obsW <- observeHereditaryPure (applyExternalLens (zoomedPureLens (blackShift 1) (redShift 1) (/= emptyHMSet))) u1
   let MkPureObs u2 _ _ = obsW
   driveObservedZoomedWarmup rem u2
 

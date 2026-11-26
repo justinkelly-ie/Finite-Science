@@ -2,6 +2,7 @@ module FiniteScience.CosmologyAudits
 
 import Control.App
 import Control.App.Console
+import Data.List
 import FinScBox.BoxInt
 import FinScBox.Box
 import FinScBox.HereditaryMSet
@@ -242,25 +243,29 @@ auditActiveUniversePair =
 public export
 auditGohSpreadPolyHMSet : GohSpreadAuditReport
 auditGohSpreadPolyHMSet =
-  let z1 = spreadZHMSet 1;  z2 = spreadZHMSet 2;  z3 = spreadZHMSet 3;  z4 = spreadZHMSet 4
-      z5 = spreadZHMSet 5;  z6 = spreadZHMSet 6;  z7 = spreadZHMSet 7;  z8 = spreadZHMSet 8
-      z9 = spreadZHMSet 9;  z10 = spreadZHMSet 10; z12 = spreadZHMSet 12
+  let z1 = spreadZHMSet 1;  z2 = spreadZHMSet 2;  z3 = spreadZHMSet 3;   z4 = spreadZHMSet 4
+      z5 = spreadZHMSet 5;  z6 = spreadZHMSet 6;  z7 = spreadZHMSet 7;   z8 = spreadZHMSet 8
+      z9 = spreadZHMSet 9;  z10 = spreadZHMSet 10; z11 = spreadZHMSet 11; z12 = spreadZHMSet 12
+      psiTbl = gohPsiTableUpTo 12
+      psi    = \d => fromMaybe 1 (lookup d psiTbl)
       factOk = all id
-        [ z1 == gohPsi1, z2 == gohPsi1 * gohPsi2, z3 == gohPsi1 * gohPsi3
-        , z4 == gohPsi1 * gohPsi2 * gohPsi4, z5 == gohPsi1 * gohPsi5
-        , z6 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi6, z7 == gohPsi1 * gohPsi7
-        , z8 == gohPsi1 * gohPsi2 * gohPsi4 * gohPsi8, z9 == gohPsi1 * gohPsi3 * gohPsi9
-        , z10 == gohPsi1 * gohPsi2 * gohPsi5 * gohPsi10
-        , z12 == gohPsi1 * gohPsi2 * gohPsi3 * gohPsi4 * gohPsi6 * gohPsi12
+        [ z1 == psi 1, z2 == psi 1 * psi 2, z3 == psi 1 * psi 3
+        , z4 == psi 1 * psi 2 * psi 4, z5 == psi 1 * psi 5
+        , z6 == psi 1 * psi 2 * psi 3 * psi 6, z7 == psi 1 * psi 7
+        , z8 == psi 1 * psi 2 * psi 4 * psi 8, z9 == psi 1 * psi 3 * psi 9
+        , z10 == psi 1 * psi 2 * psi 5 * psi 10
+        , z11 == psi 1 * psi 11
+        , z12 == psi 1 * psi 2 * psi 3 * psi 4 * psi 6 * psi 12
         ]
       rootOk = all id
-        [ evalPolyHMSetAt gohPsi2  (the Integer 2) == 2,  evalPolyHMSetAt gohPsi3  (the Integer 3) == 0
-        , evalPolyHMSetAt gohPsi4  (the Integer 2) == 0,  evalPolyHMSetAt gohPsi6  (the Integer 1) == 0
-        , evalPolyHMSetAt gohPsi2  (the Integer 0) == 4,  evalPolyHMSetAt gohPsi3  (the Integer 0) == 9
-        , evalPolyHMSetAt gohPsi4  (the Integer 0) == 4,  evalPolyHMSetAt gohPsi5  (the Integer 0) == 25
-        , evalPolyHMSetAt gohPsi6  (the Integer 0) == 1,  evalPolyHMSetAt gohPsi7  (the Integer 0) == 49
-        , evalPolyHMSetAt gohPsi8  (the Integer 0) == 4,  evalPolyHMSetAt gohPsi9  (the Integer 0) == 9
-        , evalPolyHMSetAt gohPsi10 (the Integer 0) == 1,  evalPolyHMSetAt gohPsi12 (the Integer 0) == 1
+        [ evalPolyHMSetAt (psi 2)  (the Integer 2) == 2,   evalPolyHMSetAt (psi 3)  (the Integer 3) == 0
+        , evalPolyHMSetAt (psi 4)  (the Integer 2) == 0,   evalPolyHMSetAt (psi 6)  (the Integer 1) == 0
+        , evalPolyHMSetAt (psi 2)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 3)  (the Integer 0) == 9
+        , evalPolyHMSetAt (psi 4)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 5)  (the Integer 0) == 25
+        , evalPolyHMSetAt (psi 6)  (the Integer 0) == 1,   evalPolyHMSetAt (psi 7)  (the Integer 0) == 49
+        , evalPolyHMSetAt (psi 8)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 9)  (the Integer 0) == 9
+        , evalPolyHMSetAt (psi 10) (the Integer 0) == 1,   evalPolyHMSetAt (psi 11) (the Integer 0) == 121
+        , evalPolyHMSetAt (psi 12) (the Integer 0) == 1
         ]
       fibOk = all (\(z, v) => evalPolyHMSetAt z (the Integer 5) == v)
         [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)]
