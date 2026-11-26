@@ -2,6 +2,7 @@ module FiniteScience.Lab
 
 import Control.App
 import FinScBox.BoxInt
+import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
 import FinScBox.Lenses
@@ -12,7 +13,7 @@ import FinScLens
 %default total
 
 --------------------------------------------------------------------------------
--- POLYMORPHIC `BlackBoxLab` HARNESS OVER FLAT (2D/3D/ND) & HEREDITARY UNIVERSES
+-- POLYMORPHIC `BlackBoxLab` HARNESS OVER `Space n` & HEREDITARY UNIVERSES
 --------------------------------------------------------------------------------
 
 public export
@@ -44,10 +45,6 @@ record BlackBoxLab (e : List Error) (box : Type) (k : Type) where
   labEndAudit  : (1 u : box) -> App1 {u = Any} e (EndAudit k)
 
 export
-rootStateOf : Configuration -> EvolutionState PureMultiset
-rootStateOf r = (unpackRootToEvolutionState r).stateData
-
-export
 flatEndAudit : Ord k => (1 u : FlatBlackBox k) -> App1 {u = Any} e (EndAudit k)
 flatEndAudit u = App1.do
   st <- closeFlat0D u
@@ -63,7 +60,7 @@ hereditaryEndAudit u = App1.do
                u
   let MkPureObs u1 zoomedBack _ = obsLens
   finRoot <- closeHereditary0D u1
-  let st     = rootStateOf finRoot
+  let st     = (unpackRootToEvolutionState finRoot).stateData
       balOk  = verifyRootBalancedDipoles finRoot
       lensOk = zoomedBack == finRoot
       rNet   = unwrapBox (sumHMSet finRoot)
@@ -74,35 +71,29 @@ hereditaryEndAudit u = App1.do
                         (stateLoadSym st) balOk netW)
 
 export
-flatLabWith : Ord k => AxisBasis k -> BlackBoxLab e (FlatBlackBox k) k
-flatLabWith basis =
+flatLab : {n : Nat} -> BlackBoxLab e (FlatBlackBox (Space n)) (Space n)
+flatLab =
   MkBlackBoxLab
-    basis
-    (bootFlatWith basis)
+    spaceBasis
+    (bootFlatWith spaceBasis)
     injectFlatState
-    stepFlatByMode
+    (\mode => stepFlatWith (canonDynamicsParams mode))
     (observeFlatPure stateQuadrance)
     (observeFlatPure (\st => MkStepTel (stateQuadrance st) (stateActiveWork st) True))
     flatEndAudit
 
 export
-flatLab : BlackBoxLab e (FlatBlackBox Coord2) Coord2
-flatLab = flatLabWith coord2Basis
-
-export
-flatLab3D : BlackBoxLab e (FlatBlackBox Coord3) Coord3
-flatLab3D = flatLabWith coord3Basis
-
-export
 hereditaryLab : BlackBoxLab e HereditaryBlackBox PureMultiset
 hereditaryLab =
   MkBlackBoxLab
-    pureMSetBasis
+    (pureMSetBasis 2)
     bootHereditary0D
     injectHereditaryState
-    stepHereditaryByMode
-    (observeHereditaryPure (\r => stateQuadrance (rootStateOf r)))
-    (observeHereditaryPure (\r => let st = rootStateOf r in MkStepTel (stateQuadrance st) (rootActivePeelWork r) (verifyRootBalancedDipoles r)))
+    (\mode => stepHereditaryWith (canonDynamicsParams mode))
+    (observeHereditaryPure (\r => stateQuadrance (unpackRootToEvolutionState r).stateData))
+    (observeHereditaryPure (\r => MkStepTel (stateQuadrance (unpackRootToEvolutionState r).stateData)
+                                            (rootActivePeelWork r)
+                                            (verifyRootBalancedDipoles r)))
     hereditaryEndAudit
 
 export

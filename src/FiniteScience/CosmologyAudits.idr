@@ -4,6 +4,7 @@ import Control.App
 import Control.App.Console
 import Data.List
 import FinScBox.BoxInt
+import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
 import FinScBox.Views
@@ -40,25 +41,25 @@ record Emergent3DReport where
 export
 runEmergent3DLoad : App1 {u = Any} e Emergent3DReport
 runEmergent3DLoad = App1.do
-  let exc3DB  = seedExcitation3DZ pureMSetBasis 0 0 0 512
-      dpTopZB = seedBoundDipole3DZ pureMSetBasis 1 0 3 4 8192
-      dpBotZB = seedBoundDipole3DZ pureMSetBasis 1 0 (-2) (-3) 8192
-      exc3DA  = seedExcitation3DZ coord3Basis 0 0 0 512
-      dpTopZA = seedBoundDipole3DZ coord3Basis 1 0 3 4 8192
-      dpBotZA = seedBoundDipole3DZ coord3Basis 1 0 (-2) (-3) 8192
+  let exc3DB  = seedDirectedPulse (pureMSetBasis 3) [0, 0, 0] (FS (FS FZ)) 512
+      dpTopZB = seedBoundDipole   (pureMSetBasis 3) [1, 0, 3] [1, 0, 4] 8192
+      dpBotZB = seedBoundDipole   (pureMSetBasis 3) [1, 0, -2] [1, 0, -3] 8192
+      exc3DA  = seedDirectedPulse (spaceBasis {n = 3}) [0, 0, 0] (FS (FS FZ)) 512
+      dpTopZA = seedBoundDipole   (spaceBasis {n = 3}) [1, 0, 3] [1, 0, 4] 8192
+      dpBotZA = seedBoundDipole   (spaceBasis {n = 3}) [1, 0, -2] [1, 0, -3] 8192
       combP   = (dpTopZB <+> exc3DB).polarityMaxel
-      axCnt   = treeSizeNonZero (activeAxisAtomsOf pureMSetBasis combP)
-      unCnt   = treeSizeNonZero (activeUnitAxesOf pureMSetBasis combP)
-  eaBgTA <- bootInjectAndRun flatLab3D     ModePaced 6 dpTopZA
-  eaBgBA <- bootInjectAndRun flatLab3D     ModePaced 6 dpBotZA
-  (vZA, balVA, antiVA, symVA) <- runLabExcitationAxis flatLab3D axisZ ModePaced 6 exc3DA neutral neutral
-  (tZA, balTA, antiTA, symTA) <- runLabExcitationAxis flatLab3D axisZ ModePaced 6 exc3DA dpTopZA eaBgTA.eaState
-  (bZA, balBA, antiBA, symBA) <- runLabExcitationAxis flatLab3D axisZ ModePaced 6 exc3DA dpBotZA eaBgBA.eaState
-  eaBgTB <- bootInjectAndRun hereditaryLab ModePaced 6 dpTopZB
-  eaBgBB <- bootInjectAndRun hereditaryLab ModePaced 6 dpBotZB
-  (vZB, balVB, antiVB, symVB) <- runLabExcitationAxis hereditaryLab axisZ ModePaced 6 exc3DB neutral neutral
-  (tZB, balTB, antiTB, symTB) <- runLabExcitationAxis hereditaryLab axisZ ModePaced 6 exc3DB dpTopZB eaBgTB.eaState
-  (bZB, balBB, antiBB, symBB) <- runLabExcitationAxis hereditaryLab axisZ ModePaced 6 exc3DB dpBotZB eaBgBB.eaState
+      axCnt   = treeSizeNonZero (activeAxisAtomsOf (pureMSetBasis 2) combP)
+      unCnt   = treeSizeNonZero (activeUnitAxesOf  (pureMSetBasis 2) combP)
+  eaBgTA <- bootInjectAndRun (flatLab {n = 3}) (ModeFactor 4 1) 6 dpTopZA
+  eaBgBA <- bootInjectAndRun (flatLab {n = 3}) (ModeFactor 4 1) 6 dpBotZA
+  (vZA, balVA, antiVA, symVA) <- runLabExcitationAxis (flatLab {n = 3}) (axisNat 2) (ModeFactor 4 1) 6 exc3DA neutral neutral
+  (tZA, balTA, antiTA, symTA) <- runLabExcitationAxis (flatLab {n = 3}) (axisNat 2) (ModeFactor 4 1) 6 exc3DA dpTopZA eaBgTA.eaState
+  (bZA, balBA, antiBA, symBA) <- runLabExcitationAxis (flatLab {n = 3}) (axisNat 2) (ModeFactor 4 1) 6 exc3DA dpBotZA eaBgBA.eaState
+  eaBgTB <- bootInjectAndRun hereditaryLab (ModeFactor 4 1) 6 dpTopZB
+  eaBgBB <- bootInjectAndRun hereditaryLab (ModeFactor 4 1) 6 dpBotZB
+  (vZB, balVB, antiVB, symVB) <- runLabExcitationAxis hereditaryLab (axisNat 2) (ModeFactor 4 1) 6 exc3DB neutral neutral
+  (tZB, balTB, antiTB, symTB) <- runLabExcitationAxis hereditaryLab (axisNat 2) (ModeFactor 4 1) 6 exc3DB dpTopZB eaBgTB.eaState
+  (bZB, balBB, antiBB, symBB) <- runLabExcitationAxis hereditaryLab (axisNat 2) (ModeFactor 4 1) 6 exc3DB dpBotZB eaBgBB.eaState
   let par3D = sameExcitationTrajectory vZA vZB &&
               sameExcitationTrajectory tZA tZB &&
               sameExcitationTrajectory bZA bZB
@@ -93,10 +94,10 @@ emergent3DCriteriaOk r =
   (r.e3BotZ.finalQuadrance <= r.e3BotZ.initQuadrance)
 
 export
-collectPacedWork : (Nat, Nat) -> Nat -> EvolutionState Coord2 -> PacedWorkStats
+collectPacedWork : (Nat, Nat) -> Nat -> EvolutionState (Space 2) -> PacedWorkStats
 collectPacedWork (oP, iT) steps st0 =
   let params         = canonDynamicsParams (ModeFactor oP iT)
-      (relic, skips) = freezeDynamicsStreamWith coord2Basis params 0 (mkGohFuel (integerToNat 1000000)) steps st0
+      (relic, skips) = freezeDynamicsStreamWith (spaceBasis {n = 2}) params 0 (mkGohFuel (integerToNat 1000000)) steps st0
   in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.throttleMaxel)
 
 public export
@@ -155,8 +156,8 @@ public export
 auditCoupledSourceFlow : (Bool, Integer, Integer)
 auditCoupledSourceFlow =
   let eSrc0 : Configuration
-      eSrc0 = wrapBox (mkPureCoord2D 0 8) + wrapBox (mkPureCoord2D 0 (-4)) + wrapBox (mkPureCoord2D 0 0)
-      stepF = stepCoupledSourceFlow coord2Basis (canonDynamicsParams ModeLinear) 50
+      eSrc0 = wrapBox (mkPureCoord [0, 8]) + wrapBox (mkPureCoord [0, -4]) + wrapBox (mkPureCoord [0, 0])
+      stepF = stepCoupledSourceFlow (spaceBasis {n = 2}) (canonDynamicsParams ModeLinear) 50
       s1    = freezeSteps 10000 1 stepF (neutral, eSrc0)
       s2    = freezeSteps 10000 1 stepF s1
       s3    = freezeSteps 10000 1 stepF s2
@@ -177,14 +178,14 @@ public export
 runRelicCycle : (qAmp : BoxInt) -> TopologicalRelic -> (TopologicalRelic, Nat, Nat, Integer, Bool)
 runRelicCycle qAmp eSrc =
   let (MkAnyGohFuel _ yFuel, sBud) = selfFuelOfHMSet eSrc
-      fuel   = gohSteps yFuel
+      fuel   = yFuel.fuelSteps
       rCyc   = fst (freezeStateStreamWith 0 (mkGohFuel (fuel * 25)) (max 4 sBud)
-                                          (stepCoupledSourceFlow pureMSetBasis (canonDynamicsParams ModeLinear) qAmp)
-                                          (neutral, embedRelic eSrc))
+                                          (stepCoupledSourceFlow (pureMSetBasis 2) (canonDynamicsParams ModeLinear) qAmp)
+                                          (neutral, the Configuration (castSupportHMSet eSrc)))
       uOut   = fst rCyc.relicState
       remSrc = snd rCyc.relicState
       qOut   = stateQuadrance uOut
-      nextR  = quenchRelic (packEvolutionStateToRoot BoxLeaf uOut)
+      nextR  = the TopologicalRelic (castSupportHMSet (packEvolutionStateToRoot BoxLeaf uOut))
       ok     = (fuel > 0) && (sBud > 0) && (rCyc.stepsConsumed > 0) &&
                (qOut > 0) && (fastPeelWorkHMSet remSrc < fastPeelWorkHMSet eSrc) &&
                (statePolarityNet uOut + stateFluxNet uOut == 0) &&
@@ -205,14 +206,15 @@ runRelicChain (S rem) qAmp eSrc =
 public export
 seedToFirstRelic : EvolutionState PureMultiset -> TopologicalRelic
 seedToFirstRelic seedPure =
-  let (rCyc1, _) = freezeDynamicsStreamWith pureMSetBasis (canonDynamicsParams ModeSpread) 0 (mkGohFuel (integerToNat 600)) 5 seedPure
-  in quenchRelic (packEvolutionStateToRoot BoxLeaf rCyc1.relicState)
+  let (rCyc1, _) = freezeDynamicsStreamWith (pureMSetBasis 2) (canonDynamicsParams (ModeFactor 1 4)) 0 (mkGohFuel (integerToNat 600)) 5 seedPure
+  in castSupportHMSet (packEvolutionStateToRoot BoxLeaf rCyc1.relicState)
 
 public export
 auditRelicFuelChain : (Bool, Bool, Bool, Bool, List (Nat, Nat, Integer), List (Nat, Nat, Integer))
 auditRelicFuelChain =
-  let suppA = seedToFirstRelic (seedBoundDipole pureMSetBasis 4 5 6 8192)
-      suppB = seedToFirstRelic (seedExcitationAt pureMSetBasis 0 (-3) 2048 <+> seedExcitationAt pureMSetBasis 0 3 2048)
+  let suppA = seedToFirstRelic (seedBoundDipole (pureMSetBasis 2) [4, 5] [4, 6] 8192)
+      suppB = seedToFirstRelic (seedDirectedPulse (pureMSetBasis 2) [0, -3] (FS FZ) 2048 <+>
+                                seedDirectedPulse (pureMSetBasis 2) [0, 3] (FS FZ) 2048)
       (okA, fixA, trA, lastA) = runRelicChain 4 50 suppA
       (okB, fixB, trB, lastB) = runRelicChain 4 50 suppB
   in (okA && okB && fixA, fixA, fixB, lastA == lastB, trA, trB)
@@ -220,11 +222,12 @@ auditRelicFuelChain =
 public export
 auditActiveUniversePair : (Bool, Integer, Integer, Integer, Integer)
 auditActiveUniversePair =
-  let seam       = (seedEdgeFlux coord2Basis 0 0 1 0 1 <+> seedEdgeFlux coord2Basis 0 1 1 1 1).polarityMaxel
-      uA0        = seedEdgeFlux coord2Basis 0 0 1 0 200 <+> seedEdgeFlux coord2Basis 0 1 1 1 120
+  let ax2        = spaceBasis {n = 2}
+      seam       = (seedEdgeFlux ax2 [0, 0] [1, 0] 1 <+> seedEdgeFlux ax2 [0, 1] [1, 1] 1).polarityMaxel
+      uA0        = seedEdgeFlux ax2 [0, 0] [1, 0] 200 <+> seedEdgeFlux ax2 [0, 1] [1, 1] 120
       qA0        = stateQuadrance uA0
-      stepLin    = stepCoupledUniversePair coord2Basis (canonDynamicsParams ModeLinear) seam 50
-      stepSpr    = stepCoupledUniversePair coord2Basis (canonDynamicsParams ModeSpread) seam 50
+      stepLin    = stepCoupledUniversePair ax2 (canonDynamicsParams ModeLinear) seam 50
+      stepSpr    = stepCoupledUniversePair ax2 (canonDynamicsParams (ModeFactor 1 4)) seam 50
       (uA3, uB3) = freezeSteps 10000 3 stepLin (uA0, neutral)
       (uA6, uB6) = freezeSteps 10000 3 stepLin (uA3, uB3)
       (sA3, sB3) = freezeSteps 10000 3 stepSpr (uA0, neutral)
@@ -248,7 +251,7 @@ auditGohSpreadPolyHMSet =
       z9 = spreadZHMSet 9;  z10 = spreadZHMSet 10; z11 = spreadZHMSet 11; z12 = spreadZHMSet 12
       psiTbl = gohPsiTableUpTo 12
       psi    = \d => fromMaybe 1 (lookup d psiTbl)
-      factOk = all id
+      factOk = all id $ the (List Bool)
         [ z1 == psi 1, z2 == psi 1 * psi 2, z3 == psi 1 * psi 3
         , z4 == psi 1 * psi 2 * psi 4, z5 == psi 1 * psi 5
         , z6 == psi 1 * psi 2 * psi 3 * psi 6, z7 == psi 1 * psi 7
@@ -257,7 +260,7 @@ auditGohSpreadPolyHMSet =
         , z11 == psi 1 * psi 11
         , z12 == psi 1 * psi 2 * psi 3 * psi 4 * psi 6 * psi 12
         ]
-      rootOk = all id
+      rootOk = all id $ the (List Bool)
         [ evalPolyHMSetAt (psi 2)  (the Integer 2) == 2,   evalPolyHMSetAt (psi 3)  (the Integer 3) == 0
         , evalPolyHMSetAt (psi 4)  (the Integer 2) == 0,   evalPolyHMSetAt (psi 6)  (the Integer 1) == 0
         , evalPolyHMSetAt (psi 2)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 3)  (the Integer 0) == 9
@@ -268,9 +271,9 @@ auditGohSpreadPolyHMSet =
         , evalPolyHMSetAt (psi 12) (the Integer 0) == 1
         ]
       fibOk = all (\(z, v) => evalPolyHMSetAt z (the Integer 5) == v)
-        [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)]
+        (the (List (PureMultiset, Integer)) [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)])
       compOk = all (\(p, q, r) => evalPolyHMSetAt p q == r)
-        [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)]
+        (the (List (PureMultiset, PureMultiset, PureMultiset)) [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)])
       MkQuadraticTriple _ b1 r1 = pythPowerTriple 1 (MkBoxInt 28)
       MkQuadraticTriple _ b2 _  = pythPowerTriple 2 (MkBoxInt 28)
       MkQuadraticTriple _ b3 _  = pythPowerTriple 3 (MkBoxInt 28)
@@ -278,19 +281,19 @@ auditGohSpreadPolyHMSet =
       num28       = 4 * b1 * b1
       den28       = r1 * r1
       homogOk = all (\(d, z, b) => evalHomogPolyHMSet d z num28 den28 == 4 * b * b)
-        [(1, z1, b1), (2, z2, b2), (3, z3, b3), (4, z4, b4)]
+        (the (List (Nat, PureMultiset, Integer)) [(1, z1, b1), (2, z2, b2), (3, z3, b3), (4, z4, b4)])
       (relicZ6,  yFuel6,  yUsed6,  sUsed6,  fReason6)  = freezeGohSpreadStream 6
       (relicZ10, yFuel10, yUsed10, sUsed10, fReason10) = freezeGohSpreadStream 10
       frzOk =
         (relicZ6 == z6) && (yUsed6 == 4) && (sUsed6 == 6) && (yUsed6 <= yFuel6) && (fReason6 == NaturalCompletion) &&
         (relicZ10 == z10) && (yUsed10 == 4) && (sUsed10 == 10) && (yUsed10 <= yFuel10) && (fReason10 == NaturalCompletion)
       (MkAnyGohFuel _ yFuel12, _) = selfFuelOfHMSet z12
-      linkYieldBudget             = gohSteps yFuel12 * 40
-      seedDense                   = seedBoundDipole coord2Basis 4 5 6 8192
-      pUnthrottled                = MkDynamicsParams ModePaced 7 0           canonDecayNum canonDecayDen 0
-      pThrottled                  = canonDynamicsParams ModePaced
-      (rDil, sDil)                = freezeDynamicsStreamWith coord2Basis pUnthrottled 0 (mkGohFuel linkYieldBudget) 25 seedDense
-      (rDen, sDen)                = freezeDynamicsStreamWith coord2Basis pThrottled   0 (mkGohFuel linkYieldBudget) 25 seedDense
+      linkYieldBudget             = yFuel12.fuelSteps * 40
+      seedDense                   = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
+      pUnthrottled                = MkDynamicsParams (ModeFactor 4 1) 7 0           canonDecayNum canonDecayDen 0
+      pThrottled                  = canonDynamicsParams (ModeFactor 4 1)
+      (rDil, sDil)                = freezeDynamicsStreamWith (spaceBasis {n = 2}) pUnthrottled 0 (mkGohFuel linkYieldBudget) 25 seedDense
+      (rDen, sDen)                = freezeDynamicsStreamWith (spaceBasis {n = 2}) pThrottled   0 (mkGohFuel linkYieldBudget) 25 seedDense
       cycDil                      = rDil.stepsConsumed
       cycDen                      = rDen.stepsConsumed
       selfTimeOk =
@@ -314,7 +317,7 @@ mkAudit6Lines gs wDp wVac (e3D, ok3D) (gohOk, quadMonoOk, quiescenceOk, pass) =
   [ "----------------------------------------------------------------"
   , "[Audit 6] Goh Spread Polynumbers, TopologicalRelic Attractor, Maxel-Seam & 3D Parity"
   , "  * 6-A PureMultiset Goh Spread Polynumber Algebra & Coupled Multiset Dynamics (" ++ show gohOk ++ "):"
-  , "    - Factorization Z_n == prod_{d|n} Psi_d (n=1..10,12 in PureMultiset) : " ++ show gs.gsFactOk
+  , "    - Factorization Z_n == prod_{d|n} Psi_d (n=1..12 in PureMultiset) : " ++ show gs.gsFactOk
   , "    - Prime Roots & von Mangoldt Spectrum (Psi_3(3)=0, Psi_4(2)=0, Psi_6(1)=0, Psi_{p^k}(0)=p^2, Psi_comp(0)=1): " ++ show gs.gsPrimeRootOk
   , "    - Fibonacci Specialization Z_n(5) == (-1)^(n-1) * 5 * F_n^2 (n=1..6): " ++ show gs.gsFibOk
   , "    - Semigroup Composition (Z_2 o Z_2 = Z_4, Z_2 o Z_3 = Z_6, Z_2 o Z_5 = Z_10, Z_3 o Z_4 = Z_12): " ++ show gs.gsComposeOk
@@ -334,7 +337,7 @@ mkAudit6Lines gs wDp wVac (e3D, ok3D) (gohOk, quadMonoOk, quiescenceOk, pass) =
     " (t3: [" ++ show gs.gsPairQA3 ++ "," ++ show gs.gsPairQB3 ++ "] -> t6: [" ++ show gs.gsPairQA6 ++ "," ++ show gs.gsPairQB6 ++ "], netA=netB=0)"
   , "  * 6-B Canonical ModeSpread (1,4) StreamSkip Quiescence (" ++ show quiescenceOk ++ "):"
   , "    - dipoleOnly: " ++ showPacedStats wDp ++ " | vac: " ++ showPacedStats wVac
-  , "  * 6-3D Emergent 3D Causal Load & FlatBlackBox Coord3 == HereditaryBlackBox Parity (" ++ show ok3D ++
+  , "  * 6-3D Emergent 3D Causal Load & FlatBlackBox (Space 3) == HereditaryBlackBox Parity (" ++ show ok3D ++
     ", parity3D=" ++ show e3D.e3Parity3D ++ ", axes=" ++ show e3D.e3AxesCount ++ ", neighbors=" ++ show e3D.e3UnitCount ++ "):"
   , "    - 3D Vacuum Z-Band(B)-> " ++ show e3D.e3VacZ
   , "    - 3D +Z Dipole    (B)-> " ++ show e3D.e3TopZ
@@ -348,9 +351,9 @@ public export
 buildAudit6Report : LoadCoreMetrics -> Emergent3DReport -> (Bool, List String)
 buildAudit6Report pCan e3D =
   let gs           = auditGohSpreadPolyHMSet
-      gohOk        = all id [gs.gsFactOk, gs.gsPrimeRootOk, gs.gsFibOk, gs.gsComposeOk, gs.gsHomogPythOk, gs.gsFreezeOk, gs.gsSelfTimeOk, gs.gsCoupledOk, gs.gsRelicCycleOk, gs.gsActivePairOk]
-      wDp          = collectPacedWork (1, 4) 18 (seedBoundDipole coord2Basis 4 5 6 8192)
-      wVac         = collectPacedWork (1, 4) 18 (seedExcitationAt coord2Basis 0 0 512)
+      gohOk        = all id $ the (List Bool) [gs.gsFactOk, gs.gsPrimeRootOk, gs.gsFibOk, gs.gsComposeOk, gs.gsHomogPythOk, gs.gsFreezeOk, gs.gsSelfTimeOk, gs.gsCoupledOk, gs.gsRelicCycleOk, gs.gsActivePairOk]
+      wDp          = collectPacedWork (1, 4) 18 (seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192)
+      wVac         = collectPacedWork (1, 4) 18 (seedDirectedPulse (spaceBasis {n = 2}) [0, 0] (FS FZ) 512)
       ok3D         = emergent3DCriteriaOk e3D
       quadMonoOk   = coreQuadranceMonoOk pCan
       quiescenceOk =

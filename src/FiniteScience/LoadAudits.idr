@@ -3,6 +3,7 @@ module FiniteScience.LoadAudits
 import Control.App
 import Control.App.Console
 import FinScBox.BoxInt
+import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
 import FinScBox.Lenses
@@ -24,7 +25,7 @@ runLabSelfTrap :
   App1 {u = Any} e (SelfTrapReport, (Bool, Bool, Bool))
 runLabSelfTrap lab mode = App1.do
   u0 <- lab.labBoot
-  u1 <- lab.labInject (seedBoundDipole lab.labBasis 0 0 1 4096) u0
+  u1 <- lab.labInject (seedBoundDipole lab.labBasis [0, 0] [0, 1] 4096) u0
   obs <- lab.labQuadrance u1
   let MkPureObs u2 initQ _ = obs
   (ea, maxQ, work, balOk) <- driveLabStepsTel lab mode 20 u2 initQ 0 True
@@ -62,7 +63,7 @@ runLabExcitation :
   EvolutionState k ->
   App1 {u = Any} e (ExcitationReport, Bool, Bool, Bool)
 runLabExcitation lab mode steps =
-  runLabExcitationAxis lab axisY mode steps (seedExcitationAt lab.labBasis 0 0 512)
+  runLabExcitationAxis lab (axisNat 1) mode steps (seedDirectedPulse lab.labBasis [0, 0] (FS FZ) 512)
 
 export
 runLabTwoBody :
@@ -72,15 +73,15 @@ runLabTwoBody :
   Bool ->
   App1 {u = Any} e (ExcitationReport, ExcitationReport, Integer, (Bool, Bool, Bool))
 runLabTwoBody lab mode bothPulses = App1.do
-  let seed = seedExcitationAt lab.labBasis 0 (-3) 2048 <+>
-             (if bothPulses then seedExcitationAt lab.labBasis 0 3 2048 else neutral)
+  let seed = seedDirectedPulse lab.labBasis [0, -3] (FS FZ) 2048 <+>
+             (if bothPulses then seedDirectedPulse lab.labBasis [0, 3] (FS FZ) 2048 else neutral)
   u0 <- lab.labBoot
   u1 <- lab.labInject seed u0
   obs <- lab.labQuadrance u1
   let MkPureObs u2 initQ _ = obs
   (ea, maxQ, _, balOk) <- driveLabStepsTel lab mode 16 u2 initQ 0 True
-  let botRep = measureBandRange lab.labBasis (-100) 0 ea.eaState neutral initQ ea.eaQuad maxQ 0
-      topRep = measureBandRange lab.labBasis 1 100 ea.eaState neutral initQ ea.eaQuad maxQ 0
+  let botRep = measureBandAxis lab.labBasis (axisNat 1) (-100) 0 ea.eaState neutral initQ ea.eaQuad maxQ 0
+      topRep = measureBandAxis lab.labBasis (axisNat 1) 1 100 ea.eaState neutral initQ ea.eaQuad maxQ 0
   App1.pure (botRep, topRep, ea.eaNetSum, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
@@ -91,16 +92,16 @@ runLabLightCone :
   (vRep18, tRep18 : ExcitationReport) ->
   App1 {u = Any} e (CausalLightConeReport, Bool, Bool)
 runLabLightCone lab mode vRep18 tRep18 = App1.do
-  let dpSeed  = seedBoundDipole lab.labBasis 4 5 6 8192
-      excSeed = seedExcitationAt lab.labBasis 0 0 512
+  let dpSeed  = seedBoundDipole lab.labBasis [4, 5] [4, 6] 8192
+      excSeed = seedDirectedPulse lab.labBasis [0, 0] (FS FZ) 512
   eaVac2 <- bootInjectAndRun lab mode 2 excSeed
   eaBg2  <- bootInjectAndRun lab mode 2 dpSeed
   eaDp2  <- bootInjectAndRun lab mode 2 (dpSeed <+> excSeed)
   let exactSl = bandsEqualInBox lab.labBasis (-4) 4 (-3) 3 eaDp2.eaState eaBg2.eaState eaVac2.eaState
       balOk   = eaVac2.eaBalOk && eaBg2.eaBalOk && eaDp2.eaBalOk
       symOk   = eaVac2.eaSymOk && eaBg2.eaSymOk && eaDp2.eaSymOk
-      wVac2   = measureBand lab.labBasis eaVac2.eaState neutral eaVac2.eaQuad eaVac2.eaQuad eaVac2.eaQuad 0
-      wDp2    = measureBand lab.labBasis eaDp2.eaState  eaBg2.eaState eaDp2.eaQuad  eaDp2.eaQuad  eaDp2.eaQuad  0
+      wVac2   = measureBandAxis lab.labBasis (axisNat 1) (-3) 4 eaVac2.eaState neutral eaVac2.eaQuad eaVac2.eaQuad eaVac2.eaQuad 0
+      wDp2    = measureBandAxis lab.labBasis (axisNat 1) (-3) 4 eaDp2.eaState  eaBg2.eaState eaDp2.eaQuad  eaDp2.eaQuad  eaDp2.eaQuad  0
   App1.pure (MkCausalLightConeReport
                exactSl
                wVac2.meanXMilli wDp2.meanXMilli wDp2.fluxYAccum
@@ -110,9 +111,9 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
 public export
 stressSourceState : Ord k => AxisBasis k -> Bool -> EvolutionState k
 stressSourceState ax True =
-  seedEdgeFlux ax 3 5 4 5 8192 <+> seedEdgeFlux ax 4 5 5 5 8192
+  seedEdgeFlux ax [3, 5] [4, 5] 8192 <+> seedEdgeFlux ax [4, 5] [5, 5] 8192
 stressSourceState ax False =
-  seedEdgeFlux ax 4 4 4 5 8192 <+> seedEdgeFlux ax 4 5 4 6 8192
+  seedEdgeFlux ax [4, 4] [4, 5] 8192 <+> seedEdgeFlux ax [4, 5] [4, 6] 8192
 
 export
 runLabAnisotropicStress :
@@ -122,8 +123,8 @@ runLabAnisotropicStress :
   App1 {u = Any} e (AnisotropicStressReport, Bool)
 runLabAnisotropicStress lab mode = App1.do
   let ax = lab.labBasis
-  eaQH  <- bootInjectAndRun lab mode 12 (seedEdgeFlux ax 0 0 1 0 8192)
-  eaQV  <- bootInjectAndRun lab mode 12 (seedEdgeFlux ax 0 0 0 1 8192)
+  eaQH  <- bootInjectAndRun lab mode 12 (seedEdgeFlux ax [0, 0] [1, 0] 8192)
+  eaQV  <- bootInjectAndRun lab mode 12 (seedEdgeFlux ax [0, 0] [0, 1] 8192)
   eaBgH <- bootInjectAndRun lab mode 18 (stressSourceState ax True)
   eaBgV <- bootInjectAndRun lab mode 18 (stressSourceState ax False)
   (mH, balPH, antiPH, symPH) <- runLabExcitation lab mode 18 (stressSourceState ax True)  eaBgH.eaState
@@ -166,8 +167,8 @@ runLabCoreSuite :
   App1 {u = Any} e LoadCoreMetrics
 runLabCoreSuite lab mode = App1.do
   let ax        = lab.labBasis
-      dpTopSeed = seedBoundDipole ax 4 5 6 8192
-      dpBotSeed = seedBoundDipole ax 4 (-4) (-5) 8192
+      dpTopSeed = seedBoundDipole ax [4, 5] [4, 6] 8192
+      dpBotSeed = seedBoundDipole ax [4, -4] [4, -5] 8192
   (linRep, (antiLin, symLin, balLin))     <- runLabSelfTrap lab ModeLinear
   (trapRep, (antiTrap, symTrap, balTrap)) <- runLabSelfTrap lab mode
   eaBgTop <- bootInjectAndRun lab mode 18 dpTopSeed
@@ -323,7 +324,7 @@ record ParitySuiteReport where
 
 public export
 mkParityReport :
-  EndAudit Coord2 ->
+  EndAudit (Space 2) ->
   (ExcitationReport, Bool, Bool, Bool) ->
   EndAudit PureMultiset ->
   (ExcitationReport, Bool, Bool, Bool) ->
@@ -340,20 +341,20 @@ runModeParityCheck :
   Nat ->
   App1 {u = Any} e ModeParityReport
 runModeParityCheck mode steps = App1.do
-  let dpA = seedBoundDipole coord2Basis 4 5 6 8192
-      dpB = seedBoundDipole pureMSetBasis 4 5 6 8192
-  eaBgA <- bootInjectAndRun flatLab       mode steps dpA
-  eaBgB <- bootInjectAndRun hereditaryLab mode steps dpB
-  resA  <- runLabExcitation flatLab       mode steps dpA eaBgA.eaState
-  resB  <- runLabExcitation hereditaryLab mode steps dpB eaBgB.eaState
+  let dpA = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
+      dpB = seedBoundDipole (pureMSetBasis 2) [4, 5] [4, 6] 8192
+  eaBgA <- bootInjectAndRun (flatLab {n = 2}) mode steps dpA
+  eaBgB <- bootInjectAndRun hereditaryLab     mode steps dpB
+  resA  <- runLabExcitation (flatLab {n = 2}) mode steps dpA eaBgA.eaState
+  resB  <- runLabExcitation hereditaryLab     mode steps dpB eaBgB.eaState
   App1.pure (mkParityReport eaBgA resA eaBgB resB)
 
 export
 runParitySuite : App1 {u = Any} e ParitySuiteReport
 runParitySuite = App1.do
-  s <- runModeParityCheck ModeSpread   4
-  b <- runModeParityCheck ModeBalanced 4
-  p <- runModeParityCheck ModePaced    4
+  s <- runModeParityCheck (ModeFactor 1 4) 4
+  b <- runModeParityCheck (ModeFactor 2 2) 4
+  p <- runModeParityCheck (ModeFactor 4 1) 4
   App1.pure (MkParitySuiteReport s b p)
 
 public export
@@ -382,7 +383,7 @@ mkAudit4and5Lines cA par okA pass =
   , "    - Anisotropic Stress (A) -> " ++ show cA.lcAniso
   , "  * Criteria Check (Canonical ModeSpread 4A/4B/4D/4E/4F): okA=" ++ show okA
   , "----------------------------------------------------------------"
-  , "[Audit 5] Model A (`FlatBlackBox Coord2`) == Model B (`HereditaryBlackBox`) Parity Matrix (4-Sweep)"
+  , "[Audit 5] Model A (`FlatBlackBox (Space 2)`) == Model B (`HereditaryBlackBox`) Parity Matrix (4-Sweep)"
   , "  * Multi-Mode Model A == Model B Parity (4 sweeps, anti/sym/zero-sum):"
   , modeLine "ModeSpread  (1,4)" par.psSpr
   , modeLine "ModeBalanced(2,2)" par.psBal
@@ -402,7 +403,7 @@ public export
 buildAudit4and5Report : LoadCoreMetrics -> ParitySuiteReport -> (Bool, List String)
 buildAudit4and5Report cA par =
   let okA      = loadCoreCriteriaOk cA
-      seedRoot = packEvolutionStateToRoot BoxLeaf (seedExcitation pureMSetBasis 0 512)
+      seedRoot = packEvolutionStateToRoot BoxLeaf (seedDirectedPulse (pureMSetBasis 2) [0, 0] (FS FZ) 512)
       parityOk =
         modeParityAndWorkOk par.psSpr &&
         modeParityAndWorkOk par.psBal &&
@@ -416,7 +417,7 @@ buildAudit4and5Report cA par =
 export
 runAudit4and5 : Has [Console] e => App e (Bool, List String, LoadCoreMetrics)
 runAudit4and5 = do
-  cA  <- app1 (runLabCoreSuite flatLab ModeSpread)
+  cA  <- app1 (runLabCoreSuite (flatLab {n = 2}) (ModeFactor 1 4))
   par <- app1 runParitySuite
   let res = buildAudit4and5Report cA par
   traverse_ putStrLn (snd res)
