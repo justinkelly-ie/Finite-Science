@@ -17,7 +17,7 @@ modules = FiniteScience.Lab
         , FiniteScience.RelicAudits
         , FiniteScience.GeometryAudits
         , FiniteScience
-        , Main
+        , FiniteScience.Main
 
-main       = Main
+main       = FiniteScience.Main
 executable = "finite-science-audits"

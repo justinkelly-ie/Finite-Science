@@ -1,4 +1,4 @@
-module Main
+module FiniteScience.Main
 
 import Control.App
 import Control.App.Console

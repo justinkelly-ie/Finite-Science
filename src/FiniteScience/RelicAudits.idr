@@ -28,6 +28,14 @@ record PacedWorkStats where
   pwNodes  : Nat
 
 public export
+Eq PacedWorkStats where
+  a == b = a.pwYields == b.pwYields && a.pwSkips == b.pwSkips && a.pwNodes == b.pwNodes
+
+public export
+Show PacedWorkStats where
+  show w = "PacedWorkStats(yields=" ++ show w.pwYields ++ ", skips=" ++ show w.pwSkips ++ ", nodes=" ++ show w.pwNodes ++ ")"
+
+public export
 record Emergent3DReport where
   constructor MkEmergent3DReport
   e3AxesCount : Nat
@@ -37,6 +45,25 @@ record Emergent3DReport where
   e3BotZ      : ExcitationReport
   e3Parity3D  : Bool
   e3FlagsOk   : Bool
+
+public export
+Eq Emergent3DReport where
+  a == b =
+    a.e3AxesCount == b.e3AxesCount &&
+    a.e3UnitCount == b.e3UnitCount &&
+    a.e3VacZ == b.e3VacZ &&
+    a.e3TopZ == b.e3TopZ &&
+    a.e3BotZ == b.e3BotZ &&
+    a.e3Parity3D == b.e3Parity3D &&
+    a.e3FlagsOk == b.e3FlagsOk
+
+public export
+Show Emergent3DReport where
+  show r =
+    "Emergent3DReport(axes=" ++ show r.e3AxesCount ++
+    ", units=" ++ show r.e3UnitCount ++
+    ", parity3D=" ++ show r.e3Parity3D ++
+    ", flagsOk=" ++ show r.e3FlagsOk ++ ")"
 
 export
 runEmergent3DLoad : App1 {u = Any} e Emergent3DReport
@@ -141,6 +168,51 @@ record GohSpreadAuditReport where
   gsPairQB3       : BoxInt
   gsPairQA6       : BoxInt
   gsPairQB6       : BoxInt
+
+public export
+Eq GohSpreadAuditReport where
+  a == b =
+    a.gsFactOk == b.gsFactOk &&
+    a.gsPrimeRootOk == b.gsPrimeRootOk &&
+    a.gsFibOk == b.gsFibOk &&
+    a.gsComposeOk == b.gsComposeOk &&
+    a.gsHomogPythOk == b.gsHomogPythOk &&
+    a.gsFreezeOk == b.gsFreezeOk &&
+    a.gsSelfTimeOk == b.gsSelfTimeOk &&
+    a.gsCoupledOk == b.gsCoupledOk &&
+    a.gsRelicCycleOk == b.gsRelicCycleOk &&
+    a.gsActivePairOk == b.gsActivePairOk &&
+    a.gsBoundSteps10 == b.gsBoundSteps10 &&
+    a.gsYields10 == b.gsYields10 &&
+    a.gsSteps10 == b.gsSteps10 &&
+    a.gsDiluteCyc == b.gsDiluteCyc &&
+    a.gsDenseCyc == b.gsDenseCyc &&
+    a.gsDenseSkips == b.gsDenseSkips &&
+    a.gsCoupledQ3 == b.gsCoupledQ3 &&
+    a.gsCoupledQ6 == b.gsCoupledQ6 &&
+    a.gsRelicTrace == b.gsRelicTrace &&
+    a.gsRelicTraceB == b.gsRelicTraceB &&
+    a.gsRelicFixedA == b.gsRelicFixedA &&
+    a.gsRelicFixedB == b.gsRelicFixedB &&
+    a.gsSameAttractor == b.gsSameAttractor &&
+    a.gsPairQA3 == b.gsPairQA3 &&
+    a.gsPairQB3 == b.gsPairQB3 &&
+    a.gsPairQA6 == b.gsPairQA6 &&
+    a.gsPairQB6 == b.gsPairQB6
+
+public export
+Show GohSpreadAuditReport where
+  show r =
+    "GohSpreadAuditReport(fact=" ++ show r.gsFactOk ++
+    ", primeRoot=" ++ show r.gsPrimeRootOk ++
+    ", fib=" ++ show r.gsFibOk ++
+    ", compose=" ++ show r.gsComposeOk ++
+    ", homogPyth=" ++ show r.gsHomogPythOk ++
+    ", freeze=" ++ show r.gsFreezeOk ++
+    ", selfTime=" ++ show r.gsSelfTimeOk ++
+    ", coupled=" ++ show r.gsCoupledOk ++
+    ", relicCycle=" ++ show r.gsRelicCycleOk ++
+    ", activePair=" ++ show r.gsActivePairOk ++ ")"
 
 public export
 auditCoupledSourceFlow : (Bool, BoxInt, BoxInt)

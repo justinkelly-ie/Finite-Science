@@ -69,9 +69,9 @@ All link updates use conservative integer quadratic exchanges (`exchangeQuadrati
 ## Step 5: Rational Geometry & Non-Perturbing Observers (`FinSc-Space` Geometry & `FinSc-Lens`)
 
 Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
-- **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`sampleUnitPairMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`castSupportHMSet`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupoleAxes`).
+- **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), quenched `TopologicalRelic` skeletons (`castSupportHMSet`), and spatial moment / band-flux / quadrupole / projective readouts (`ExcitationReport`, `measureBandAxis`, `fieldCoreQuadranceShare`, `loadQuadrupoleAxes`).
 - **`FinScSpace.Geometry`:** Division-free projective `Proportion`s, metric-polymorphic spreads, universal `QTT 0` proofs of the Triple Quad Formula, Spread Law, Cross Law and Triple Spread Law, and one metric-parameterized `Rotor` covering `SO(3; Q)` quaternions (Blue metric) and `SO(1, 2; Q)` Wildberger Dihedrons (Red metric).
-- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), [`GeometryAudits.idr`](src/FiniteScience/GeometryAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 9 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
+- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr) hosting probe fixtures (`protonMSet`, `neutronMSet`, `heavyMassMSet`), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), [`GeometryAudits.idr`](src/FiniteScience/GeometryAudits.idr), & [`Main.idr`](src/FiniteScience/Main.idr)): Sits at the top of the stack, driving all 9 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
 
 ---
 

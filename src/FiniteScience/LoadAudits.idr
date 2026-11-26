@@ -159,6 +159,32 @@ record LoadCoreMetrics where
   lcLightCone : CausalLightConeReport
   lcAniso     : AnisotropicStressReport
 
+public export
+Eq LoadCoreMetrics where
+  a == b =
+    a.lcWork == b.lcWork &&
+    a.lcNetSum == b.lcNetSum &&
+    a.lcAntiOk == b.lcAntiOk &&
+    a.lcSymOk == b.lcSymOk &&
+    a.lcBalOk == b.lcBalOk &&
+    a.lcLin == b.lcLin &&
+    a.lcTrap == b.lcTrap &&
+    a.lcVac == b.lcVac &&
+    a.lcTop == b.lcTop &&
+    a.lcBot == b.lcBot &&
+    a.lcTwoBody == b.lcTwoBody &&
+    a.lcLightCone == b.lcLightCone &&
+    a.lcAniso == b.lcAniso
+
+public export
+Show LoadCoreMetrics where
+  show c =
+    "LoadCoreMetrics(work=" ++ show c.lcWork ++
+    ", net=" ++ show c.lcNetSum ++
+    ", anti=" ++ show c.lcAntiOk ++
+    ", sym=" ++ show c.lcSymOk ++
+    ", bal=" ++ show c.lcBalOk ++ ")"
+
 export
 runLabCoreSuite :
   GroupCoord k =>
@@ -316,11 +342,35 @@ record ModeParityReport where
   mpWorkB    : Nat
 
 public export
+Eq ModeParityReport where
+  a == b =
+    a.mpParityOk == b.mpParityOk &&
+    a.mpFlagsOk == b.mpFlagsOk &&
+    a.mpWorkA == b.mpWorkA &&
+    a.mpWorkB == b.mpWorkB
+
+public export
+Show ModeParityReport where
+  show m =
+    "ModeParityReport(parity=" ++ show m.mpParityOk ++
+    ", flags=" ++ show m.mpFlagsOk ++
+    ", workA=" ++ show m.mpWorkA ++
+    ", workB=" ++ show m.mpWorkB ++ ")"
+
+public export
 record ParitySuiteReport where
   constructor MkParitySuiteReport
   psSpr : ModeParityReport
   psBal : ModeParityReport
   psPac : ModeParityReport
+
+public export
+Eq ParitySuiteReport where
+  a == b = a.psSpr == b.psSpr && a.psBal == b.psBal && a.psPac == b.psPac
+
+public export
+Show ParitySuiteReport where
+  show s = "ParitySuiteReport(spr=" ++ show s.psSpr ++ ", bal=" ++ show s.psBal ++ ", pac=" ++ show s.psPac ++ ")"
 
 public export
 mkParityReport :

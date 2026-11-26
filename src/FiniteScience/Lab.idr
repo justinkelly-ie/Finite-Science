@@ -24,6 +24,14 @@ record StepTel where
   stBalOk : Bool
 
 public export
+Eq StepTel where
+  a == b = a.stQuad == b.stQuad && a.stWork == b.stWork && a.stBalOk == b.stBalOk
+
+public export
+Show StepTel where
+  show t = "StepTel(Q=" ++ show t.stQuad ++ ", work=" ++ show t.stWork ++ ", balOk=" ++ show t.stBalOk ++ ")"
+
+public export
 record EndAudit (k : Type) where
   constructor MkEndAudit
   eaState  : EvolutionState k
@@ -32,6 +40,25 @@ record EndAudit (k : Type) where
   eaSymOk  : Bool
   eaBalOk  : Bool
   eaNetSum : BoxInt
+
+public export
+Ord k => Eq (EndAudit k) where
+  a == b =
+    a.eaState == b.eaState &&
+    a.eaQuad == b.eaQuad &&
+    a.eaAntiOk == b.eaAntiOk &&
+    a.eaSymOk == b.eaSymOk &&
+    a.eaBalOk == b.eaBalOk &&
+    a.eaNetSum == b.eaNetSum
+
+public export
+Show k => Show (EndAudit k) where
+  show a =
+    "EndAudit(Q=" ++ show a.eaQuad ++
+    ", antiOk=" ++ show a.eaAntiOk ++
+    ", symOk=" ++ show a.eaSymOk ++
+    ", balOk=" ++ show a.eaBalOk ++
+    ", net=" ++ show a.eaNetSum ++ ")"
 
 public export
 record BlackBoxLab (e : List Error) (box : Type) (k : Type) where
