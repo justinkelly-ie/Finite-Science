@@ -19,7 +19,7 @@ import FiniteScience.Lab
 
 export
 runLabSelfTrap :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   StepMode ->
   App1 {u = Any} e (SelfTrapReport, (Bool, Bool, Bool))
@@ -34,7 +34,7 @@ runLabSelfTrap lab mode = App1.do
 
 export
 runLabExcitationAxis :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   (axisT : PureMultiset) ->
   StepMode ->
@@ -55,7 +55,7 @@ runLabExcitationAxis lab axisT mode steps excSeed extraBg bgState = App1.do
 
 export
 runLabExcitation :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   StepMode ->
   Nat ->
@@ -67,7 +67,7 @@ runLabExcitation lab mode steps =
 
 export
 runLabTwoBody :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   StepMode ->
   Bool ->
@@ -86,7 +86,7 @@ runLabTwoBody lab mode bothPulses = App1.do
 
 export
 runLabLightCone :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   StepMode ->
   (vRep18, tRep18 : ExcitationReport) ->
@@ -97,7 +97,7 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
   eaVac2 <- bootInjectAndRun lab mode 2 excSeed
   eaBg2  <- bootInjectAndRun lab mode 2 dpSeed
   eaDp2  <- bootInjectAndRun lab mode 2 (dpSeed <+> excSeed)
-  let exactSl = bandsEqualInBox lab.labBasis (-4) 4 (-3) 3 eaDp2.eaState eaBg2.eaState eaVac2.eaState
+  let exactSl = bandsEqualInBox lab.labBasis [-4, -3] [4, 3] eaDp2.eaState eaBg2.eaState eaVac2.eaState
       balOk   = eaVac2.eaBalOk && eaBg2.eaBalOk && eaDp2.eaBalOk
       symOk   = eaVac2.eaSymOk && eaBg2.eaSymOk && eaDp2.eaSymOk
       wVac2   = measureBandAxis lab.labBasis (axisNat 1) (-3) 4 eaVac2.eaState neutral eaVac2.eaQuad eaVac2.eaQuad eaVac2.eaQuad 0
@@ -117,7 +117,7 @@ stressSourceState ax False =
 
 export
 runLabAnisotropicStress :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   StepMode ->
   App1 {u = Any} e (AnisotropicStressReport, Bool)
@@ -129,8 +129,8 @@ runLabAnisotropicStress lab mode = App1.do
   eaBgV <- bootInjectAndRun lab mode 18 (stressSourceState ax False)
   (mH, balPH, antiPH, symPH) <- runLabExcitation lab mode 18 (stressSourceState ax True)  eaBgH.eaState
   (mV, balPV, antiPV, symPV) <- runLabExcitation lab mode 18 (stressSourceState ax False) eaBgV.eaState
-  let qH     = loadQuadrupolePlus ax eaQH.eaState.loadMaxel
-      qV     = loadQuadrupolePlus ax eaQV.eaState.loadMaxel
+  let qH     = loadQuadrupoleAxes ax (axisNat 0) (axisNat 1) eaQH.eaState.loadMaxel
+      qV     = loadQuadrupoleAxes ax (axisNat 0) (axisNat 1) eaQV.eaState.loadMaxel
       symOk  = eaQH.eaSymOk && eaQV.eaSymOk && eaBgH.eaSymOk && eaBgV.eaSymOk &&
                antiPH && symPH && antiPV && symPV
       balOk  = eaQH.eaBalOk && eaQV.eaBalOk && eaBgH.eaBalOk && eaBgV.eaBalOk && balPH && balPV
@@ -161,7 +161,7 @@ record LoadCoreMetrics where
 
 export
 runLabCoreSuite :
-  Ord k =>
+  GroupCoord k =>
   BlackBoxLab e box k ->
   StepMode ->
   App1 {u = Any} e LoadCoreMetrics

@@ -83,13 +83,13 @@ flatLab =
     flatEndAudit
 
 export
-hereditaryLab : BlackBoxLab e HereditaryBlackBox PureMultiset
+hereditaryLab : {default 2 minDim : Nat} -> BlackBoxLab e HereditaryBlackBox PureMultiset
 hereditaryLab =
   MkBlackBoxLab
-    (pureMSetBasis 2)
+    (pureMSetBasis minDim)
     bootHereditary0D
     injectHereditaryState
-    (\mode => stepHereditaryWith (canonDynamicsParams mode))
+    (\mode => stepHereditaryWith {minDim} (canonDynamicsParams mode))
     (observeHereditaryPure (\r => stateQuadrance (unpackRootToEvolutionState r).stateData))
     (observeHereditaryPure (\r => MkStepTel (stateQuadrance (unpackRootToEvolutionState r).stateData)
                                             (rootActivePeelWork r)

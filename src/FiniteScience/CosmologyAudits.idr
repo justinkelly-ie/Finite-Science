@@ -251,7 +251,7 @@ auditGohSpreadPolyHMSet =
       z9 = spreadZHMSet 9;  z10 = spreadZHMSet 10; z11 = spreadZHMSet 11; z12 = spreadZHMSet 12
       psiTbl = gohPsiTableUpTo 12
       psi    = \d => fromMaybe 1 (lookup d psiTbl)
-      factOk = all id $ the (List Bool)
+      factOk = all id
         [ z1 == psi 1, z2 == psi 1 * psi 2, z3 == psi 1 * psi 3
         , z4 == psi 1 * psi 2 * psi 4, z5 == psi 1 * psi 5
         , z6 == psi 1 * psi 2 * psi 3 * psi 6, z7 == psi 1 * psi 7
@@ -260,7 +260,7 @@ auditGohSpreadPolyHMSet =
         , z11 == psi 1 * psi 11
         , z12 == psi 1 * psi 2 * psi 3 * psi 4 * psi 6 * psi 12
         ]
-      rootOk = all id $ the (List Bool)
+      rootOk = all id
         [ evalPolyHMSetAt (psi 2)  (the Integer 2) == 2,   evalPolyHMSetAt (psi 3)  (the Integer 3) == 0
         , evalPolyHMSetAt (psi 4)  (the Integer 2) == 0,   evalPolyHMSetAt (psi 6)  (the Integer 1) == 0
         , evalPolyHMSetAt (psi 2)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 3)  (the Integer 0) == 9
@@ -273,7 +273,7 @@ auditGohSpreadPolyHMSet =
       fibOk = all (\(z, v) => evalPolyHMSetAt z (the Integer 5) == v)
         (the (List (PureMultiset, Integer)) [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)])
       compOk = all (\(p, q, r) => evalPolyHMSetAt p q == r)
-        (the (List (PureMultiset, PureMultiset, PureMultiset)) [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)])
+        [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)]
       MkQuadraticTriple _ b1 r1 = pythPowerTriple 1 (MkBoxInt 28)
       MkQuadraticTriple _ b2 _  = pythPowerTriple 2 (MkBoxInt 28)
       MkQuadraticTriple _ b3 _  = pythPowerTriple 3 (MkBoxInt 28)
@@ -351,7 +351,7 @@ public export
 buildAudit6Report : LoadCoreMetrics -> Emergent3DReport -> (Bool, List String)
 buildAudit6Report pCan e3D =
   let gs           = auditGohSpreadPolyHMSet
-      gohOk        = all id $ the (List Bool) [gs.gsFactOk, gs.gsPrimeRootOk, gs.gsFibOk, gs.gsComposeOk, gs.gsHomogPythOk, gs.gsFreezeOk, gs.gsSelfTimeOk, gs.gsCoupledOk, gs.gsRelicCycleOk, gs.gsActivePairOk]
+      gohOk        = all id [gs.gsFactOk, gs.gsPrimeRootOk, gs.gsFibOk, gs.gsComposeOk, gs.gsHomogPythOk, gs.gsFreezeOk, gs.gsSelfTimeOk, gs.gsCoupledOk, gs.gsRelicCycleOk, gs.gsActivePairOk]
       wDp          = collectPacedWork (1, 4) 18 (seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192)
       wVac         = collectPacedWork (1, 4) 18 (seedDirectedPulse (spaceBasis {n = 2}) [0, 0] (FS FZ) 512)
       ok3D         = emergent3DCriteriaOk e3D

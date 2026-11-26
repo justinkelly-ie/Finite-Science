@@ -26,7 +26,8 @@ runFlatGuardedSplitBoundary :
 runFlatGuardedSplitBoundary settingTxt wA wB = do
   _ <- validateAndDecodeSetting settingTxt
   requireBalancedSplit wA wB
-  let p50 = fromIntegers [5, 0]
+  let p50 : Space 2
+      p50 = [5, 0]
   st <- app1 $ App1.do
     u0 <- bootFlatWith (spaceBasis {n = 2})
     u1 <- splitFlatFromVacuum p50 p50 (MkBoxInt wA) u0
@@ -38,8 +39,10 @@ runFlatHorizonProbe :
   Has [Exception UniverseErr] e =>
   HorizonSpec -> App e HorizonObservationReport
 runFlatHorizonProbe spec = do
-  let p50 = fromIntegers [5, 0]
-      p30 = fromIntegers [30, 30]
+  let p50 : Space 2
+      p50 = [5, 0]
+      p30 : Space 2
+      p30 = [30, 30]
   rep <- app1 $ App1.do
     u0  <- bootFlatWith (spaceBasis {n = 2})
     u1  <- splitFlatFromVacuum p50 p30 (MkBoxInt 14) u0
