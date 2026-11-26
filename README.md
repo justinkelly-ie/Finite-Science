@@ -62,14 +62,14 @@ In [`FinSc-Dynamics`](https://github.com/justinkelly-ie/FinSc-Dynamics), each cl
 2. **`loadMaxel`** (`SymForm`) — causal 1-hop retarded interaction load sourced from `quadranceOf polarityMaxel` (`c = 1`).
 3. **`throttleMaxel`** (`SymForm`) — integer Bresenham pacing accumulator emitting `StreamSkip` pauses at **`0 GohBound`** cost when local load is high.
 
-All link updates use conservative integer quadratic exchanges (`exchangeQuadraticPow` in `FinScBox.QuadraticExchange`), conserving linear polarity `p_A + p_B` identically and monotonically bounding total quadrance `2*(p_A^2 + p_B^2) + u^2`.
+All link updates use conservative integer quadratic exchanges (`exchangeQuadraticTriple` / `exchangeQuadratic` in `FinScBox.QuadraticExchange`), conserving linear polarity `p_A + p_B` identically and monotonically bounding total quadrance `2*(p_A^2 + p_B^2) + u^2`.
 
 ---
 
 ## Step 5: Pluggable Non-Perturbing Observers (`FinSc-Lens` & `FinSc-Dihedron`)
 
 Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
-- **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`quenchRelic = MSetSupport`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupolePlus`).
+- **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`sampleUnitPairMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`castSupportHMSet`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupoleAxes`).
 - **[`FinSc-Dihedron`](https://github.com/justinkelly-ie/FinSc-Dihedron):** Rational `SO(3; Q)` quaternion proportions (`ProjectiveProportion`) and `SL(2; Q)` Dihedron frames for relativistic observer development.
 - **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 8 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
 
