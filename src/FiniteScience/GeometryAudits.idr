@@ -42,7 +42,7 @@ public export
 stepHereditaryN : Nat -> DynamicsParams -> (1 u : HereditaryBlackBox) -> App1 e HereditaryBlackBox
 stepHereditaryN Z       _ u = App1.pure1 u
 stepHereditaryN (S rem) p u = App1.do
-  u1 <- stepHereditaryWith {minDim = 3} p u
+  u1 <- stepHereditaryWith 3 p u
   stepHereditaryN rem p u1
 
 ||| Canonical external observer frame (`N_blue = 4 + 1 + 1 + 4 = 10`).
@@ -57,7 +57,7 @@ runFlat3DFrame = App1.do
   u0  <- bootFlatWith (spaceBasis {n = 3})
   u1  <- injectFlatState (seedBoundDipole (spaceBasis {n = 3}) [1, 0, 0] [0, 0, 1] 2048) u0
   u2  <- stepFlatN 4 (canonDynamicsParams (ModeFactor 1 4)) u1
-  obs <- observeFlatPure (observeRotatedMoment3D spaceBasis blueMetric3 observerRotor) u2
+  obs <- observeFlatPure (observeRotatedMoment3D spaceBasis blueMetric observerRotor) u2
   let MkPureObs u3 mRot _ = obs
   st  <- closeFlat0D u3
   App1.pure (mRot, observeStateMoment3D spaceBasis st, stateQuadrance st)
@@ -70,7 +70,7 @@ runHereditary3DFrame = App1.do
   u1  <- injectHereditaryState (seedBoundDipole (pureMSetBasis 3) [1, 0, 0] [0, 0, 1] 2048) u0
   u2  <- stepHereditaryN 4 (canonDynamicsParams (ModeFactor 1 4)) u1
   obs <- observeHereditaryPure
-           (\r => observeRotatedMoment3D (pureMSetBasis 3) blueMetric3 observerRotor
+           (\r => observeRotatedMoment3D (pureMSetBasis 3) blueMetric observerRotor
                     (unpackRootToEvolutionState r).stateData) u2
   let MkPureObs u3 mRot _ = obs
   root <- closeHereditary0D u3
@@ -95,17 +95,17 @@ public export
 check9AChromo : (Bool, Bool, BoxInt, BoxInt, BoxInt, BoxInt)
 check9AChromo =
   let p1 = vec2Box 3 1; p2 = vec2Box 1 4
-      aB = triangleQuadrea blueMetric2 p1 p2
-      aR = triangleQuadrea redMetric2  p1 p2
+      aB = triangleQuadrea blueMetric p1 p2
+      aR = triangleQuadrea redMetric  p1 p2
       aG = triangleQuadrea greenMetric2 p1 p2
       chromoOk = (aB == negate aR) && (aB == negate aG) &&
-                 spreadLawHolds blueMetric2 p1 p2 && spreadLawHolds greenMetric2 p1 p2
+                 spreadLawHolds blueMetric p1 p2 && spreadLawHolds greenMetric2 p1 p2
       wOut = vec2Box 5 3; wEnd = vec2Box 10 0
-      aTw = triangleQuadrea redMetric2 wOut wEnd
-      twinOk = (metricQuadrance redMetric2 wOut == 16) &&
-               (metricQuadrance redMetric2 (subM wEnd wOut) == 16) &&
-               (metricQuadrance redMetric2 wEnd == 100) &&
-               (aTw == -3600) && spreadLawHolds redMetric2 wOut wEnd
+      aTw = triangleQuadrea redMetric wOut wEnd
+      twinOk = (metricQuadrance redMetric wOut == 16) &&
+               (metricQuadrance redMetric (subM wEnd wOut) == 16) &&
+               (metricQuadrance redMetric wEnd == 100) &&
+               (aTw == -3600) && spreadLawHolds redMetric wOut wEnd
   in (chromoOk, twinOk, aB, aR, aG, aTw)
 
 public export
@@ -113,28 +113,28 @@ check9BBlue : Bool
 check9BBlue =
   let vBlue = vec3Box 3 (-2) 5
       bRot1 = MkRotor 1 (vec3Box 1 0 0)
-      mB1   = rotorActionMaxel blueMetric3 bRot1
-      mB2   = rotorActionMaxel blueMetric3 observerRotor
-      mB12  = rotorActionMaxel blueMetric3 (composeRotor blueMetric3 observerRotor bRot1)
-      nBlue = rotorNorm blueMetric3 observerRotor
+      mB1   = rotorActionMaxel blueMetric bRot1
+      mB2   = rotorActionMaxel blueMetric observerRotor
+      mB12  = rotorActionMaxel blueMetric (composeRotor blueMetric observerRotor bRot1)
+      nBlue = rotorNorm blueMetric observerRotor
   in (composeMaxel mB2 mB1 == mB12) &&
      (actMaxelR mB2 (actMaxelR mB1 vBlue) == actMaxelR mB12 vBlue) &&
-     (metricQuadrance blueMetric3 (actMaxelR mB2 vBlue) == nBlue * nBlue * metricQuadrance blueMetric3 vBlue)
+     (metricQuadrance blueMetric (actMaxelR mB2 vBlue) == nBlue * nBlue * metricQuadrance blueMetric vBlue)
 
 public export
 check9BRed : (Bool, Box BoxInt (Fin 3))
 check9BRed =
   let g2   = pythGeneratorTriple 2
       bst  = boostFromQuadraticTriple g2
-      wB   = actMaxelR (rotorActionMaxel redMetric3 bst) (vec3Box 1 0 0)
-      nB   = rotorNorm redMetric3 bst
+      wB   = actMaxelR (rotorActionMaxel redMetric bst) (vec3Box 1 0 0)
+      nB   = rotorNorm redMetric bst
       rA1  = boostRotorAxis1 3 1; rA2 = boostRotorAxis2 2 1
-      mR1  = rotorActionMaxel redMetric3 rA2; mR2 = rotorActionMaxel redMetric3 rA1
-      mR12 = rotorActionMaxel redMetric3 (composeRotor redMetric3 rA1 rA2)
+      mR1  = rotorActionMaxel redMetric rA2; mR2 = rotorActionMaxel redMetric rA1
+      mR12 = rotorActionMaxel redMetric (composeRotor redMetric rA1 rA2)
       ok   = isQuadraticTriple g2 && (wB == vec3Box 90 54 0) &&
              (MkProportion (lookupBox (FS FZ) wB) (lookupBox FZ wB) == MkProportion 3 5) &&
-             (spreadBetween redMetric3 (vec3Box 1 0 0) wB == MkProportion (-9) 16) &&
-             (metricQuadrance redMetric3 wB == nB * nB) && (composeMaxel mR2 mR1 == mR12)
+             (spreadBetween redMetric (vec3Box 1 0 0) wB == MkProportion (-9) 16) &&
+             (metricQuadrance redMetric wB == nB * nB) && (composeMaxel mR2 mR1 == mR12)
   in (ok, wB)
 
 public export
@@ -147,17 +147,17 @@ check9BPrecessionAndFrame (fRot, fRaw, fQ, hRot, hRaw, hQ) =
                   , MkRotor 0 (vec3Box 1 0 0), MkRotor 1 (vec3Box 0 1 0) ]
       classOk = classes == [ EllipticSpatialRotation, HyperbolicLorentzBoost, ParabolicNullRotation
                            , InvolutionHalfTurn, SingularNullRotor ]
-      p12 = composeRotor redMetric3 (boostRotorAxis1 3 1) (boostRotorAxis2 2 1)
-      p21 = composeRotor redMetric3 (boostRotorAxis2 2 1) (boostRotorAxis1 3 1)
+      p12 = composeRotor redMetric (boostRotorAxis1 3 1) (boostRotorAxis2 2 1)
+      p21 = composeRotor redMetric (boostRotorAxis2 2 1) (boostRotorAxis1 3 1)
       t12 = lookupBox FZ p12.rotorBivector
       t21 = lookupBox FZ p21.rotorBivector
       wigOk = (t12 /= 0) && (t12 == negate t21)
       gi = toGeneralMaxel quatUnitI; gj = toGeneralMaxel quatUnitJ; gk = toGeneralMaxel quatUnitK
       mxlOk = (composeMaxel epsilonDihedronMaxel2 epsilonDihedronMaxel2 == emptyMaxel) &&
               (composeMaxel gi gj == gk) && isCanonicalMaxel quatUnitI
-      nBlue = rotorNorm blueMetric3 observerRotor
+      nBlue = rotorNorm blueMetric observerRotor
       frmOk = (fRaw == hRaw) && (fRot == hRot) && (fQ == hQ) && (fRaw /= BoxLeaf) &&
-              (metricQuadrance blueMetric3 fRot == nBlue * nBlue * metricQuadrance blueMetric3 fRaw)
+              (metricQuadrance blueMetric fRot == nBlue * nBlue * metricQuadrance blueMetric fRaw)
   in (classOk, wigOk, mxlOk, frmOk, t12, t21)
 
 export
@@ -171,7 +171,7 @@ runAudit9 = do
       blueOk                              = check9BBlue
       (boostOk, wB)                       = check9BRed
       (classOk, wigOk, mxlOk, frmOk, t12, t21) = check9BPrecessionAndFrame (fRot, fRaw, fQ, hRot, hRaw, hQ)
-      nBlue                               = rotorNorm blueMetric3 observerRotor
+      nBlue                               = rotorNorm blueMetric observerRotor
       pass                                = chromoOk && twinOk && deflOk && blueOk && boostOk && classOk && wigOk && mxlOk && frmOk
       lines =
         [ "----------------------------------------------------------------"

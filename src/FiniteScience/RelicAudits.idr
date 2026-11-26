@@ -55,11 +55,11 @@ runEmergent3DLoad = App1.do
   (vZA, balVA, antiVA, symVA) <- runLabExcitationAxis (flatLab {n = 3}) (axisAtom 2) (ModeFactor 4 1) 6 exc3DA neutral neutral
   (tZA, balTA, antiTA, symTA) <- runLabExcitationAxis (flatLab {n = 3}) (axisAtom 2) (ModeFactor 4 1) 6 exc3DA dpTopZA eaBgTA.eaState
   (bZA, balBA, antiBA, symBA) <- runLabExcitationAxis (flatLab {n = 3}) (axisAtom 2) (ModeFactor 4 1) 6 exc3DA dpBotZA eaBgBA.eaState
-  eaBgTB <- bootInjectAndRun hereditaryLab (ModeFactor 4 1) 6 dpTopZB
-  eaBgBB <- bootInjectAndRun hereditaryLab (ModeFactor 4 1) 6 dpBotZB
-  (vZB, balVB, antiVB, symVB) <- runLabExcitationAxis hereditaryLab (axisAtom 2) (ModeFactor 4 1) 6 exc3DB neutral neutral
-  (tZB, balTB, antiTB, symTB) <- runLabExcitationAxis hereditaryLab (axisAtom 2) (ModeFactor 4 1) 6 exc3DB dpTopZB eaBgTB.eaState
-  (bZB, balBB, antiBB, symBB) <- runLabExcitationAxis hereditaryLab (axisAtom 2) (ModeFactor 4 1) 6 exc3DB dpBotZB eaBgBB.eaState
+  eaBgTB <- bootInjectAndRun (hereditaryLab 2) (ModeFactor 4 1) 6 dpTopZB
+  eaBgBB <- bootInjectAndRun (hereditaryLab 2) (ModeFactor 4 1) 6 dpBotZB
+  (vZB, balVB, antiVB, symVB) <- runLabExcitationAxis (hereditaryLab 2) (axisAtom 2) (ModeFactor 4 1) 6 exc3DB neutral neutral
+  (tZB, balTB, antiTB, symTB) <- runLabExcitationAxis (hereditaryLab 2) (axisAtom 2) (ModeFactor 4 1) 6 exc3DB dpTopZB eaBgTB.eaState
+  (bZB, balBB, antiBB, symBB) <- runLabExcitationAxis (hereditaryLab 2) (axisAtom 2) (ModeFactor 4 1) 6 exc3DB dpBotZB eaBgBB.eaState
   let par3D = sameExcitationTrajectory vZA vZB &&
               sameExcitationTrajectory tZA tZB &&
               sameExcitationTrajectory bZA bZB
@@ -369,10 +369,10 @@ runAudit6 pCan = do
 
 public export
 countCoreResidenceSweeps : Nat -> DynamicsParams -> EvolutionState (Space 2) -> (Nat, Integer)
-countCoreResidenceSweeps Z       _      st = (0, fieldCoreQuadranceFrac (spaceBasis {n = 2}) st)
+countCoreResidenceSweeps Z       _      st = (0, fieldCoreQuadranceFrac (spaceBasis {n = 2}) [-1, -1] [1, 2] st)
 countCoreResidenceSweeps (S rem) params st =
   let (st1, _) = stepDynamicsWith (spaceBasis {n = 2}) params st
-      cPct     = fieldCoreQuadranceFrac (spaceBasis {n = 2}) st1
+      cPct     = fieldCoreQuadranceFrac (spaceBasis {n = 2}) [-1, -1] [1, 2] st1
       (k, fin) = countCoreResidenceSweeps rem params st1
   in (if cPct >= 75 then S k else k, fin)
 

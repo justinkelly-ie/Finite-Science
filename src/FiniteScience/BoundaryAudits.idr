@@ -16,8 +16,85 @@ import FinScLens
 %default total
 
 --------------------------------------------------------------------------------
--- 1. AUDIT BOUNDARY HARNESSES (SPECIFIC `(5, 0)` / `(30, 30)` TEST PROBES)
+-- 1. PROBE FIXTURES & AUDIT BOUNDARY HARNESSES (`(5, 0)` / `(30, 30)` PROBES)
 --------------------------------------------------------------------------------
+
+||| Canonical Proton triad `uud = (+2, +2, -1)` at axes `1, 2, 3`.
+public export
+protonMSet : Configuration
+protonMSet =
+  MkHMSet $ setBox (scalarKeyHMSet 3) (MkBoxInt (-1))
+          $ setBox (scalarKeyHMSet 2) (MkBoxInt 2)
+          $ setBox (scalarKeyHMSet 1) (MkBoxInt 2) BoxLeaf
+
+||| Canonical Neutron triad `udd = (+2, -1, -1)` at axes `1, 2, 3`.
+public export
+neutronMSet : Configuration
+neutronMSet =
+  MkHMSet $ setBox (scalarKeyHMSet 3) (MkBoxInt (-1))
+          $ setBox (scalarKeyHMSet 2) (MkBoxInt (-1))
+          $ setBox (scalarKeyHMSet 1) (MkBoxInt 2) BoxLeaf
+
+||| Dense massive probe configuration (`10 * protonMSet`).
+public export
+heavyMassMSet : Configuration
+heavyMassMSet = scaleHMSet (MkBoxInt 10) protonMSet
+
+public export
+vacuumSettingText : String
+vacuumSettingText = "[]"
+
+public export
+photonSettingText : String
+photonSettingText = "{{[]:[-1]}:[-1], {[]:[1]}:[1]}"
+
+public export
+protonSettingText : String
+protonSettingText = "{{[]:[1]}:[2], {[]:[2]}:[2], {[]:[3]}:[-1]}"
+
+public export
+neutronSettingText : String
+neutronSettingText = "{{[]:[1]}:[2], {[]:[2]}:[-1], {[]:[3]}:[-1]}"
+
+public export
+heavyMassSettingText : String
+heavyMassSettingText = "{{[]:[1]}:[20], {[]:[2]}:[20], {[]:[3]}:[-10]}"
+
+public export
+checkSettingDecode : String -> Configuration -> Bool
+checkSettingDecode txt expected =
+  case parsePureMultiset txt of
+    Just m  => m == expected
+    Nothing => False
+
+public export
+0 prfStreamWorkMonotonic :
+  (let wVac   = (streamPeelWorkHMSet (the Configuration FinScBox.HereditaryMSet.emptyHMSet)).workSteps
+       wPhot  = (streamPeelWorkHMSet FinScBox.BlackRedZoom.sampleUnitPairMSet).workSteps
+       wProt  = (streamPeelWorkHMSet FiniteScience.BoundaryAudits.protonMSet).workSteps
+       wHeavy = (streamPeelWorkHMSet FiniteScience.BoundaryAudits.heavyMassMSet).workSteps
+   in (wVac == 0) && (wVac < wPhot) && (wPhot < wProt) && (wProt < wHeavy)) = True
+prfStreamWorkMonotonic = Refl
+
+public export
+0 prfFastPeelMatchesProton :
+  FinScBox.Views.fastPeelWorkHMSet FiniteScience.BoundaryAudits.protonMSet
+  = (FinScBox.Views.streamPeelWorkHMSet FiniteScience.BoundaryAudits.protonMSet).workSteps
+prfFastPeelMatchesProton = Refl
+
+public export
+0 prfAllSettingsParityAndDecode :
+  ((FiniteScience.BoundaryAudits.vacuumSettingText    == renderPureMultiset FinScBox.HereditaryMSet.emptyHMSet) &&
+   (FiniteScience.BoundaryAudits.photonSettingText    == renderPureMultiset FinScBox.BlackRedZoom.sampleUnitPairMSet) &&
+   (FiniteScience.BoundaryAudits.protonSettingText    == renderPureMultiset FiniteScience.BoundaryAudits.protonMSet) &&
+   (FiniteScience.BoundaryAudits.neutronSettingText   == renderPureMultiset FiniteScience.BoundaryAudits.neutronMSet) &&
+   (FiniteScience.BoundaryAudits.heavyMassSettingText == renderPureMultiset FiniteScience.BoundaryAudits.heavyMassMSet) &&
+   checkSettingDecode FiniteScience.BoundaryAudits.vacuumSettingText    FinScBox.HereditaryMSet.emptyHMSet &&
+   checkSettingDecode FiniteScience.BoundaryAudits.photonSettingText    FinScBox.BlackRedZoom.sampleUnitPairMSet &&
+   checkSettingDecode FiniteScience.BoundaryAudits.protonSettingText    FiniteScience.BoundaryAudits.protonMSet &&
+   checkSettingDecode FiniteScience.BoundaryAudits.neutronSettingText   FiniteScience.BoundaryAudits.neutronMSet &&
+   checkSettingDecode FiniteScience.BoundaryAudits.heavyMassSettingText FiniteScience.BoundaryAudits.heavyMassMSet) = True
+prfAllSettingsParityAndDecode = Refl
 
 export
 runFlatGuardedSplitBoundary :
@@ -223,17 +300,17 @@ driveUnobservedUnified Z Z u = App1.do
   r <- closeHereditary0D u
   App1.pure (closeOutcomeText (classifyHereditaryClose r))
 driveUnobservedUnified Z (S urem) u = App1.do
-  u1 <- stepHereditaryWith (canonDynamicsParams (ModeFactor 1 4)) u
+  u1 <- stepHereditaryWith 2 (canonDynamicsParams (ModeFactor 1 4)) u
   driveUnobservedUnified Z urem u1
 driveUnobservedUnified (S wrem) Z u = App1.do
-  u1 <- stepHereditaryWith (canonDynamicsParams (ModeFactor 1 4)) u
+  u1 <- stepHereditaryWith 2 (canonDynamicsParams (ModeFactor 1 4)) u
   driveUnobservedUnified wrem Z u1
 driveUnobservedUnified (S Z) live@(S _) u = App1.do
-  u1 <- stepHereditaryWith (canonDynamicsParams (ModeFactor 1 4)) u
+  u1 <- stepHereditaryWith 2 (canonDynamicsParams (ModeFactor 1 4)) u
   uw <- injectHereditaryState (seedDirectedPulse (pureMSetBasis 2) [0, 0] (FS FZ) 512) u1
   driveUnobservedUnified Z live uw
 driveUnobservedUnified (S wrem@(S _)) live@(S _) u = App1.do
-  u1 <- stepHereditaryWith (canonDynamicsParams (ModeFactor 1 4)) u
+  u1 <- stepHereditaryWith 2 (canonDynamicsParams (ModeFactor 1 4)) u
   driveUnobservedUnified wrem live u1
 
 export
@@ -249,7 +326,7 @@ driveObservedZoomedTest Z u snapsOk = App1.do
   r <- closeHereditary0D u
   App1.pure (closeOutcomeText (classifyHereditaryClose r), snapsOk)
 driveObservedZoomedTest (S rem) u snapsOk = App1.do
-  u1   <- stepHereditaryWith (canonDynamicsParams (ModeFactor 1 4)) u
+  u1   <- stepHereditaryWith 2 (canonDynamicsParams (ModeFactor 1 4)) u
   obsS <- observeHereditaryPure (applyExternalLens (zoomedPureLens (blackShift 2) emptyHMSet (/= emptyHMSet))) u1
   let MkPureObs u2 sOk _ = obsS
   obsT <- observeHereditaryPure (applyExternalLens (zoomedPureLens emptyHMSet (blackShift 1) (/= emptyHMSet))) u2
@@ -264,7 +341,7 @@ driveObservedZoomedWarmup Z u = App1.do
   uw <- injectHereditaryState (seedDirectedPulse (pureMSetBasis 2) [0, 0] (FS FZ) 512) u
   driveObservedZoomedTest 3 uw True
 driveObservedZoomedWarmup (S rem) u = App1.do
-  u1   <- stepHereditaryWith (canonDynamicsParams (ModeFactor 1 4)) u
+  u1   <- stepHereditaryWith 2 (canonDynamicsParams (ModeFactor 1 4)) u
   obsW <- observeHereditaryPure (applyExternalLens (zoomedPureLens (blackShift 1) (redShift 1) (/= emptyHMSet))) u1
   let MkPureObs u2 _ _ = obsW
   driveObservedZoomedWarmup rem u2

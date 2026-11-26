@@ -29,7 +29,7 @@ runLabSelfTrap lab mode = App1.do
   obs <- lab.labQuadrance u1
   let MkPureObs u2 initQ _ = obs
   (ea, maxQ, work, balOk) <- driveLabStepsTel lab mode 20 u2 initQ 0 True
-  let corePct = fieldCoreQuadranceFrac lab.labBasis ea.eaState
+  let corePct = fieldCoreQuadranceFrac lab.labBasis [-1, -1] [1, 2] ea.eaState
   App1.pure (MkSelfTrapReport initQ ea.eaQuad maxQ corePct ea.eaNetSum work, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
@@ -344,9 +344,9 @@ runModeParityCheck mode steps = App1.do
   let dpA = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
       dpB = seedBoundDipole (pureMSetBasis 2) [4, 5] [4, 6] 8192
   eaBgA <- bootInjectAndRun (flatLab {n = 2}) mode steps dpA
-  eaBgB <- bootInjectAndRun hereditaryLab     mode steps dpB
+  eaBgB <- bootInjectAndRun (hereditaryLab 2) mode steps dpB
   resA  <- runLabExcitation (flatLab {n = 2}) mode steps dpA eaBgA.eaState
-  resB  <- runLabExcitation hereditaryLab     mode steps dpB eaBgB.eaState
+  resB  <- runLabExcitation (hereditaryLab 2) mode steps dpB eaBgB.eaState
   App1.pure (mkParityReport eaBgA resA eaBgB resB)
 
 export
