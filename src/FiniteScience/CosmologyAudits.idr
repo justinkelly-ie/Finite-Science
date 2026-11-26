@@ -97,7 +97,7 @@ export
 collectPacedWork : (Nat, Nat) -> Nat -> EvolutionState (Space 2) -> PacedWorkStats
 collectPacedWork (oP, iT) steps st0 =
   let params         = canonDynamicsParams (ModeFactor oP iT)
-      (relic, skips) = freezeDynamicsStreamWith (spaceBasis {n = 2}) params 0 (mkGohFuel (integerToNat 1000000)) steps st0
+      (relic, skips) = freezeDynamicsStreamWith (spaceBasis {n = 2}) params 0 (mkGohBound (integerToNat 1000000)) steps st0
   in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.throttleMaxel)
 
 public export
@@ -124,7 +124,7 @@ record GohSpreadAuditReport where
   gsCoupledOk     : Bool
   gsRelicCycleOk  : Bool
   gsActivePairOk  : Bool
-  gsFuelSteps10   : Nat
+  gsBoundSteps10  : Nat
   gsYields10      : Nat
   gsSteps10       : Nat
   gsDiluteCyc     : Nat
@@ -144,13 +144,13 @@ record GohSpreadAuditReport where
 
 public export
 freezeSteps :
-  (fuelInt : Integer) ->
+  (boundInt : Integer) ->
   (steps : Nat) ->
   (s -> (StreamStep s, Nat, Nat)) ->
   s ->
   s
-freezeSteps fuelInt steps stepF s0 =
-  (fst (freezeStateStreamWith 0 (mkGohFuel (integerToNat fuelInt)) steps stepF s0)).relicState
+freezeSteps boundInt steps stepF s0 =
+  (fst (freezeStateStreamWith 0 (mkGohBound (integerToNat boundInt)) steps stepF s0)).relicState
 
 public export
 auditCoupledSourceFlow : (Bool, Integer, Integer)
@@ -172,46 +172,46 @@ auditCoupledSourceFlow =
               (statePolarityNet (fst s6) + stateFluxNet (fst s6) == 0)
   in (ok, qU3, qU6)
 
-||| One cosmological cycle where `eSrc : TopologicalRelic` (`HereditaryMSet MultisetBit`) serves as BOTH `GohFuel` clock
+||| One cosmological cycle where `eSrc : TopologicalRelic` (`HereditaryMSet MultisetBit`) serves as BOTH `GohBound` clock
 ||| AND boundary bond reservoir feeding an empty universe, quenching to the next `TopologicalRelic`.
 public export
 runRelicCycle : (qAmp : BoxInt) -> TopologicalRelic -> (TopologicalRelic, Nat, Nat, Integer, Bool)
 runRelicCycle qAmp eSrc =
-  let (MkAnyGohFuel _ yFuel, sBud) = selfFuelOfHMSet eSrc
-      fuel   = yFuel.fuelSteps
-      rCyc   = fst (freezeStateStreamWith 0 (mkGohFuel (fuel * 25)) (max 4 sBud)
+  let (MkAnyGohBound _ yBound, sBud) = selfBoundOfHMSet eSrc
+      bnd    = yBound.boundSteps
+      rCyc   = fst (freezeStateStreamWith 0 (mkGohBound (bnd * 25)) (max 4 sBud)
                                           (stepCoupledSourceFlow (pureMSetBasis 2) (canonDynamicsParams ModeLinear) qAmp)
                                           (neutral, the Configuration (castSupportHMSet eSrc)))
       uOut   = fst rCyc.relicState
       remSrc = snd rCyc.relicState
       qOut   = stateQuadrance uOut
       nextR  = the TopologicalRelic (castSupportHMSet (packEvolutionStateToRoot BoxLeaf uOut))
-      ok     = (fuel > 0) && (sBud > 0) && (rCyc.stepsConsumed > 0) &&
+      ok     = (bnd > 0) && (sBud > 0) && (rCyc.stepsConsumed > 0) &&
                (qOut > 0) && (fastPeelWorkHMSet remSrc < fastPeelWorkHMSet eSrc) &&
                (statePolarityNet uOut + stateFluxNet uOut == 0) &&
                (rCyc.freezeReason == YieldExhausted || rCyc.freezeReason == StepHorizonReached)
-  in (nextR, fuel, rCyc.stepsConsumed, qOut, ok)
+  in (nextR, bnd, rCyc.stepsConsumed, qOut, ok)
 
 public export
 runRelicChain : Nat -> BoxInt -> TopologicalRelic -> (Bool, Bool, List (Nat, Nat, Integer), TopologicalRelic)
 runRelicChain Z       _    eSrc = (True, False, [], eSrc)
 runRelicChain (S Z)   qAmp eSrc =
-  let (nextR, fuel, sw, qOut, ok) = runRelicCycle qAmp eSrc
-  in (ok, nextR == eSrc, [(fuel, sw, qOut)], nextR)
+  let (nextR, bnd, sw, qOut, ok) = runRelicCycle qAmp eSrc
+  in (ok, nextR == eSrc, [(bnd, sw, qOut)], nextR)
 runRelicChain (S rem) qAmp eSrc =
-  let (nextR, fuel, sw, qOut, ok)          = runRelicCycle qAmp eSrc
+  let (nextR, bnd, sw, qOut, ok)           = runRelicCycle qAmp eSrc
       (restOk, fixedPt, restTrace, finalR) = runRelicChain rem qAmp nextR
-  in (ok && restOk, fixedPt, (fuel, sw, qOut) :: restTrace, finalR)
+  in (ok && restOk, fixedPt, (bnd, sw, qOut) :: restTrace, finalR)
 
 public export
 seedToFirstRelic : EvolutionState PureMultiset -> TopologicalRelic
 seedToFirstRelic seedPure =
-  let (rCyc1, _) = freezeDynamicsStreamWith (pureMSetBasis 2) (canonDynamicsParams (ModeFactor 1 4)) 0 (mkGohFuel (integerToNat 600)) 5 seedPure
+  let (rCyc1, _) = freezeDynamicsStreamWith (pureMSetBasis 2) (canonDynamicsParams (ModeFactor 1 4)) 0 (mkGohBound (integerToNat 600)) 5 seedPure
   in castSupportHMSet (packEvolutionStateToRoot BoxLeaf rCyc1.relicState)
 
 public export
-auditRelicFuelChain : (Bool, Bool, Bool, Bool, List (Nat, Nat, Integer), List (Nat, Nat, Integer))
-auditRelicFuelChain =
+auditRelicBoundChain : (Bool, Bool, Bool, Bool, List (Nat, Nat, Integer), List (Nat, Nat, Integer))
+auditRelicBoundChain =
   let suppA = seedToFirstRelic (seedBoundDipole (pureMSetBasis 2) [4, 5] [4, 6] 8192)
       suppB = seedToFirstRelic (seedDirectedPulse (pureMSetBasis 2) [0, -3] (FS FZ) 2048 <+>
                                 seedDirectedPulse (pureMSetBasis 2) [0, 3] (FS FZ) 2048)
@@ -282,28 +282,28 @@ auditGohSpreadPolyHMSet =
       den28       = r1 * r1
       homogOk = all (\(d, z, b) => evalHomogPolyHMSet d z num28 den28 == 4 * b * b)
         (the (List (Nat, PureMultiset, Integer)) [(1, z1, b1), (2, z2, b2), (3, z3, b3), (4, z4, b4)])
-      (relicZ6,  yFuel6,  yUsed6,  sUsed6,  fReason6)  = freezeGohSpreadStream 6
-      (relicZ10, yFuel10, yUsed10, sUsed10, fReason10) = freezeGohSpreadStream 10
+      (relicZ6,  yBound6,  yUsed6,  sUsed6,  fReason6)  = freezeGohSpreadStream 6
+      (relicZ10, yBound10, yUsed10, sUsed10, fReason10) = freezeGohSpreadStream 10
       frzOk =
-        (relicZ6 == z6) && (yUsed6 == 4) && (sUsed6 == 6) && (yUsed6 <= yFuel6) && (fReason6 == NaturalCompletion) &&
-        (relicZ10 == z10) && (yUsed10 == 4) && (sUsed10 == 10) && (yUsed10 <= yFuel10) && (fReason10 == NaturalCompletion)
-      (MkAnyGohFuel _ yFuel12, _) = selfFuelOfHMSet z12
-      linkYieldBudget             = yFuel12.fuelSteps * 40
-      seedDense                   = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
-      pUnthrottled                = MkDynamicsParams (ModeFactor 4 1) 7 0           canonDecayNum canonDecayDen 0
-      pThrottled                  = canonDynamicsParams (ModeFactor 4 1)
-      (rDil, sDil)                = freezeDynamicsStreamWith (spaceBasis {n = 2}) pUnthrottled 0 (mkGohFuel linkYieldBudget) 25 seedDense
-      (rDen, sDen)                = freezeDynamicsStreamWith (spaceBasis {n = 2}) pThrottled   0 (mkGohFuel linkYieldBudget) 25 seedDense
-      cycDil                      = rDil.stepsConsumed
-      cycDen                      = rDen.stepsConsumed
+        (relicZ6 == z6) && (yUsed6 == 4) && (sUsed6 == 6) && (yUsed6 <= yBound6) && (fReason6 == NaturalCompletion) &&
+        (relicZ10 == z10) && (yUsed10 == 4) && (sUsed10 == 10) && (yUsed10 <= yBound10) && (fReason10 == NaturalCompletion)
+      (MkAnyGohBound _ yBound12, _) = selfBoundOfHMSet z12
+      linkYieldBudget               = yBound12.boundSteps * 40
+      seedDense                     = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
+      pUnthrottled                  = MkDynamicsParams (ModeFactor 4 1) 7 0           canonDecayNum canonDecayDen 0
+      pThrottled                    = canonDynamicsParams (ModeFactor 4 1)
+      (rDil, sDil)                  = freezeDynamicsStreamWith (spaceBasis {n = 2}) pUnthrottled 0 (mkGohBound linkYieldBudget) 25 seedDense
+      (rDen, sDen)                  = freezeDynamicsStreamWith (spaceBasis {n = 2}) pThrottled   0 (mkGohBound linkYieldBudget) 25 seedDense
+      cycDil                        = rDil.stepsConsumed
+      cycDen                        = rDen.stepsConsumed
       selfTimeOk =
         (rDil.freezeReason == YieldExhausted) && (rDen.freezeReason == YieldExhausted) &&
         (sDil == 0) && (sDen > 800) && (cycDen > cycDil)
       (coupledOk, qU3, qU6)                                         = auditCoupledSourceFlow
-      (relicCycleOk, fixA, fixB, sameAttr, relicTrace, relicTraceB) = auditRelicFuelChain
+      (relicCycleOk, fixA, fixB, sameAttr, relicTrace, relicTraceB) = auditRelicBoundChain
       (activePairOk, pQA3, pQB3, pQA6, pQB6)                        = auditActiveUniversePair
   in MkGohSpreadAuditReport factOk rootOk fibOk compOk homogOk frzOk selfTimeOk coupledOk relicCycleOk activePairOk
-                            yFuel10 yUsed10 sUsed10 cycDil cycDen sDen qU3 qU6 relicTrace relicTraceB fixA fixB sameAttr pQA3 pQB3 pQA6 pQB6
+                            yBound10 yUsed10 sUsed10 cycDil cycDen sDen qU3 qU6 relicTrace relicTraceB fixA fixB sameAttr pQA3 pQB3 pQA6 pQB6
 
 public export
 mkAudit6Lines :
@@ -322,12 +322,12 @@ mkAudit6Lines gs wDp wVac (e3D, ok3D) (gohOk, quadMonoOk, quiescenceOk, pass) =
   , "    - Fibonacci Specialization Z_n(5) == (-1)^(n-1) * 5 * F_n^2 (n=1..6): " ++ show gs.gsFibOk
   , "    - Semigroup Composition (Z_2 o Z_2 = Z_4, Z_2 o Z_3 = Z_6, Z_2 o Z_5 = Z_10, Z_3 o Z_4 = Z_12): " ++ show gs.gsComposeOk
   , "    - Exact Pythagorean Power Homogenization R_1^(2y) Z_y(4 B_1^2 / R_1^2) == 4 B_y^2 (m=28, y=1..4): " ++ show gs.gsHomogPythOk
-  , "    - Support -> selfFuelOfHMSet -> freezeTimeStreamWith(Z_6 & Z_10): ok=" ++ show gs.gsFreezeOk ++
-    " (Z_10 yieldFuel=" ++ show gs.gsFuelSteps10 ++ ", yields=" ++ show gs.gsYields10 ++
-    ", steps=" ++ show gs.gsSteps10 ++ ", skips=6 at d=3,4,6,7,8,9 cost 0 GohFuel)"
-  , "    - Live GohFuel Time Dilation (budget=1640 from Z_12): ok=" ++ show gs.gsSelfTimeOk ++
+  , "    - Support -> selfBoundOfHMSet -> freezeTimeStreamWith(Z_6 & Z_10): ok=" ++ show gs.gsFreezeOk ++
+    " (Z_10 yieldBound=" ++ show gs.gsBoundSteps10 ++ ", yields=" ++ show gs.gsYields10 ++
+    ", steps=" ++ show gs.gsSteps10 ++ ", skips=6 at d=3,4,6,7,8,9 cost 0 GohBound)"
+  , "    - Live GohBound Time Dilation (bound=1640 from Z_12): ok=" ++ show gs.gsSelfTimeOk ++
     " (unthrottled sweeps=" ++ show gs.gsDiluteCyc ++ " [0 skips] vs load-throttled dipole sweeps=" ++
-    show gs.gsDenseCyc ++ " [" ++ show gs.gsDenseSkips ++ " StreamSkips cost 0 GohFuel])"
+    show gs.gsDenseCyc ++ " [" ++ show gs.gsDenseSkips ++ " StreamSkips cost 0 GohBound])"
   , "    - Signed Coupled Reservoir Flow (E_src[3x2500=7500, y in {-4,0,8}] -> U -> cooling): ok=" ++ show gs.gsCoupledOk ++
     " (Q(U_3)=" ++ show gs.gsCoupledQ3 ++ " [E_src=[]], Q(U_6)=" ++ show gs.gsCoupledQ6 ++ " <= Q(U_3), net=0)"
   , "    - 5-Cycle TopologicalRelic Attractor & Basin Check (Dipole vs 2-Pulse): ok=" ++ show gs.gsRelicCycleOk ++
@@ -367,5 +367,87 @@ runAudit6 : Has [Console] e => LoadCoreMetrics -> App e (Bool, List String)
 runAudit6 pCan = do
   e3D <- app1 runEmergent3DLoad
   let res = buildAudit6Report pCan e3D
+  traverse_ putStrLn (snd res)
+  pure res
+
+--------------------------------------------------------------------------------
+-- AUDIT 7: DELAYED ANNIHILATION, STRING-BREAKING THRESHOLD & GOHBOUND LIFETIME
+--------------------------------------------------------------------------------
+
+public export
+countCoreResidenceSweeps : Nat -> DynamicsParams -> EvolutionState (Space 2) -> (Nat, Integer)
+countCoreResidenceSweeps Z       _      st = (0, fieldCoreQuadranceFrac (spaceBasis {n = 2}) st)
+countCoreResidenceSweeps (S rem) params st =
+  let (st1, _) = stepDynamicsWith (spaceBasis {n = 2}) params st
+      cPct     = fieldCoreQuadranceFrac (spaceBasis {n = 2}) st1
+      (k, fin) = countCoreResidenceSweeps rem params st1
+  in (if cPct >= 75 then S k else k, fin)
+
+public export
+buildAudit7Report : (Bool, List String)
+buildAudit7Report =
+  let ax2    = spaceBasis {n = 2}
+      pSpr   = canonDynamicsParams (ModeFactor 1 4)
+      (r0, sk0) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 12 (seedBoundDipole ax2 [0, 0] [0, 0] 1400)
+      collapse0Ok =
+        (r0.freezeReason == NaturalCompletion) && (r0.stepsConsumed == 0) &&
+        (r0.yieldsConsumed == 0) && (sk0 == 0) && (stateQuadrance r0.relicState == 0)
+      seedD1 = seedBoundDipole ax2 [0, 0] [0, 1] 1400
+      seedD6 = seedBoundDipole ax2 [0, -3] [0, 3] 1400
+      (r1, sk1) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 12 seedD1
+      (r6, sk6) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 12 seedD6
+      thr1   = maxelNodeCount r1.relicState.throttleMaxel
+      thr6   = maxelNodeCount r6.relicState.throttleMaxel
+      (_, sk1A4) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 4 seedD1
+      (_, sk1B4) = freezeDynamicsStreamWith (pureMSetBasis 2) pSpr 0 (mkGohBound 100000) 4
+                     (seedBoundDipole (pureMSetBasis 2) [0, 0] [0, 1] 1400)
+      (_, sk6B4) = freezeDynamicsStreamWith (pureMSetBasis 2) pSpr 0 (mkGohBound 100000) 4
+                     (seedBoundDipole (pureMSetBasis 2) [0, -3] [0, 3] 1400)
+      stringBreakOk =
+        (stateQuadrance seedD1 == 7840000) && (stateQuadrance seedD6 == 7840000) &&
+        (r1.stepsConsumed == 12) && (r6.stepsConsumed == 12) &&
+        (sk1 > 0) && (thr1 > 0) && (sk6 == 0) && (thr6 == 0) &&
+        (r6.yieldsConsumed > r1.yieldsConsumed) &&
+        (sk1B4 == sk1A4) && (sk1B4 > 0) && (sk6B4 == 0) &&
+        (stateQuadrance r1.relicState <= stateQuadrance seedD1) &&
+        (stateQuadrance r6.relicState <= stateQuadrance seedD6) &&
+        (statePolarityNet r1.relicState + stateFluxNet r1.relicState == 0) &&
+        (statePolarityNet r6.relicState + stateFluxNet r6.relicState == 0)
+      dp4096 = seedBoundDipole ax2 [0, 0] [0, 1] 4096
+      (tauLin, finLin)   = countCoreResidenceSweeps 20 (canonDynamicsParams ModeLinear) dp4096
+      (tauTrap, finTrap) = countCoreResidenceSweeps 20 pSpr dp4096
+      (MkAnyGohBound _ gb12, _) = selfBoundOfHMSet (spreadZHMSet 12)
+      quota  = gb12.boundSteps * 40
+      dp8192 = seedBoundDipole ax2 [0, 0] [0, 1] 8192
+      pFast  = MkDynamicsParams (ModeFactor 4 1) 7 0 canonDecayNum canonDecayDen 0
+      pBrake = canonDynamicsParams (ModeFactor 4 1)
+      (rFast, skFast)   = freezeDynamicsStreamWith ax2 pFast  0 (mkGohBound quota) 25 dp8192
+      (rBrake, skBrake) = freezeDynamicsStreamWith ax2 pBrake 0 (mkGohBound quota) 25 dp8192
+      lifetimeOk =
+        (tauTrap >= 18) && (tauTrap > tauLin) && (finTrap >= 85) && (finLin <= 65) &&
+        (rFast.freezeReason == YieldExhausted) && (rBrake.freezeReason == YieldExhausted) &&
+        (skFast == 0) && (skBrake > 800) && (rBrake.stepsConsumed >= 3 * rFast.stepsConsumed)
+      pass = collapse0Ok && stringBreakOk && lifetimeOk
+      lines =
+        [ "----------------------------------------------------------------"
+        , "[Audit 7] Delayed Annihilation, String-Breaking Threshold & GohBound Lifetime"
+        , "  * 7-A Coincident d=0 Vacuum Collapse: ok=" ++ show collapse0Ok ++
+          " (reason=" ++ show r0.freezeReason ++ ", steps=" ++ show r0.stepsConsumed ++
+          ", yields=" ++ show r0.yieldsConsumed ++ ", Q=" ++ show (stateQuadrance r0.relicState) ++ ")"
+        , "  * 7-B Pair-Separation / String-Breaking Threshold (amp=1400, Q0=7840000, 12 sweeps): ok=" ++ show stringBreakOk
+        , "    - d=1 bound  ([0,0]/[0,1]) : yields=" ++ show r1.yieldsConsumed ++ ", skips=" ++ show sk1 ++ ", thrNodes=" ++ show thr1
+        , "    - d=6 broken ([0,-3]/[0,3]): yields=" ++ show r6.yieldsConsumed ++ ", skips=" ++ show sk6 ++ ", thrNodes=" ++ show thr6
+        , "    - Hereditary 4-sweep parity: d=1 skips=" ++ show sk1B4 ++ " (flat=" ++ show sk1A4 ++ "), d=6 skips=" ++ show sk6B4
+        , "  * 7-C Obstructed vs Unobstructed Core Residence & GohBound Lifetime: ok=" ++ show lifetimeOk
+        , "    - Core>=75% sweeps (amp=4096, 20 sweeps): linear=" ++ show tauLin ++ " (fin=" ++ show finLin ++ "%) vs obstructed=" ++ show tauTrap ++ " (fin=" ++ show finTrap ++ "%)"
+        , "    - Intrinsic GohBound=" ++ show quota ++ " (Z_12): unobstructed=" ++ show rFast.stepsConsumed ++ " sweeps (skips=" ++ show skFast ++ ") vs braked=" ++ show rBrake.stepsConsumed ++ " sweeps (skips=" ++ show skBrake ++ ")"
+        , "  -> Audit 7 pass=" ++ show pass
+        ]
+  in (pass, lines)
+
+export
+runAudit7 : Has [Console] e => App e (Bool, List String)
+runAudit7 = do
+  let res = buildAudit7Report
   traverse_ putStrLn (snd res)
   pure res

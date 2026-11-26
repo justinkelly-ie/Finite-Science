@@ -281,8 +281,8 @@ runAudit3 : Has [Console] e => App e (Bool, List String)
 runAudit3 = do
   let h = "----------------------------------------------------------------"
   let t = "[Audit 3] Horizon Cutoffs (`RetroTime 0` vs `RetroTime 2`) & Non-Interfering Lenses"
-  let coarseSpec = mkPolyFuelHorizonSpec 10 0
-  let deepUVSpec = mkPolyFuelHorizonSpec 10 2
+  let coarseSpec = mkPolyBoundHorizonSpec 10 0
+  let deepUVSpec = mkPolyBoundHorizonSpec 10 2
   (cA0, msgA0) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runFlatHorizonProbe coarseSpec))
   (cA2, msgA2) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runFlatHorizonProbe deepUVSpec))
   (cB0, msgB0) <- probeFrozenCycles (the (App (UniverseErr :: e) HorizonObservationReport) (runHereditaryHorizonProbe coarseSpec protonMSet))
