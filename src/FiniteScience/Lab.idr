@@ -19,7 +19,7 @@ import FinScLens
 public export
 record StepTel where
   constructor MkStepTel
-  stQuad  : Integer
+  stQuad  : BoxInt
   stWork  : Nat
   stBalOk : Bool
 
@@ -27,11 +27,11 @@ public export
 record EndAudit (k : Type) where
   constructor MkEndAudit
   eaState  : EvolutionState k
-  eaQuad   : Integer
+  eaQuad   : BoxInt
   eaAntiOk : Bool
   eaSymOk  : Bool
   eaBalOk  : Bool
-  eaNetSum : Integer
+  eaNetSum : BoxInt
 
 public export
 record BlackBoxLab (e : List Error) (box : Type) (k : Type) where
@@ -40,7 +40,7 @@ record BlackBoxLab (e : List Error) (box : Type) (k : Type) where
   labBoot      : App1 e box
   labInject    : EvolutionState k -> (1 u : box) -> App1 e box
   labStepMode  : StepMode -> (1 u : box) -> App1 e box
-  labQuadrance : (1 u : box) -> App1 e (PureObservation u Integer)
+  labQuadrance : (1 u : box) -> App1 e (PureObservation u BoxInt)
   labStepTel   : (1 u : box) -> App1 e (PureObservation u StepTel)
   labEndAudit  : (1 u : box) -> App1 {u = Any} e (EndAudit k)
 
@@ -63,7 +63,7 @@ hereditaryEndAudit u = App1.do
   let st     = (unpackRootToEvolutionState finRoot).stateData
       balOk  = verifyRootBalancedDipoles finRoot
       lensOk = zoomedBack == finRoot
-      rNet   = unwrapBox (sumHMSet finRoot)
+      rNet   = sumHMSet finRoot
       closed = classifyHereditaryClose finRoot
       netW   = abs rNet + abs (closeNetSum closed)
   App1.pure (MkEndAudit st (stateQuadrance st)
@@ -126,10 +126,10 @@ driveLabStepsTel :
   StepMode ->
   (rem : Nat) ->
   (1 u : box) ->
-  (maxQ : Integer) ->
+  (maxQ : BoxInt) ->
   (accWork : Nat) ->
   (balOk : Bool) ->
-  App1 {u = Any} e (EndAudit k, Integer, Nat, Bool)
+  App1 {u = Any} e (EndAudit k, BoxInt, Nat, Bool)
 driveLabStepsTel lab _ Z u maxQ accWork balOk = App1.do
   ea <- lab.labEndAudit u
   App1.pure (ea, maxQ, accWork, balOk && ea.eaBalOk)

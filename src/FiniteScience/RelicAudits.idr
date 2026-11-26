@@ -81,15 +81,15 @@ emergent3DCriteriaOk r =
   (r.e3VacZ.polarityNetSum == 0) &&
   (r.e3TopZ.polarityNetSum == 0) &&
   (r.e3BotZ.polarityNetSum == 0) &&
-  (r.e3VacZ.meanYMilli == 500) &&
+  (r.e3VacZ.meanY == MkProportion 1 2) &&
   (r.e3VacZ.fluxYAccum == 0) &&
-  (r.e3TopZ.meanXMilli < r.e3VacZ.meanXMilli) &&
-  (r.e3TopZ.meanYMilli > 500) &&
+  propLt r.e3TopZ.meanX r.e3VacZ.meanX &&
+  propGt r.e3TopZ.meanY (MkProportion 1 2) &&
   (r.e3TopZ.fluxYAccum /= 0) &&
-  (r.e3BotZ.meanXMilli == r.e3TopZ.meanXMilli) &&
-  (r.e3BotZ.meanYMilli < 500) &&
-  (r.e3TopZ.meanYMilli + r.e3BotZ.meanYMilli == 999) &&
-  (r.e3BotZ.fluxYAccum == -(r.e3TopZ.fluxYAccum)) &&
+  (r.e3BotZ.meanX == r.e3TopZ.meanX) &&
+  propLt r.e3BotZ.meanY (MkProportion 1 2) &&
+  (addProportion r.e3TopZ.meanY r.e3BotZ.meanY == MkProportion 1 1) &&
+  (r.e3BotZ.fluxYAccum == negate r.e3TopZ.fluxYAccum) &&
   (r.e3TopZ.finalQuadrance <= r.e3TopZ.initQuadrance) &&
   (r.e3BotZ.finalQuadrance <= r.e3BotZ.initQuadrance)
 
@@ -101,15 +101,15 @@ collectPacedWork (oP, iT) steps st0 =
   in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.throttleMaxel)
 
 public export
-pacedSkipPct : Nat -> Nat -> Integer
-pacedSkipPct y s =
-  if y + s == 0 then 0 else divIntegerPos (cast s * 100) (cast (y + s))
+pacedSkipShare : Nat -> Nat -> Proportion
+pacedSkipShare y s =
+  if y + s == 0 then MkProportion 0 1 else MkProportion (cast s) (cast (y + s))
 
 public export
 showPacedStats : PacedWorkStats -> String
 showPacedStats w =
   "yields=" ++ show w.pwYields ++ ", skips=" ++ show w.pwSkips ++
-  " (" ++ show (pacedSkipPct w.pwYields w.pwSkips) ++ "%), throttleNodes=" ++ show w.pwNodes
+  " (" ++ show (pacedSkipShare w.pwYields w.pwSkips) ++ "), throttleNodes=" ++ show w.pwNodes
 
 public export
 record GohSpreadAuditReport where
@@ -130,20 +130,20 @@ record GohSpreadAuditReport where
   gsDiluteCyc     : Nat
   gsDenseCyc      : Nat
   gsDenseSkips    : Nat
-  gsCoupledQ3     : Integer
-  gsCoupledQ6     : Integer
-  gsRelicTrace    : List (Nat, Nat, Integer)
-  gsRelicTraceB   : List (Nat, Nat, Integer)
+  gsCoupledQ3     : BoxInt
+  gsCoupledQ6     : BoxInt
+  gsRelicTrace    : List (Nat, Nat, BoxInt)
+  gsRelicTraceB   : List (Nat, Nat, BoxInt)
   gsRelicFixedA   : Bool
   gsRelicFixedB   : Bool
   gsSameAttractor : Bool
-  gsPairQA3       : Integer
-  gsPairQB3       : Integer
-  gsPairQA6       : Integer
-  gsPairQB6       : Integer
+  gsPairQA3       : BoxInt
+  gsPairQB3       : BoxInt
+  gsPairQA6       : BoxInt
+  gsPairQB6       : BoxInt
 
 public export
-auditCoupledSourceFlow : (Bool, Integer, Integer)
+auditCoupledSourceFlow : (Bool, BoxInt, BoxInt)
 auditCoupledSourceFlow =
   let eSrc0 : Configuration
       eSrc0 = wrapBox (mkPureCoord [0, 8]) + wrapBox (mkPureCoord [0, -4]) + wrapBox (mkPureCoord [0, 0])
@@ -166,7 +166,7 @@ auditCoupledSourceFlow =
 ||| One cosmological cycle where `eSrc : TopologicalRelic` (`HereditaryMSet MultisetBit`) serves as BOTH `GohBound` clock
 ||| AND boundary bond reservoir feeding an empty universe, quenching to the next `TopologicalRelic`.
 public export
-runRelicCycle : (qAmp : BoxInt) -> TopologicalRelic -> (TopologicalRelic, Nat, Nat, Integer, Bool)
+runRelicCycle : (qAmp : BoxInt) -> TopologicalRelic -> (TopologicalRelic, Nat, Nat, BoxInt, Bool)
 runRelicCycle qAmp eSrc =
   let (MkAnyGohBound _ yBound, sBud) = selfBoundOfHMSet eSrc
       bnd    = yBound.boundSteps
@@ -184,7 +184,7 @@ runRelicCycle qAmp eSrc =
   in (nextR, bnd, rCyc.stepsConsumed, qOut, ok)
 
 public export
-runRelicChain : Nat -> BoxInt -> TopologicalRelic -> (Bool, Bool, List (Nat, Nat, Integer), TopologicalRelic)
+runRelicChain : Nat -> BoxInt -> TopologicalRelic -> (Bool, Bool, List (Nat, Nat, BoxInt), TopologicalRelic)
 runRelicChain Z       _    eSrc = (True, False, [], eSrc)
 runRelicChain (S Z)   qAmp eSrc =
   let (nextR, bnd, sw, qOut, ok) = runRelicCycle qAmp eSrc
@@ -202,7 +202,7 @@ seedToFirstRelic seedPure =
   in castSupportHMSet (packEvolutionStateToRoot BoxLeaf rCyc1.relicState)
 
 public export
-auditRelicBoundChain : (Bool, Bool, Bool, Bool, List (Nat, Nat, Integer), List (Nat, Nat, Integer))
+auditRelicBoundChain : (Bool, Bool, Bool, Bool, List (Nat, Nat, BoxInt), List (Nat, Nat, BoxInt))
 auditRelicBoundChain =
   let suppA = seedToFirstRelic (seedBoundDipole (pureMSetBasis 2) [4, 5] [4, 6] 8192)
       suppB = seedToFirstRelic (seedDirectedPulse (pureMSetBasis 2) [0, -3] (FS FZ) 2048 <+>
@@ -212,7 +212,7 @@ auditRelicBoundChain =
   in (okA && okB && fixA, fixA, fixB, lastA == lastB, trA, trB)
 
 public export
-auditActiveUniversePair : (Bool, Integer, Integer, Integer, Integer)
+auditActiveUniversePair : (Bool, BoxInt, BoxInt, BoxInt, BoxInt)
 auditActiveUniversePair =
   let ax2        = spaceBasis {n = 2}
       seam       = (seedEdgeFlux ax2 [0, 0] [1, 0] 1 <+> seedEdgeFlux ax2 [0, 1] [1, 1] 1).polarityMaxel
@@ -242,8 +242,8 @@ auditGohSpreadPolyHMSet =
   let z1 = spreadZHMSet 1;  z2 = spreadZHMSet 2;  z3 = spreadZHMSet 3;   z4 = spreadZHMSet 4
       z5 = spreadZHMSet 5;  z6 = spreadZHMSet 6;  z7 = spreadZHMSet 7;   z8 = spreadZHMSet 8
       z9 = spreadZHMSet 9;  z10 = spreadZHMSet 10; z11 = spreadZHMSet 11; z12 = spreadZHMSet 12
-      psiTbl = gohPsiTableUpTo 12
-      psi    = \d => fromMaybe 1 (lookup d psiTbl)
+      psiTbl = gohPsiMaxelUpTo 12
+      psi    = \d => lookupGohPsi d psiTbl
       factOk = all id
         [ z1 == psi 1, z2 == psi 1 * psi 2, z3 == psi 1 * psi 3
         , z4 == psi 1 * psi 2 * psi 4, z5 == psi 1 * psi 5
@@ -254,17 +254,17 @@ auditGohSpreadPolyHMSet =
         , z12 == psi 1 * psi 2 * psi 3 * psi 4 * psi 6 * psi 12
         ]
       rootOk = all id
-        [ evalPolyHMSetAt (psi 2)  (the Integer 2) == 2,   evalPolyHMSetAt (psi 3)  (the Integer 3) == 0
-        , evalPolyHMSetAt (psi 4)  (the Integer 2) == 0,   evalPolyHMSetAt (psi 6)  (the Integer 1) == 0
-        , evalPolyHMSetAt (psi 2)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 3)  (the Integer 0) == 9
-        , evalPolyHMSetAt (psi 4)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 5)  (the Integer 0) == 25
-        , evalPolyHMSetAt (psi 6)  (the Integer 0) == 1,   evalPolyHMSetAt (psi 7)  (the Integer 0) == 49
-        , evalPolyHMSetAt (psi 8)  (the Integer 0) == 4,   evalPolyHMSetAt (psi 9)  (the Integer 0) == 9
-        , evalPolyHMSetAt (psi 10) (the Integer 0) == 1,   evalPolyHMSetAt (psi 11) (the Integer 0) == 121
-        , evalPolyHMSetAt (psi 12) (the Integer 0) == 1
+        [ evalPolyHMSetAt (psi 2)  (the BoxInt 2) == 2,   evalPolyHMSetAt (psi 3)  (the BoxInt 3) == 0
+        , evalPolyHMSetAt (psi 4)  (the BoxInt 2) == 0,   evalPolyHMSetAt (psi 6)  (the BoxInt 1) == 0
+        , evalPolyHMSetAt (psi 2)  (the BoxInt 0) == 4,   evalPolyHMSetAt (psi 3)  (the BoxInt 0) == 9
+        , evalPolyHMSetAt (psi 4)  (the BoxInt 0) == 4,   evalPolyHMSetAt (psi 5)  (the BoxInt 0) == 25
+        , evalPolyHMSetAt (psi 6)  (the BoxInt 0) == 1,   evalPolyHMSetAt (psi 7)  (the BoxInt 0) == 49
+        , evalPolyHMSetAt (psi 8)  (the BoxInt 0) == 4,   evalPolyHMSetAt (psi 9)  (the BoxInt 0) == 9
+        , evalPolyHMSetAt (psi 10) (the BoxInt 0) == 1,   evalPolyHMSetAt (psi 11) (the BoxInt 0) == 121
+        , evalPolyHMSetAt (psi 12) (the BoxInt 0) == 1
         ]
-      fibOk = all (\(z, v) => evalPolyHMSetAt z (the Integer 5) == v)
-        (the (List (PureMultiset, Integer)) [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)])
+      fibOk = all (\(z, v) => evalPolyHMSetAt z (the BoxInt 5) == v)
+        (the (List (PureMultiset, BoxInt)) [(z1, 5), (z2, -5), (z3, 20), (z4, -45), (z5, 125), (z6, -320)])
       compOk = all (\(p, q, r) => evalPolyHMSetAt p q == r)
         [(z2, z2, z4), (z2, z3, z6), (z3, z2, z6), (z2, z4, z8), (z3, z3, z9), (z2, z5, z10), (z5, z2, z10), (z3, z4, z12), (z4, z3, z12)]
       MkQuadraticTriple _ b1 r1 = pythPowerTriple 1 (MkBoxInt 28)
@@ -274,7 +274,7 @@ auditGohSpreadPolyHMSet =
       num28       = 4 * b1 * b1
       den28       = r1 * r1
       homogOk = all (\(d, z, b) => evalHomogPolyHMSet d z num28 den28 == 4 * b * b)
-        (the (List (Nat, PureMultiset, Integer)) [(1, z1, b1), (2, z2, b2), (3, z3, b3), (4, z4, b4)])
+        (the (List (Nat, PureMultiset, BoxInt)) [(1, z1, b1), (2, z2, b2), (3, z3, b3), (4, z4, b4)])
       (relicZ6,  yBound6,  yUsed6,  sUsed6,  fReason6)  = freezeGohSpreadStream 6
       (relicZ10, yBound10, yUsed10, sUsed10, fReason10) = freezeGohSpreadStream 10
       frzOk =
@@ -283,7 +283,7 @@ auditGohSpreadPolyHMSet =
       (MkAnyGohBound _ yBound12, _) = selfBoundOfHMSet z12
       linkYieldBudget               = yBound12.boundSteps * 40
       seedDense                     = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
-      pUnthrottled                  = MkDynamicsParams (ModeFactor 4 1) 7 0           canonDecayNum canonDecayDen 0
+      pUnthrottled                  = { dpLagDiv := 0, dpLinkCoup := 0 } (canonDynamicsParams (ModeFactor 4 1))
       pThrottled                    = canonDynamicsParams (ModeFactor 4 1)
       (rDil, sDil)                  = freezeStateStreamWith 0 (MkGohBound {capacity = 0} linkYieldBudget) 25 (stepDynamicsStreamWith (spaceBasis {n = 2}) pUnthrottled) seedDense
       (rDen, sDen)                  = freezeStateStreamWith 0 (MkGohBound {capacity = 0} linkYieldBudget) 25 (stepDynamicsStreamWith (spaceBasis {n = 2}) pThrottled)   seedDense
@@ -350,8 +350,8 @@ buildAudit6Report pCan e3D =
       ok3D         = emergent3DCriteriaOk e3D
       quadMonoOk   = coreQuadranceMonoOk pCan
       quiescenceOk =
-        (pacedSkipPct wDp.pwYields wDp.pwSkips >= 30) &&
-        (pacedSkipPct wVac.pwYields wVac.pwSkips <= 2)
+        propGe (pacedSkipShare wDp.pwYields wDp.pwSkips) (MkProportion 3 10) &&
+        propLt (pacedSkipShare wVac.pwYields wVac.pwSkips) (MkProportion 3 100)
       pass         = gohOk && ok3D && quadMonoOk && quiescenceOk
   in (pass, mkAudit6Lines gs wDp wVac (e3D, ok3D) (gohOk, quadMonoOk, quiescenceOk, pass))
 
@@ -368,13 +368,13 @@ runAudit6 pCan = do
 --------------------------------------------------------------------------------
 
 public export
-countCoreResidenceSweeps : Nat -> DynamicsParams -> EvolutionState (Space 2) -> (Nat, Integer)
-countCoreResidenceSweeps Z       _      st = (0, fieldCoreQuadranceFrac (spaceBasis {n = 2}) [-1, -1] [1, 2] st)
+countCoreResidenceSweeps : Nat -> DynamicsParams -> EvolutionState (Space 2) -> (Nat, Proportion)
+countCoreResidenceSweeps Z       _      st = (0, fieldCoreQuadranceShare (spaceBasis {n = 2}) [-1, -1] [1, 2] st)
 countCoreResidenceSweeps (S rem) params st =
   let (st1, _) = stepDynamicsWith (spaceBasis {n = 2}) params st
-      cPct     = fieldCoreQuadranceFrac (spaceBasis {n = 2}) [-1, -1] [1, 2] st1
+      cShare   = fieldCoreQuadranceShare (spaceBasis {n = 2}) [-1, -1] [1, 2] st1
       (k, fin) = countCoreResidenceSweeps rem params st1
-  in (if cPct >= 75 then S k else k, fin)
+  in (if propGe cShare (MkProportion 3 4) then S k else k, fin)
 
 public export
 buildAudit7Report : (Bool, List String)
@@ -415,12 +415,13 @@ buildAudit7Report =
       (MkAnyGohBound _ gb12, _) = selfBoundOfHMSet (spreadZHMSet 12)
       quota  = gb12.boundSteps * 40
       dp8192 = seedBoundDipole ax2 [0, 0] [0, 1] 8192
-      pFast  = MkDynamicsParams (ModeFactor 4 1) 7 0 canonDecayNum canonDecayDen 0
+      pFast  = { dpLagDiv := 0, dpLinkCoup := 0 } (canonDynamicsParams (ModeFactor 4 1))
       pBrake = canonDynamicsParams (ModeFactor 4 1)
       (rFast, skFast)   = freezeStateStreamWith 0 (MkGohBound {capacity = 0} quota) 25 (stepDynamicsStreamWith ax2 pFast)  dp8192
       (rBrake, skBrake) = freezeStateStreamWith 0 (MkGohBound {capacity = 0} quota) 25 (stepDynamicsStreamWith ax2 pBrake) dp8192
       lifetimeOk =
-        (tauTrap >= 18) && (tauTrap > tauLin) && (finTrap >= 85) && (finLin <= 65) &&
+        (tauTrap >= 18) && (tauTrap > tauLin) &&
+        propGe finTrap (MkProportion 85 100) && propLt finLin (MkProportion 66 100) &&
         (rFast.freezeReason == YieldExhausted) && (rBrake.freezeReason == YieldExhausted) &&
         (skFast == 0) && (skBrake > 800) && (rBrake.stepsConsumed >= 3 * rFast.stepsConsumed)
       pass = collapse0Ok && stringBreakOk && lifetimeOk
@@ -435,7 +436,7 @@ buildAudit7Report =
         , "    - d=6 broken ([0,-3]/[0,3]): yields=" ++ show r6.yieldsConsumed ++ ", skips=" ++ show sk6 ++ ", thrNodes=" ++ show thr6
         , "    - Hereditary 4-sweep parity: d=1 skips=" ++ show sk1B4 ++ " (flat=" ++ show sk1A4 ++ "), d=6 skips=" ++ show sk6B4
         , "  * 7-C Obstructed vs Unobstructed Core Residence & GohBound Lifetime: ok=" ++ show lifetimeOk
-        , "    - Core>=75% sweeps (amp=4096, 20 sweeps): linear=" ++ show tauLin ++ " (fin=" ++ show finLin ++ "%) vs obstructed=" ++ show tauTrap ++ " (fin=" ++ show finTrap ++ "%)"
+        , "    - Core>=75% sweeps (amp=4096, 20 sweeps): linear=" ++ show tauLin ++ " (fin=" ++ show finLin ++ ") vs obstructed=" ++ show tauTrap ++ " (fin=" ++ show finTrap ++ ")"
         , "    - Intrinsic GohBound=" ++ show quota ++ " (Z_12): unobstructed=" ++ show rFast.stepsConsumed ++ " sweeps (skips=" ++ show skFast ++ ") vs braked=" ++ show rBrake.stepsConsumed ++ " sweeps (skips=" ++ show skBrake ++ ")"
         , "  -> Audit 7 pass=" ++ show pass
         ]

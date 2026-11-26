@@ -29,8 +29,8 @@ runLabSelfTrap lab mode = App1.do
   obs <- lab.labQuadrance u1
   let MkPureObs u2 initQ _ = obs
   (ea, maxQ, work, balOk) <- driveLabStepsTel lab mode 20 u2 initQ 0 True
-  let corePct = fieldCoreQuadranceFrac lab.labBasis [-1, -1] [1, 2] ea.eaState
-  App1.pure (MkSelfTrapReport initQ ea.eaQuad maxQ corePct ea.eaNetSum work, (ea.eaAntiOk, ea.eaSymOk, balOk))
+  let coreShare = fieldCoreQuadranceShare lab.labBasis [-1, -1] [1, 2] ea.eaState
+  App1.pure (MkSelfTrapReport initQ ea.eaQuad maxQ coreShare ea.eaNetSum work, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
 runLabExcitationAxis :
@@ -71,7 +71,7 @@ runLabTwoBody :
   BlackBoxLab e box k ->
   StepMode ->
   Bool ->
-  App1 {u = Any} e (ExcitationReport, ExcitationReport, Integer, (Bool, Bool, Bool))
+  App1 {u = Any} e (ExcitationReport, ExcitationReport, BoxInt, (Bool, Bool, Bool))
 runLabTwoBody lab mode bothPulses = App1.do
   let seed = seedDirectedPulse lab.labBasis [0, -3] (FS FZ) 2048 <+>
              (if bothPulses then seedDirectedPulse lab.labBasis [0, 3] (FS FZ) 2048 else neutral)
@@ -104,8 +104,8 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
       wDp2    = measureBandAxis lab.labBasis (axisAtom 1) (-3) 4 eaDp2.eaState  eaBg2.eaState eaDp2.eaQuad  eaDp2.eaQuad  eaDp2.eaQuad  0
   App1.pure (MkCausalLightConeReport
                exactSl
-               wVac2.meanXMilli wDp2.meanXMilli wDp2.fluxYAccum
-               vRep18.meanXMilli tRep18.meanXMilli tRep18.meanYMilli tRep18.fluxYAccum,
+               wVac2.meanX wDp2.meanX wDp2.fluxYAccum
+               vRep18.meanX tRep18.meanX tRep18.meanY tRep18.fluxYAccum,
              balOk, symOk)
 
 public export
@@ -137,8 +137,8 @@ runLabAnisotropicStress lab mode = App1.do
       netTot = eaQH.eaNetSum + eaQV.eaNetSum + eaBgH.eaNetSum + eaBgV.eaNetSum + mH.polarityNetSum + mV.polarityNetSum
   App1.pure (MkAnisotropicStressReport
                qH qV
-               mH.meanXMilli mH.meanYMilli mH.fluxYAccum
-               mV.meanXMilli mV.meanYMilli mV.fluxYAccum
+               mH.meanX mH.meanY mH.fluxYAccum
+               mV.meanX mV.meanY mV.fluxYAccum
                symOk netTot,
              balOk)
 
@@ -146,7 +146,7 @@ public export
 record LoadCoreMetrics where
   constructor MkLoadCoreMetrics
   lcWork      : Nat
-  lcNetSum    : Integer
+  lcNetSum    : BoxInt
   lcAntiOk    : Bool
   lcSymOk     : Bool
   lcBalOk     : Bool
@@ -181,7 +181,7 @@ runLabCoreSuite lab mode = App1.do
   (blBot, _,     net2L, (anti2L, sym2L, bal2L)) <- runLabTwoBody lab ModeLinear True
   (coneRep, balLC, symLC) <- runLabLightCone lab mode vRep tRep
   (asRep, balAS)          <- runLabAnisotropicStress lab mode
-  let tbRep = MkTwoBodyReport b2Bot.meanYMilli b2Top.meanYMilli b1Bot.meanYMilli
+  let tbRep = MkTwoBodyReport b2Bot.meanY b2Top.meanY b1Bot.meanY
                               b2Bot.fluxYAccum b2Top.fluxYAccum
                               b1Bot.fluxYAccum blBot.fluxYAccum
                               b2Bot.initQuadrance b2Bot.finalQuadrance b2Bot.maxQuadrance net2B
@@ -208,17 +208,17 @@ selfTrapCriteriaOk linRep trapRep =
   (trapRep.finalQuadrance <= trapRep.initQuadrance) &&
   (trapRep.maxQuadrance <= trapRep.initQuadrance) &&
   (trapRep.finalQuadrance * 100 >= trapRep.initQuadrance * 95) &&
-  (trapRep.coreFracPct >= 85) &&
-  (trapRep.coreFracPct > linRep.coreFracPct + 25)
+  propGe trapRep.coreShare (MkProportion 85 100) &&
+  propGt trapRep.coreShare (addProportion linRep.coreShare (MkProportion 1 4))
 
 public export
 twoBodyCriteriaOk : TwoBodyReport -> Bool
 twoBodyCriteriaOk tb =
   (tb.tbNetSum == 0) &&
-  (tb.tbBotYMilli > tb.tbSingleBotYMilli + 40) &&
-  (tb.tbBotYMilli + tb.tbTopYMilli == 1000) &&
+  propGt tb.tbBotY (addProportion tb.tbSingleBotY (MkProportion 1 25)) &&
+  (addProportion tb.tbBotY tb.tbTopY == MkProportion 1 1) &&
   (tb.tbBotSy > 250000) &&
-  (tb.tbTopSy == -(tb.tbBotSy)) &&
+  (tb.tbTopSy == negate tb.tbBotSy) &&
   (tb.tbSingleBotSy < 0) &&
   (tb.tbLinearBotSy < 0) &&
   (tb.tbFinalQ <= tb.tbInitQ) &&
@@ -231,8 +231,8 @@ lightConeCriteriaOk lc =
   lc.clSpacelikeExact &&
   (lc.clEarlyDpX == lc.clEarlyVacX) &&
   (lc.clEarlyDpSy == 0) &&
-  (lc.clLateDpX < lc.clLateVacX) &&
-  (lc.clLateDpY > 530) &&
+  propLt lc.clLateDpX lc.clLateVacX &&
+  propGt lc.clLateDpY (MkProportion 53 100) &&
   (lc.clLateDpSy > 200000)
 
 public export
@@ -242,14 +242,14 @@ anisotropicStressCriteriaOk a =
   (a.asNetSum == 0) &&
   (a.asQuadHoriz > 100000000) &&
   (a.asQuadVert < -100000000) &&
-  (a.asProbeHorizX + 20 < a.asProbeVertX) &&
-  (a.asProbeHorizY > a.asProbeVertY) &&
+  propLt (addProportion a.asProbeHorizX (MkProportion 1 50)) a.asProbeVertX &&
+  propGt a.asProbeHorizY a.asProbeVertY &&
   (a.asProbeHorizSy > a.asProbeVertSy + 100000)
 
 public export
 deflection4BCriteriaOk : LoadCoreMetrics -> Bool
 deflection4BCriteriaOk m =
-  let symSum = m.lcTop.meanYMilli + m.lcBot.meanYMilli
+  let symSum = addProportion m.lcTop.meanY m.lcBot.meanY
   in (m.lcVac.polarityNetSum == 0) &&
      (m.lcTop.polarityNetSum == 0) &&
      (m.lcBot.polarityNetSum == 0) &&
@@ -261,15 +261,15 @@ deflection4BCriteriaOk m =
      (m.lcBot.finalQuadrance <= m.lcBot.initQuadrance) &&
      (m.lcBot.maxQuadrance <= m.lcBot.initQuadrance) &&
      (m.lcTop.finalQuadrance * 100 >= m.lcTop.initQuadrance * 97) &&
-     (m.lcVac.meanYMilli == 500) &&
+     (m.lcVac.meanY == MkProportion 1 2) &&
      (m.lcVac.fluxYAccum == 0) &&
-     (m.lcTop.meanXMilli + 50 < m.lcVac.meanXMilli) &&
-     (m.lcTop.meanYMilli > 530) &&
+     propLt (addProportion m.lcTop.meanX (MkProportion 1 20)) m.lcVac.meanX &&
+     propGt m.lcTop.meanY (MkProportion 53 100) &&
      (m.lcTop.fluxYAccum > 200000) &&
-     (m.lcBot.meanXMilli == m.lcTop.meanXMilli) &&
-     (m.lcBot.meanYMilli < 500) &&
-     (m.lcBot.fluxYAccum == -(m.lcTop.fluxYAccum)) &&
-     (symSum == 999) &&
+     (m.lcBot.meanX == m.lcTop.meanX) &&
+     propLt m.lcBot.meanY (MkProportion 1 2) &&
+     (m.lcBot.fluxYAccum == negate m.lcTop.fluxYAccum) &&
+     (symSum == MkProportion 1 1) &&
      (m.lcBot.finalQuadrance == m.lcTop.finalQuadrance)
 
 public export
@@ -289,8 +289,8 @@ loadCoreCriteriaOk c =
 public export
 sameExcitationTrajectory : ExcitationReport -> ExcitationReport -> Bool
 sameExcitationTrajectory a b =
-  (a.meanXMilli == b.meanXMilli) &&
-  (a.meanYMilli == b.meanYMilli) &&
+  (a.meanX == b.meanX) &&
+  (a.meanY == b.meanY) &&
   (a.fluxYAccum == b.fluxYAccum) &&
   (a.initQuadrance == b.initQuadrance) &&
   (a.finalQuadrance == b.finalQuadrance) &&
@@ -389,8 +389,8 @@ mkAudit4and5Lines cA par okA pass =
   , modeLine "ModeBalanced(2,2)" par.psBal
   , modeLine "ModePaced   (4,1)" par.psPac
   , "  * Canonical Model A Summary: net=" ++ show cA.lcNetSum ++
-    ", dy=+" ++ show (cA.lcTwoBody.tbBotYMilli - cA.lcTwoBody.tbSingleBotYMilli) ++
-    ", dX_4F=" ++ show (cA.lcAniso.asProbeHorizX - cA.lcAniso.asProbeVertX) ++
+    ", dy=" ++ show (subProportion cA.lcTwoBody.tbBotY cA.lcTwoBody.tbSingleBotY) ++
+    ", dX_4F=" ++ show (subProportion cA.lcAniso.asProbeHorizX cA.lcAniso.asProbeVertX) ++
     ", workA=" ++ show cA.lcWork ++ ", tagFreeRoundTrip=" ++ show checkTagFreePackUnpackRoundTrip
   , "  -> Audit 4 & 5 pass=" ++ show pass
   ]
@@ -409,7 +409,7 @@ buildAudit4and5Report cA par =
         modeParityAndWorkOk par.psBal &&
         modeParityAndWorkOk par.psPac &&
         checkTagFreePackUnpackRoundTrip &&
-        (unwrapBox (sumHMSet seedRoot) == 0) &&
+        (sumHMSet seedRoot == 0) &&
         (cA.lcNetSum == 0) && cA.lcAntiOk && cA.lcSymOk && cA.lcBalOk
       pass     = okA && parityOk
   in (pass, mkAudit4and5Lines cA par okA pass)

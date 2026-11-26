@@ -52,7 +52,7 @@ observerRotor = MkRotor 2 (vec3Box 1 (-1) 2)
 
 ||| Evolves a 3D dipole in Model A and observes its rotated moment through `PureObservation`.
 export
-runFlat3DFrame : App1 {u = Any} e (Box BoxInt (Fin 3), Box BoxInt (Fin 3), Integer)
+runFlat3DFrame : App1 {u = Any} e (Box BoxInt (Fin 3), Box BoxInt (Fin 3), BoxInt)
 runFlat3DFrame = App1.do
   u0  <- bootFlatWith (spaceBasis {n = 3})
   u1  <- injectFlatState (seedBoundDipole (spaceBasis {n = 3}) [1, 0, 0] [0, 0, 1] 2048) u0
@@ -64,7 +64,7 @@ runFlat3DFrame = App1.do
 
 ||| Evolves the same 3D dipole in Model B and observes its rotated moment through `PureObservation`.
 export
-runHereditary3DFrame : App1 {u = Any} e (Box BoxInt (Fin 3), Box BoxInt (Fin 3), Integer)
+runHereditary3DFrame : App1 {u = Any} e (Box BoxInt (Fin 3), Box BoxInt (Fin 3), BoxInt)
 runHereditary3DFrame = App1.do
   u0  <- bootHereditary0D
   u1  <- injectHereditaryState (seedBoundDipole (pureMSetBasis 3) [1, 0, 0] [0, 0, 1] 2048) u0
@@ -139,7 +139,7 @@ check9BRed =
 
 public export
 check9BPrecessionAndFrame :
-  (Box BoxInt (Fin 3), Box BoxInt (Fin 3), Integer, Box BoxInt (Fin 3), Box BoxInt (Fin 3), Integer) ->
+  (Box BoxInt (Fin 3), Box BoxInt (Fin 3), BoxInt, Box BoxInt (Fin 3), Box BoxInt (Fin 3), BoxInt) ->
   (Bool, Bool, Bool, Bool, BoxInt, BoxInt)
 check9BPrecessionAndFrame (fRot, fRaw, fQ, hRot, hRaw, hQ) =
   let classes = map classifyRedRotor

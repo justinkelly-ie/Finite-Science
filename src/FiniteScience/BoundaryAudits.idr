@@ -99,7 +99,7 @@ prfAllSettingsParityAndDecode = Refl
 export
 runFlatGuardedSplitBoundary :
   Has [Exception UniverseErr] e =>
-  String -> Integer -> Integer -> App e CloseOutcome
+  String -> BoxInt -> BoxInt -> App e CloseOutcome
 runFlatGuardedSplitBoundary settingTxt wA wB = do
   _ <- validateAndDecodeSetting settingTxt
   requireBalancedSplit wA wB
@@ -107,7 +107,7 @@ runFlatGuardedSplitBoundary settingTxt wA wB = do
       p50 = [5, 0]
   st <- app1 $ App1.do
     u0 <- bootFlatWith (spaceBasis {n = 2})
-    u1 <- splitFlatFromVacuum p50 p50 (MkBoxInt wA) u0
+    u1 <- splitFlatFromVacuum p50 p50 wA u0
     closeFlat0D u1
   pure (classifyFlatClose st)
 
@@ -140,7 +140,7 @@ runFlatHorizonProbe spec = do
 export
 runHereditaryGuardedSplitBoundary :
   Has [Exception UniverseErr] e =>
-  String -> Integer -> Integer -> App e CloseOutcome
+  String -> BoxInt -> BoxInt -> App e CloseOutcome
 runHereditaryGuardedSplitBoundary settingTxt wA wB = do
   payload <- validateAndDecodeSetting settingTxt
   requireBalancedSplit wA wB
