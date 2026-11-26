@@ -60,7 +60,7 @@ Putting boxes inside other boxes forms a **Hereditary Multiset** (`HereditaryMSe
 In [`FinSc-Dynamics`](https://github.com/justinkelly-ie/FinSc-Dynamics), each closed universe evolves locally with zero observer knowledge (`EvolutionState k`):
 1. **`polarityMaxel`** (`DiagAntisymForm`) — signed site polarities `(A, A)` and antisymmetric directed link fluxes `(A, B)`.
 2. **`loadMaxel`** (`SymForm`) — causal 1-hop retarded interaction load sourced from `quadranceOf polarityMaxel` (`c = 1`).
-3. **`throttleMaxel`** (`SymForm`) — integer Bresenham pacing accumulator emitting `StreamSkip` pauses at **`0 GohFuel`** cost when local load is high.
+3. **`throttleMaxel`** (`SymForm`) — integer Bresenham pacing accumulator emitting `StreamSkip` pauses at **`0 GohBound`** cost when local load is high.
 
 All link updates use conservative integer quadratic exchanges (`exchangeQuadraticPow` in `FinScBox.QuadraticExchange`), conserving linear polarity `p_A + p_B` identically and monotonically bounding total quadrance `2*(p_A^2 + p_B^2) + u^2`.
 
@@ -71,7 +71,7 @@ All link updates use conservative integer quadratic exchanges (`exchangeQuadrati
 Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
 - **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`photonMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`quenchRelic = MSetSupport`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupolePlus`).
 - **[`FinSc-Dihedron`](https://github.com/justinkelly-ie/FinSc-Dihedron):** Rational `SO(3; Q)` quaternion proportions (`ProjectiveProportion`) and `SL(2; Q)` Dihedron frames for relativistic observer development.
-- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`CosmologyAudits.idr`](src/FiniteScience/CosmologyAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 6 automated audits across polymorphic `FlatBlackBox k` (`Coord2` & `Coord3`) and `HereditaryBlackBox`.
+- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 8 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
 
 ---
 
@@ -98,10 +98,10 @@ idris2 --build Finite-Science.ipkg
 ./build/exec/finite-science-audits
 ```
 
-A passing run prints all 6 audit reports, writes `audit_trace.txt` (git-ignored), and ends with:
+A passing run prints all 8 audit reports, writes `audit_trace.txt` (git-ignored), and ends with:
 
 ```text
-ALL 6 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + TopologicalRelic)
+ALL 8 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + GohBound + TopologicalRelic)
 Boundary telemetry written to audit_trace.txt: True
 ```
 

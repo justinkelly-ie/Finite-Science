@@ -14,7 +14,7 @@ sourcedir = "src"
 modules = FiniteScience.Lab
         , FiniteScience.BoundaryAudits
         , FiniteScience.LoadAudits
-        , FiniteScience.CosmologyAudits
+        , FiniteScience.RelicAudits
         , FiniteScience
         , Main
 

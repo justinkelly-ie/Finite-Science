@@ -1,4 +1,4 @@
-module FiniteScience.CosmologyAudits
+module FiniteScience.RelicAudits
 
 import Control.App
 import Control.App.Console
@@ -52,14 +52,14 @@ runEmergent3DLoad = App1.do
       unCnt   = treeSizeNonZero (activeUnitAxesOf  (pureMSetBasis 2) combP)
   eaBgTA <- bootInjectAndRun (flatLab {n = 3}) (ModeFactor 4 1) 6 dpTopZA
   eaBgBA <- bootInjectAndRun (flatLab {n = 3}) (ModeFactor 4 1) 6 dpBotZA
-  (vZA, balVA, antiVA, symVA) <- runLabExcitationAxis (flatLab {n = 3}) (axisNat 2) (ModeFactor 4 1) 6 exc3DA neutral neutral
-  (tZA, balTA, antiTA, symTA) <- runLabExcitationAxis (flatLab {n = 3}) (axisNat 2) (ModeFactor 4 1) 6 exc3DA dpTopZA eaBgTA.eaState
-  (bZA, balBA, antiBA, symBA) <- runLabExcitationAxis (flatLab {n = 3}) (axisNat 2) (ModeFactor 4 1) 6 exc3DA dpBotZA eaBgBA.eaState
+  (vZA, balVA, antiVA, symVA) <- runLabExcitationAxis (flatLab {n = 3}) (axisAtom 2) (ModeFactor 4 1) 6 exc3DA neutral neutral
+  (tZA, balTA, antiTA, symTA) <- runLabExcitationAxis (flatLab {n = 3}) (axisAtom 2) (ModeFactor 4 1) 6 exc3DA dpTopZA eaBgTA.eaState
+  (bZA, balBA, antiBA, symBA) <- runLabExcitationAxis (flatLab {n = 3}) (axisAtom 2) (ModeFactor 4 1) 6 exc3DA dpBotZA eaBgBA.eaState
   eaBgTB <- bootInjectAndRun hereditaryLab (ModeFactor 4 1) 6 dpTopZB
   eaBgBB <- bootInjectAndRun hereditaryLab (ModeFactor 4 1) 6 dpBotZB
-  (vZB, balVB, antiVB, symVB) <- runLabExcitationAxis hereditaryLab (axisNat 2) (ModeFactor 4 1) 6 exc3DB neutral neutral
-  (tZB, balTB, antiTB, symTB) <- runLabExcitationAxis hereditaryLab (axisNat 2) (ModeFactor 4 1) 6 exc3DB dpTopZB eaBgTB.eaState
-  (bZB, balBB, antiBB, symBB) <- runLabExcitationAxis hereditaryLab (axisNat 2) (ModeFactor 4 1) 6 exc3DB dpBotZB eaBgBB.eaState
+  (vZB, balVB, antiVB, symVB) <- runLabExcitationAxis hereditaryLab (axisAtom 2) (ModeFactor 4 1) 6 exc3DB neutral neutral
+  (tZB, balTB, antiTB, symTB) <- runLabExcitationAxis hereditaryLab (axisAtom 2) (ModeFactor 4 1) 6 exc3DB dpTopZB eaBgTB.eaState
+  (bZB, balBB, antiBB, symBB) <- runLabExcitationAxis hereditaryLab (axisAtom 2) (ModeFactor 4 1) 6 exc3DB dpBotZB eaBgBB.eaState
   let par3D = sameExcitationTrajectory vZA vZB &&
               sameExcitationTrajectory tZA tZB &&
               sameExcitationTrajectory bZA bZB
@@ -97,7 +97,7 @@ export
 collectPacedWork : (Nat, Nat) -> Nat -> EvolutionState (Space 2) -> PacedWorkStats
 collectPacedWork (oP, iT) steps st0 =
   let params         = canonDynamicsParams (ModeFactor oP iT)
-      (relic, skips) = freezeDynamicsStreamWith (spaceBasis {n = 2}) params 0 (mkGohBound (integerToNat 1000000)) steps st0
+      (relic, skips) = freezeStateStreamWith 0 (MkGohBound {capacity = 0} 1000000) steps (stepDynamicsStreamWith (spaceBasis {n = 2}) params) st0
   in MkPacedWorkStats relic.yieldsConsumed skips (maxelNodeCount relic.relicState.throttleMaxel)
 
 public export
@@ -143,25 +143,16 @@ record GohSpreadAuditReport where
   gsPairQB6       : Integer
 
 public export
-freezeSteps :
-  (boundInt : Integer) ->
-  (steps : Nat) ->
-  (s -> (StreamStep s, Nat, Nat)) ->
-  s ->
-  s
-freezeSteps boundInt steps stepF s0 =
-  (fst (freezeStateStreamWith 0 (mkGohBound (integerToNat boundInt)) steps stepF s0)).relicState
-
-public export
 auditCoupledSourceFlow : (Bool, Integer, Integer)
 auditCoupledSourceFlow =
   let eSrc0 : Configuration
       eSrc0 = wrapBox (mkPureCoord [0, 8]) + wrapBox (mkPureCoord [0, -4]) + wrapBox (mkPureCoord [0, 0])
       stepF = stepCoupledSourceFlow (spaceBasis {n = 2}) (canonDynamicsParams ModeLinear) 50
-      s1    = freezeSteps 10000 1 stepF (neutral, eSrc0)
-      s2    = freezeSteps 10000 1 stepF s1
-      s3    = freezeSteps 10000 1 stepF s2
-      s6    = freezeSteps 10000 3 stepF s3
+      qBud  = MkGohBound {capacity = 0} 10000
+      s1    = (fst (freezeStateStreamWith 0 qBud 1 stepF (neutral, eSrc0))).relicState
+      s2    = (fst (freezeStateStreamWith 0 qBud 1 stepF s1)).relicState
+      s3    = (fst (freezeStateStreamWith 0 qBud 1 stepF s2)).relicState
+      s6    = (fst (freezeStateStreamWith 0 qBud 3 stepF s3)).relicState
       qU1   = stateQuadrance (fst s1)
       qU2   = stateQuadrance (fst s2)
       qU3   = stateQuadrance (fst s3)
@@ -179,7 +170,7 @@ runRelicCycle : (qAmp : BoxInt) -> TopologicalRelic -> (TopologicalRelic, Nat, N
 runRelicCycle qAmp eSrc =
   let (MkAnyGohBound _ yBound, sBud) = selfBoundOfHMSet eSrc
       bnd    = yBound.boundSteps
-      rCyc   = fst (freezeStateStreamWith 0 (mkGohBound (bnd * 25)) (max 4 sBud)
+      rCyc   = fst (freezeStateStreamWith 0 (MkGohBound {capacity = 0} (bnd * 25)) (max 4 sBud)
                                           (stepCoupledSourceFlow (pureMSetBasis 2) (canonDynamicsParams ModeLinear) qAmp)
                                           (neutral, the Configuration (castSupportHMSet eSrc)))
       uOut   = fst rCyc.relicState
@@ -206,7 +197,8 @@ runRelicChain (S rem) qAmp eSrc =
 public export
 seedToFirstRelic : EvolutionState PureMultiset -> TopologicalRelic
 seedToFirstRelic seedPure =
-  let (rCyc1, _) = freezeDynamicsStreamWith (pureMSetBasis 2) (canonDynamicsParams (ModeFactor 1 4)) 0 (mkGohBound (integerToNat 600)) 5 seedPure
+  let stepF      = stepDynamicsStreamWith (pureMSetBasis 2) (canonDynamicsParams (ModeFactor 1 4))
+      (rCyc1, _) = freezeStateStreamWith 0 (MkGohBound {capacity = 0} 600) 5 stepF seedPure
   in castSupportHMSet (packEvolutionStateToRoot BoxLeaf rCyc1.relicState)
 
 public export
@@ -226,11 +218,12 @@ auditActiveUniversePair =
       seam       = (seedEdgeFlux ax2 [0, 0] [1, 0] 1 <+> seedEdgeFlux ax2 [0, 1] [1, 1] 1).polarityMaxel
       uA0        = seedEdgeFlux ax2 [0, 0] [1, 0] 200 <+> seedEdgeFlux ax2 [0, 1] [1, 1] 120
       qA0        = stateQuadrance uA0
+      qBud       = MkGohBound {capacity = 0} 10000
       stepLin    = stepCoupledUniversePair ax2 (canonDynamicsParams ModeLinear) seam 50
       stepSpr    = stepCoupledUniversePair ax2 (canonDynamicsParams (ModeFactor 1 4)) seam 50
-      (uA3, uB3) = freezeSteps 10000 3 stepLin (uA0, neutral)
-      (uA6, uB6) = freezeSteps 10000 3 stepLin (uA3, uB3)
-      (sA3, sB3) = freezeSteps 10000 3 stepSpr (uA0, neutral)
+      (uA3, uB3) = (fst (freezeStateStreamWith 0 qBud 3 stepLin (uA0, neutral))).relicState
+      (uA6, uB6) = (fst (freezeStateStreamWith 0 qBud 3 stepLin (uA3, uB3))).relicState
+      (sA3, sB3) = (fst (freezeStateStreamWith 0 qBud 3 stepSpr (uA0, neutral))).relicState
       qA3 = stateQuadrance uA3; qB3 = stateQuadrance uB3
       qA6 = stateQuadrance uA6; qB6 = stateQuadrance uB6
       qSA = stateQuadrance sA3; qSB = stateQuadrance sB3
@@ -292,8 +285,8 @@ auditGohSpreadPolyHMSet =
       seedDense                     = seedBoundDipole (spaceBasis {n = 2}) [4, 5] [4, 6] 8192
       pUnthrottled                  = MkDynamicsParams (ModeFactor 4 1) 7 0           canonDecayNum canonDecayDen 0
       pThrottled                    = canonDynamicsParams (ModeFactor 4 1)
-      (rDil, sDil)                  = freezeDynamicsStreamWith (spaceBasis {n = 2}) pUnthrottled 0 (mkGohBound linkYieldBudget) 25 seedDense
-      (rDen, sDen)                  = freezeDynamicsStreamWith (spaceBasis {n = 2}) pThrottled   0 (mkGohBound linkYieldBudget) 25 seedDense
+      (rDil, sDil)                  = freezeStateStreamWith 0 (MkGohBound {capacity = 0} linkYieldBudget) 25 (stepDynamicsStreamWith (spaceBasis {n = 2}) pUnthrottled) seedDense
+      (rDen, sDen)                  = freezeStateStreamWith 0 (MkGohBound {capacity = 0} linkYieldBudget) 25 (stepDynamicsStreamWith (spaceBasis {n = 2}) pThrottled)   seedDense
       cycDil                        = rDil.stepsConsumed
       cycDen                        = rDen.stepsConsumed
       selfTimeOk =
@@ -388,20 +381,23 @@ buildAudit7Report : (Bool, List String)
 buildAudit7Report =
   let ax2    = spaceBasis {n = 2}
       pSpr   = canonDynamicsParams (ModeFactor 1 4)
-      (r0, sk0) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 12 (seedBoundDipole ax2 [0, 0] [0, 0] 1400)
+      qBud   = MkGohBound {capacity = 0} 100000
+      step2  = stepDynamicsStreamWith ax2 pSpr
+      stepB  = stepDynamicsStreamWith (pureMSetBasis 2) pSpr
+      (r0, sk0) = freezeStateStreamWith 0 qBud 12 step2 (seedBoundDipole ax2 [0, 0] [0, 0] 1400)
       collapse0Ok =
         (r0.freezeReason == NaturalCompletion) && (r0.stepsConsumed == 0) &&
         (r0.yieldsConsumed == 0) && (sk0 == 0) && (stateQuadrance r0.relicState == 0)
       seedD1 = seedBoundDipole ax2 [0, 0] [0, 1] 1400
       seedD6 = seedBoundDipole ax2 [0, -3] [0, 3] 1400
-      (r1, sk1) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 12 seedD1
-      (r6, sk6) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 12 seedD6
+      (r1, sk1) = freezeStateStreamWith 0 qBud 12 step2 seedD1
+      (r6, sk6) = freezeStateStreamWith 0 qBud 12 step2 seedD6
       thr1   = maxelNodeCount r1.relicState.throttleMaxel
       thr6   = maxelNodeCount r6.relicState.throttleMaxel
-      (_, sk1A4) = freezeDynamicsStreamWith ax2 pSpr 0 (mkGohBound 100000) 4 seedD1
-      (_, sk1B4) = freezeDynamicsStreamWith (pureMSetBasis 2) pSpr 0 (mkGohBound 100000) 4
+      (_, sk1A4) = freezeStateStreamWith 0 qBud 4 step2 seedD1
+      (_, sk1B4) = freezeStateStreamWith 0 qBud 4 stepB
                      (seedBoundDipole (pureMSetBasis 2) [0, 0] [0, 1] 1400)
-      (_, sk6B4) = freezeDynamicsStreamWith (pureMSetBasis 2) pSpr 0 (mkGohBound 100000) 4
+      (_, sk6B4) = freezeStateStreamWith 0 qBud 4 stepB
                      (seedBoundDipole (pureMSetBasis 2) [0, -3] [0, 3] 1400)
       stringBreakOk =
         (stateQuadrance seedD1 == 7840000) && (stateQuadrance seedD6 == 7840000) &&
@@ -421,8 +417,8 @@ buildAudit7Report =
       dp8192 = seedBoundDipole ax2 [0, 0] [0, 1] 8192
       pFast  = MkDynamicsParams (ModeFactor 4 1) 7 0 canonDecayNum canonDecayDen 0
       pBrake = canonDynamicsParams (ModeFactor 4 1)
-      (rFast, skFast)   = freezeDynamicsStreamWith ax2 pFast  0 (mkGohBound quota) 25 dp8192
-      (rBrake, skBrake) = freezeDynamicsStreamWith ax2 pBrake 0 (mkGohBound quota) 25 dp8192
+      (rFast, skFast)   = freezeStateStreamWith 0 (MkGohBound {capacity = 0} quota) 25 (stepDynamicsStreamWith ax2 pFast)  dp8192
+      (rBrake, skBrake) = freezeStateStreamWith 0 (MkGohBound {capacity = 0} quota) 25 (stepDynamicsStreamWith ax2 pBrake) dp8192
       lifetimeOk =
         (tauTrap >= 18) && (tauTrap > tauLin) && (finTrap >= 85) && (finLin <= 65) &&
         (rFast.freezeReason == YieldExhausted) && (rBrake.freezeReason == YieldExhausted) &&
@@ -449,5 +445,151 @@ export
 runAudit7 : Has [Console] e => App e (Bool, List String)
 runAudit7 = do
   let res = buildAudit7Report
+  traverse_ putStrLn (snd res)
+  pure res
+
+--------------------------------------------------------------------------------
+-- AUDIT 8: DYNAMICAL PHYSICS BENCHMARKS & FALSIFICATION OF PASTED CHAT CLAIMS
+--------------------------------------------------------------------------------
+
+||| Zero-sum 2x2 antisymmetric edge-flux plaquette with quadrance `4 * amp^2` and net sum `0`.
+public export
+seedFluxPlaquette : Ord k => AxisBasis k -> (x, y : SignedCoord) -> BoxInt -> EvolutionState k
+seedFluxPlaquette ax x y amp =
+  let c00 = mkCoord ax [x,     y    ]
+      c10 = mkCoord ax [x + 1, y    ]
+      c11 = mkCoord ax [x + 1, y + 1]
+      c01 = mkCoord ax [x,     y + 1]
+      pol = setMaxelEdge c00 c01 (negate amp) $
+            setMaxelEdge c01 c11 (negate amp) $
+            setMaxelEdge c10 c11 amp          $
+            singletonMaxelEdge c00 c10 amp
+  in MkEvolutionState pol emptyMaxel emptyMaxel
+
+public export
+buildAudit8Report : (Bool, List String)
+buildAudit8Report =
+  let ax2   = spaceBasis {n = 2}
+      pSpr  = canonDynamicsParams (ModeFactor 1 4)
+      qBud  = MkGohBound {capacity = 0} 100000
+      step2 = stepDynamicsStreamWith ax2 pSpr
+      stepB = stepDynamicsStreamWith (pureMSetBasis 2) pSpr
+
+      -- 8-A-1: 1-in-8 CP-like residual skew bath vs balanced 8-pair vacuum bath
+      bathPair = the (SignedCoord -> EvolutionState (Space 2)) (\k => seedBoundDipole ax2 [k, 0] [k, 1] 2048)
+      ks       = the (List SignedCoord) [0, 1, 2, 3, 4, 5, 6, 7]
+      symBath  = foldl (\acc, k => acc <+> bathPair k <+> negM (bathPair k)) neutral ks
+      skewBath = foldl (\acc, k => acc <+> (if k == 7 then bathPair k else bathPair k <+> negM (bathPair k))) neutral ks
+      (rSymB, _)    = freezeStateStreamWith 0 qBud 12 step2 symBath
+      (rSkB, skSkB) = freezeStateStreamWith 0 qBud 12 step2 skewBath
+      (rSkA4, skSkA4) = freezeStateStreamWith 0 qBud 4 step2 skewBath
+      (rSkB4, skSkB4) = freezeStateStreamWith 0 qBud 4 stepB (seedBoundDipole (pureMSetBasis 2) [7, 0] [7, 1] 2048)
+      relicSk         = the TopologicalRelic (castSupportHMSet (packEvolutionStateToRoot BoxLeaf rSkB4.relicState))
+      cpBathOk =
+        (classifyFlatClose symBath == CleanVacuumCollapse) &&
+        (rSymB.freezeReason == NaturalCompletion) && (rSymB.stepsConsumed == 0) &&
+        (stateQuadrance symBath == 0) &&
+        (classifyFlatClose rSkB.relicState /= CleanVacuumCollapse) &&
+        (rSkB.stepsConsumed == 12) && (skSkB > 0) && (stateQuadrance rSkB.relicState > 0) &&
+        (statePolarityNet rSkB.relicState + stateFluxNet rSkB.relicState == 0) &&
+        (skSkB4 == skSkA4) && (skSkB4 > 0) && (relicSk /= emptyHMSet)
+
+      -- 8-A-2: Equal-Q0 topology lifetime comparison (1 concentrated edge amp=2000 vs 4-edge loop amp=1000, Q0=4,000,000)
+      edge2000 = seedEdgeFlux ax2 [0, 0] [1, 0] 2000
+      loop1000 = seedFluxPlaquette ax2 0 0 1000
+      (rEdge, skEdge) = freezeStateStreamWith 0 qBud 12 step2 edge2000
+      (rLoop, skLoop) = freezeStateStreamWith 0 qBud 12 step2 loop1000
+      thrLoop = maxelNodeCount rLoop.relicState.throttleMaxel
+      topoQuadOk =
+        (stateQuadrance edge2000 == 4000000) && (stateQuadrance loop1000 == 4000000) &&
+        (skEdge > 0) && (skLoop == 0) && (thrLoop == 0) &&
+        (rLoop.yieldsConsumed < rEdge.yieldsConsumed) &&
+        (statePolarityNet rEdge.relicState + stateFluxNet rEdge.relicState == 0) &&
+        (statePolarityNet rLoop.relicState + stateFluxNet rLoop.relicState == 0)
+
+      -- 8-A-3: Topological plaquette collisions (coincident annihilation vs co-circulating unwinding vs counter-circulating seam)
+      vL = seedFluxPlaquette ax2 0 0 1050
+      vR = seedFluxPlaquette ax2 1 0 1050
+      vAnn  = vL <+> negM vL
+      vSame = vL <+> vR
+      vOpp  = vL <+> negM vR
+      (rAnn, skAnn)   = freezeStateStreamWith 0 qBud 12 step2 vAnn
+      (rSame, skSame) = freezeStateStreamWith 0 qBud 12 step2 vSame
+      (rOpp, skOpp)   = freezeStateStreamWith 0 qBud 12 step2 vOpp
+      thrOpp  = maxelNodeCount rOpp.relicState.throttleMaxel
+      vLB = seedFluxPlaquette (pureMSetBasis 2) 0 0 1050
+      vRB = seedFluxPlaquette (pureMSetBasis 2) 1 0 1050
+      (_, skSameA4) = freezeStateStreamWith 0 qBud 4 step2 vSame
+      (_, skSameB4) = freezeStateStreamWith 0 qBud 4 stepB (vLB <+> vRB)
+      (_, skOppA4)  = freezeStateStreamWith 0 qBud 4 step2 vOpp
+      (_, skOppB4)  = freezeStateStreamWith 0 qBud 4 stepB (vLB <+> negM vRB)
+      plaqCollisionOk =
+        (rAnn.freezeReason == NaturalCompletion) && (rAnn.stepsConsumed == 0) && (skAnn == 0) && (stateQuadrance rAnn.relicState == 0) &&
+        (maxelNodeCount vSame.polarityMaxel == 6) && (stateQuadrance vSame == 6615000) &&
+        (maxelNodeCount vOpp.polarityMaxel == 7) && (stateQuadrance vOpp == 11025000) &&
+        (skOpp >= 3 * skSame) && (thrOpp > 0) &&
+        (skSameB4 == skSameA4) && (skOppB4 == skOppA4) && (skOppB4 > skSameB4)
+
+      -- 8-B: Direct falsification of pasted chat claims (`False` = claim refuted by codebase)
+      dp1400 = seedBoundDipole ax2 [0, 0] [0, 1] 1400
+      (rZero, _) = freezeStateStreamWith 0 (MkGohBound {capacity = 0} 0)   12 step2 dp1400
+      (rExh,  _) = freezeStateStreamWith 0 (MkGohBound {capacity = 0} 600) 20 step2 dp1400
+      chatClaimZeroBoundVanishesSpace =
+        (classifyFlatClose rZero.relicState == CleanVacuumCollapse) ||
+        (classifyFlatClose rExh.relicState == CleanVacuumCollapse)
+
+      rootDp@(MkHMSet bDp) = packEvolutionStateToRoot BoxLeaf (seedBoundDipole (pureMSetBasis 2) [0, 0] [0, 1] 1400)
+      rawMinusNormalGap   = minus (boxNodeCount bDp) (treeSizeNonZero bDp)
+      (MkAnyGohBound _ unsplitBound, _) = selfBoundOfHMSet (scalarKeyHMSet 1)
+      chatClaimRawNormalGapNonZero =
+        (rawMinusNormalGap > 0) ||
+        ((rawMinusNormalGap == 0) == (rootDp == emptyHMSet)) ||
+        (unsplitBound.boundSteps == 0)
+
+      (r20, _) = freezeStateStreamWith 0 qBud 20 step2 dp1400
+      chatClaimDipoleSettlesToVacuum =
+        (r20.freezeReason == NaturalCompletion) ||
+        (stateQuadrance r20.relicState * 2 < stateQuadrance dp1400)
+
+      falsifyOk =
+        not chatClaimZeroBoundVanishesSpace &&
+        not chatClaimRawNormalGapNonZero &&
+        not chatClaimDipoleSettlesToVacuum &&
+        (rZero.freezeReason == YieldExhausted) && (rZero.remainingYield.boundSteps == 0) && (stateQuadrance rZero.relicState == 7840000) &&
+        (rExh.freezeReason == YieldExhausted) && (rExh.stepsConsumed > 0) && (stateQuadrance rExh.relicState > 0) &&
+        (r20.freezeReason == StepHorizonReached) && (stateQuadrance r20.relicState * 100 >= stateQuadrance dp1400 * 90)
+
+      pass = cpBathOk && topoQuadOk && plaqCollisionOk && falsifyOk
+      lines =
+        [ "----------------------------------------------------------------"
+        , "[Audit 8] Dynamical Physics Benchmarks & Falsification of Chat Claims"
+        , "  * 8-A-1 1-in-8 CP-Like Skew Bath (amp=2048): ok=" ++ show cpBathOk ++
+          " (symSteps=" ++ show rSymB.stepsConsumed ++ ", skewSkips=" ++ show skSkB ++
+          ", skewQ=" ++ show (stateQuadrance rSkB.relicState) ++ ", paritySkips=" ++ show skSkB4 ++ ")"
+        , "  * 8-A-2 Equal-Q0 Topology Comparison (Q0=4000000, 12 sweeps): ok=" ++ show topoQuadOk ++
+          " (edgeSkips=" ++ show skEdge ++ ", edgeYields=" ++ show rEdge.yieldsConsumed ++
+          " vs loopSkips=" ++ show skLoop ++ ", loopYields=" ++ show rLoop.yieldsConsumed ++ ")"
+        , "  * 8-A-3 Vortex Plaquette Collisions (amp=1050): ok=" ++ show plaqCollisionOk ++
+          " (d0Q=" ++ show (stateQuadrance rAnn.relicState) ++
+          ", same[edges=" ++ show (maxelNodeCount vSame.polarityMaxel) ++ ",skips=" ++ show skSame ++ ",pB4=" ++ show skSameB4 ++ "]" ++
+          ", opp[edges=" ++ show (maxelNodeCount vOpp.polarityMaxel) ++ ",skips=" ++ show skOpp ++ ",thr=" ++ show thrOpp ++ ",pB4=" ++ show skOppB4 ++ "])"
+        , "  * 8-B Falsification of Pasted Chat Claims (each claim MUST evaluate False): ok=" ++ show falsifyOk
+        , "    - Claim \"GohBound=0 vanishes space to []\" -> " ++ show chatClaimZeroBoundVanishesSpace ++
+          " (counterexample: YieldExhausted Q_0=" ++ show (stateQuadrance rZero.relicState) ++
+          ", Q_exh=" ++ show (stateQuadrance rExh.relicState) ++ ", close=" ++ show (classifyFlatClose rExh.relicState) ++ ")"
+        , "    - Claim \"GohBound is raw-vs-normal gap; gap=0 => []\" -> " ++ show chatClaimRawNormalGapNonZero ++
+          " (counterexample: separated gap=" ++ show rawMinusNormalGap ++ " on " ++ show (boxNodeCount bDp) ++
+          " nodes /= [], unsplit scalarKey(1) boundSteps=" ++ show unsplitBound.boundSteps ++ ")"
+        , "    - Claim \"FinSc-Dynamics reconciles separated pairs to []\" -> " ++ show chatClaimDipoleSettlesToVacuum ++
+          " (counterexample: 20-sweep reason=" ++ show r20.freezeReason ++ ", Q20=" ++ show (stateQuadrance r20.relicState) ++
+          "/" ++ show (stateQuadrance dp1400) ++ ")"
+        , "  -> Audit 8 pass=" ++ show pass
+        ]
+  in (pass, lines)
+
+export
+runAudit8 : Has [Console] e => App e (Bool, List String)
+runAudit8 = do
+  let res = buildAudit8Report
   traverse_ putStrLn (snd res)
   pure res

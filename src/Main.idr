@@ -24,14 +24,15 @@ runPureAuditSuite = do
   (p4, l4, cA) <- runAudit4and5
   (p6, l6)     <- runAudit6 cA
   (p7, l7)     <- runAudit7
-  let ok = p1 && p2 && p3 && p4 && p6 && p7
+  (p8, l8)     <- runAudit8
+  let ok = p1 && p2 && p3 && p4 && p6 && p7 && p8
   let footer = [ "================================================================"
                , if ok
-                   then "ALL 7 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + GohBound + TopologicalRelic)"
+                   then "ALL 8 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + GohBound + TopologicalRelic)"
                    else "FINITE-SCIENCE AUDITS FAILED"
                ]
   traverse_ putStrLn footer
-  pure (ok, banner ++ l1 ++ l2 ++ l3 ++ l4 ++ l6 ++ l7 ++ footer)
+  pure (ok, banner ++ l1 ++ l2 ++ l3 ++ l4 ++ l6 ++ l7 ++ l8 ++ footer)
 
 public export
 covering

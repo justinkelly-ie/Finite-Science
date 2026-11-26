@@ -63,7 +63,7 @@ runLabExcitation :
   EvolutionState k ->
   App1 {u = Any} e (ExcitationReport, Bool, Bool, Bool)
 runLabExcitation lab mode steps =
-  runLabExcitationAxis lab (axisNat 1) mode steps (seedDirectedPulse lab.labBasis [0, 0] (FS FZ) 512)
+  runLabExcitationAxis lab (axisAtom 1) mode steps (seedDirectedPulse lab.labBasis [0, 0] (FS FZ) 512)
 
 export
 runLabTwoBody :
@@ -80,8 +80,8 @@ runLabTwoBody lab mode bothPulses = App1.do
   obs <- lab.labQuadrance u1
   let MkPureObs u2 initQ _ = obs
   (ea, maxQ, _, balOk) <- driveLabStepsTel lab mode 16 u2 initQ 0 True
-  let botRep = measureBandAxis lab.labBasis (axisNat 1) (-100) 0 ea.eaState neutral initQ ea.eaQuad maxQ 0
-      topRep = measureBandAxis lab.labBasis (axisNat 1) 1 100 ea.eaState neutral initQ ea.eaQuad maxQ 0
+  let botRep = measureBandAxis lab.labBasis (axisAtom 1) (-100) 0 ea.eaState neutral initQ ea.eaQuad maxQ 0
+      topRep = measureBandAxis lab.labBasis (axisAtom 1) 1 100 ea.eaState neutral initQ ea.eaQuad maxQ 0
   App1.pure (botRep, topRep, ea.eaNetSum, (ea.eaAntiOk, ea.eaSymOk, balOk))
 
 export
@@ -100,8 +100,8 @@ runLabLightCone lab mode vRep18 tRep18 = App1.do
   let exactSl = bandsEqualInBox lab.labBasis [-4, -3] [4, 3] eaDp2.eaState eaBg2.eaState eaVac2.eaState
       balOk   = eaVac2.eaBalOk && eaBg2.eaBalOk && eaDp2.eaBalOk
       symOk   = eaVac2.eaSymOk && eaBg2.eaSymOk && eaDp2.eaSymOk
-      wVac2   = measureBandAxis lab.labBasis (axisNat 1) (-3) 4 eaVac2.eaState neutral eaVac2.eaQuad eaVac2.eaQuad eaVac2.eaQuad 0
-      wDp2    = measureBandAxis lab.labBasis (axisNat 1) (-3) 4 eaDp2.eaState  eaBg2.eaState eaDp2.eaQuad  eaDp2.eaQuad  eaDp2.eaQuad  0
+      wVac2   = measureBandAxis lab.labBasis (axisAtom 1) (-3) 4 eaVac2.eaState neutral eaVac2.eaQuad eaVac2.eaQuad eaVac2.eaQuad 0
+      wDp2    = measureBandAxis lab.labBasis (axisAtom 1) (-3) 4 eaDp2.eaState  eaBg2.eaState eaDp2.eaQuad  eaDp2.eaQuad  eaDp2.eaQuad  0
   App1.pure (MkCausalLightConeReport
                exactSl
                wVac2.meanXMilli wDp2.meanXMilli wDp2.fluxYAccum
@@ -129,8 +129,8 @@ runLabAnisotropicStress lab mode = App1.do
   eaBgV <- bootInjectAndRun lab mode 18 (stressSourceState ax False)
   (mH, balPH, antiPH, symPH) <- runLabExcitation lab mode 18 (stressSourceState ax True)  eaBgH.eaState
   (mV, balPV, antiPV, symPV) <- runLabExcitation lab mode 18 (stressSourceState ax False) eaBgV.eaState
-  let qH     = loadQuadrupoleAxes ax (axisNat 0) (axisNat 1) eaQH.eaState.loadMaxel
-      qV     = loadQuadrupoleAxes ax (axisNat 0) (axisNat 1) eaQV.eaState.loadMaxel
+  let qH     = loadQuadrupoleAxes ax (axisAtom 0) (axisAtom 1) eaQH.eaState.loadMaxel
+      qV     = loadQuadrupoleAxes ax (axisAtom 0) (axisAtom 1) eaQV.eaState.loadMaxel
       symOk  = eaQH.eaSymOk && eaQV.eaSymOk && eaBgH.eaSymOk && eaBgV.eaSymOk &&
                antiPH && symPH && antiPV && symPV
       balOk  = eaQH.eaBalOk && eaQV.eaBalOk && eaBgH.eaBalOk && eaBgV.eaBalOk && balPH && balPV
