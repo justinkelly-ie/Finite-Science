@@ -1,81 +1,35 @@
 # Finite-Science
 
-**Top-of-the-stack discrete physics lab and multi-observer audit suite built purely from finite multisets of Black (`+1`) and Red (`-1`) boxes — no floating-point numbers, no pre-built grid walls, and no external clock.**
+**Top-of-the-stack application and interface shell built purely from finite multisets of Black (`+1`) and Red (`-1`) boxes — no floating-point numbers, no pre-built grid walls, and no external clock.**
 
-All mathematics, blind dynamics, and non-perturbing observer lenses are written in total (`%default total`) Idris 2 across a strict four-layer DAG:
+All mathematics, blind dynamics, non-perturbing observer lenses, and experimental verification suites are cleanly separated across a strict four-layer DAG so each library's `*-Wiki` tests only need to rerun when that library changes:
 
 ```text
-FinSc-Box       (Layer 1: Pure Box, HereditaryMSet, Maxel, Space n, GohBound, QuadraticTriple)
-    │
+FinSc-Box       (Layer 1: Pure Box, HereditaryMSet, Maxel, Space n, GohBound, Dec/Subset)
+    │             └── Verified by FinSc-Box-Wiki
     ▼
 FinSc-Space     (Layer 2: Geometry.{Affine, Projective} + Blind Dynamics — App1, NoThrow)
-    │
+    │             └── Verified by FinSc-Space-Wiki
     ▼
-FinSc-Lens      (Layer 3: Non-Perturbing Horizons, Projective & Frame Readouts)
-    │
+FinSc-Lens      (Layer 3: Non-Perturbing Horizons, Proportion/Rotor Readouts & BlackBoxLab)
+    │             └── Verified by FinSc-Lens-Wiki (includes full multi-observer experiment suite)
     ▼
-Finite-Science  (Layer 4: Top-of-Stack Lab & Audits)
+Finite-Science  (Layer 4: Clean Top-of-Stack Facade & Eventual Interface Shell)
+                  └── Documented by Finite-Science-Wiki
 ```
 
 ---
 
-## Step 1: Nothing at All — The Empty Box
+## Architecture & Incremental Verification
 
-Start with an empty container:
-
-```text
-[]
-```
-
-This is the **vacuum**: `0` boxes, `0` quadrance, `0` net polarity, and `0` time ticks.
+- **[`FinSc-Box`](../FinSc-Box)** & **[`FinSc-Box-Wiki`](../FinSc-Box-Wiki):** Domain-free multiset, `Maxel`, `QuadraticTriple`, `BlackRedZoom`, `MultisetCodec`, streaming peel-work ordering, and QuickCheck property tests.
+- **[`FinSc-Space`](../FinSc-Space)** & **[`FinSc-Space-Wiki`](../FinSc-Space-Wiki):** Affine & projective rational trigonometry (`Proportion`, `Rotor`, Chromogeometry, Special Relativity, Regge curvature) plus frame-blind local evolution (`FlatBlackBox`, `HereditaryBlackBox`, zero-tag 5-shape root codec).
+- **[`FinSc-Lens`](../FinSc-Lens)** & **[`FinSc-Lens-Wiki`](../FinSc-Lens-Wiki):** Observer horizons (`HorizonSpec`, `Dec`/`Subset` boundary guards), `TopologicalRelic` skeletons, exact `Proportion` / `Rotor` readouts, polymorphic `BlackBoxLab`, and the complete multi-observer experimental audit suite (supports `--quick` for fast iteration).
+- **[`Finite-Science`](src/FiniteScience.idr):** Kept intentionally lean as the Layer 4 application facade (`import FiniteScience`) and entry point (`FiniteScience.Main`), reserved for an eventual user/application interface without coupling to lower-layer test suites.
 
 ---
 
-## Step 2: Black Boxes (⬛) and Red Boxes (🟥)
-
-Introduce two elementary tokens inside a container:
-- a **Black box** `⬛` meaning `+1`, and
-- a **Red box** `🟥` meaning `-1`.
-
-Whenever a Black box and a Red box meet inside the same container, they annihilate back to nothing:
-
-```text
-[ ⬛ , 🟥 ]  =  []
-```
-
-Conversely, empty vacuum `[]` can split into a balanced pair — one `⬛` and one `🟥` — while keeping the total signed count strictly `0` forever.
-
----
-
-## Step 3: Boxes Inside Boxes — Space Without a Grid
-
-Putting boxes inside other boxes forms a **Hereditary Multiset** (`HereditaryMSet BoxInt` in `FinScBox.HereditaryMSet`, aliased in physics as `Configuration`). Each inner box acts as an emergent coordinate address (`{ [] : 1 }` for X, `{ [] : 2 }` for Y, `{ [] : 3 }` for Z):
-- **No grid walls:** space extends only where active polarities travel.
-- **Emergent dimension:** if an excitation uses 2 axis shapes, the universe evolves in 2D; if a 3rd axis shape is present, the exact same blind stepper automatically evolves in 3D.
-
----
-
-## Step 4: Polarity, Quadrance, Interaction Load & Pacing (`FinSc-Space` Dynamics)
-
-In `FinScSpace.Dynamics` ([`FinSc-Space`](https://github.com/justinkelly-ie/FinSc-Space)), each closed universe evolves locally with zero observer knowledge (`EvolutionState k`):
-1. **`polarityMaxel`** (`DiagAntisymForm`) — signed site polarities `(A, A)` and antisymmetric directed link fluxes `(A, B)`.
-2. **`loadMaxel`** (`SymForm`) — causal 1-hop retarded interaction load sourced from `quadranceOf polarityMaxel` (`c = 1`).
-3. **`throttleMaxel`** (`SymForm`) — integer Bresenham pacing accumulator emitting `StreamSkip` pauses at **`0 GohBound`** cost when local load is high.
-
-All link updates use conservative integer quadratic exchanges (`exchangeQuadraticTriple` / `exchangeQuadratic` in `FinScBox.QuadraticExchange`), conserving linear polarity `p_A + p_B` identically and monotonically bounding total quadrance `2*(p_A^2 + p_B^2) + u^2`.
-
----
-
-## Step 5: Rational Geometry & Non-Perturbing Observers (`FinSc-Space` Geometry & `FinSc-Lens`)
-
-Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
-- **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), quenched `TopologicalRelic` skeletons (`castSupportHMSet`), and spatial moment / band-flux / quadrupole / projective readouts (`ExcitationReport`, `measureBandAxis`, `fieldCoreQuadranceShare`, `loadQuadrupoleAxes`).
-- **`FinScSpace.Geometry`:** Division-free projective `Proportion`s, metric-polymorphic spreads, universal `QTT 0` proofs of the Triple Quad Formula, Spread Law, Cross Law and Triple Spread Law, and one metric-parameterized `Rotor` covering `SO(3; Q)` quaternions (Blue metric) and `SO(1, 2; Q)` Wildberger Dihedrons (Red metric).
-- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr) hosting probe fixtures (`protonMSet`, `neutronMSet`, `heavyMassMSet`), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), [`GeometryAudits.idr`](src/FiniteScience/GeometryAudits.idr), & [`Main.idr`](src/FiniteScience/Main.idr)): Sits at the top of the stack, driving all 9 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
-
----
-
-## Building & Running the Stack
+## Building & Running
 
 ### Prerequisites
 - [Idris 2](https://github.com/idris-lang/Idris2) `>= 0.8.0` (Chez Scheme backend) on your `PATH`, including `base` and `linear`.
@@ -89,26 +43,14 @@ cd FinSc-Box && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg
 # 2. Layer 2: Rational Geometry & Blind Local Evolution
 cd FinSc-Space && idris2 --build FinSc-Space.ipkg && idris2 --install FinSc-Space.ipkg && cd ..
 
-# 3. Layer 3: Non-Perturbing Observer Library
+# 3. Layer 3: Non-Perturbing Observer Library & BlackBoxLab
 cd FinSc-Lens && idris2 --build FinSc-Lens.ipkg && idris2 --install FinSc-Lens.ipkg && cd ..
 
-# 4. Layer 4: Top-of-Stack Audit Suite
-cd Finite-Science
-idris2 --build Finite-Science.ipkg
-./build/exec/finite-science-audits
+# 4. Layer 4: Application Shell
+cd Finite-Science && idris2 --build Finite-Science.ipkg && ./build/exec/finite-science
 ```
 
-A passing run prints all 9 audit reports, writes `audit_trace.txt` (git-ignored), and ends with:
-
-```text
-ALL 9 FINITE-SCIENCE AUDITS PASSED (FinSc-Space + FinSc-Lens + GohBound + TopologicalRelic)
-Boundary telemetry written to audit_trace.txt: True
-```
-
-### Troubleshooting
-- **Stale `.ttc` caches after upstream changes:** purge `build/` and reinstall in topological order (`FinSc-Box` → `FinSc-Space` → `FinSc-Lens` → `Finite-Science`).
-
----
+To run tests for any individual layer, build and run its corresponding `*-Wiki` repository (`finsc-box-wiki`, `finsc-space-wiki`, `finsc-lens-wiki`, or `finite-science-wiki`).
 
 ## License
 
