@@ -15,7 +15,7 @@ runPureAuditSuite : Has [Console] e => App e (Bool, List String)
 runPureAuditSuite = do
   let banner = [ "================================================================"
                , "  FINITE-SCIENCE: Top-of-Stack Multi-Observer Black-Box Audits  "
-               , "  (FinSc-Box -> FinSc-Dynamics -> FinSc-Lens -> Finite-Science) "
+               , "  (FinSc-Box -> FinSc-Space -> FinSc-Lens -> Finite-Science)    "
                , "================================================================" ]
   traverse_ putStrLn banner
   (p1, l1)     <- runAudit1
@@ -25,14 +25,15 @@ runPureAuditSuite = do
   (p6, l6)     <- runAudit6 cA
   (p7, l7)     <- runAudit7
   (p8, l8)     <- runAudit8
-  let ok = p1 && p2 && p3 && p4 && p6 && p7 && p8
+  (p9, l9)     <- runAudit9
+  let ok = p1 && p2 && p3 && p4 && p6 && p7 && p8 && p9
   let footer = [ "================================================================"
                , if ok
-                   then "ALL 8 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + GohBound + TopologicalRelic)"
+                   then "ALL 9 FINITE-SCIENCE AUDITS PASSED (FinSc-Space + FinSc-Lens + GohBound + TopologicalRelic)"
                    else "FINITE-SCIENCE AUDITS FAILED"
                ]
   traverse_ putStrLn footer
-  pure (ok, banner ++ l1 ++ l2 ++ l3 ++ l4 ++ l6 ++ l7 ++ l8 ++ footer)
+  pure (ok, banner ++ l1 ++ l2 ++ l3 ++ l4 ++ l6 ++ l7 ++ l8 ++ l9 ++ footer)
 
 public export
 covering

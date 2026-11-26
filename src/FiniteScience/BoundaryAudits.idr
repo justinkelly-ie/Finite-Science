@@ -10,7 +10,7 @@ import FinScBox.Views
 import FinScBox.Lenses
 import FinScBox.MultisetCodec
 import FinScBox.BlackRedZoom
-import FinScDynamics
+import FinScSpace
 import FinScLens
 
 %default total

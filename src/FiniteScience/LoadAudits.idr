@@ -7,7 +7,7 @@ import FinScBox.Interfaces
 import FinScBox.Box
 import FinScBox.HereditaryMSet
 import FinScBox.Lenses
-import FinScDynamics
+import FinScSpace
 import FinScLens
 import FiniteScience.Lab
 

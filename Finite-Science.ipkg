@@ -1,12 +1,12 @@
 package Finite-Science
-version = 0.4.0
+version = 0.5.0
 authors = "Justin"
 brief   = "Finite-Science: Top-of-Stack Multi-Observer Lab & Black-Box Audit Suite"
 
 depends = base >= 0.8.0
         , linear
         , FinSc-Box
-        , FinSc-Dynamics
+        , FinSc-Space
         , FinSc-Lens
 
 sourcedir = "src"
@@ -15,6 +15,7 @@ modules = FiniteScience.Lab
         , FiniteScience.BoundaryAudits
         , FiniteScience.LoadAudits
         , FiniteScience.RelicAudits
+        , FiniteScience.GeometryAudits
         , FiniteScience
         , Main
 

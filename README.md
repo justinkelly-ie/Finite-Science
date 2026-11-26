@@ -5,16 +5,16 @@
 All mathematics, blind dynamics, and non-perturbing observer lenses are written in total (`%default total`) Idris 2 across a strict four-layer DAG:
 
 ```text
-                FinSc-Box               (Layer 1: Core Multiset & Maxel Algebra)
-                    │
-                    ▼
-             FinSc-Dynamics             (Layer 2: Blind Local Evolution — App1, NoThrow)
-               ╱         ╲
-              ▼           ▼
-        FinSc-Lens     FinSc-Dihedron   (Layer 3: Independent Non-Perturbing Observers)
-              ╲           ╱
-               ▼         ▼
-             Finite-Science             (Layer 4: Top-of-Stack Lab, Audits & Visualizer)
+FinSc-Box       (Layer 1: Pure Box, HereditaryMSet, Maxel, Space n, GohBound, QuadraticTriple)
+    │
+    ▼
+FinSc-Space     (Layer 2: Geometry.{Affine, Projective} + Blind Dynamics — App1, NoThrow)
+    │
+    ▼
+FinSc-Lens      (Layer 3: Non-Perturbing Horizons, Projective & Frame Readouts)
+    │
+    ▼
+Finite-Science  (Layer 4: Top-of-Stack Lab & Audits)
 ```
 
 ---
@@ -55,9 +55,9 @@ Putting boxes inside other boxes forms a **Hereditary Multiset** (`HereditaryMSe
 
 ---
 
-## Step 4: Polarity, Quadrance, Interaction Load & Pacing (`FinSc-Dynamics`)
+## Step 4: Polarity, Quadrance, Interaction Load & Pacing (`FinSc-Space` Dynamics)
 
-In [`FinSc-Dynamics`](https://github.com/justinkelly-ie/FinSc-Dynamics), each closed universe evolves locally with zero observer knowledge (`EvolutionState k`):
+In `FinScSpace.Dynamics` ([`FinSc-Space`](https://github.com/justinkelly-ie/FinSc-Space)), each closed universe evolves locally with zero observer knowledge (`EvolutionState k`):
 1. **`polarityMaxel`** (`DiagAntisymForm`) — signed site polarities `(A, A)` and antisymmetric directed link fluxes `(A, B)`.
 2. **`loadMaxel`** (`SymForm`) — causal 1-hop retarded interaction load sourced from `quadranceOf polarityMaxel` (`c = 1`).
 3. **`throttleMaxel`** (`SymForm`) — integer Bresenham pacing accumulator emitting `StreamSkip` pauses at **`0 GohBound`** cost when local load is high.
@@ -66,12 +66,12 @@ All link updates use conservative integer quadratic exchanges (`exchangeQuadrati
 
 ---
 
-## Step 5: Pluggable Non-Perturbing Observers (`FinSc-Lens` & `FinSc-Dihedron`)
+## Step 5: Rational Geometry & Non-Perturbing Observers (`FinSc-Space` Geometry & `FinSc-Lens`)
 
 Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0 same : uOut = uIn`):
 - **[`FinSc-Lens`](https://github.com/justinkelly-ie/FinSc-Lens):** Observer `Time` / UV cutoffs (`HorizonSpec`), initial probe configurations (`sampleUnitPairMSet`, `protonMSet`), quenched `TopologicalRelic` skeletons (`castSupportHMSet`), and spatial moment / band-flux / quadrupole readouts (`ExcitationReport`, `measureBandAxis`, `loadQuadrupoleAxes`).
-- **[`FinSc-Dihedron`](https://github.com/justinkelly-ie/FinSc-Dihedron):** Rational `SO(3; Q)` quaternion proportions (`ProjectiveProportion`) and `SL(2; Q)` Dihedron frames for relativistic observer development.
-- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 8 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
+- **`FinScSpace.Geometry`:** Division-free projective `Proportion`s, metric-polymorphic spreads, universal `QTT 0` proofs of the Triple Quad Formula, Spread Law, Cross Law and Triple Spread Law, and one metric-parameterized `Rotor` covering `SO(3; Q)` quaternions (Blue metric) and `SO(1, 2; Q)` Wildberger Dihedrons (Red metric).
+- **`Finite-Science`** (`src/FiniteScience/` — [`Lab.idr`](src/FiniteScience/Lab.idr), [`BoundaryAudits.idr`](src/FiniteScience/BoundaryAudits.idr), [`LoadAudits.idr`](src/FiniteScience/LoadAudits.idr), [`RelicAudits.idr`](src/FiniteScience/RelicAudits.idr), [`GeometryAudits.idr`](src/FiniteScience/GeometryAudits.idr), & [`Main.idr`](src/Main.idr)): Sits at the top of the stack, driving all 9 automated audits across polymorphic `FlatBlackBox k` (`Space n`) and `HereditaryBlackBox`.
 
 ---
 
@@ -86,8 +86,8 @@ Observers never touch or mutate the inner `App1` universe (`PureObservation`, `0
 # 1. Layer 1: Core Multiset & Maxel Algebra
 cd FinSc-Box && idris2 --build FinSc-Box.ipkg && idris2 --install FinSc-Box.ipkg && cd ..
 
-# 2. Layer 2: Blind Local Evolution
-cd FinSc-Dynamics && idris2 --build FinSc-Dynamics.ipkg && idris2 --install FinSc-Dynamics.ipkg && cd ..
+# 2. Layer 2: Rational Geometry & Blind Local Evolution
+cd FinSc-Space && idris2 --build FinSc-Space.ipkg && idris2 --install FinSc-Space.ipkg && cd ..
 
 # 3. Layer 3: Non-Perturbing Observer Library
 cd FinSc-Lens && idris2 --build FinSc-Lens.ipkg && idris2 --install FinSc-Lens.ipkg && cd ..
@@ -98,15 +98,15 @@ idris2 --build Finite-Science.ipkg
 ./build/exec/finite-science-audits
 ```
 
-A passing run prints all 8 audit reports, writes `audit_trace.txt` (git-ignored), and ends with:
+A passing run prints all 9 audit reports, writes `audit_trace.txt` (git-ignored), and ends with:
 
 ```text
-ALL 8 FINITE-SCIENCE AUDITS PASSED (FinSc-Dynamics + FinSc-Lens + GohBound + TopologicalRelic)
+ALL 9 FINITE-SCIENCE AUDITS PASSED (FinSc-Space + FinSc-Lens + GohBound + TopologicalRelic)
 Boundary telemetry written to audit_trace.txt: True
 ```
 
 ### Troubleshooting
-- **Stale `.ttc` caches after upstream changes:** purge `build/` and reinstall in topological order (`FinSc-Box` → `FinSc-Dynamics` → `FinSc-Lens` → `Finite-Science`).
+- **Stale `.ttc` caches after upstream changes:** purge `build/` and reinstall in topological order (`FinSc-Box` → `FinSc-Space` → `FinSc-Lens` → `Finite-Science`).
 
 ---
 

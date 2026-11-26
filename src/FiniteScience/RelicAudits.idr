@@ -9,7 +9,7 @@ import FinScBox.Box
 import FinScBox.HereditaryMSet
 import FinScBox.Views
 import FinScBox.QuadraticExchange
-import FinScDynamics
+import FinScSpace
 import FinScLens
 import FiniteScience.Lab
 import FiniteScience.LoadAudits
@@ -580,7 +580,7 @@ buildAudit8Report =
         , "    - Claim \"GohBound is raw-vs-normal gap; gap=0 => []\" -> " ++ show chatClaimRawNormalGapNonZero ++
           " (counterexample: separated gap=" ++ show rawMinusNormalGap ++ " on " ++ show (boxNodeCount bDp) ++
           " nodes /= [], unsplit scalarKey(1) boundSteps=" ++ show unsplitBound.boundSteps ++ ")"
-        , "    - Claim \"FinSc-Dynamics reconciles separated pairs to []\" -> " ++ show chatClaimDipoleSettlesToVacuum ++
+        , "    - Claim \"FinSc-Space dynamics reconciles separated pairs to []\" -> " ++ show chatClaimDipoleSettlesToVacuum ++
           " (counterexample: 20-sweep reason=" ++ show r20.freezeReason ++ ", Q20=" ++ show (stateQuadrance r20.relicState) ++
           "/" ++ show (stateQuadrance dp1400) ++ ")"
         , "  -> Audit 8 pass=" ++ show pass
